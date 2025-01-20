@@ -10,7 +10,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,21 +38,18 @@ public class AuthController {
         try {
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(
-                            loginRequest.getUsername(),
+                            loginRequest.getEmail(),
                             loginRequest.getPassword()
                     );
 
             Authentication authentication = authenticationManager.authenticate(authenticationToken);
 
-
             String token = jwtUtil.generateToken(authentication.getName());
-
-            logger.info("Generated JWT Token for user {}: {}", authentication.getName(), token);
 
             return ResponseEntity.ok(token);
 
         } catch (AuthenticationException e) {
-            logger.error("Authentication failed for user {}: {}", loginRequest.getUsername(), e.getMessage());
+            logger.error("Authentication failed for user {}: {}", loginRequest.getEmail(), e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
         }
     }
