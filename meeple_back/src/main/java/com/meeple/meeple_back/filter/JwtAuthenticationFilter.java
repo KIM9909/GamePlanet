@@ -1,5 +1,6 @@
 package com.meeple.meeple_back.filter;
 
+import com.meeple.meeple_back.user.service.CustomUserDetailsService;
 import com.meeple.meeple_back.util.JwtUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
@@ -41,9 +42,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jwt = resolveToken(request);
 
             if (StringUtils.hasText(jwt) && jwtUtil.validateToken(jwt)) {
-                String username = jwtUtil.getUsernameFromToken(jwt);
+                String email = jwtUtil.getUsernameFromToken(jwt);
 
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
