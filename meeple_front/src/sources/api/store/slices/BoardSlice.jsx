@@ -24,5 +24,5 @@ const BoardSlice = createSlice({
   }
 })
 
-export const { setPosts, setCurrentPost, setLoading, setError } = boardSlice.actions;
+export const { setPosts, setCurrentPost, setLoading, setError } = BoardSlice.actions;
 export default BoardSlice.reducer;

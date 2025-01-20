@@ -24,5 +24,5 @@ const TournamentSlice = createSlice({
   }
 })
 
-export const { setTournaments, setCurrentTournament, setLoading, setError } = tournamentSlice.actions;
+export const { setTournaments, setCurrentTournament, setLoading, setError } = TournamentSlice.actions;
 export default TournamentSlice.reducer;
