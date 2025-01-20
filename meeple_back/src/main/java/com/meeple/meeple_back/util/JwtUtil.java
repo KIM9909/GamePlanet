@@ -22,14 +22,14 @@ public class JwtUtil {
      * [JWT 생성 메서드]
      * - 사용자명을 클레임에 넣고, 만료 시간 등을 설정해 토큰을 생성한다.
      */
-    public String generateToken(String username) {
+    public String generateToken(String userEmail) {
         long now = System.currentTimeMillis();
         long validity = 1000 * 60 * 60; // 1시간
 
         Key key = getSigningKey();
 
         return Jwts.builder()
-                .setSubject(username)
+                .setSubject(userEmail)
                 .setIssuedAt(new Date(now)) // 발급 시간
                 .setExpiration(new Date(now + validity)) // 만료 시간
                 .signWith(key, SignatureAlgorithm.HS256) // 서명
