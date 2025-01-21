@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket & REST API Test</title>
+  <!-- SockJS -->
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+  <!-- STOMP.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
+<body>
+  <h1>WebSocket & REST API Test</h1>
+
+  <section>
+    <h3>Room Management</h3>
+    <label for="roomId">Room ID:</label>
+    <input type="text" id="roomId" placeholder="Enter room ID">
+    <button onclick="createRoom()">Create Room</button>
+    <button onclick="joinRoom()">Join Room</button>
+  </section>
+
+  <section>
+    <h3>Player Name</h3>
+    <label for="playerName">Name:</label>
+    <input type="text" id="playerName" placeholder="Enter your name">
+  </section>
+
+  <section>
+    <h3>Chat</h3>
+    <div id="chatBox" style="border: 1px solid #ccc; padding: 10px; height: 150px; overflow-y: auto;"></div>
+    <input type="text" id="chatMessage" placeholder="Type a message">
+    <button onclick="sendMessage()">Send</button>
+  </section>
+
+  <script>
+    const baseUrl = 'http://localhost:8090/api/game'; // REST API URL
+    const wsUrl = 'http://localhost:8090/ws'; // WebSocket URL
+
+    let stompClient;
+
+    // Initialize WebSocket connection
+    function connectWebSocket() {
+      const socket = new SockJS(wsUrl);
+      stompClient = Stomp.over(socket); // Stomp.js 기본 네임스페이스 사용
+
+      stompClient.connect({}, () => {
+        console.log('Connected to WebSocket');
+        stompClient.subscribe('/topic/messages', (msg) => {
+          const message = JSON.parse(msg.body);
+          displayMessage(message);
+        });
+      }, (error) => {
+        console.error('WebSocket connection error:', error);
+      });
+    }
+
+    // Create a new game room
+    async function createRoom() {
+      const roomId = document.getElementById('roomId').value;
+      try {
+        const response = await fetch(`${baseUrl}/create-room?roomId=${roomId}`, { method: 'POST' });
+        if (response.ok) {
+          alert(`Room ${roomId} created successfully`);
+        } else {
+          alert('Failed to create room');
+        }
+      } catch (error) {
+        console.error('Error creating room:', error);
+      }
+    }
+
+    // Join a game room
+    async function joinRoom() {
+      const roomId = document.getElementById('roomId').value;
+      const playerName = document.getElementById('playerName').value;
+      try {
+        const response = await fetch(`${baseUrl}/join-room?roomId=${roomId}&playerName=${playerName}`, { method: 'POST' });
+        if (response.ok) {
+          alert(`${playerName} joined room ${roomId}`);
+        } else {
+          alert('Failed to join room');
+        }
+      } catch (error) {
+        console.error('Error joining room:', error);
+      }
+    }
+
+    // Send a chat message
+    function sendMessage() {
+      const message = document.getElementById('chatMessage').value;
+      if (stompClient && stompClient.connected) {
+        stompClient.send('/app/chat', {}, JSON.stringify(message));
+        document.getElementById('chatMessage').value = '';
+      } else {
+        alert('WebSocket is not connected');
+      }
+    }
+
+    // Display a received chat message
+    function displayMessage(message) {
+      const chatBox = document.getElementById('chatBox');
+      const p = document.createElement('p');
+      p.textContent = message;
+      chatBox.appendChild(p);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Connect to WebSocket on page load
+    window.onload = connectWebSocket;
+  </script>
+</body>
+</html>
