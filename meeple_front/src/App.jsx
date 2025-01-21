@@ -9,6 +9,7 @@ import MainPage from './pages/main/MainPage'
 import ProfilePage from './pages/profile/ProfilePage'
 import ProposalPage from './pages/proposal/ProposalPage'
 import TournamentPage from './pages/tournament/TournamentPage'
+import CockroachPokerPage from './pages/game/CockroachPokerPage'
 import {Store} from './sources/api/store/Store'
 import { Provider } from 'react-redux'
 
@@ -26,6 +27,7 @@ function App() {
           
           {/* Game */}
           <Route path="/game/burumabul" element={<BurumabulPage />} />
+          <Route path="/game/cockroachpoker" element={<CockroachPokerPage />} />
           
           {/* GameInfo */}
           <Route path="/game/:gameId" element={<GameInfoPage />} />
