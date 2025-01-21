@@ -10,8 +10,9 @@ import java.util.Map;
 public class WebSocketController {
 
     @MessageMapping("/chat")
-    @SendTo("/topic.messages")
+    @SendTo("/topic/messages")
     public String handleMessage(String message) {
+        System.out.println(message);
         return message;
     }
 

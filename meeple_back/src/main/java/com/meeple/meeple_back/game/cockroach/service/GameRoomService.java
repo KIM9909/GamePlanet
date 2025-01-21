@@ -25,11 +25,12 @@ public class GameRoomService {
         Map<String, Object> roomInfo = new HashMap<>();
         roomInfo.put("players", new ArrayList<>());
         roomInfo.put("gameData", new HashMap<>());
-
+        System.out.println("createRoom service 호출");
         redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
     }
 
     public Map<String, Object> getRoom(String roomId) {
+        System.out.println("getRoom service 호출");
         return (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
     }
 
