@@ -1,5 +1,6 @@
-import { retry } from "@reduxjs/toolkit/query";
+
 import React, { useEffect, useState } from "react";
+import Dice from "./Dice"
 
 const TravelMap = () => {
   // cities 배열
@@ -16,7 +17,7 @@ const TravelMap = () => {
   const cells = Array.from({ length: totalCells }, (_, i) => i); // 칸 번호
   const [currentPosition, setCurrentPosition] = useState(39); // 현재 말 위치
   const [isFirstMove, setIsFirstMove] = useState(true)
-
+  const [showDice, setShowDice] = useState(false);
 
   // 칸 스타일
   const cellClass =
@@ -57,6 +58,11 @@ const TravelMap = () => {
   const bottomRow = cells.slice(size * 3 - 4, totalCells).reverse().map(renderCell);
   const leftColumn = cells.slice(0, size-2).reverse().map(renderCell);
 
+
+  const rollDice = () => {
+    setShowDice(true);
+  }
+
   return (
     <div className="flex flex-col items-center mt-10">
       <h1 className="text-2xl font-bold mb-5">부루마불 보드</h1>
@@ -79,13 +85,22 @@ const TravelMap = () => {
         {/* 하단 줄 */}
         <div className="flex">{bottomRow}</div>
       </div>
-      {/* 이동 버튼 */}
-      <button
-        onClick={moveToken}
-        className="mt-5 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-      >
-        Move Token
-      </button>
+      {/* 이동 버튼 + 주사위 버튼 */}
+      <div className="flex">
+        <button
+          onClick={moveToken}
+          className="mt-5 mx-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Move Token
+        </button>
+        <button 
+          onClick={rollDice}
+          className="mt-5 mx-3 px-4 py-2 bg-red-300 text-white rounded hover:bg-blue-600"
+        >
+          Roll the Dice
+        </button>
+        {showDice && <Dice />}
+      </div>
     </div>
   );
 };
