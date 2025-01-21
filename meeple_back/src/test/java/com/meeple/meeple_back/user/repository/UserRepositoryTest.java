@@ -1,7 +1,6 @@
 package com.meeple.meeple_back.user.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 import com.meeple.meeple_back.user.model.User;
 import java.time.LocalDateTime;
@@ -13,8 +12,8 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
-@DataJpaTest(showSql = true)
-@TestPropertySource("classpath:application-test.yml")
+@DataJpaTest
+@TestPropertySource("classpath:test-application.properties")
 class UserRepositoryTest {
   @Autowired
   private UserRepository userRepository;
