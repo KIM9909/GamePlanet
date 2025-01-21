@@ -26,4 +26,8 @@ public class UserService {
                 .userNickname(user.getUserNickname())
                 .build());
     }
+
+    public boolean isDuplicate(Long userId) {
+        return userRepository.existsById(userId);
+    }
 }
