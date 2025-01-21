@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { CARD_TYPES } from './constants/cardTypes';
 import styled from 'styled-components';

@@ -1,5 +1,6 @@
 import { Card, CardList, CARD_TYPES } from '../../components/cockroachcard';
 import { useState } from 'react';
+import GameBoard from '../../components/cockroachcard/GameBoard';
 
 const GamePage = () => {
     const [cards, setCards] = useState([
@@ -35,6 +36,7 @@ const GamePage = () => {
         cards={cards} 
         onCardClick={handleCardClick}
       />
+      <GameBoard/>
     </div>
   );
 };
