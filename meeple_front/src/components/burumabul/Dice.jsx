@@ -217,6 +217,7 @@ const Dice = ({ onComplete ,onClose }) => {
         setTotalScore(prevTotalScore => prevTotalScore + newScore)
 
     };
+    
 
     const throwDice = () => {
         setScore('');
@@ -283,7 +284,7 @@ const Dice = ({ onComplete ,onClose }) => {
     const initPhysics = () => {
         gameState.current.physicsWorld = new CANNON.World({
             allowSleep: true,
-            gravity: new CANNON.Vec3(0, -40, 0),
+            gravity: new CANNON.Vec3(0, -80, 0),
         });
         gameState.current.physicsWorld.defaultContactMaterial.restitution = 0.3;
         gameState.current.physicsWorld.defaultContactMaterial.contactEquationStiffness = 1e9;
@@ -295,10 +296,10 @@ const Dice = ({ onComplete ,onClose }) => {
         const floor = new THREE.Mesh(
             new THREE.PlaneGeometry(wallSize * 2, wallSize * 2),
             new THREE.ShadowMaterial({
-                opacity: 0.15,
+                opacity: 0,
             })
         );
-        floor.receiveShadow = true;
+        // floor.receiveShadow = true;
         floor.position.y = -7;
         floor.quaternion.setFromAxisAngle(new THREE.Vector3(-1, 0, 0), Math.PI * 0.5);
         gameState.current.scene.add(floor);
@@ -316,41 +317,15 @@ const Dice = ({ onComplete ,onClose }) => {
         const wallMaterial = new THREE.MeshStandardMaterial({
             color: 0xffffff,
             transparent: true,
-            opacity: 0.1
+            opacity: 0
         });
 
         // 벽의 물리적 크기 = 시각적 크기
         const wallShape = new CANNON.Box(new CANNON.Vec3(0.05, wallSize, wallSize));
 
-        // 왼쪽 벽
-        const wallLeft = new THREE.Mesh(wallGeometry, wallMaterial);
-        wallLeft.position.set(-wallSize + 0.5, 3, 0);
-        gameState.current.scene.add(wallLeft);
-
-        const wallLeftBody = new CANNON.Body({
-            type: CANNON.Body.STATIC,
-            shape: wallShape
-            
-        });
-        wallLeftBody.position.copy(wallLeft.position);
-        gameState.current.physicsWorld.addBody(wallLeftBody);
-
-
-        // 오른쪽 벽
-        const wallRight = wallLeft.clone();
-        wallRight.position.set(wallSize - 0.5, 3, 0);
-        gameState.current.scene.add(wallRight);
-
-        const wallRightBody = new CANNON.Body({
-            type: CANNON.Body.STATIC,
-            shape: wallShape
-        });
-        wallRightBody.position.copy(wallRight.position);
-        gameState.current.physicsWorld.addBody(wallRightBody);
-
-
-        // 앞쪽 벽
-        const wallFront = wallLeft.clone();
+        
+        // 앞쪽 벽 -> 화면 밖으로 나가지 않게
+        const wallFront = new THREE.Mesh(wallGeometry, wallMaterial);
         wallFront.rotation.y = Math.PI * 0.5;
         wallFront.position.set(0, 3, wallSize - 0.5);
         gameState.current.scene.add(wallFront);
@@ -362,22 +337,6 @@ const Dice = ({ onComplete ,onClose }) => {
         wallFrontBody.position.copy(wallFront.position);
         wallFrontBody.quaternion.copy(wallFront.quaternion);
         gameState.current.physicsWorld.addBody(wallFrontBody);
-
-        // 뒤쪽 벽
-        const wallBack = wallLeft.clone();
-        wallBack.rotation.y = Math.PI * 0.5;
-        wallBack.position.set(0,3,-wallSize + 0.5);
-        gameState.current.scene.add(wallBack);
-
-        const wallBackBody = new CANNON.Body({
-            type: CANNON.Body.STATIC,
-            shape: wallShape
-        });
-        wallBackBody.position.copy(wallBack.position);
-        wallBackBody.quaternion.copy(wallBack.quaternion);
-        gameState.current.physicsWorld.addBody(wallBackBody);
-        //
-
     };
     
 
@@ -401,8 +360,9 @@ const Dice = ({ onComplete ,onClose }) => {
             0.1,
             1000
         );
-        state.camera.position.set(0, 5, 7).multiplyScalar(4);
+        state.camera.position.set(0, 10, 0).multiplyScalar(4);
         state.camera.lookAt(0, 0, 0);
+        state.camera.up.set(0, 0, -1);
         state.camera.fov = 45;
 
         const ambientLight = new THREE.AmbientLight(0xffffff, 2.8);
@@ -475,10 +435,10 @@ const Dice = ({ onComplete ,onClose }) => {
 
     useEffect(() => {
         if (totalScore > 0) {
-            // 주사위 동작이 완료된 후 약 2초 뒤에 모달을 닫고 'onComplete' 함수 호출
+            // 주사위 동작이 완료된 후 약 1.7초 뒤에 모달을 닫고 'onComplete' 함수 호출
             const timer = setTimeout(() => {
                 onComplete(totalScore);
-            }, 2000);
+            }, 1700);
 
             return () => clearTimeout(timer);
         }
@@ -487,15 +447,6 @@ const Dice = ({ onComplete ,onClose }) => {
     return (
         <div className="container modal">
             <canvas id='canvas' ref={canvasRef} className="w-full h-full" />
-            <div className="fixed top-4 left-4 bg-white/80 p-4 rounded-lg shadow-lg">
-                <p>Total score: {totalScore}</p>
-                <button
-                    onClick={throwDice}
-                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                >
-                    Roll Dice
-                </button>
-            </div>
         </div>
     );
 };

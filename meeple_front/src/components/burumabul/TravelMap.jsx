@@ -114,7 +114,7 @@ const TravelMap = () => {
         <p className="mt-5 text-lg">마지막 주사위 점수 : <strong>{totalScore}</strong></p>
       )}
       {showModal && createPortal(
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center backdrop-blur-sm z-50">
+        <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm z-50">
             <Dice onComplete={handleDiceComplete} onClose={() => setShowModal(false)} />,
         </div>,
         document.body
