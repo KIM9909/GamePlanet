@@ -5,12 +5,12 @@ import BoardPage from './pages/board/BoardPage'
 import BurumabulPage from './pages/game/BurumabulPage'
 import GameInfoPage from './pages/gameInfo/GameInfoPage'
 import HomePage from './pages/home/HomePage'
-import MainPage from './pages/main/MainPage'
 import ProfilePage from './pages/profile/ProfilePage'
 import ProposalPage from './pages/proposal/ProposalPage'
 import TournamentPage from './pages/tournament/TournamentPage'
 import {Store} from './sources/api/store/Store'
 import { Provider } from 'react-redux'
+import MainPage from './pages/main/MainPage'
 
 function App() {
   return (
