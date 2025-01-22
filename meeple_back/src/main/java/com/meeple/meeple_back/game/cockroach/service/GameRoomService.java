@@ -23,7 +23,12 @@ public class GameRoomService {
 
     public void createRoom(String roomId) {
         Map<String, Object> roomInfo = new HashMap<>();
-        roomInfo.put("players", new ArrayList<>());
+        List<String> players = new ArrayList<>();
+        players.add("user1");
+        players.add("user2");
+        players.add("user3");
+//        roomInfo.put("players", new ArrayList<>());
+        roomInfo.put("players", players);
         roomInfo.put("gameData", new HashMap<>());
         System.out.println("createRoom service 호출");
         redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
@@ -46,6 +51,7 @@ public class GameRoomService {
 
     public void addPlayer(String roomId, String playerName) {
         Map<String, Object> room = getRoom(roomId);
+        System.out.println(roomId + "방 " + playerName + " 유저 참가 서비스" );
         if (room != null) {
             List<String> players = (List<String>) room.get("players");
             players.add(playerName);

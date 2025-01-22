@@ -17,7 +17,7 @@ public class CockroachController {
 
     @Autowired
     public CockroachController(CockroachService cockroachService,
-                               GameRoomService gameRoomService) {
+        GameRoomService gameRoomService) {
         this.cockroachService = cockroachService;
         this.gameRoomService = gameRoomService;
     }
@@ -31,24 +31,24 @@ public class CockroachController {
 
     @PostMapping("/join-room")
     public ResponseEntity<String> joinRoom(
-            @RequestParam String roomId,
-            @RequestParam String playerName) {
+        @RequestParam String roomId,
+        @RequestParam String playerName) {
         gameRoomService.addPlayer(roomId, playerName);
-        return ResponseEntity.ok( playerName + "joined room: " + roomId);
+        return ResponseEntity.ok(playerName + "joined room: " + roomId);
     }
 
     @PostMapping("/update-data")
     public ResponseEntity<String> updateGameData(
-            @RequestParam String roomId,
-            @RequestParam String key,
-            @RequestParam Object value) {
+        @RequestParam String roomId,
+        @RequestParam String key,
+        @RequestParam Object value) {
         gameRoomService.updateGameData(roomId, key, value);
 
         return ResponseEntity.ok("Game data updated for room: " + roomId);
     }
 
     @GetMapping("/room/{roomId}")
-    public ResponseEntity<Map<String,Object>> getRoom(@PathVariable String roomId) {
+    public ResponseEntity<Map<String, Object>> getRoom(@PathVariable String roomId) {
         return ResponseEntity.ok(gameRoomService.getRoom(roomId));
     }
 

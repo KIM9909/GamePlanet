@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WebSocket Room Chat</title>
+  <title>WebSocket Room Chat with Game Start</title>
   <!-- SockJS -->
   <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
   <!-- STOMP.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 </head>
 <body>
-  <h1>Room-Based Chat Application</h1>
+  <h1>Room-Based Chat & Game</h1>
 
   <section>
     <h3>Room Management</h3>
@@ -18,8 +18,10 @@
     <input type="text" id="roomId" placeholder="Enter room ID">
     <label for="playerName">Name:</label>
     <input type="text" id="playerName" placeholder="Enter your name">
+    <button onclick="createRoom()">Create Room</button>
     <button onclick="joinRoom()">Join Room</button>
     <button onclick="leaveRoom()">Leave Room</button>
+    <button onclick="startGame()">Start Game</button>
   </section>
 
   <section>
@@ -29,8 +31,14 @@
     <button onclick="sendMessage()">Send</button>
   </section>
 
+  <section>
+    <h3>Game Data</h3>
+    <div id="gameDataBox" style="border: 1px solid #ccc; padding: 10px; height: 150px; overflow-y: auto;"></div>
+  </section>
+
   <script>
     const wsUrl = 'http://localhost:8090/ws'; // WebSocket URL
+    const apiUrl = 'http://localhost:8090/api/game'; // REST API URL
     let stompClient;
     let currentRoomId = null;
 
@@ -46,6 +54,31 @@
       });
     }
 
+    // Create a room
+    async function createRoom() {
+      const roomId = document.getElementById('roomId').value;
+
+      if (!roomId) {
+        alert('Room ID is required to create a room');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${apiUrl}/create-room?roomId=${roomId}`, {
+          method: 'POST',
+        });
+
+        if (response.ok) {
+          alert(`Room ${roomId} created successfully`);
+        } else {
+          alert('Failed to create room');
+        }
+      } catch (error) {
+        console.error('Error creating room:', error);
+        alert('An error occurred while creating the room');
+      }
+    }
+
     // Join a specific room
     function joinRoom() {
       const roomId = document.getElementById('roomId').value;
@@ -56,13 +89,17 @@
         return;
       }
 
-      // Unsubscribe from the previous room
       leaveRoom();
 
-      // Subscribe to the new room
       stompClient.subscribe(`/topic/messages/${roomId}`, (msg) => {
         const message = msg.body;
         displayMessage(`[Room ${roomId}] ${message}`);
+      });
+
+      stompClient.subscribe(`/topic/game/${roomId}`, (msg) => {
+        const gameData = JSON.parse(msg.body);
+        console.log('Game Started:', gameData);
+        displayGameData(gameData);
       });
 
       currentRoomId = roomId;
@@ -74,15 +111,32 @@
     function leaveRoom() {
       if (currentRoomId) {
         stompClient.unsubscribe(`/topic/messages/${currentRoomId}`);
+        stompClient.unsubscribe(`/topic/game/${currentRoomId}`);
         console.log(`Unsubscribed from room ${currentRoomId}`);
         displayMessage(`You have left room ${currentRoomId}`);
         currentRoomId = null;
 
-        // Clear chat box
         const chatBox = document.getElementById('chatBox');
         chatBox.innerHTML = '';
+        const gameDataBox = document.getElementById('gameDataBox');
+        gameDataBox.innerHTML = '';
       } else {
         console.log('No room to leave');
+      }
+    }
+
+    // Start the game
+    function startGame() {
+      if (!currentRoomId) {
+        alert('You must join a room before starting the game');
+        return;
+      }
+
+      if (stompClient && stompClient.connected) {
+        stompClient.send(`/app/game/start-game/${currentRoomId}`, {});
+        console.log(`Game start request sent for room ${currentRoomId}`);
+      } else {
+        alert('WebSocket is not connected');
       }
     }
 
@@ -109,7 +163,16 @@
       const p = document.createElement('p');
       p.textContent = message;
       chatBox.appendChild(p);
-      chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Display game data
+    function displayGameData(gameData) {
+      const gameDataBox = document.getElementById('gameDataBox');
+      gameDataBox.innerHTML = ''; // Clear existing data
+      const pre = document.createElement('pre');
+      pre.textContent = JSON.stringify(gameData, null, 2); // Pretty print JSON
+      gameDataBox.appendChild(pre);
     }
 
     // Connect to WebSocket on page load
