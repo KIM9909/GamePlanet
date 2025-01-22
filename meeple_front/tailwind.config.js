@@ -5,7 +5,7 @@ export default {
     extend: {
       fontFamily : {
         sans: ['DungGeunMo', 'sans-serif'],
-      }
+      },
     },
   },
   plugins: [],

@@ -38,7 +38,7 @@ export const TypedText = ({ text, delay = 0, className = "", style = {}, onCompl
       } else {
         clearInterval(interval);
       }
-    }, 180); // 타이핑 속도 (150ms)
+    }, 190); // 타이핑 속도 (150ms)
 
     return () => clearInterval(interval);
   }, [text, isTyping, onComplete, isCompleted]);

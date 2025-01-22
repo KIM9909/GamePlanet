@@ -30,7 +30,7 @@ export const MainPageUp = ({ isFirstSection, showScrollDown, onLastTextComplete 
             </div>
             {/* 두 번째 텍스트 라인 */}
             <div 
-              className="mt-[90px] text-white text-[130px] ml-[300px]"
+              className="mt-[60px] text-white text-[130px] ml-[300px]"
               style={{ 
                 textShadow: '0 4px 12px rgba(255, 0, 255, 0.6), 0 8px 24px rgba(255, 0, 255, 0.4)'
               }}
