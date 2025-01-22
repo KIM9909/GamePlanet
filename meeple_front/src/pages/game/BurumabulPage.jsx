@@ -1,7 +1,12 @@
+import TravelMap from "../../components/burumabul/TravelMap"
+
+
+
 const BurumabulPage = () => {
   return (
     <div>
-      BurumablePage
+      <div className="text-4xl font-bold text-center">BurumablePage</div>
+      <TravelMap />
     </div>
   )
 }
