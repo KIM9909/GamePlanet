@@ -5,7 +5,7 @@ import { mergeVertices, mergeGeometries } from 'three/examples/jsm/utils/BufferG
 
 
 
-const Dice = () => {
+const Dice = ({ onComplete ,onClose }) => {
     const canvasRef = useRef(null);
     const [score, setScore] = useState('');
     const [totalScore, setTotalScore] = useState(0);
@@ -462,7 +462,7 @@ const Dice = () => {
       const handleResize = () => updateSceneSize();
       window.addEventListener('resize', handleResize);
       const animationId = requestAnimationFrame(animate);
-  
+    
       return () => {
           window.removeEventListener('resize', handleResize);
           cancelAnimationFrame(animationId);
@@ -473,11 +473,21 @@ const Dice = () => {
       };
     }, []);
 
+    useEffect(() => {
+        if (totalScore > 0) {
+            // 주사위 동작이 완료된 후 약 2초 뒤에 모달을 닫고 'onComplete' 함수 호출
+            const timer = setTimeout(() => {
+                onComplete(totalScore);
+            }, 2000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [totalScore, onComplete]);
+
     return (
-        <div className="container">
+        <div className="container modal">
             <canvas id='canvas' ref={canvasRef} className="w-full h-full" />
             <div className="fixed top-4 left-4 bg-white/80 p-4 rounded-lg shadow-lg">
-                <p className="text-xl font-bold mb-2">Score: {score}</p>
                 <p>Total score: {totalScore}</p>
                 <button
                     onClick={throwDice}
