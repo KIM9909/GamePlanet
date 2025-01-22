@@ -20,6 +20,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
 import org.springframework.test.context.jdbc.SqlGroup;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -28,8 +29,8 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase
 @SqlGroup({
-		@Sql(value = "/sql/post-create-controller-test-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
-		@Sql(value = "/sql/delete-all-data.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+		@Sql(value = "/sql/post-create-controller-test-data.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD),
+		@Sql(value = "/sql/delete-all-data.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
 })
 class UserControllerTest {
 
@@ -93,17 +94,54 @@ class UserControllerTest {
 
 	@Test
 	void 중복된_이메일을_조회했을때_True를_반환한다() throws Exception {
+
 		//given
 		String userEmail = "dummyUser1@example.com";
 		//when
 		//then
-		mockMvc.perform(get("/user/checkEmail/dummyUser1@example.com").contentType(
+		mockMvc.perform(get("/user/checkEmail/{userEmail}", userEmail).contentType(
 						MediaType.APPLICATION_JSON))
 				.andExpect(result -> Assertions.assertTrue(
 						Boolean.parseBoolean(result.getResponse().getContentAsString())));
 	}
 
 	@Test
-	void isDuplicateNickname() {
+	void 중복되지_않은_이메일을_조회했을때_False를_반환한다() throws Exception {
+
+		//given
+		String userEmail = "uniqueUser1@example.com";
+		//when
+		//then
+		mockMvc.perform(get("/user/checkEmail/{userEmail}", userEmail).contentType(
+						MediaType.APPLICATION_JSON))
+				.andExpect(result -> Assertions.assertFalse(
+						Boolean.parseBoolean(result.getResponse().getContentAsString())));
+	}
+
+
+	@Test
+	void 중복된_닉네임을_조회했을때_True를_반환한다() throws Exception {
+
+		//given
+		String nickname = "dummyNick3";
+		//when
+		//then
+		mockMvc.perform(get("/user/checkNickname/{nickname}", nickname).contentType(
+						MediaType.APPLICATION_JSON))
+				.andExpect(result -> Assertions.assertTrue(
+						Boolean.parseBoolean(result.getResponse().getContentAsString())));
+	}
+
+	@Test
+	void 중복되지_않은_닉네임을_조회했을때_False를_반환한다() throws Exception {
+
+		//given
+		String nickname = "fakeNick";
+		//when
+		//then
+		mockMvc.perform(get("/user/checkNickname/{nickname}", nickname).contentType(
+						MediaType.APPLICATION_JSON))
+				.andExpect(result -> Assertions.assertFalse(
+						Boolean.parseBoolean(result.getResponse().getContentAsString())));
 	}
 }
