@@ -91,6 +91,7 @@ class UserControllerTest {
 				.andExpect(status().is4xxClientError());
 	}
 
+	@Test
 	void 중복된_이메일을_조회했을때_True를_반환한다() throws Exception {
 		//given
 		String userEmail = "dummyUser1@example.com";
