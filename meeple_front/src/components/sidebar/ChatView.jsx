@@ -1,3 +1,4 @@
+// ChatView.jsx
 import React, { useState } from 'react';
 
 const ChatView = () => {
@@ -7,10 +8,10 @@ const ChatView = () => {
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto p-2">
         <div className="space-y-2 mb-4">
-          <div className="bg-gray-800 rounded p-2 max-w-[80%]">
-            오빠 내 디자인 별로야?
           <div className="bg-gray-800 rounded p-2 ml-auto mr-4 max-w-[80%]">
+            오빠 내 디자인 별로야?
           </div>
+          <div className="bg-gray-800 rounded p-2 max-w-[80%]">
             오빠 지금 게임중
           </div>
         </div>
