@@ -1,67 +1,77 @@
-import { useDispatch, useSelector } from "react-redux"
-import React from "react"
-import { setModalOpen, logout } from "../../sources/api/store/slices/UserSlice"
+import React, { useState, useEffect, useRef } from "react"
 import LoginModal from "../../components/user/LoginModal"
-import { useState } from "react"
 import RegisterModal from "../../components/user/RegisterModal"
+import { MainPageUp } from "./MainPageUp"
+import { MainPageDown } from "./MainPageDown"
 
 const MainPage = () => {
-  const dispatch = useDispatch()
-  // 회원가입 모달의 표시 상태 관리
+  // 현재 보여지는 섹션 상태 (첫 번째/두 번째)
+  const [isFirstSection, setIsFirstSection] = useState(true)
+  // 스크롤 애니메이션 진행 중 여부
+  const [isScrolling, setIsScrolling] = useState(false)
+  // 스크롤 다운 인디케이터 표시 여부
+  const [showScrollDown, setShowScrollDown] = useState(false)
+  // 회원가입 모달 표시 여부 상태
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false)
+  // 스크롤 다운 타이머 참조
+  const scrollDownTimeoutRef = useRef(null);
 
-  // Redux store에서 token 상태를 가져옴 (로그인 상태 확인용)
-  const { token } = useSelector((state) => state.user)
-  
-  // 로그아웃 처리 핸들러
-  // 리덕스의 logout 액션을 디스패치하여 토큰 제거거
-  const handleLogout = () => {
-    dispatch(logout())
-  }
+  // 스크롤 이벤트 처리
+  useEffect(() => {
+    const handleWheel = (e) => {
+      // 스크롤 애니메이션 중복 방지
+      if (isScrolling) return;
+      
+      setIsScrolling(true);
+      // 스크롤 방향에 따라 섹션 전환
+      if (e.deltaY > 0 && isFirstSection) {
+        setIsFirstSection(false);
+      } else if (e.deltaY < 0 && !isFirstSection) {
+        setIsFirstSection(true);
+      }
+      
+      // 스크롤 잠금 해제 타이머
+      setTimeout(() => {
+        setIsScrolling(false);
+      }, 1000);
+    }
+
+    window.addEventListener('wheel', handleWheel);
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      if (scrollDownTimeoutRef.current) {
+        clearTimeout(scrollDownTimeoutRef.current);
+      }
+    };
+  }, [isFirstSection, isScrolling]);
+
+  // 마지막 텍스트 타이핑 완료 후 스크롤 다운 표시
+  const handleLastTextComplete = () => {
+    scrollDownTimeoutRef.current = setTimeout(() => {
+      setShowScrollDown(true);
+    }, 500);
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">Meeple</h1>
-        </div>
-      </header>
+    <div className="h-screen overflow-hidden">
+      <MainPageUp
+        isFirstSection={isFirstSection}
+        showScrollDown={showScrollDown}
+        onLastTextComplete={handleLastTextComplete}
+      />
+      
+      <MainPageDown
+        isFirstSection={isFirstSection}
+        onRegisterClick={() => setIsRegisterModalOpen(true)}
+      />
 
-      <div className="flex justify-center">
-        {!token ? (
-          // 로그인하지 않은 경우
-          <>
-            <button
-              onClick={() => dispatch(setModalOpen(true))}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-            >
-              로그인
-            </button>
-            <button 
-              onClick={() => setIsRegisterModalOpen(true)}
-              className="ml-5 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-            >
-              회원가입
-            </button>
-          </>
-        ) : (
-          // 로그인된 경우
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-          >
-            로그아웃
-          </button>
-        )}
-
-        <LoginModal />
-        <RegisterModal
-          isOpen={isRegisterModalOpen}
-          onClose={() => setIsRegisterModalOpen(false)}
-        />
-      </div>
+      <LoginModal />
+      <RegisterModal
+        isOpen={isRegisterModalOpen}
+        onClose={() => setIsRegisterModalOpen(false)}
+      />
     </div>
-  )
-}
+  );
+};
 
-export default MainPage
+export default MainPage;
