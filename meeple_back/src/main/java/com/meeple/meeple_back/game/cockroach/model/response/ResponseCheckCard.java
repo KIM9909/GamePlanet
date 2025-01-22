@@ -1,0 +1,11 @@
+package com.meeple.meeple_back.game.cockroach.model.response;
+
+import com.meeple.meeple_back.game.cockroach.model.entity.Card;
+import lombok.Data;
+
+@Data
+public class ResponseCheckCard {
+    private String userName;    // 먹을 플레이어
+    private Card card;          // 먹을 카드
+    private boolean isEnd;      // 게임 종료 여부
+}

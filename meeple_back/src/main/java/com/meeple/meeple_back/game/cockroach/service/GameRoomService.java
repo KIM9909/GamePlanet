@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class GameRoomService {
@@ -61,5 +62,16 @@ public class GameRoomService {
 
     public void deleteRoom(String roomId) {
         redisTemplate.opsForHash().delete(ROOM_KEY, roomId);
+    }
+
+    public List<String> getAllRooms() {
+        System.out.println("getAllRooms service 호출");
+
+        // Redis에서 Object 타입 키를 가져와 String으로 변환
+        return redisTemplate.opsForHash()
+                .keys(ROOM_KEY)
+                .stream()
+                .map(Object::toString) // Object 타입을 String으로 변환
+                .collect(Collectors.toList());
     }
 }

@@ -3,6 +3,10 @@ package com.meeple.meeple_back.game.cockroach.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.meeple.meeple_back.game.cockroach.model.entity.Card;
+import com.meeple.meeple_back.game.cockroach.model.request.RequestCheckCard;
+import com.meeple.meeple_back.game.cockroach.model.request.RequestGiveCard;
+import com.meeple.meeple_back.game.cockroach.model.response.ResponseCheckCard;
+import com.meeple.meeple_back.game.cockroach.model.response.ResponseGiveCard;
 import com.meeple.meeple_back.game.cockroach.model.response.ResponseStartGame;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -71,9 +75,16 @@ public class CockroachServiceImpl implements CockroachService {
 
         Map<String, List<Card>> distributedCards = distributeCards(deck, players);
 
+        Map<String, List<Card>> userTableCards = new HashMap<>();
+        for (String player : players) {
+            userTableCards.put(player, new ArrayList<>());
+        }
+
+
         /* redis 저장 */
         gameData.put("publicDeck", publicDeck);
         gameData.put("playerCards", distributedCards);
+        gameData.put("userTableCards", userTableCards);
         redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
 
         /* 데이터 반환 */
@@ -82,6 +93,79 @@ public class CockroachServiceImpl implements CockroachService {
         response.setGameData(gameData);
 
         return response;
+    }
+
+    @Override
+    public ResponseGiveCard giveCard(String roomId, RequestGiveCard request) {
+        // Redis에서 방 정보 가져오기
+        Map<String, Object> roomInfo =
+                (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+
+        if (roomInfo == null) {
+            throw new IllegalArgumentException("방을 찾을 수 없습니다: " + roomId);
+        }
+
+        // 플레이어 카드 데이터 가져오기
+        Map<String, List<Card>> playerCards = (Map<String, List<Card>>) roomInfo.get("playerCards");
+        if (playerCards == null || !playerCards.containsKey(request.getFrom())) {
+            throw new IllegalStateException("플레이어 카드 정보를 찾을 수 없습니다: " + request.getFrom());
+        }
+
+        List<Card> cards = playerCards.get(request.getFrom());
+
+        boolean cardRemoved = false;
+        for (int i = 0; i < cards.size(); i++) {
+            if (cards.get(i).getType().equals(request.getCard().getType())) {
+                cards.remove(i);
+                cardRemoved = true;
+                break;
+            }
+        }
+
+        if (!cardRemoved) {
+            throw new IllegalStateException("전달하려는 카드가 플레이어의 패에 없습니다: " + request.getCard());
+        }
+
+        // 업데이트된 카드 리스트를 playerCards에 반영
+        playerCards.put(request.getFrom(), cards);
+        roomInfo.put("playerCards", playerCards);
+
+        redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
+
+        ResponseGiveCard response = ResponseGiveCard.builder()
+                .to(request.getTo())
+                .from(request.getFrom())
+                .card(request.getCard())
+                .animal(request.getAnimal())
+                .isNagative(request.isNagative())
+                .isKing(request.isKing())
+                .build();
+
+        return response;
+    }
+
+    @Override
+    public ResponseCheckCard checkCard(String roomId, RequestCheckCard request) {
+        Map<String, Object> roomInfo =
+                (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+
+        if (roomInfo == null) {
+            throw new IllegalArgumentException("방을 찾을 수 없습니다: " + roomId);
+        }
+
+        if (request.isCorrect()) {
+            Map<String, List<Card>> playerTables = (Map<String, List<Card>>) roomInfo.get("userTableCards");
+            if (playerTables == null || !playerTables.containsKey(request.getFrom())) {
+                throw new IllegalStateException("플레이어 테이블 정보를 찾을 수 없습니다: " + request.getFrom());
+            }
+
+            List<Card> table = playerTables.get(request.getFrom());
+
+//            table.add()
+
+        }
+
+        return null;
     }
 
     /* 카드 초기 설정 */

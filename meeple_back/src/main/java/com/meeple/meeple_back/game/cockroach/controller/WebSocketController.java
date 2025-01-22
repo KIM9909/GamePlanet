@@ -1,5 +1,9 @@
 package com.meeple.meeple_back.game.cockroach.controller;
 
+import com.meeple.meeple_back.game.cockroach.model.request.RequestCheckCard;
+import com.meeple.meeple_back.game.cockroach.model.request.RequestGiveCard;
+import com.meeple.meeple_back.game.cockroach.model.response.ResponseCheckCard;
+import com.meeple.meeple_back.game.cockroach.model.response.ResponseGiveCard;
 import com.meeple.meeple_back.game.cockroach.model.response.ResponseStartGame;
 import com.meeple.meeple_back.game.cockroach.service.CockroachService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +11,7 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.Map;
@@ -61,5 +66,25 @@ public class WebSocketController {
     ) {
         System.out.println("게임 시작 호출");
         return cockroachService.startGame(roomId);
+    }
+
+    @MessageMapping("/game/give-card/{roomId}")
+    @SendTo("/topic/game/{roomId}")
+    public ResponseGiveCard giveCard(
+            @DestinationVariable String roomId,
+            @RequestBody RequestGiveCard request
+            ) {
+
+        return cockroachService.giveCard(roomId, request);
+    }
+
+    @MessageMapping("/game/check-card/{roomId}")
+    @SendTo("/topic/game/{roomId}")
+    public ResponseCheckCard checkCard(
+            @DestinationVariable String roomId,
+            @RequestBody RequestCheckCard request
+            ) {
+
+        return cockroachService.checkCard(roomId, request);
     }
 }
