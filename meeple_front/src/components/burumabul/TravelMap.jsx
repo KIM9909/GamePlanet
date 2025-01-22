@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Dice from "./Dice"
 
 const TravelMap = () => {
@@ -17,7 +18,14 @@ const TravelMap = () => {
   const cells = Array.from({ length: totalCells }, (_, i) => i); // 칸 번호
   const [currentPosition, setCurrentPosition] = useState(39); // 현재 말 위치
   const [isFirstMove, setIsFirstMove] = useState(true)
-  const [showDice, setShowDice] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+
+  // 주사위 점수 저장
+  const [totalScore, setTotalScore] = useState(0);
+  const handleDiceComplete = (score) => {
+    setTotalScore(score); //점수 업데이트
+    setShowModal(false);
+  }
 
   // 칸 스타일
   const cellClass =
@@ -60,48 +68,58 @@ const TravelMap = () => {
 
 
   const rollDice = () => {
-    setShowDice(true);
+    setShowModal(true);
   }
 
   return (
-    <div className="flex flex-col items-center mt-10">
-      <h1 className="text-2xl font-bold mb-5">부루마불 보드</h1>
-      <div className={boardClass}>
-        {/* 상단 줄 */}
-        <div className="flex">{topRow}</div>
-        {/* 중간 부분 */}
-        <div className="flex">
-          {/* 왼쪽 열 */}
-          <div className="flex flex-col">
-            {leftColumn}
-          </div> 
-          {/* 중앙 빈 공간 */}
-          <div className="w-[calc(9*5rem)] h-[calc(9*5rem)] bg-sky-200"></div>
-          {/* 오른쪽 열 */}
-          <div className="flex flex-col">
-            {rightColumn}
+    <>
+      <div className="flex flex-col items-center my-10">
+        <h1 className="text-2xl font-bold mb-5">부루마불 보드</h1>
+        <div className={boardClass}>
+          {/* 상단 줄 */}
+          <div className="flex">{topRow}</div>
+          {/* 중간 부분 */}
+          <div className="flex">
+            {/* 왼쪽 열 */}
+            <div className="flex flex-col">
+              {leftColumn}
+            </div> 
+            {/* 중앙 빈 공간 */}
+            <div className="w-[calc(9*5rem)] h-[calc(9*5rem)] bg-sky-200"></div>
+            {/* 오른쪽 열 */}
+            <div className="flex flex-col">
+              {rightColumn}
+            </div>
           </div>
+          {/* 하단 줄 */}
+          <div className="flex">{bottomRow}</div>
         </div>
-        {/* 하단 줄 */}
-        <div className="flex">{bottomRow}</div>
+        {/* 이동 버튼 + 주사위 버튼 */}
+        <div className="flex">
+          <button
+            onClick={moveToken}
+            className="mt-5 mx-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Move Token
+          </button>
+          <button 
+            onClick={rollDice}
+            className="mt-5 mx-3 px-4 py-2 bg-red-300 text-white rounded hover:bg-blue-600"
+          >
+            Roll the Dice
+          </button>
+        </div>
       </div>
-      {/* 이동 버튼 + 주사위 버튼 */}
-      <div className="flex">
-        <button
-          onClick={moveToken}
-          className="mt-5 mx-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Move Token
-        </button>
-        <button 
-          onClick={rollDice}
-          className="mt-5 mx-3 px-4 py-2 bg-red-300 text-white rounded hover:bg-blue-600"
-        >
-          Roll the Dice
-        </button>
-        {showDice && <Dice />}
-      </div>
-    </div>
+      {totalScore !== 0 && (
+        <p className="mt-5 text-lg">마지막 주사위 점수 : <strong>{totalScore}</strong></p>
+      )}
+      {showModal && createPortal(
+        <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm z-50">
+            <Dice onComplete={handleDiceComplete} onClose={() => setShowModal(false)} />,
+        </div>,
+        document.body
+      )}
+    </>
   );
 };
 
