@@ -1,6 +1,7 @@
 package com.meeple.meeple_back.user.controller;
 
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -24,11 +25,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
 @TestPropertySource("classpath:test-application.properties")
-
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase
 @SqlGroup({
-//		@Sql(value = "/sql/post-create-controller-test-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
+		@Sql(value = "/sql/post-create-controller-test-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
 		@Sql(value = "/sql/delete-all-data.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 })
 class UserControllerTest {
@@ -89,5 +89,20 @@ class UserControllerTest {
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(userRegistDto)))
 				.andExpect(status().is4xxClientError());
+	}
+
+	void 중복된_이메일을_조회했을때_True를_반환한다() throws Exception {
+		//given
+		String userEmail = "dummyUser1@example.com";
+		//when
+		//then
+		mockMvc.perform(get("/user/checkEmail/dummyUser1@example.com").contentType(
+						MediaType.APPLICATION_JSON))
+				.andExpect(result -> Assertions.assertTrue(
+						Boolean.parseBoolean(result.getResponse().getContentAsString())));
+	}
+
+	@Test
+	void isDuplicateNickname() {
 	}
 }
