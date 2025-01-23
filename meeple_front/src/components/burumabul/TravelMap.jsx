@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Canvas, render, useThree, useFrame, useLoader, } from "@react-three/fiber"
-import { Center, OrbitControls, RoundedBox, Text, Edges } from "@react-three/drei";
+import { OrbitControls, Text, Edges } from "@react-three/drei";
 import Dice from "./Dice"
-import { TextureLoader, BoxGeometry } from "three";
+import { TextureLoader } from "three";
 import spaceBackground from "../../assets/burumabul_images/space.jpg"
 
 import earthTexture from "../../assets/burumabul_images/earth.jpg"
@@ -107,6 +107,21 @@ const TravelMap = () => {
     });
   };
 
+  // 카메라 위치 초기화하기 위한..
+  const orbitControlsRef = useRef();
+  const initialCameraPosition = [-20, 30, 0]; // 초기 카메라 위치
+  const initialTarget = [0, 0, 0]; // 초기 카메라 타겟
+
+  const resetCamera = () => {
+    if (orbitControlsRef.current) {
+      orbitControlsRef.current.object.position.set(
+        ...initialCameraPosition
+      ); // 카메라 위치 초기화
+      orbitControlsRef.current.target.set(...initialTarget); // 타겟 초기화
+      orbitControlsRef.current.update(); // OrbitControls 업데이트 
+    }
+  };
+
 
   // 칸별 내용 생성
   const renderCells = () => {
@@ -144,36 +159,43 @@ const TravelMap = () => {
 
   return (
     <>
-      <div style={{
-          display: "flex", 
-          justifyContent: "center",
-          alignItems: "center"
-          }}>
-        <div style={{ 
-          height: "100vh", 
-          width : "80vw",
+      <div className="flex h-screen">
+          
+          {/* 좌측 영역 */}
+          <div className="flex flex-col w-1/5 bg-gray-100 p-4 text-center">
+            <div className="h-1/2">
+              user1
+            </div>
+            <div className="h-1/2">
+              user2
+            </div>
+          </div>
+          <div style={{ 
+          height: "100vh",
+          width: "80vw"
         }}>
           <Canvas
             camera={{
-              position: [0, 15, 25], // 카메라 초기 위치
-              fov: 80, // 시야각 조절
+              position: initialCameraPosition, // 카메라 초기 위치
+              fov: 75, // 시야각 조절
             }}
             onCreated={({ scene }) => {
               const texture = new TextureLoader().load(spaceBackground);
               scene.background = texture;
             }}>
             <ambientLight intensity={5} />
-            <pointLight position={[10, 10, 10]} intensity={2}/>
+            <pointLight position={[10, 20, 10]} intensity={2}/>
 
             {/* 바닥 생성 */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]}>
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.18, 0]}>
               <planeGeometry args={[16.5, 16.5]} />
               <meshStandardMaterial color="#d1d1d1" />
             </mesh>
 
             {/* OrbitControls로 카메라 이동 및 확대/축소 제어 */}
             <OrbitControls 
-              target={[0, 0, 0]} 
+              ref={orbitControlsRef}
+              target={initialTarget} 
               makeDefault
               maxPolarAngle={Math.PI / 2.5} // 위쪽으로 카메라 제한
               minDistance={10} // 최소 줌 거리
@@ -182,6 +204,16 @@ const TravelMap = () => {
             {renderCells()}
           </Canvas>
         </div>
+          <div className="flex flex-col w-1/5 bg-gray-100 p-4 text-center">
+            <div className="h-1/2">
+              user3
+            </div>
+            <div className="h-1/2">
+              user4
+            </div>
+          </div>
+          
+        
       </div>
           {/* 이동 버튼 + 주사위 버튼 */}
           <div className="flex justify-center mb-5">
@@ -197,10 +229,16 @@ const TravelMap = () => {
             >
               Roll the Dice
             </button>
+            <button 
+              onClick={resetCamera} 
+              className="mt-5 mx-3 px-4 py-2 bg-yellow-300 text-white rounded hover:bg-blue-600"
+            >Reset Camera</button>
           </div>
-          {totalScore !== 0 && (
-            <p className="mt-5 text-lg">마지막 주사위 점수 : <strong>{totalScore}</strong></p>
-          )}
+          <div className="text-center">
+            {totalScore !== 0 && (
+              <p className="mt-5 text-lg">마지막 주사위 점수 : <strong>{totalScore}</strong></p>
+            )}
+          </div>
           {showModal && createPortal(
             <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm z-50">
                 <Dice onComplete={handleDiceComplete} onClose={() => setShowModal(false)} />,
