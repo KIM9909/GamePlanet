@@ -27,7 +27,7 @@ function App() {
           
           {/* Game */}
           <Route path="/game/burumabul" element={<BurumabulPage />} />
-          <Route path="/game/cockroachpoker/:roomId" element={<CockroachPokerPage />} />
+          <Route path="/game/cockroach/:roomId" element={<CockroachPokerPage />} />
           
           {/* GameInfo */}
           <Route path="/game/:gameId" element={<GameInfoPage />} />

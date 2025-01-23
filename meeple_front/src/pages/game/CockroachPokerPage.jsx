@@ -1,154 +1,66 @@
 import React, { useState } from 'react';
-import styled from 'styled-components';
 import { useParams } from 'react-router-dom';
 import useSocket from '../../hooks/useSocket';
-import { Card, CardList, CARD_TYPES } from '../../components/cockroachcard';
 import GameBoard from '../../components/cockroachcard/GameBoard';
+import GameSidebar from '../../components/sidebar/GameSidebar';
 
 const CockroachPokerPage = () => {
   const { roomId } = useParams();
-  const [message, setMessage] = useState('');
   const { connected, sendMessage, startGame } = useSocket(roomId);
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [playerCount, setPlayerCount] = useState(4);
 
-  const handleSendMessage = (e) => {
-    e.preventDefault();
-    if (message.trim()) {
-      sendMessage(message);
-      setMessage('');
-    }
-  };
-
-  const [cards, setCards] = useState([
-    { type: 'BAT', isFlipped: false },
-    { type: 'COCKROACH', isFlipped: false },
-    { type: 'FLY', isFlipped: false },
-    { type: 'RAT', isFlipped: false },
-    { type: 'SCORPION', isFlipped: false },
-    { type: 'STINKBUG', isFlipped: false },
-    { type: 'TOAD', isFlipped: false },
-    { type: 'KING_BAT', isFlipped: false },
-    { type: 'KING_COCKROACH', isFlipped: false },
-    { type: 'KING_FLY', isFlipped: false },
-    { type: 'KING_RAT', isFlipped: false },
-    { type: 'KING_SCORPION', isFlipped: false },
-    { type: 'KING_STINKBUG', isFlipped: false },
-    { type: 'KING_TOAD', isFlipped: false },
-    { type: 'JOCKER', isFlipped: false },
-    { type: 'BLACK' , isFlipped: false}
-  ]);
-
-  const handleCardClick = (index) => {
-    setCards(cards.map((card, i) => 
-      i === index ? { ...card, isFlipped: !card.isFlipped } : card
-    ));
+  const toggleSidebar = () => {
+    setSidebarOpen(!isSidebarOpen);
   };
 
   return (
-    <Container>
-      <GameStatus>
-        <Status $connected={connected}>
-          {connected ? '연결됨' : '연결 중...'}
-        </Status>
-        <StartButton onClick={startGame}>
-          게임 시작
-        </StartButton>
-      </GameStatus>
+    <div className="h-screen w-screen flex bg-gray-900">
+      {/* 사이드바 */}
+      <div className={`transition-transform duration-300 ease-in-out transform 
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
+        relative z-50`}>
+        <GameSidebar />
+        <button
+          onClick={toggleSidebar}
+          className="absolute -right-12 top-1/2 -translate-y-1/2 w-12 h-12 
+            bg-gray-800 rounded-r text-white hover:bg-gray-700 
+            focus:outline-none flex items-center justify-center"
+        >
+          {isSidebarOpen ? '←' : '→'}
+        </button>
+      </div>
 
-      <ChatSection>
-        <ChatBox>
-          {/* 채팅 메시지들 */}
-        </ChatBox>
-        <ChatForm onSubmit={handleSendMessage}>
-          <ChatInput
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="메시지를 입력하세요"
-          />
-          <SendButton type="submit">전송</SendButton>
-        </ChatForm>
-      </ChatSection>
+      {/* 메인 게임 영역 */}
+      <div className="flex-1 flex flex-col">
+        {/* 게임 보드 */}
+        <div className="flex-1 overflow-hidden">
+          <GameBoard playerCount={playerCount} />
+        </div>
 
-      <GameSection>
-        <CardList 
-          cards={cards} 
-          onCardClick={handleCardClick}
-        />
-        <GameBoard/>
-      </GameSection>
-    </Container>
+        {/* 인원 선택 버튼 */}
+        <div className="flex justify-center gap-2 py-2 bg-gray-800">
+          {[2, 3, 4].map(count => (
+            <button 
+              key={count}
+              onClick={() => setPlayerCount(count)}
+              className={`px-3 py-1 text-sm rounded 
+                ${playerCount === count 
+                  ? 'bg-blue-500 text-white' 
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+            >
+              {count}인
+            </button>
+          ))}
+        </div>
+
+        {/* 화상 채팅 영역 */}
+        <div className="h-48 bg-gray-800 border-t border-gray-700">
+          <div className="text-white p-4">화상 채팅 영역 (개발 예정)</div>
+        </div>
+      </div>
+    </div>
   );
 };
-
-const Container = styled.div`
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-`;
-
-const GameStatus = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-`;
-
-const Status = styled.span`
-  color: ${props => props.$connected ? 'green' : 'red'};
-`;
-
-const StartButton = styled.button`
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-
-  &:hover {
-    background-color: #0056b3;
-  }
-`;
-
-const ChatSection = styled.div`
-  margin-bottom: 20px;
-`;
-
-const ChatBox = styled.div`
-  height: 200px;
-  overflow-y: auto;
-  border: 1px solid #ccc;
-  padding: 10px;
-  margin-bottom: 10px;
-`;
-
-const ChatForm = styled.form`
-  display: flex;
-`;
-
-const ChatInput = styled.input`
-  flex: 1;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-`;
-
-const SendButton = styled.button`
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-
-  &:hover {
-    background-color: #0056b3;
-  }
-`;
-
-const GameSection = styled.div`
-  margin-top: 20px;
-`;
 
 export default CockroachPokerPage;
