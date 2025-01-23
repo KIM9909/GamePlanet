@@ -9,7 +9,6 @@ import io.jsonwebtoken.security.Keys;
 import java.security.Key;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -24,7 +23,8 @@ public class JwtUtil {
 
 	private final RedisTemplate<String, String> redisTemplate;
 
-	public JwtUtil(@Qualifier("redisTemplate") RedisTemplate<String, String> redisTemplate) {
+	
+	public JwtUtil(RedisTemplate<String, String> redisTemplate) {
 		this.redisTemplate = redisTemplate;
 	}
 
