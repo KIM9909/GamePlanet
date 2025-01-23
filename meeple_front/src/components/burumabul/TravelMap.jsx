@@ -1,13 +1,22 @@
 import React, { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Canvas, render, useThree, useFrame } from "@react-three/fiber";
-import { Center, OrbitControls, RoundedBox, Text } from "@react-three/drei";
-import Dice from "./Dice";
-import { MeshStandardMaterial } from "three";
+import { Canvas, render, useThree, useFrame, useLoader, } from "@react-three/fiber"
+import { OrbitControls, Text, Edges } from "@react-three/drei";
+import Dice from "./Dice"
+import { TextureLoader } from "three";
+import spaceBackground from "../../assets/burumabul_images/space.jpg"
 
-const Cell = ({ position, isHighlight, name }) => {
+import earthTexture from "../../assets/burumabul_images/earth.jpg"
+import marsTexture from "../../assets/burumabul_images/mars.jpg"
+
+
+const Cell = ({ position, isHighlight, name, textureUrl, topTextureUrl }) => {
   const textRef = useRef();
   const { camera } = useThree();
+
+  // TextureLoader로 텍스쳐 로드
+  const texture = textureUrl ? useLoader(TextureLoader, textureUrl) : null ;
+  const topTexture = topTextureUrl ? useLoader(TextureLoader, topTextureUrl) : null ;
 
   useFrame(() => {
     if (textRef.current) {
@@ -17,15 +26,37 @@ const Cell = ({ position, isHighlight, name }) => {
 
   return (
     <mesh position={position}>
-      {/* 셀 박스 */}
-      <sphereGeometry args={[0.5, 32, 32]} />
-      <meshStandardMaterial color={isHighlight ? "red" : "white"} />
+      {/* 셀 박스 + 둥근 직육면체 */}
+      <boxGeometry args={[1.5, 0.2, 1.4]} />
+      {/* 각 면의 텍스처 및 색상 설정 */}
+      <meshStandardMaterial color={isHighlight ? "#ff6b6b" : "white"} />
+
+      <Edges
+        scale={1}
+        threshold={15} // 모서리 표시 임계값
+        color="black"
+      />
+
+      {/* 윗면에만 텍스쳐 적용 */}
+      {topTexture && (
+        <mesh position={[0, 0.101, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[1.5, 1.4]} />
+          <meshStandardMaterial
+            map={topTexture}
+            transparent={true}
+          />
+        </mesh>
+      )}
+
+
+
+
       {/* 셀 이름 */}
       <Text
         ref={textRef}
-        position={[0, 0.65, 0]} // 박스 위에 텍스트 표시
+        position={[0, 0.8, 0]} // 박스 위에 텍스트 표시
         fontSize={0.2}
-        color="black"
+        color="gray"
         anchorX="center"
         anchorY="middle"
       >
@@ -110,36 +141,51 @@ const TravelMap = () => {
     });
   };
 
+  // 카메라 위치 초기화하기 위한..
+  const orbitControlsRef = useRef();
+  const initialCameraPosition = [-20, 30, 0]; // 초기 카메라 위치
+  const initialTarget = [0, 0, 0]; // 초기 카메라 타겟
+
+  const resetCamera = () => {
+    if (orbitControlsRef.current) {
+      orbitControlsRef.current.object.position.set(
+        ...initialCameraPosition
+      ); // 카메라 위치 초기화
+      orbitControlsRef.current.target.set(...initialTarget); // 타겟 초기화
+      orbitControlsRef.current.update(); // OrbitControls 업데이트 
+    }
+  };
+
+
   // 칸별 내용 생성
-  const renderCells = (index) => {
+  const renderCells = () => {
     const positions = [];
-    const step = 1.3;
-    const centerOffset = ((size - 1) * step) / 2; // 중심 좌표 계산
+    const step = 1.495;
+    const centerOffset = (size - 1) * step / 2; // 중심 좌표 계산
+
     let x = -centerOffset;
     let z = -centerOffset;
 
-    for (let i = 0; i < size - 1; i++) positions.push([x + i * step, 0, z]);
-    for (let i = 0; i < size - 1; i++)
-      positions.push([x + (size - 1) * step, 0, z + i * step]);
-    for (let i = 0; i < size - 1; i++)
-      positions.push([x + (size - 1 - i) * step, 0, z + (size - 1) * step]);
-    for (let i = 0; i < size - 1; i++)
-      positions.push([x, 0, z + (size - 1 - i) * step]);
+    const topTextures = [
+      earthTexture, marsTexture
+    ]
+
+    for (let i = 0; i < size -1; i++) positions.push([x + i * step, 0, z]);
+    for (let i = 0; i < size - 1; i++) positions.push([x + (size - 1) * step, 0, z + i * step]);
+    for (let i = 0; i < size - 1; i++) positions.push([x + (size - 1 - i) * step, 0, z + (size - 1) * step]);
+    for (let i = 0; i < size - 1; i++) positions.push([x, 0, z + (size - 1 - i) * step]);
 
     return positions.map((pos, index) => (
-      <Cell
-        key={index}
-        position={pos}
-        isHighlight={index === currentPosition}
+      <Cell 
+        key={index} 
+        position={pos} 
+        isHighlight={index === currentPosition} 
         name={cities[index]}
-      />
-    ));
+        topTextureUrl = {topTextures[index]} />
+
+    ))
   };
 
-  // const topRow = cells.slice(size-2, size * 2 - 2).map(renderCell);
-  // const rightColumn = cells.slice(size * 2 - 2, size * 3 - 4).map(renderCell);
-  // const bottomRow = cells.slice(size * 3 - 4, totalCells).reverse().map(renderCell);
-  // const leftColumn = cells.slice(0, size-2).reverse().map(renderCell);
 
   const rollDice = () => {
     setShowModal(true);
@@ -147,30 +193,43 @@ const TravelMap = () => {
 
   return (
     <>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <div
-          style={{
-            height: "100vh",
-            width: "80vw",
-          }}
-        >
+      <div className="flex h-screen">
+          
+          {/* 좌측 영역 */}
+          <div className="flex flex-col w-1/5 bg-gray-100 p-4 text-center">
+            <div className="h-1/2">
+              user1
+            </div>
+            <div className="h-1/2">
+              user2
+            </div>
+          </div>
+          <div style={{ 
+          height: "100vh",
+          width: "80vw"
+        }}>
           <Canvas
             camera={{
-              position: [0, 15, 25], // 카메라 초기 위치
-              fov: 80, // 시야각 조절
+              position: initialCameraPosition, // 카메라 초기 위치
+              fov: 75, // 시야각 조절
             }}
-          >
-            <ambientLight intensity={4.5} />
-            <pointLight position={[10, 10, 10]} />
+            onCreated={({ scene }) => {
+              const texture = new TextureLoader().load(spaceBackground);
+              scene.background = texture;
+            }}>
+            <ambientLight intensity={5} />
+            <pointLight position={[10, 20, 10]} intensity={2}/>
+
+            {/* 바닥 생성 */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.18, 0]}>
+              <planeGeometry args={[16.5, 16.5]} />
+              <meshStandardMaterial color="#d1d1d1" />
+            </mesh>
+
             {/* OrbitControls로 카메라 이동 및 확대/축소 제어 */}
-            <OrbitControls
-              target={[0, 0, 0]}
+            <OrbitControls 
+              ref={orbitControlsRef}
+              target={initialTarget} 
               makeDefault
               maxPolarAngle={Math.PI / 2.5} // 위쪽으로 카메라 제한
               minDistance={10} // 최소 줌 거리
@@ -179,38 +238,47 @@ const TravelMap = () => {
             {renderCells()}
           </Canvas>
         </div>
+          <div className="flex flex-col w-1/5 bg-gray-100 p-4 text-center">
+            <div className="h-1/2">
+              user3
+            </div>
+            <div className="h-1/2">
+              user4
+            </div>
+          </div>
+          
+        
       </div>
-      {/* 이동 버튼 + 주사위 버튼 */}
-      <div className="flex justify-center mb-5">
-        <button
-          onClick={moveToken}
-          className="mt-5 mx-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Move Token
-        </button>
-        <button
-          onClick={rollDice}
-          className="mt-5 mx-3 px-4 py-2 bg-red-300 text-white rounded hover:bg-blue-600"
-        >
-          Roll the Dice
-        </button>
-      </div>
-      {totalScore !== 0 && (
-        <p className="mt-5 text-lg">
-          마지막 주사위 점수 : <strong>{totalScore}</strong>
-        </p>
-      )}
-      {showModal &&
-        createPortal(
-          <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm z-50">
-            <Dice
-              onComplete={handleDiceComplete}
-              onClose={() => setShowModal(false)}
-            />
-            ,
-          </div>,
-          document.body
-        )}
+          {/* 이동 버튼 + 주사위 버튼 */}
+          <div className="flex justify-center mb-5">
+            <button
+              onClick={moveToken}
+              className="mt-5 mx-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Move Token
+            </button>
+            <button 
+              onClick={rollDice}
+              className="mt-5 mx-3 px-4 py-2 bg-red-300 text-white rounded hover:bg-blue-600"
+            >
+              Roll the Dice
+            </button>
+            <button 
+              onClick={resetCamera} 
+              className="mt-5 mx-3 px-4 py-2 bg-yellow-300 text-white rounded hover:bg-blue-600"
+            >Reset Camera</button>
+          </div>
+          <div className="text-center">
+            {totalScore !== 0 && (
+              <p className="mt-5 text-lg">마지막 주사위 점수 : <strong>{totalScore}</strong></p>
+            )}
+          </div>
+          {showModal && createPortal(
+            <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm z-50">
+                <Dice onComplete={handleDiceComplete} onClose={() => setShowModal(false)} />,
+            </div>,
+            document.body
+          )}
     </>
   );
 };
