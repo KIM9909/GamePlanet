@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useParams } from 'react-router-dom';
-import useSocket from '../../hooks/useSocket';
-import { Card, CardList, CARD_TYPES } from '../../components/cockroachcard';
-import GameBoard from '../../components/cockroachcard/GameBoard';
+import useSocket from '../hooks/useSocket';
 
-const CockroachPokerPage = () => {
+const GameRoom = () => {
   const { roomId } = useParams();
   const [message, setMessage] = useState('');
   const { connected, sendMessage, startGame } = useSocket(roomId);
@@ -16,31 +14,6 @@ const CockroachPokerPage = () => {
       sendMessage(message);
       setMessage('');
     }
-  };
-
-  const [cards, setCards] = useState([
-    { type: 'BAT', isFlipped: false },
-    { type: 'COCKROACH', isFlipped: false },
-    { type: 'FLY', isFlipped: false },
-    { type: 'RAT', isFlipped: false },
-    { type: 'SCORPION', isFlipped: false },
-    { type: 'STINKBUG', isFlipped: false },
-    { type: 'TOAD', isFlipped: false },
-    { type: 'KING_BAT', isFlipped: false },
-    { type: 'KING_COCKROACH', isFlipped: false },
-    { type: 'KING_FLY', isFlipped: false },
-    { type: 'KING_RAT', isFlipped: false },
-    { type: 'KING_SCORPION', isFlipped: false },
-    { type: 'KING_STINKBUG', isFlipped: false },
-    { type: 'KING_TOAD', isFlipped: false },
-    { type: 'JOCKER', isFlipped: false },
-    { type: 'BLACK' , isFlipped: false}
-  ]);
-
-  const handleCardClick = (index) => {
-    setCards(cards.map((card, i) => 
-      i === index ? { ...card, isFlipped: !card.isFlipped } : card
-    ));
   };
 
   return (
@@ -69,11 +42,7 @@ const CockroachPokerPage = () => {
       </ChatSection>
 
       <GameSection>
-        <CardList 
-          cards={cards} 
-          onCardClick={handleCardClick}
-        />
-        <GameBoard/>
+        {/* 게임 관련 UI */}
       </GameSection>
     </Container>
   );
@@ -93,20 +62,20 @@ const GameStatus = styled.div`
 `;
 
 const Status = styled.span`
-  color: ${props => props.$connected ? 'green' : 'red'};
+  color: ${props => props.$connected ? 'green' : 'orange'};
+  font-weight: bold;
 `;
 
 const StartButton = styled.button`
-  padding: 10px 20px;
-  background-color: #007bff;
+  padding: 8px 16px;
+  background-color: #4CAF50;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.3s;
 
   &:hover {
-    background-color: #0056b3;
+    background-color: #45a049;
   }
 `;
 
@@ -115,40 +84,44 @@ const ChatSection = styled.div`
 `;
 
 const ChatBox = styled.div`
-  height: 200px;
-  overflow-y: auto;
-  border: 1px solid #ccc;
+  height: 300px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
   padding: 10px;
+  overflow-y: auto;
   margin-bottom: 10px;
 `;
 
 const ChatForm = styled.form`
   display: flex;
+  gap: 10px;
 `;
 
 const ChatInput = styled.input`
   flex: 1;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
 `;
 
 const SendButton = styled.button`
-  padding: 10px 20px;
-  background-color: #007bff;
+  padding: 8px 16px;
+  background-color: #2196F3;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.3s;
 
   &:hover {
-    background-color: #0056b3;
+    background-color: #1976D2;
   }
 `;
 
 const GameSection = styled.div`
-  margin-top: 20px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 20px;
+  min-height: 400px;
 `;
 
-export default CockroachPokerPage;
+export default GameRoom; 
