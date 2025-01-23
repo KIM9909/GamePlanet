@@ -4,7 +4,6 @@ import lombok.Data;
 
 @Data
 public class RequestSendMessage {
-    String roomId;
     String message;
     String sender;
 }

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,16 +22,20 @@ import java.util.Map;
 public class WebSocketController {
 
     private final CockroachService cockroachService;
+    private final SimpMessageSendingOperations messagingTemplate;
 
     @Autowired
-    public WebSocketController(CockroachService cockroachService) {
+    public WebSocketController(CockroachService cockroachService,
+        SimpMessageSendingOperations messagingTemplate) {
         this.cockroachService = cockroachService;
+        this.messagingTemplate = messagingTemplate;
     }
 
-
     @MessageMapping("/chat/{roomId}")
-    public void handleMessage(@RequestBody RequestSendMessage request) {
-        if (request.getRoomId() == null || request.getRoomId().isEmpty()) {
+    public void handleMessage(
+        @DestinationVariable String roomId,
+        @RequestBody RequestSendMessage request) {
+        if (roomId == null || roomId.isEmpty()) {
             throw new IllegalArgumentException("유효하지 않은 roomId 입니다.");
         }
 
@@ -39,55 +44,41 @@ public class WebSocketController {
         }
 
         // 받은 메시지를 콘솔에 출력 (디버깅용)
-        System.out.println("Received message in room " + request.getRoomId() + ": "
+        System.out.println("Received message in room " + roomId + ": "
             + request.getMessage());
 
-        cockroachService.sendMessage(request);
+        cockroachService.sendMessage(roomId, request);
     }
 
-    /**
-     * 게임 이벤트를 처리하는 메서드
-     *
-     * @param gameEvent 클라이언트가 전송한 게임 이벤트 데이터 (JSON 형식으로 매핑)
-     * @return 클라이언트로 브로드캐스트할 게임 이벤트 데이터
-     */
-    @MessageMapping("/game/{roomId}")
-    @SendTo("/topic/game/{roomId}")
-    public Map<String, Object> handleGameEvent(Map<String, Object> gameEvent) {
-        // 받은 게임 이벤트 데이터를 콘솔에 출력 (디버깅용)
-        System.out.println("Received game event: " + gameEvent);
-
-        // 게임 이벤트 데이터를 그대로 반환하여 구독 중인 클라이언트들에게 브로드캐스트
-        return gameEvent;
-    }
 
     // MessageMapping 경로를 분리해서 행위별로 구분
     @MessageMapping("/game/start-game/{roomId}")
-    @SendTo("/topic/game/{roomId}")
-    public ResponseStartGame startGame(
+    public void startGame(
         @DestinationVariable String roomId
     ) {
         System.out.println("게임 시작 호출");
-        return cockroachService.startGame(roomId);
+        ResponseStartGame response = cockroachService.startGame(roomId);
+
+        messagingTemplate.convertAndSend("/topic/game/" + roomId, response);
     }
 
     @MessageMapping("/game/give-card/{roomId}")
-    @SendTo("/topic/game/{roomId}")
-    public ResponseGiveCard giveCard(
+    public void giveCard(
         @DestinationVariable String roomId,
         @RequestBody RequestGiveCard request
     ) {
+        ResponseGiveCard response = cockroachService.giveCard(roomId, request);
 
-        return cockroachService.giveCard(roomId, request);
+        messagingTemplate.convertAndSend("/topic/game/" + roomId, response);
     }
 
     @MessageMapping("/game/check-card/{roomId}")
-    @SendTo("/topic/game/{roomId}")
-    public ResponseCheckCard checkCard(
+    public void checkCard(
         @DestinationVariable String roomId,
         @RequestBody RequestCheckCard request
     ) {
+        ResponseCheckCard resposne = cockroachService.checkCard(roomId, request);
 
-        return cockroachService.checkCard(roomId, request);
+        messagingTemplate.convertAndSend("/topic/game/" + roomId, resposne);
     }
 }

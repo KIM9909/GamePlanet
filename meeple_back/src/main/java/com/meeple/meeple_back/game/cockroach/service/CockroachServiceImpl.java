@@ -39,16 +39,16 @@ public class CockroachServiceImpl implements CockroachService {
     }
 
     @Override
-    public void sendMessage(RequestSendMessage request) {
+    public void sendMessage(String roomId, RequestSendMessage request) {
         ChatMessage chatMessage = ChatMessage.builder()
-            .roomId(request.getRoomId())
+            .roomId(roomId)
             .sender(request.getSender())
             .content(request.getMessage())
             .timestamp(LocalDateTime.now())
             .build();
 
         messagingTemplate
-            .convertAndSend("/topic/messages/" + request.getRoomId(), chatMessage);
+            .convertAndSend("/topic/messages/" + roomId, chatMessage);
     }
 
     @Override
@@ -143,7 +143,8 @@ public class CockroachServiceImpl implements CockroachService {
         }
 
         if (!cardRemoved) {
-            throw new IllegalStateException("전달하려는 카드가 플레이어의 패에 없습니다: " + request.getCard());
+            throw new IllegalStateException("전달하려는 카드가 플레이어의 패에 없습니다: "
+                + request.getCard());
         }
 
         // 업데이트된 카드 리스트를 playerCards에 반영

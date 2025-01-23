@@ -16,5 +16,5 @@ public interface CockroachService {
     ResponseCheckCard checkCard(String roomId, RequestCheckCard request);
 
 
-    void sendMessage(RequestSendMessage request);
+    void sendMessage(String roomId, RequestSendMessage request);
 }
