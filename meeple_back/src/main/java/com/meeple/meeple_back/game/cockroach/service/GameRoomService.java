@@ -1,5 +1,9 @@
 package com.meeple.meeple_back.game.cockroach.service;
 
+import com.meeple.meeple_back.game.cockroach.model.entity.Room;
+import com.meeple.meeple_back.game.cockroach.repository.RoomRepository;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -15,11 +19,14 @@ public class GameRoomService {
 
     private static final String ROOM_KEY = "GAME_ROOMS";
 
-    private RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final RoomRepository roomRepository;
 
     @Autowired
-    public GameRoomService(RedisTemplate<String, Object> redisTemplate) {
+    public GameRoomService(RedisTemplate<String, Object> redisTemplate,
+        RoomRepository roomRepository) {
         this.redisTemplate = redisTemplate;
+        this.roomRepository = roomRepository;
     }
 
     public void createRoom(String roomId) {
@@ -32,7 +39,16 @@ public class GameRoomService {
         roomInfo.put("players", players);
         roomInfo.put("gameData", new HashMap<>());
         System.out.println("createRoom service 호출");
-        redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
+
+        Room room = Room.builder()
+            .roomName(roomId)
+            .createTime(LocalDateTime.now())
+            .build();
+
+        Room savedRoom = roomRepository.save(room);
+
+
+        redisTemplate.opsForHash().put(ROOM_KEY, savedRoom.getRoomId() + "", roomInfo);
     }
 
     public Map<String, Object> getRoom(String roomId) {

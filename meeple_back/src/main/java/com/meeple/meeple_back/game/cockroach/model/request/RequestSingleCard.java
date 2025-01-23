@@ -4,7 +4,7 @@ import com.meeple.meeple_back.game.cockroach.model.entity.Card;
 import lombok.Data;
 
 @Data
-public class RequestCheckCard {
+public class RequestSingleCard {
     private String from;    // 준 사람
     private String to;      // 받는 사람
     private Card card;      // 카드

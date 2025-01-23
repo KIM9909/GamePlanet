@@ -1,22 +1,20 @@
 package com.meeple.meeple_back.game.cockroach.controller;
 
-import com.meeple.meeple_back.game.cockroach.model.request.RequestCheckCard;
+import com.meeple.meeple_back.game.cockroach.model.request.RequestMultiCard;
+import com.meeple.meeple_back.game.cockroach.model.request.RequestSingleCard;
 import com.meeple.meeple_back.game.cockroach.model.request.RequestGiveCard;
 import com.meeple.meeple_back.game.cockroach.model.request.RequestSendMessage;
 import com.meeple.meeple_back.game.cockroach.model.response.ResponseCheckCard;
 import com.meeple.meeple_back.game.cockroach.model.response.ResponseGiveCard;
+import com.meeple.meeple_back.game.cockroach.model.response.ResponseMultiCard;
 import com.meeple.meeple_back.game.cockroach.model.response.ResponseStartGame;
 import com.meeple.meeple_back.game.cockroach.service.CockroachService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-
-import java.util.Map;
 
 @Controller
 public class WebSocketController {
@@ -72,13 +70,24 @@ public class WebSocketController {
         messagingTemplate.convertAndSend("/topic/game/" + roomId, response);
     }
 
-    @MessageMapping("/game/check-card/{roomId}")
-    public void checkCard(
+    @MessageMapping("/game/single-card/{roomId}")
+    public void singleCard(
         @DestinationVariable String roomId,
-        @RequestBody RequestCheckCard request
+        @RequestBody RequestSingleCard request
     ) {
-        ResponseCheckCard resposne = cockroachService.checkCard(roomId, request);
+        ResponseCheckCard response = cockroachService.singleCard(roomId, request);
 
-        messagingTemplate.convertAndSend("/topic/game/" + roomId, resposne);
+        messagingTemplate.convertAndSend("/topic/game/" + roomId, response);
     }
+
+    @MessageMapping("/game/multi-card/{roomId}")
+    public void multiCard(
+        @DestinationVariable String roomId,
+        @RequestBody RequestMultiCard request
+    ) {
+        ResponseMultiCard response = cockroachService.multiCard(roomId, request);
+
+        messagingTemplate.convertAndSend("/topic/game/" + roomId, response);
+    }
+
 }
