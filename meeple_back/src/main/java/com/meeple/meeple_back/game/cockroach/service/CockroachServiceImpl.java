@@ -4,24 +4,32 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.meeple.meeple_back.game.cockroach.model.entity.Card;
 import com.meeple.meeple_back.game.cockroach.model.entity.ChatMessage;
+import com.meeple.meeple_back.game.cockroach.model.entity.Room;
 import com.meeple.meeple_back.game.cockroach.model.request.RequestMultiCard;
 import com.meeple.meeple_back.game.cockroach.model.request.RequestSingleCard;
 import com.meeple.meeple_back.game.cockroach.model.request.RequestGiveCard;
 import com.meeple.meeple_back.game.cockroach.model.request.RequestSendMessage;
 import com.meeple.meeple_back.game.cockroach.model.response.ResponseCheckCard;
 import com.meeple.meeple_back.game.cockroach.model.response.ResponseGiveCard;
+import com.meeple.meeple_back.game.cockroach.model.response.ResponseMessage;
 import com.meeple.meeple_back.game.cockroach.model.response.ResponseMultiCard;
 import com.meeple.meeple_back.game.cockroach.model.response.ResponseStartGame;
+import com.meeple.meeple_back.game.cockroach.repository.ChatMessageRespository;
+import com.meeple.meeple_back.game.cockroach.repository.RoomRepository;
+import com.meeple.meeple_back.user.model.User;
+import com.meeple.meeple_back.user.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CockroachServiceImpl implements CockroachService {
@@ -32,25 +40,45 @@ public class CockroachServiceImpl implements CockroachService {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final SimpMessageSendingOperations messagingTemplate;
+    private final RoomRepository roomRepository;
+    private final ChatMessageRespository chatMessageRespository;
+    private final UserRepository userRepository;
 
     @Autowired
     public CockroachServiceImpl(RedisTemplate<String, Object> redisTemplate,
-        SimpMessageSendingOperations messagingTemplate) {
+        SimpMessageSendingOperations messagingTemplate, RoomRepository roomRepository,
+        ChatMessageRespository chatMessageRespository, UserRepository userRepository) {
         this.redisTemplate = redisTemplate;
         this.messagingTemplate = messagingTemplate;
+        this.roomRepository = roomRepository;
+        this.chatMessageRespository = chatMessageRespository;
+        this.userRepository = userRepository;
     }
 
     @Override
+    @Transactional
     public void sendMessage(String roomId, RequestSendMessage request) {
+        Optional<Room> room = roomRepository.findById(Integer.parseInt(roomId));
+        User sender = userRepository.findByUserNickname(request.getSender());
+
         ChatMessage chatMessage = ChatMessage.builder()
-            .roomId(roomId)
-            .sender(request.getSender())
+            .roomId(room.get())
+            .sender(sender)
             .content(request.getMessage())
             .timestamp(LocalDateTime.now())
             .build();
 
+        chatMessageRespository.save(chatMessage);
+
+        ResponseMessage responseMessage = ResponseMessage.builder()
+            .roomId(String.valueOf(room.get().getRoomId()))
+            .sender(sender.getUserNickname())
+            .timestamp(LocalDateTime.now())
+            .content(request.getMessage())
+            .build();
+
         messagingTemplate
-            .convertAndSend("/topic/messages/" + roomId, chatMessage);
+            .convertAndSend("/topic/messages/" + roomId, responseMessage);
     }
 
     @Override
