@@ -5,12 +5,17 @@ import { UserAPI } from "../../sources/api/UserAPI";
 import { useDispatch } from "react-redux";
 import { setToken } from "../../sources/api/store/slices/UserSlice";
 
-//  isOpen: 모달 표시 여부를 제어하는 prop
-//  onClose: 모달 닫기 함수
 const RegisterModal = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
 
-  // 초기 상태값들을 상수로 정의
+  const REGEX = {
+    email: /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
+    password:
+      /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{9,16}$/,
+    nickname: /^[a-zA-Z0-9가-힣]{2,10}$/,
+    name: /^[가-힣]{2,5}$/,
+  };
+
   const initialFormData = {
     userName: "",
     userEmail: "",
@@ -26,15 +31,17 @@ const RegisterModal = ({ isOpen, onClose }) => {
     nickname: false,
     nicknameChecked: false,
     passwordMatch: true,
+    validName: false,
+    validNickname: false,
+    validPassword: false,
+    validEmail: false,
   };
 
-  // useState를 사용한 상태 관리
   const [formData, setFormData] = useState(initialFormData);
   const [validations, setValidations] = useState(initialValidations);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // 모달 닫기 핸들러: 모든 상태를 초기화하고 모달을 닫음
   const handleClose = () => {
     setFormData(initialFormData);
     setValidations(initialValidations);
@@ -42,7 +49,25 @@ const RegisterModal = ({ isOpen, onClose }) => {
     onClose();
   };
 
-  // 입력 필드 변경 핸들러
+  const handleWheel = (e) => {
+    e.stopPropagation();
+  };
+
+  const validateField = (name, value) => {
+    switch (name) {
+      case "userName":
+        return REGEX.name.test(value);
+      case "userPassword":
+        return REGEX.password.test(value);
+      case "userEmail":
+        return REGEX.email.test(value);
+      case "userNickname":
+        return REGEX.nickname.test(value);
+      default:
+        return true;
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -50,28 +75,47 @@ const RegisterModal = ({ isOpen, onClose }) => {
       [name]: value,
     }));
 
-    // 이메일이나 닉네임이 변경되면 해당 검증 상태 초기화
+    const isValid = validateField(name, value);
+
     if (name === "userEmail") {
       setValidations((prev) => ({
         ...prev,
         email: false,
         emailChecked: false,
+        validEmail: isValid,
       }));
     } else if (name === "userNickname") {
       setValidations((prev) => ({
         ...prev,
         nickname: false,
         nicknameChecked: false,
+        validNickname: isValid,
+      }));
+    } else if (name === "userName") {
+      setValidations((prev) => ({
+        ...prev,
+        validName: isValid,
+      }));
+    } else if (name === "userPassword") {
+      setValidations((prev) => ({
+        ...prev,
+        validPassword: isValid,
+        passwordMatch: value === formData.userPasswordConfirm,
+      }));
+    } else if (name === "userPasswordConfirm") {
+      setValidations((prev) => ({
+        ...prev,
+        passwordMatch: value === formData.userPassword,
       }));
     }
   };
 
-  // 이메일 중복 검사 핸들러
   const handleEmailCheck = async () => {
-    if (!formData.userEmail) {
-      setError("이메일을 입력해주세요.");
+    if (!formData.userEmail || !validations.validEmail) {
+      setError("유효한 이메일을 입력해주세요.");
       return;
     }
+
     try {
       const isDuplicate = await UserAPI.checkEmail(formData.userEmail);
       setValidations((prev) => ({
@@ -79,19 +123,19 @@ const RegisterModal = ({ isOpen, onClose }) => {
         email: !isDuplicate,
         emailChecked: true,
       }));
-      if (isDuplicate) {
-        setError("이미 사용 중인 이메일입니다.");
-      } else {
-        setError("사용 가능한 이메일입니다.");
-      }
+      setError(
+        isDuplicate
+          ? "이미 사용 중인 이메일입니다."
+          : "사용 가능한 이메일입니다."
+      );
     } catch (error) {
       setError("이메일 중복 검사 중 오류가 발생했습니다.");
     }
   };
 
-  // 닉네임 중복 검사 핸들러
   const handleNicknameCheck = async () => {
-    if (!formData.userNickname) {
+    if (!formData.userNickname || !validations.validNickname) {
+      setError("유효한 닉네임을 입력해주세요.");
       return;
     }
 
@@ -102,31 +146,34 @@ const RegisterModal = ({ isOpen, onClose }) => {
         nickname: !isDuplicate,
         nicknameChecked: true,
       }));
-      if (isDuplicate) {
-        setError("이미 사용 중인 닉네임 입니다.");
-      } else {
-        setError("사용 가능한 닉네임입니다.");
-      }
+      setError(
+        isDuplicate
+          ? "이미 사용 중인 닉네임입니다."
+          : "사용 가능한 닉네임입니다."
+      );
     } catch (error) {
       setError("닉네임 중복 검사 중 오류가 발생했습니다.");
     }
   };
 
-  // 폼 제출 핸들러
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 비밀번호 일치 확인
-    if (formData.userPassword !== formData.userPasswordConfirm) {
-      setValidations((prev) => ({
-        ...prev,
-        passwordMatch: false,
-      }));
+    if (
+      !validations.validName ||
+      !validations.validPassword ||
+      !validations.validEmail ||
+      !validations.validNickname
+    ) {
+      setError("모든 필드를 올바르게 입력해주세요.");
+      return;
+    }
+
+    if (!validations.passwordMatch) {
       setError("비밀번호가 일치하지 않습니다.");
       return;
     }
 
-    // 이메일과 닉네임 중복 검사 여부 확인
     if (!validations.email || !validations.nickname) {
       setError("이메일과 닉네임 중복 검사를 완료해주세요.");
       return;
@@ -134,12 +181,10 @@ const RegisterModal = ({ isOpen, onClose }) => {
 
     setIsLoading(true);
     try {
-      // 생년월일 형식 변환
       const birthdayDateTime = new Date(formData.userBirthday);
       const formattedBirthday =
         birthdayDateTime.toISOString().split("T")[0] + "T00:00:00";
 
-      // 회원가입 데이터 준비
       const userData = {
         userName: formData.userName,
         userEmail: formData.userEmail,
@@ -148,12 +193,17 @@ const RegisterModal = ({ isOpen, onClose }) => {
         userBirthday: formattedBirthday,
       };
 
-      // 회원가입 및 자동 로그인 처리
-      const token = await UserAPI.register(userData);
-
-      if (token) {
-        dispatch(setToken(token));
-        onClose();
+      const success = await UserAPI.register(userData);
+      if (success) {
+        const loginData = {
+          email: formData.userEmail,
+          password: formData.userPassword,
+        };
+        const token = await UserAPI.login(loginData);
+        if (token) {
+          dispatch(setToken(token));
+          handleClose();
+        }
       }
     } catch (error) {
       setError(error.message || "회원가입에 실패했습니다.");
@@ -163,163 +213,294 @@ const RegisterModal = ({ isOpen, onClose }) => {
   };
 
   return (
-    <Dialog open={isOpen} onClose={handleClose} className="relative z-50">
-      <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-
-      <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="mx-auto max-w-lg rounded-lg bg-white p-6 w-full">
-          <div className="flex justify-between items-center mb-4">
-            <Dialog.Title className="text-lg font-medium">
-              회원가입
-            </Dialog.Title>
-            <button
-              onClick={handleClose}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              <X className="h-6 w-6" />
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label
-                htmlFor="userName"
-                className="block text-sm font-medium text-gray-700"
-              >
-                이름
-              </label>
-              <input
-                type="text"
-                name="userName"
-                id="userName"
-                value={formData.userName}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                required
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="userBirthday"
-                className="block text-sm font-medium text-gray-700"
-              >
-                생년월일
-              </label>
-              <input
-                type="date"
-                name="userBirthday"
-                id="userBirthday"
-                value={formData.userBirthday}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                required
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="userEmail"
-                className="block text-sm font-medium text-gray-700"
-              >
-                이메일
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="email"
-                  name="userEmail"
-                  id="userEmail"
-                  value={formData.userEmail}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={handleEmailCheck}
-                  className="mt-1 px-4 h-10 bg-gray-500 text-white rounded-md hover:bg-gray-600 whitespace-nowrap"
-                >
-                  중복확인
-                </button>
+    <>
+      <style>{`
+        .thin-scrollbar::-webkit-scrollbar { width: 5px; padding-right: 12px; position: absolute; right: 0;}
+        .thin-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .thin-scrollbar::-webkit-scrollbar-thumb { background: #888; border-radius: 15px;}
+        .thin-scrollbar::-webkit-scrollbar-track { display: none; }
+        .thin-scrollbar {padding-right: 10px;}
+      `}</style>
+      <Dialog open={isOpen} onClose={handleClose} className="relative z-50">
+        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+        <div className="fixed inset-0 flex items-center justify-center">
+          <Dialog.Panel
+            className="relative space-y-1 rounded-3xl bg-white p-6 w-full max-w-lg overflow-visible"
+            onWheel={handleWheel}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex-1 text-center">
+                <Dialog.Title className="text-3xl font-bold ml-7">
+                  MEEPLE SIGNUP
+                </Dialog.Title>
               </div>
+              <button
+                onClick={handleClose}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="h-6 w-6" />
+              </button>
             </div>
 
-            <div>
-              <label
-                htmlFor="userPassword"
-                className="block text-sm font-medium text-gray-700"
-              >
-                비밀번호
-              </label>
-              <input
-                type="password"
-                name="userPassword"
-                id="userPassword"
-                value={formData.userPassword}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                required
-              />
+            <div className="text-center text-gray-400 mb-3">
+              MEET MEEPLE NOW
             </div>
 
-            <div>
-              <label
-                htmlFor="userPasswordConfirm"
-                className="block text-sm font-medium text-gray-700"
-              >
-                비밀번호 확인
-              </label>
-              <input
-                type="password"
-                name="userPasswordConfirm"
-                id="userPasswordConfirm"
-                value={formData.userPasswordConfirm}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                required
-              />
-            </div>
+            <div className="max-h-[75vh] overflow-y-auto thin-scrollbar pr-1">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="userName"
+                    className="block text-xl font-medium text-gray-700"
+                  >
+                    이름
+                  </label>
+                  <input
+                    type="text"
+                    name="userName"
+                    id="userName"
+                    value={formData.userName}
+                    onChange={handleChange}
+                    className={`mt-1 block w-full rounded-md border ${
+                      formData.userName && !validations.validName
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    } px-3 py-2`}
+                    required
+                    placeholder="이름을 입력하세요."
+                  />
+                  {formData.userName && !validations.validName && (
+                    <p className="mt-1 text-sm text-red-500">
+                      이름은 2-5자의 한글만 가능합니다.
+                    </p>
+                  )}
+                </div>
 
-            <div>
-              <label
-                htmlFor="userNickname"
-                className="block text-sm font-medium text-gray-700"
-              >
-                닉네임
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  name="userNickname"
-                  id="userNickname"
-                  value={formData.userNickname}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                  required
-                />
+                <div>
+                  <label
+                    htmlFor="userBirthday"
+                    className="block text-xl font-medium text-gray-700"
+                  >
+                    생년월일
+                  </label>
+                  <div className="text-[12px] ml-[2px] text-gray-400">
+                    생년월일 6자리 ex)000101
+                  </div>
+                  <input
+                    type="date"
+                    name="userBirthday"
+                    id="userBirthday"
+                    value={formData.userBirthday}
+                    onChange={handleChange}
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between">
+                    <label
+                      htmlFor="userNickname"
+                      className="block text-xl font-medium text-gray-700"
+                    >
+                      닉네임
+                    </label>
+                    <div className="ml-1 flex-1 text-[#FF7A4A]">*</div>
+                    <button
+                      type="button"
+                      onClick={handleNicknameCheck}
+                      className="mt-1 px-3 h-7 bg-[#E3E3E3] text-black rounded-md hover:bg-gray-600 whitespace-nowrap"
+                    >
+                      check
+                    </button>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      name="userNickname"
+                      id="userNickname"
+                      value={formData.userNickname}
+                      onChange={handleChange}
+                      className={`mt-1 block w-full rounded-md border ${
+                        formData.userNickname && !validations.validNickname
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      } px-3 py-2`}
+                      required
+                      placeholder="사용할 닉네임을 입력하세요."
+                    />
+                  </div>
+                  {formData.userNickname && !validations.validNickname && (
+                    <p className="mt-1 text-sm text-red-500">
+                      닉네임은 2-10자의 한글, 영문, 숫자만 가능합니다.
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <div className="flex justify-between">
+                    <label
+                      htmlFor="userEmail"
+                      className="block text-xl font-medium text-gray-700"
+                    >
+                      이메일
+                    </label>
+                    <div className="ml-1 flex-1 text-[#FF7A4A]">*</div>
+                    <button
+                      type="button"
+                      onClick={handleEmailCheck}
+                      className="mt-1 px-3 h-7 bg-[#E3E3E3] text-black rounded-md hover:bg-gray-600 whitespace-nowrap"
+                    >
+                      check
+                    </button>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="email"
+                      name="userEmail"
+                      id="userEmail"
+                      value={formData.userEmail}
+                      onChange={handleChange}
+                      className={`mt-1 block w-full rounded-md border ${
+                        formData.userEmail && !validations.validEmail
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      } px-3 py-2`}
+                      required
+                      placeholder="사용할 이메일을 입력하세요."
+                    />
+                  </div>
+                  {formData.userEmail && !validations.validEmail && (
+                    <p className="mt-1 text-sm text-red-500">
+                      유효한 이메일 형식이 아닙니다.
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="userPassword"
+                    className="block text-xl font-medium text-gray-700"
+                  >
+                    비밀번호
+                  </label>
+                  <div className="text-[12px] ml-[2px] text-gray-400">
+                    영문 + 숫자 + 특수문자를 포함하여 9 - 16자 작성
+                  </div>
+                  <input
+                    type="password"
+                    name="userPassword"
+                    id="userPassword"
+                    value={formData.userPassword}
+                    onChange={handleChange}
+                    className={`mt-1 block w-full rounded-md border ${
+                      formData.userPassword && !validations.validPassword
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    } px-3 py-2`}
+                    required
+                    placeholder="사용할 비밀번호를 입력하세요."
+                  />
+                  {formData.userPassword && !validations.validPassword && (
+                    <p className="mt-1 text-sm text-red-500">
+                      비밀번호는 영문, 숫자, 특수문자를 포함한 9-16자여야
+                      합니다.
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="userPasswordConfirm"
+                    className="block text-xl font-medium text-gray-700"
+                  >
+                    비밀번호 확인
+                  </label>
+                  <input
+                    type="password"
+                    name="userPasswordConfirm"
+                    id="userPasswordConfirm"
+                    value={formData.userPasswordConfirm}
+                    onChange={handleChange}
+                    className={`mt-1 block w-full rounded-md border ${
+                      formData.userPasswordConfirm && !validations.passwordMatch
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    } px-3 py-2`}
+                    required
+                    placeholder="비밀번호를 다시 입력하세요."
+                  />
+                  {formData.userPasswordConfirm &&
+                    !validations.passwordMatch && (
+                      <p className="mt-1 text-sm text-red-500">
+                        비밀번호가 일치하지 않습니다.
+                      </p>
+                    )}
+                </div>
+
+                {error && <p className="text-red-500 text-sm">{error}</p>}
+
+                <hr className="my-4" />
+
+                <div className="p-3 bg-gray-50 rounded-md text-sm text-gray-600">
+                  본 서비스는 원활한 소통을 위해 화상 카메라와 마이크 사용이
+                  필수적입니다. 서비스 이용을 위한 카메라 및 마이크 기기 접근과
+                  사용에 동의해주세요.
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="termsAgreement"
+                      className="mr-2"
+                      required
+                    />
+                    <label htmlFor="termsAgreement" className="text-sm">
+                      [필수] 서비스 이용약관 동의
+                    </label>
+                  </div>
+
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="privacyAgreement"
+                      className="mr-2"
+                      required
+                    />
+                    <label htmlFor="privacyAgreement" className="text-sm">
+                      [필수] 개인정보 수집 및 이용 동의
+                    </label>
+                  </div>
+
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="deviceAgreement"
+                      className="mr-2"
+                      required
+                    />
+                    <label htmlFor="deviceAgreement" className="text-sm">
+                      [필수] 화상/음성 채팅 이용 동의
+                    </label>
+                  </div>
+                </div>
+
+                <hr className="my-4" />
+
                 <button
-                  type="button"
-                  onClick={handleNicknameCheck}
-                  className="mt-1 px-4 h-10 bg-gray-500 text-white rounded-md hover:bg-gray-600 whitespace-nowrap"
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full rounded-md text-xl py-2 text-white bg-gradient-to-tr from-cyan-500 to-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
                 >
-                  중복확인
+                  {isLoading ? "처리중..." : "SIGNUP"}
                 </button>
-              </div>
+              </form>
             </div>
-
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full rounded-md bg-blue-500 py-2 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-            >
-              {isLoading ? "처리중..." : "회원가입"}
-            </button>
-          </form>
-        </Dialog.Panel>
-      </div>
-    </Dialog>
+          </Dialog.Panel>
+        </div>
+      </Dialog>
+    </>
   );
 };
 

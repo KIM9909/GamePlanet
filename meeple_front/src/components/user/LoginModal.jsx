@@ -80,7 +80,7 @@ const LoginModal = () => {
 
           <form onSubmit={handleSubmit} className="space-y-3">
             <div>
-              <label htmlFor="email" className="block text-2xl font-bold mb-2">
+              <label htmlFor="email" className="block text-2xl mb-2">
                 EMAIL
               </label>
               <input
@@ -96,10 +96,7 @@ const LoginModal = () => {
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="block text-2xl font-bold mb-2"
-              >
+              <label htmlFor="password" className="block text-2xl mb-2">
                 PW
               </label>
               <input

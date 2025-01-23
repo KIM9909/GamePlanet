@@ -48,25 +48,8 @@ export const UserAPI = {
 
   register: async (userData) => {
     try {
-      // 1. 회원가입 요청
-      await API.post("/user/register", userData);
-
-      // 서버 처리 시간을 고려한 지연
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      // 2. 회원가입 성공 시 바로 로그인 시도
-      const loginData = {
-        email: userData.userEmail,
-        password: userData.userPassword,
-      };
-
-      const loginResponse = await API.post("/auth/login", loginData);
-
-      // 3. 로그인 성공 시 토큰 저장
-      if (loginResponse.data) {
-        localStorage.setItem("token", loginResponse.data);
-        return loginResponse.data;
-      }
+      const response = await API.post("/user/register", userData);
+      return response.status === 201; // 회원가입 성공 여부만 반환
     } catch (error) {
       throw error.response?.data || "회원가입에 실패했습니다.";
     }
@@ -74,9 +57,7 @@ export const UserAPI = {
 
   checkNickname: async (nickname) => {
     try {
-      const response = await API.get(
-        `/user/checkNickname?userNickname=${nickname}`
-      );
+      const response = await API.get(`/user/checkNickname/${nickname}`);
       return response.data;
     } catch (error) {
       throw error.response?.data || "닉네임 중복 검사에 실패했습니다.";
@@ -85,7 +66,7 @@ export const UserAPI = {
 
   checkEmail: async (email) => {
     try {
-      const response = await API.get(`/user/checkEmail?userEmail=${email}`);
+      const response = await API.get(`/user/checkEmail/${email}`);
       return response.data;
     } catch (error) {
       throw error.response?.data || "이메일 중복 검사에 실패했습니다.";
