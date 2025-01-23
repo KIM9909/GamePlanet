@@ -1,14 +1,22 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Canvas, render, useThree, useFrame } from "@react-three/fiber"
-import { Center, OrbitControls, RoundedBox, Text } from "@react-three/drei";
+import { Canvas, render, useThree, useFrame, useLoader, } from "@react-three/fiber"
+import { Center, OrbitControls, RoundedBox, Text, Edges } from "@react-three/drei";
 import Dice from "./Dice"
-import { MeshStandardMaterial } from "three";
+import { TextureLoader, BoxGeometry } from "three";
+import spaceBackground from "../../assets/burumabul_images/space.jpg"
 
-const Cell = ({ position, isHighlight, name }) => {
+import earthTexture from "../../assets/burumabul_images/earth.jpg"
+import marsTexture from "../../assets/burumabul_images/mars.jpg"
+
+
+const Cell = ({ position, isHighlight, name, textureUrl, topTextureUrl }) => {
   const textRef = useRef();
   const { camera } = useThree();
+
+  // TextureLoader로 텍스쳐 로드
+  const texture = textureUrl ? useLoader(TextureLoader, textureUrl) : null ;
+  const topTexture = topTextureUrl ? useLoader(TextureLoader, topTextureUrl) : null ;
 
   useFrame(() => {
     if (textRef.current) {
@@ -18,15 +26,37 @@ const Cell = ({ position, isHighlight, name }) => {
 
   return (
     <mesh position={position}>
-      {/* 셀 박스 */}
-      <sphereGeometry args={[0.5, 32, 32]} />
-        <meshStandardMaterial color={isHighlight ? "red" : "white"} />
+      {/* 셀 박스 + 둥근 직육면체 */}
+      <boxGeometry args={[1.5, 0.2, 1.4]} />
+      {/* 각 면의 텍스처 및 색상 설정 */}
+      <meshStandardMaterial color={isHighlight ? "#ff6b6b" : "white"} />
+
+      <Edges
+        scale={1}
+        threshold={15} // 모서리 표시 임계값
+        color="black"
+      />
+
+      {/* 윗면에만 텍스쳐 적용 */}
+      {topTexture && (
+        <mesh position={[0, 0.101, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[1.5, 1.4]} />
+          <meshStandardMaterial
+            map={topTexture}
+            transparent={true}
+          />
+        </mesh>
+      )}
+
+
+
+
       {/* 셀 이름 */}
       <Text
         ref={textRef}
-        position={[0, 0.65, 0]} // 박스 위에 텍스트 표시
+        position={[0, 0.8, 0]} // 박스 위에 텍스트 표시
         fontSize={0.2}
-        color="black"
+        color="gray"
         anchorX="center"
         anchorY="middle"
       >
@@ -79,12 +109,17 @@ const TravelMap = () => {
 
 
   // 칸별 내용 생성
-  const renderCells = (index) => {
+  const renderCells = () => {
     const positions = [];
-    const step = 1.3;
+    const step = 1.495;
     const centerOffset = (size - 1) * step / 2; // 중심 좌표 계산
+
     let x = -centerOffset;
     let z = -centerOffset;
+
+    const topTextures = [
+      earthTexture, marsTexture
+    ]
 
     for (let i = 0; i < size -1; i++) positions.push([x + i * step, 0, z]);
     for (let i = 0; i < size - 1; i++) positions.push([x + (size - 1) * step, 0, z + i * step]);
@@ -92,15 +127,15 @@ const TravelMap = () => {
     for (let i = 0; i < size - 1; i++) positions.push([x, 0, z + (size - 1 - i) * step]);
 
     return positions.map((pos, index) => (
-      <Cell key={index} position={pos} isHighlight={index === currentPosition} name={cities[index]} />
+      <Cell 
+        key={index} 
+        position={pos} 
+        isHighlight={index === currentPosition} 
+        name={cities[index]}
+        topTextureUrl = {topTextures[index]} />
 
     ))
   };
-
-  // const topRow = cells.slice(size-2, size * 2 - 2).map(renderCell);
-  // const rightColumn = cells.slice(size * 2 - 2, size * 3 - 4).map(renderCell);
-  // const bottomRow = cells.slice(size * 3 - 4, totalCells).reverse().map(renderCell);
-  // const leftColumn = cells.slice(0, size-2).reverse().map(renderCell);
 
 
   const rollDice = () => {
@@ -116,15 +151,26 @@ const TravelMap = () => {
           }}>
         <div style={{ 
           height: "100vh", 
-          width : "80vw", 
-          }}>
+          width : "80vw",
+        }}>
           <Canvas
             camera={{
               position: [0, 15, 25], // 카메라 초기 위치
               fov: 80, // 시야각 조절
+            }}
+            onCreated={({ scene }) => {
+              const texture = new TextureLoader().load(spaceBackground);
+              scene.background = texture;
             }}>
-            <ambientLight intensity={4.5} />
-            <pointLight position={[10, 10, 10]} />
+            <ambientLight intensity={5} />
+            <pointLight position={[10, 10, 10]} intensity={2}/>
+
+            {/* 바닥 생성 */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]}>
+              <planeGeometry args={[16.5, 16.5]} />
+              <meshStandardMaterial color="#d1d1d1" />
+            </mesh>
+
             {/* OrbitControls로 카메라 이동 및 확대/축소 제어 */}
             <OrbitControls 
               target={[0, 0, 0]} 
