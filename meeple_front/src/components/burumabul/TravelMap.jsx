@@ -63,25 +63,59 @@ const Cell = ({ position, isHighlight, name, textureUrl, topTextureUrl }) => {
         {name}
       </Text>
     </mesh>
-  )
-}
-
+  );
+};
 
 const TravelMap = () => {
   // cities 배열
   const cities = [
-    "지구 Start", "화성", "텔레파시 카드", "목성", "토성", "뉴런의 골짜기", "천왕성", "텔레파시 카드", "해왕성", "명왕성",
-    "타임머신", "궁수자리", "물병자리", "텔레파시 카드", "쌍둥이 자리", "직녀성", "시리우스", "UFO", "헤라클레스 자리", "카시오페아 자리",
-    "공포의 블랙홀", "백조자리", "처녀자리", "텔레파시 카드", "천칭자리", "뉴런의 골짜기", "오리온 자리", "전갈 자리", "큰곰자리",
-    "텔레파시 카드", "우주조난기지", "황소자리", "사자자리", "텔레파시 카드", "안드로메다 자리", "견우성", "페가수스 자리", "헬리 혜성", "수성", "금성",
+    "지구 Start",
+    "화성",
+    "텔레파시 카드",
+    "목성",
+    "토성",
+    "뉴런의 골짜기",
+    "천왕성",
+    "텔레파시 카드",
+    "해왕성",
+    "명왕성",
+    "타임머신",
+    "궁수자리",
+    "물병자리",
+    "텔레파시 카드",
+    "쌍둥이 자리",
+    "직녀성",
+    "시리우스",
+    "UFO",
+    "헤라클레스 자리",
+    "카시오페아 자리",
+    "공포의 블랙홀",
+    "백조자리",
+    "처녀자리",
+    "텔레파시 카드",
+    "천칭자리",
+    "뉴런의 골짜기",
+    "오리온 자리",
+    "전갈 자리",
+    "큰곰자리",
+    "텔레파시 카드",
+    "우주조난기지",
+    "황소자리",
+    "사자자리",
+    "텔레파시 카드",
+    "안드로메다 자리",
+    "견우성",
+    "페가수스 자리",
+    "헬리 혜성",
+    "수성",
+    "금성",
   ];
 
-  
   const size = 11; // 각 변의 칸 수
   const totalCells = size * 4 - 4; // 전체 칸 개수
   const cells = Array.from({ length: totalCells }, (_, i) => i); // 칸 번호
   const [currentPosition, setCurrentPosition] = useState(0); // 현재 말 위치
-  const [isFirstMove, setIsFirstMove] = useState(true)
+  const [isFirstMove, setIsFirstMove] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
   // 주사위 점수 저장
@@ -90,7 +124,7 @@ const TravelMap = () => {
   const handleDiceComplete = (score) => {
     setTotalScore(score); //점수 업데이트
     setShowModal(false);
-  }
+  };
 
   // 칸 스타일
   const cellClass =
@@ -155,7 +189,7 @@ const TravelMap = () => {
 
   const rollDice = () => {
     setShowModal(true);
-  }
+  };
 
   return (
     <>
