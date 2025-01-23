@@ -1,9 +1,11 @@
 package com.meeple.meeple_back.game.cockroach.model.response;
 
 import com.meeple.meeple_back.game.cockroach.model.entity.Card;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder
 public class ResponseCheckCard {
     private String userName;    // 먹을 플레이어
     private Card card;          // 먹을 카드

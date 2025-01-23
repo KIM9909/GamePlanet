@@ -167,6 +167,7 @@ public class CockroachServiceImpl implements CockroachService {
 
     @Override
     public ResponseCheckCard checkCard(String roomId, RequestCheckCard request) {
+        /* 방 목록 조회 */
         Map<String, Object> roomInfo =
             (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
 
@@ -174,20 +175,42 @@ public class CockroachServiceImpl implements CockroachService {
             throw new IllegalArgumentException("방을 찾을 수 없습니다: " + roomId);
         }
 
-        if (request.isCorrect()) {
-            Map<String, List<Card>> playerTables = (Map<String, List<Card>>) roomInfo.get(
-                "userTableCards");
-            if (playerTables == null || !playerTables.containsKey(request.getFrom())) {
-                throw new IllegalStateException("플레이어 테이블 정보를 찾을 수 없습니다: " + request.getFrom());
-            }
-
-            List<Card> table = playerTables.get(request.getFrom());
-
-//            table.add()
-
+        Map<String, List<Card>> playerTables = (Map<String, List<Card>>) roomInfo.get(
+            "userTableCards");
+        if (playerTables == null || !playerTables.containsKey(request.getFrom())) {
+            throw new IllegalStateException("플레이어 테이블 정보를 찾을 수 없습니다: "
+                + request.getFrom());
         }
 
-        return null;
+        /* 만약 정답을 맞췄다면 */
+        ResponseCheckCard response = ResponseCheckCard.builder()
+            .userName(request.getFrom())
+            .card(request.getCard())
+            .isEnd(false)
+            .build();
+
+        if (request.isCorrect()) {
+            List<Card> table = playerTables.get(request.getFrom());
+
+            table.add(request.getCard());
+
+            playerTables.put(request.getFrom(), table);
+
+        } else {
+            List<Card> table = playerTables.get(request.getTo());
+
+            table.add(request.getCard());
+
+            playerTables.put(request.getTo(), table);
+
+            response.setUserName(request.getTo());
+        }
+
+        /* Redis 업데이트 */
+        roomInfo.put("playerTableCards", playerTables);
+        redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
+
+        return response;
     }
 
     /* 카드 초기 설정 */
