@@ -2,8 +2,14 @@ import React, { useState, useEffect, useRef } from "react"
 import { useSelector } from "react-redux"
 import LoginModal from "../../components/user/LoginModal"
 import RegisterModal from "../../components/user/RegisterModal"
+// 실험용 - 희준
+import GameSidebar from "../../components/sidebar/GameSidebar"
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import { Menu, X } from 'lucide-react';
+
 import { MainPageUp } from "./MainPageUp"
 import { MainPageDown } from "./MainPageDown"
+
 
 const MainPage = () => {
   // 현재 보여지는 섹션 상태 (첫 번째/두 번째)
@@ -19,6 +25,10 @@ const MainPage = () => {
   
   // 토큰 상태 구독
   const { token } = useSelector((state) => state.user)
+
+  //실험용-희준
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
+
   
   // 토큰 변경 감지 시 자동으로 두 번째 섹션으로 이동
   useEffect(() => {
@@ -63,7 +73,59 @@ const MainPage = () => {
     }, 500)
   }
 
+  //실험용-희준
+  const toggleSidebar = () => {
+    setSidebarOpen(!isSidebarOpen)
+  }
+
   return (
+
+    <div className="min-h-screen bg-gray-100">
+
+      {/* 실험용-희준준 */}
+      <div className="fixed left-0 top-0 h-full z-50 flex">
+        <div
+          className={`transition-transform duration-300 ease-in-out transform 
+            ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
+            relative`} 
+        >
+          <GameSidebar />
+          {isSidebarOpen && (
+            <button
+              onClick={toggleSidebar}
+              className="absolute -right-12 top-1/2 -translate-y-1/2 w-12 h-12 
+              bg-gray-800 rounded-r text-white
+              hover:bg-gray-700 focus:outline-none 
+              flex items-center justify-center
+              shadow-lg"
+            >
+              <X className="w-8 h-8" />
+            </button>
+          )}
+        </div>
+        
+        {!isSidebarOpen && (
+          <button
+            onClick={toggleSidebar}
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-12 
+            bg-gray-800 rounded-r text-white
+            hover:bg-gray-700 focus:outline-none 
+            flex items-center justify-center
+            shadow-lg"
+          >
+            <Menu className="w-8 h-8" />
+          </button>
+        )}
+      </div>
+      {/*  */}
+
+
+      <header className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
+          <h1 className="text-3xl font-bold text-gray-900">Meeple</h1>
+        </div>
+      </header>
+
     <div className="h-screen overflow-hidden">
       <MainPageUp
         isFirstSection={isFirstSection}
@@ -76,11 +138,13 @@ const MainPage = () => {
         onRegisterClick={() => setIsRegisterModalOpen(true)}
       />
 
+
       <LoginModal />
       <RegisterModal
         isOpen={isRegisterModalOpen}
         onClose={() => setIsRegisterModalOpen(false)}
       />
+    </div>
     </div>
   )
 }
