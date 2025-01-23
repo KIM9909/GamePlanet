@@ -4,11 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.meeple.meeple_back.game.cockroach.model.entity.Card;
 import com.meeple.meeple_back.game.cockroach.model.entity.ChatMessage;
-import com.meeple.meeple_back.game.cockroach.model.request.RequestCheckCard;
+import com.meeple.meeple_back.game.cockroach.model.request.RequestMultiCard;
+import com.meeple.meeple_back.game.cockroach.model.request.RequestSingleCard;
 import com.meeple.meeple_back.game.cockroach.model.request.RequestGiveCard;
 import com.meeple.meeple_back.game.cockroach.model.request.RequestSendMessage;
 import com.meeple.meeple_back.game.cockroach.model.response.ResponseCheckCard;
 import com.meeple.meeple_back.game.cockroach.model.response.ResponseGiveCard;
+import com.meeple.meeple_back.game.cockroach.model.response.ResponseMultiCard;
 import com.meeple.meeple_back.game.cockroach.model.response.ResponseStartGame;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -166,7 +168,7 @@ public class CockroachServiceImpl implements CockroachService {
     }
 
     @Override
-    public ResponseCheckCard checkCard(String roomId, RequestCheckCard request) {
+    public ResponseCheckCard singleCard(String roomId, RequestSingleCard request) {
         /* 방 목록 조회 */
         Map<String, Object> roomInfo =
             (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
@@ -209,6 +211,59 @@ public class CockroachServiceImpl implements CockroachService {
         /* Redis 업데이트 */
         roomInfo.put("playerTableCards", playerTables);
         redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
+
+        return response;
+    }
+
+    @Override
+    public ResponseMultiCard multiCard(String roomId, RequestMultiCard request) {
+        /* 방 목록 조회 */
+        Map<String, Object> roomInfo =
+            (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+
+        Map<String, List<Card>> playerCards = (Map<String, List<Card>>) roomInfo.get("playerCards");
+        Map<String, List<Card>> userTables =
+            (Map<String, List<Card>>) roomInfo.get("userTableCards");
+
+        List<Card> cards = playerCards.get(request.getUser());
+        List<Card> tables = userTables.get(request.getUser());
+
+        if (request.isBlack()) {
+            for (Card card : request.getCards()) {
+                for (int j = 0; j < cards.size(); j++) {
+                    if (cards.get(j) == card) {
+                        cards.remove(j);
+                        tables.add(card);
+                        cards.add(new Card("Black", false));
+                        break;
+                    }
+                }
+            }
+        } else {
+            for (Card card : request.getCards()) {
+                for (int j = 0; j < cards.size(); j++) {
+                    if (cards.get(j) == card) {
+                        cards.remove(j);
+                        tables.add(card);
+                        cards.add(new Card("Joker", false));
+                        break;
+                    }
+                }
+            }
+        }
+        playerCards.put(request.getUser(), cards);
+        userTables.put(request.getUser(), tables);
+        roomInfo.put("playerCards", playerCards);
+        roomInfo.put("userTableCards", userTables);
+
+        List<String> players = (List<String>) roomInfo.get("players");
+
+        redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
+
+        ResponseMultiCard response = ResponseMultiCard.builder()
+            .gameData(roomInfo)
+            .players(players)
+            .build();
 
         return response;
     }
