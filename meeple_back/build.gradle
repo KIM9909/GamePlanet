@@ -24,7 +24,6 @@ repositories {
 }
 
 dependencies {
-<<<<<<< meeple_back/build.gradle
     // spring-boot
 
     // 테스트용 h2 데이터베이스
