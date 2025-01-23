@@ -1,0 +1,23 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: meeple_back
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/game_project
+    username: root
+    password: ssafy12!
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+jwt:
+  secret: u/ZqCz6eQxS5Zr0P9Z3ZmE+8Q3kHXk4e4f6kzW1TQaQ=
