@@ -17,22 +17,26 @@ const CockroachPokerPage = () => {
   return (
     <div className="h-screen w-screen flex bg-gray-900">
       {/* 사이드바 */}
-      <div className={`transition-transform duration-300 ease-in-out transform 
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
+      <div className={`transition-all duration-300 ease-in-out
+        ${isSidebarOpen ? 'w-72' : 'w-0'} 
         relative z-50`}>
-        <GameSidebar />
-        <button
-          onClick={toggleSidebar}
-          className="absolute -right-12 top-1/2 -translate-y-1/2 w-12 h-12 
-            bg-gray-800 rounded-r text-white hover:bg-gray-700 
-            focus:outline-none flex items-center justify-center"
-        >
-          {isSidebarOpen ? '←' : '→'}
-        </button>
+        <div className={`fixed top-0 left-0 h-full transition-transform duration-300 ease-in-out transform 
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <GameSidebar />
+          <button
+            onClick={toggleSidebar}
+            className="absolute -right-12 top-1/2 -translate-y-1/2 w-12 h-12 
+              bg-gray-800 rounded-r text-white hover:bg-gray-700 
+              focus:outline-none flex items-center justify-center"
+          >
+            {isSidebarOpen ? '←' : '→'}
+          </button>
+        </div>
       </div>
 
       {/* 메인 게임 영역 */}
-      <div className="flex-1 flex flex-col">
+      <div className={`flex-1 flex flex-col transition-all duration-300 ease-in-out
+        ${isSidebarOpen ? 'ml-0' : 'ml-0'}`}>
         {/* 게임 보드 */}
         <div className="flex-1 overflow-hidden">
           <GameBoard playerCount={playerCount} />
@@ -59,6 +63,19 @@ const CockroachPokerPage = () => {
           <div className="text-white p-4">화상 채팅 영역 (개발 예정)</div>
         </div>
       </div>
+
+      {/* 토글 버튼 (사이드바가 닫혀있을 때) */}
+      {!isSidebarOpen && (
+        <button
+          onClick={toggleSidebar}
+          className="fixed left-0 top-1/2 -translate-y-1/2 w-12 h-12 
+            bg-gray-800 rounded-r text-white hover:bg-gray-700 
+            focus:outline-none flex items-center justify-center
+            z-50"
+        >
+          →
+        </button>
+      )}
     </div>
   );
 };
