@@ -9,17 +9,14 @@ import {
 } from "../../sources/api/store/slices/UserSlice";
 // HeadlessUI의 Dialog 컴포넌트: 접근성이 고려된 모달 구현을 위해 사용
 import { Dialog } from "@headlessui/react";
-// Lucide 아이콘: 모달 닫기 버튼에 사용될 X 아이콘
-import { X } from "lucide-react";
+// Lucide 아이콘: 모달 닫기 버튼과 비밀번호 표시/숨김에 사용될 아이콘
+import { X, Eye, EyeOff } from "lucide-react";
 
 const LoginModal = () => {
   // Redux의 dispatch 함수를 가져옴: 액션을 발생시키는 데 사용
   const dispatch = useDispatch();
 
   // Redux store에서 필요한 상태를 가져옴
-  // isModalOpen: 모달의 표시 여부
-  // isLoading: 로그인 요청 진행 상태
-  // error: 로그인 실패 시 에러 메시지
   const { isModalOpen, isLoading, error } = useSelector((state) => state.user);
 
   // 로그인 폼의 입력값을 관리하는 로컬 상태
@@ -28,36 +25,65 @@ const LoginModal = () => {
     password: "", // 비밀번호 입력값
   });
 
+  // 입력값 유효성 검사 상태
+  const [validations, setValidations] = useState({
+    email: false,
+    password: false,
+  });
+
+  // 비밀번호 표시/숨김 상태
+  const [showPassword, setShowPassword] = useState(false);
+
+  // 유효성 검사를 위한 정규식
+  const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+  const passwordRegex =
+    /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{9,16}$/;
+
+  // 모달 닫기 핸들러: 상태 초기화 및 모달 닫기
   const handleClose = () => {
-    setCredentials({
-      email: "",
-      password: "",
-    });
+    setCredentials({ email: "", password: "" });
+    setValidations({ email: false, password: false });
     dispatch(setModalOpen(false));
   };
 
-  // 폼 제출 처리 핸들러
-  const handleSubmit = (e) => {
-    e.preventDefault(); // 기본 폼 제출 동작 방지
-    dispatch(loginUser(credentials)); // 로그인 액션을 Redux로 디스패치
+  // 입력값 유효성 검사 함수
+  const validateField = (name, value) => {
+    if (name === "email") {
+      return emailRegex.test(value);
+    } else if (name === "password") {
+      return passwordRegex.test(value);
+    }
+    return false;
   };
 
-  // 입력 필드 값 변경 처리 핸들러
+  // 입력값 변경 핸들러
   const handleChange = (e) => {
-    // 이전 상태를 복사하고 변경된 필드만 업데이트
-    setCredentials({
-      ...credentials,
-      [e.target.name]: e.target.value, // 동적 키로 해당 필드 업데이트
-    });
+    const { name, value } = e.target;
+    setCredentials((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    setValidations((prev) => ({
+      ...prev,
+      [name]: validateField(name, value),
+    }));
+  };
+
+  // 폼 유효성 검사: 모든 필드가 유효한지 확인
+  const isFormValid = () => {
+    return validations.email && validations.password;
+  };
+
+  // 폼 제출 핸들러
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (isFormValid()) {
+      dispatch(loginUser(credentials));
+    }
   };
 
   return (
-    // Dialog 컴포넌트: 모달의 기본 구조 제공
-    <Dialog
-      open={isModalOpen} // 모달 표시 여부
-      onClose={handleClose}
-      className="relative z-50"
-    >
+    <Dialog open={isModalOpen} onClose={handleClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
 
       <div className="fixed inset-0 flex items-center justify-center p-4">
@@ -89,26 +115,57 @@ const LoginModal = () => {
                 id="email"
                 value={credentials.email}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md bg-gray-100 px-4 py-3 text-gray-700 focus:outline-none"
+                className={`mt-1 block w-full rounded-md bg-gray-100 px-4 py-3 text-gray-700 focus:outline-none ${
+                  credentials.email && !validations.email
+                    ? "border-2 border-red-500"
+                    : ""
+                }`}
                 required
                 placeholder="이메일을 입력하세요."
               />
+              {credentials.email && !validations.email && (
+                <p className="text-red-500 text-sm mt-1">
+                  유효한 이메일 형식이 아닙니다.
+                </p>
+              )}
             </div>
 
             <div>
               <label htmlFor="password" className="block text-2xl mb-2">
                 PW
               </label>
-              <input
-                type="password"
-                name="password"
-                id="password"
-                value={credentials.password}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md bg-gray-100 px-4 py-3 text-gray-700 focus:outline-none"
-                required
-                placeholder="비밀번호를 입력하세요."
-              />
+              <div className="relative">
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    id="password"
+                    value={credentials.password}
+                    onChange={handleChange}
+                    className={`mt-1 block w-full rounded-md bg-gray-100 px-4 py-3 pr-10 text-gray-700 focus:outline-none ${
+                      credentials.password && !validations.password
+                        ? "border-2 border-red-500"
+                        : ""
+                    }`}
+                    required
+                    placeholder="비밀번호를 입력하세요."
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                </div>
+                {credentials.password && !validations.password && (
+                  <p className="text-red-500 text-sm mt-1">
+                    비밀번호는 영문, 숫자, 특수문자를 포함한 9-16자여야 합니다.
+                  </p>
+                )}
+              </div>
             </div>
 
             <div className="text-right mb-4">
@@ -124,7 +181,7 @@ const LoginModal = () => {
 
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !isFormValid()}
               className="w-full rounded-md bg-gradient-to-tr from-cyan-500 to-gray-500 py-3 text-white text-xl font-semibold focus:outline-none disabled:opacity-50"
             >
               {isLoading ? "로그인 중..." : "LOGIN"}
