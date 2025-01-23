@@ -2,6 +2,7 @@ package com.meeple.meeple_back.game.cockroach.controller;
 
 import com.meeple.meeple_back.game.cockroach.model.request.RequestCheckCard;
 import com.meeple.meeple_back.game.cockroach.model.request.RequestGiveCard;
+import com.meeple.meeple_back.game.cockroach.model.request.RequestSendMessage;
 import com.meeple.meeple_back.game.cockroach.model.response.ResponseCheckCard;
 import com.meeple.meeple_back.game.cockroach.model.response.ResponseGiveCard;
 import com.meeple.meeple_back.game.cockroach.model.response.ResponseStartGame;
@@ -26,20 +27,22 @@ public class WebSocketController {
         this.cockroachService = cockroachService;
     }
 
-    /**
-     * 채팅 메시지를 처리하는 메서드
-     *
-     * @param roomId  메시지가 전송된 방의 ID (URL 경로에서 추출)
-     * @param message 클라이언트가 전송한 메시지 (단순 텍스트)
-     * @return 클라이언트로 브로드캐스트할 메시지
-     */
+
     @MessageMapping("/chat/{roomId}")
-    @SendTo("/topic/messages/{roomId}")
-    public String handleMessage(@DestinationVariable String roomId, String message) {
+    public void handleMessage(@RequestBody RequestSendMessage request) {
+        if (request.getRoomId() == null || request.getRoomId().isEmpty()) {
+            throw new IllegalArgumentException("유효하지 않은 roomId 입니다.");
+        }
+
+        if (request.getMessage() == null || request.getMessage().trim().isEmpty()) {
+            throw new IllegalArgumentException("빈 메세지는 전송할 수 없습니다.");
+        }
+
         // 받은 메시지를 콘솔에 출력 (디버깅용)
-        System.out.println("Received message in room " + roomId + ": " + message);
-        // 메시지를 그대로 반환하여 구독 중인 클라이언트들에게 브로드캐스트
-        return message;
+        System.out.println("Received message in room " + request.getRoomId() + ": "
+            + request.getMessage());
+
+        cockroachService.sendMessage(request);
     }
 
     /**
@@ -71,9 +74,9 @@ public class WebSocketController {
     @MessageMapping("/game/give-card/{roomId}")
     @SendTo("/topic/game/{roomId}")
     public ResponseGiveCard giveCard(
-            @DestinationVariable String roomId,
-            @RequestBody RequestGiveCard request
-            ) {
+        @DestinationVariable String roomId,
+        @RequestBody RequestGiveCard request
+    ) {
 
         return cockroachService.giveCard(roomId, request);
     }
@@ -81,9 +84,9 @@ public class WebSocketController {
     @MessageMapping("/game/check-card/{roomId}")
     @SendTo("/topic/game/{roomId}")
     public ResponseCheckCard checkCard(
-            @DestinationVariable String roomId,
-            @RequestBody RequestCheckCard request
-            ) {
+        @DestinationVariable String roomId,
+        @RequestBody RequestCheckCard request
+    ) {
 
         return cockroachService.checkCard(roomId, request);
     }

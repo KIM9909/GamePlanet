@@ -3,11 +3,14 @@ package com.meeple.meeple_back.game.cockroach.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.meeple.meeple_back.game.cockroach.model.entity.Card;
+import com.meeple.meeple_back.game.cockroach.model.entity.ChatMessage;
 import com.meeple.meeple_back.game.cockroach.model.request.RequestCheckCard;
 import com.meeple.meeple_back.game.cockroach.model.request.RequestGiveCard;
+import com.meeple.meeple_back.game.cockroach.model.request.RequestSendMessage;
 import com.meeple.meeple_back.game.cockroach.model.response.ResponseCheckCard;
 import com.meeple.meeple_back.game.cockroach.model.response.ResponseGiveCard;
 import com.meeple.meeple_back.game.cockroach.model.response.ResponseStartGame;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,11 +28,27 @@ public class CockroachServiceImpl implements CockroachService {
     private static final String[] CARD_TYPES = {"Bat", "Rat", "Fly",
         "Cockroach", "Scorpion", "Toad", "Stinkbug"};
 
-    private RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final SimpMessageSendingOperations messagingTemplate;
 
     @Autowired
-    public CockroachServiceImpl(RedisTemplate<String, Object> redisTemplate) {
+    public CockroachServiceImpl(RedisTemplate<String, Object> redisTemplate,
+        SimpMessageSendingOperations messagingTemplate) {
         this.redisTemplate = redisTemplate;
+        this.messagingTemplate = messagingTemplate;
+    }
+
+    @Override
+    public void sendMessage(RequestSendMessage request) {
+        ChatMessage chatMessage = ChatMessage.builder()
+            .roomId(request.getRoomId())
+            .sender(request.getSender())
+            .content(request.getMessage())
+            .timestamp(LocalDateTime.now())
+            .build();
+
+        messagingTemplate
+            .convertAndSend("/topic/messages/" + request.getRoomId(), chatMessage);
     }
 
     @Override
@@ -99,7 +119,7 @@ public class CockroachServiceImpl implements CockroachService {
     public ResponseGiveCard giveCard(String roomId, RequestGiveCard request) {
         // Redis에서 방 정보 가져오기
         Map<String, Object> roomInfo =
-                (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+            (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
 
         if (roomInfo == null) {
             throw new IllegalArgumentException("방을 찾을 수 없습니다: " + roomId);
@@ -133,13 +153,13 @@ public class CockroachServiceImpl implements CockroachService {
         redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
 
         ResponseGiveCard response = ResponseGiveCard.builder()
-                .to(request.getTo())
-                .from(request.getFrom())
-                .card(request.getCard())
-                .animal(request.getAnimal())
-                .isNagative(request.isNagative())
-                .isKing(request.isKing())
-                .build();
+            .to(request.getTo())
+            .from(request.getFrom())
+            .card(request.getCard())
+            .animal(request.getAnimal())
+            .isNagative(request.isNagative())
+            .isKing(request.isKing())
+            .build();
 
         return response;
     }
@@ -147,14 +167,15 @@ public class CockroachServiceImpl implements CockroachService {
     @Override
     public ResponseCheckCard checkCard(String roomId, RequestCheckCard request) {
         Map<String, Object> roomInfo =
-                (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+            (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
 
         if (roomInfo == null) {
             throw new IllegalArgumentException("방을 찾을 수 없습니다: " + roomId);
         }
 
         if (request.isCorrect()) {
-            Map<String, List<Card>> playerTables = (Map<String, List<Card>>) roomInfo.get("userTableCards");
+            Map<String, List<Card>> playerTables = (Map<String, List<Card>>) roomInfo.get(
+                "userTableCards");
             if (playerTables == null || !playerTables.containsKey(request.getFrom())) {
                 throw new IllegalStateException("플레이어 테이블 정보를 찾을 수 없습니다: " + request.getFrom());
             }
