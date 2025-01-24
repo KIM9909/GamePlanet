@@ -10,4 +10,6 @@ import lombok.Data;
 public class ResponseMultiCard {
     List<String> players;
     Map<String, Object> gameData;
+    boolean isEnd;
+    String loser;
 }

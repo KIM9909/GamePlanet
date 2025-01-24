@@ -1,6 +1,6 @@
-package com.meeple.meeple_back.game.cockroach.model.entity;
+package com.meeple.meeple_back.game.game.model;
 
-import com.meeple.meeple_back.game.game.model.Game;
+import com.meeple.meeple_back.user.model.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -9,36 +9,34 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.Setter;
 
 @Entity
-@Table(name = "tbl_room")
-@Getter
-
+@Table(name = "tbl_game_result")
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class Room {
+@Getter
+@Setter
+public class GameResult {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "room_id")
-    private int roomId;
+    @Column(name = "game_result_id")
+    private int gameResultId;
 
-    @Column(name = "room_name")
-    private String roomName;
+    @Column(name = "is_winner")
+    private char isWinner;
 
-    @Column(name = "create_time")
-    private LocalDateTime createTime;
+    @JoinColumn(name = "user_id")
+    @ManyToOne
+    private User user;
 
     @JoinColumn(name = "game_id")
     @ManyToOne
     private Game game;
-
 }

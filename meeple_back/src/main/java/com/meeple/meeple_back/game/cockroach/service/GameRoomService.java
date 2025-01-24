@@ -29,7 +29,7 @@ public class GameRoomService {
         this.roomRepository = roomRepository;
     }
 
-    public void createRoom(String roomId) {
+    public void  createRoom(String roomId) {
         Map<String, Object> roomInfo = new HashMap<>();
         List<String> players = new ArrayList<>();
         players.add("user1");
