@@ -16,15 +16,21 @@ import com.meeple.meeple_back.game.cockroach.model.response.ResponseMultiCard;
 import com.meeple.meeple_back.game.cockroach.model.response.ResponseStartGame;
 import com.meeple.meeple_back.game.cockroach.repository.ChatMessageRespository;
 import com.meeple.meeple_back.game.cockroach.repository.RoomRepository;
+import com.meeple.meeple_back.game.game.model.Game;
+import com.meeple.meeple_back.game.game.model.GameResult;
+import com.meeple.meeple_back.game.repo.GameRepository;
+import com.meeple.meeple_back.game.repo.GameResultRepository;
 import com.meeple.meeple_back.user.model.User;
 import com.meeple.meeple_back.user.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
@@ -43,16 +49,21 @@ public class CockroachServiceImpl implements CockroachService {
     private final RoomRepository roomRepository;
     private final ChatMessageRespository chatMessageRespository;
     private final UserRepository userRepository;
+    private final GameRepository gameRepository;
+    private final GameResultRepository gameResultRepository;
 
     @Autowired
     public CockroachServiceImpl(RedisTemplate<String, Object> redisTemplate,
         SimpMessageSendingOperations messagingTemplate, RoomRepository roomRepository,
-        ChatMessageRespository chatMessageRespository, UserRepository userRepository) {
+        ChatMessageRespository chatMessageRespository, UserRepository userRepository,
+        GameRepository gameRepository, GameResultRepository gameResultRepository) {
         this.redisTemplate = redisTemplate;
         this.messagingTemplate = messagingTemplate;
         this.roomRepository = roomRepository;
         this.chatMessageRespository = chatMessageRespository;
         this.userRepository = userRepository;
+        this.gameRepository = gameRepository;
+        this.gameResultRepository = gameResultRepository;
     }
 
     @Override
@@ -215,28 +226,61 @@ public class CockroachServiceImpl implements CockroachService {
         /* 만약 정답을 맞췄다면 */
         ResponseCheckCard response = ResponseCheckCard.builder()
             .userName(request.getFrom())
-            .card(request.getCard())
             .isEnd(false)
             .build();
+
+        List<Card> giveCards = new ArrayList<>();
+        List<Card> publicDeck = (List<Card>) roomInfo.get("publicDeck");
 
         if (request.isCorrect()) {
             List<Card> table = playerTables.get(request.getFrom());
 
             table.add(request.getCard());
+            giveCards.add(request.getCard());
+
+            if (request.getCard().isRoyal()) {
+                Card card = publicDeck.get(publicDeck.size() - 1);
+                publicDeck.remove(publicDeck.size() - 1);
+
+                table.add(card);
+                giveCards.add(card);
+            }
 
             playerTables.put(request.getFrom(), table);
+            String loser = checkGameFinish(request.getFrom(), roomInfo);
+
+            if (!loser.equals("")) {
+                response.setEnd(true);
+                response.setLoser(loser);
+            }
 
         } else {
             List<Card> table = playerTables.get(request.getTo());
 
             table.add(request.getCard());
+            giveCards.add(request.getCard());
+
+            if (request.getCard().isRoyal()) {
+                Card card = publicDeck.get(publicDeck.size() - 1);
+                publicDeck.remove(publicDeck.size() - 1);
+
+                table.add(card);
+                giveCards.add(card);
+            }
 
             playerTables.put(request.getTo(), table);
 
             response.setUserName(request.getTo());
+            String loser = checkGameFinish(request.getTo(), roomInfo);
+
+            if (!loser.equals("")) {
+                response.setEnd(true);
+                response.setLoser(loser);
+            }
         }
 
         /* Redis 업데이트 */
+        roomInfo.put("publicDeck", publicDeck);
         roomInfo.put("playerTableCards", playerTables);
         redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
 
@@ -286,12 +330,20 @@ public class CockroachServiceImpl implements CockroachService {
 
         List<String> players = (List<String>) roomInfo.get("players");
 
+        String loser = checkGameFinish(request.getUser(), roomInfo);
+
+
         redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
 
         ResponseMultiCard response = ResponseMultiCard.builder()
             .gameData(roomInfo)
             .players(players)
             .build();
+
+        if (!loser.equals("")) {
+            response.setEnd(true);
+            response.setLoser(loser);
+        }
 
         return response;
     }
@@ -330,5 +382,66 @@ public class CockroachServiceImpl implements CockroachService {
         }
 
         return playerCards;
+    }
+
+    public String checkGameFinish(String userName, Map<String, Object> roomInfo) {
+        // 같은 카드가 4장이거나 각 카드별로 1장
+        Map<String, List<Card>> userTableCards =
+            (Map<String, List<Card>>) roomInfo.get("userTableCards");
+
+        boolean isFinished = false;
+
+        List<Card> userTable = userTableCards.get(userName);
+        Map<String, Integer> cardCount = new HashMap<>();
+        for (Card card : userTable) {
+            cardCount.put(card.getType(), cardCount.getOrDefault(card.getType(), 0) + 1);
+
+            if (cardCount.get(card.getType()) >= 4) {
+                isFinished = true;
+                break;
+            }
+        }
+
+        Set<String> allCardTypes = new HashSet<>(List.of(CARD_TYPES));
+        Set<String> playerCardTypes = new HashSet<>();
+
+        for (Card card : userTable) {
+            playerCardTypes.add(card.getType());
+        }
+
+        if (playerCardTypes.containsAll(allCardTypes)) {
+            isFinished = true;
+        }
+
+        if (isFinished) {
+            List<String> users = (List<String>) roomInfo.get("players");
+
+            Optional<Game> game = gameRepository.findById(1);
+            for (String user : users) {
+                if(!user.equals(userName)) {
+                    User winner = userRepository.findByUserNickname(user);
+                    GameResult gameResult = GameResult.builder()
+                        .game(game.get())
+                        .isWinner('Y')
+                        .user(winner)
+                        .build();
+
+                    gameResultRepository.save(gameResult);
+                } else {
+                    User winner = userRepository.findByUserNickname(user);
+                    GameResult gameResult = GameResult.builder()
+                        .game(game.get())
+                        .isWinner('N')
+                        .user(winner)
+                        .build();
+
+                    gameResultRepository.save(gameResult);
+                }
+            }
+
+            return userName;
+        } else {
+            return "";
+        }
     }
 }
