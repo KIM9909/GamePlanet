@@ -37,6 +37,7 @@ export const UserAPI = {
       // 응답에서 토큰을 받아오면 localStorage에 저장
       if (response.data) {
         localStorage.setItem("token", response.data);
+        console.log(response.data);
       }
       return response.data; // 토큰 반환
     } catch (error) {
@@ -81,6 +82,15 @@ export const UserAPI = {
       localStorage.removeItem("token");
     } catch (error) {
       throw error.response?.data || "로그아웃에 실패했습니다.";
+    }
+  },
+
+  getProfile: async (userId) => {
+    try {
+      const response = await API.get(`/profile/${userId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || "프로필 정보를 불러오는데 실패했습니다.";
     }
   },
 };

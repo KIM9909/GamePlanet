@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../sources/api/store/slices/UserSlice";
 import { useNavigate } from "react-router-dom";
 import Twinkle from "../../assets/images/decorate_twinkle.png";
@@ -17,6 +17,9 @@ const TopNavbar = () => {
   const navigate = useNavigate();
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const navbarRef = useRef(null);
+  const { token } = useSelector((state) => state.user);
+
+  const userId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
 
   const characterInfo = {
     0: {
@@ -142,7 +145,7 @@ const TopNavbar = () => {
 
           <div className="flex items-center space-x-8">
             <Link
-              to="/profile"
+              to={`/profile/${userId}`}
               className="text-2xl font-semibold tracking-wide hover:text-cyan-300 transition-colors duration-300
                      relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-cyan-300 
                      after:left-0 after:-bottom-1 hover:after:w-full after:transition-all after:duration-300"

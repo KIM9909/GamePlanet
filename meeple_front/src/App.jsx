@@ -9,16 +9,15 @@ import ProfilePage from "./pages/profile/ProfilePage";
 import ProposalPage from "./pages/proposal/ProposalPage";
 import TournamentPage from "./pages/tournament/TournamentPage";
 import CockroachPokerPage from "./pages/game/CockroachPokerPage";
-import { Store } from "./sources/api/store/Store";
-import { Provider } from "react-redux";
 import MainPage from "./pages/main/MainPage";
 import TopLayout from "./components/layout/TopLayout";
 import SideLayout from "./components/layout/SideLayout";
 import Introduce from "./pages/introduce/Introduce";
 
 function App() {
+  // const { userId } = useSelector((state) => state.user);
+
   return (
-    <Provider store={Store}>
       <BrowserRouter>
         <TopLayout>
           <SideLayout>
@@ -45,7 +44,6 @@ function App() {
               <Route path="/" element={<MainPage />} />
 
               {/* Profile */}
-              <Route path="/profile" element={<ProfilePage />} />
               <Route path="/profile/:userId" element={<ProfilePage />} />
 
               {/* Proposal */}
@@ -65,7 +63,6 @@ function App() {
           </SideLayout>
         </TopLayout>
       </BrowserRouter>
-    </Provider>
   );
 }
 
