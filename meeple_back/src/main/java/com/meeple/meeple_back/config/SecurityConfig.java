@@ -56,7 +56,7 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // OPTIONS 요청 허용
 						.requestMatchers("/auth/login", "/user/register", "/user/checkEmail/**",
-								"/user/checkNickname/**").permitAll()
+								"/user/checkNickname/**", "/profile/{userId}").permitAll()
 						.anyRequest().authenticated()
 				)
 
