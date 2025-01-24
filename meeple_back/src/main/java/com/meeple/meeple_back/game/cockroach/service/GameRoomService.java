@@ -2,7 +2,7 @@ package com.meeple.meeple_back.game.cockroach.service;
 
 import com.meeple.meeple_back.game.cockroach.model.entity.Room;
 import com.meeple.meeple_back.game.cockroach.repository.RoomRepository;
-import java.sql.Timestamp;
+
 import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -24,12 +24,12 @@ public class GameRoomService {
 
     @Autowired
     public GameRoomService(RedisTemplate<String, Object> redisTemplate,
-        RoomRepository roomRepository) {
+                           RoomRepository roomRepository) {
         this.redisTemplate = redisTemplate;
         this.roomRepository = roomRepository;
     }
 
-    public void createRoom(String roomId) {
+    public int createRoom(String roomId) {
         Map<String, Object> roomInfo = new HashMap<>();
         List<String> players = new ArrayList<>();
         players.add("user1");
@@ -41,14 +41,16 @@ public class GameRoomService {
         System.out.println("createRoom service 호출");
 
         Room room = Room.builder()
-            .roomName(roomId)
-            .createTime(LocalDateTime.now())
-            .build();
+                .roomName(roomId)
+                .createTime(LocalDateTime.now())
+                .build();
 
         Room savedRoom = roomRepository.save(room);
 
 
         redisTemplate.opsForHash().put(ROOM_KEY, savedRoom.getRoomId() + "", roomInfo);
+
+        return savedRoom.getRoomId();
     }
 
     public Map<String, Object> getRoom(String roomId) {

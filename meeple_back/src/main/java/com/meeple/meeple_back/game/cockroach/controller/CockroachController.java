@@ -26,8 +26,8 @@ public class CockroachController {
     @PostMapping("/create-room")
     public ResponseEntity<String> createRoom(@RequestParam String roomId) {
         System.out.println("방 생성 호출됨");
-        gameRoomService.createRoom(roomId);
-        return ResponseEntity.ok("Room created with ID: " + roomId);
+        int savedRoomId = gameRoomService.createRoom(roomId);
+        return ResponseEntity.ok(savedRoomId + "");
     }
 
     @PostMapping("/join-room")

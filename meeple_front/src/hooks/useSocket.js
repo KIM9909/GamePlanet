@@ -1,18 +1,19 @@
-import { useEffect, useRef, useCallback } from 'react';
-import SockJS from 'sockjs-client';
-import { Client } from '@stomp/stompjs';
+import { useEffect, useRef, useCallback, useState } from "react";
+import SockJS from "sockjs-client";
+import { Client } from "@stomp/stompjs";
 
 // global 객체가 없을 경우를 대비한 폴리필
-if (typeof global === 'undefined') {
+if (typeof global === "undefined") {
   window.global = window;
 }
 
 const useSocket = (roomId) => {
   const clientRef = useRef(null);
+  const [messages, setMessages] = useState([]);
 
   const connect = useCallback(() => {
     const client = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8090/ws'),
+      webSocketFactory: () => new SockJS("http://localhost:8090/ws"),
       debug: (str) => console.log(str),
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
@@ -20,12 +21,12 @@ const useSocket = (roomId) => {
     });
 
     client.onConnect = () => {
-      console.log('Connected to WebSocket');
-      
+      console.log("Connected to WebSocket");
+
       // 채팅 메시지 구독
-      client.subscribe(`/topic/chat/${roomId}`, (message) => {
-        const data = JSON.parse(message.body);
-        // 메시지 처리 콜백
+      client.subscribe(`/topic/messages/${roomId}`, (message) => {
+        const newMessage = JSON.parse(message.body);
+        setMessages((prev) => [...prev, newMessage]);
       });
 
       // 게임 상태 구독
@@ -36,8 +37,8 @@ const useSocket = (roomId) => {
     };
 
     client.onStompError = (frame) => {
-      console.error('Broker reported error: ' + frame.headers['message']);
-      console.error('Additional details: ' + frame.body);
+      console.error("Broker reported error: " + frame.headers["message"]);
+      console.error("Additional details: " + frame.body);
     };
 
     clientRef.current = client;
@@ -50,20 +51,26 @@ const useSocket = (roomId) => {
     }
   }, []);
 
-  const sendMessage = useCallback((message) => {
-    if (clientRef.current?.connected) {
-      clientRef.current.publish({
-        destination: `/app/chat/${roomId}`,
-        body: JSON.stringify({ message })
-      });
-    }
-  }, [roomId]);
+  const sendMessage = useCallback(
+    (messageData) => {
+      if (clientRef.current?.connected) {
+        clientRef.current.publish({
+          destination: `/app/chat/${roomId}`,
+          body: JSON.stringify({
+            message: messageData.message,
+            sender: messageData.sender,
+          }),
+        });
+      }
+    },
+    [roomId]
+  );
 
   const startGame = useCallback(() => {
     if (clientRef.current?.connected) {
       clientRef.current.publish({
         destination: `/app/game/start-game/${roomId}`,
-        body: JSON.stringify({})
+        body: JSON.stringify({}),
       });
     }
   }, [roomId]);
@@ -78,8 +85,9 @@ const useSocket = (roomId) => {
   return {
     connected: !!clientRef.current?.connected,
     sendMessage,
-    startGame
+    messages,
+    startGame,
   };
 };
 
-export default useSocket; 
+export default useSocket;

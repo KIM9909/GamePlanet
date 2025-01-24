@@ -16,22 +16,19 @@ const HomePage = () => {
 
  const handleCreateRoom = async (roomData) => {
   try {
-    const formData = new URLSearchParams();
-    formData.append('roomId', roomData.roomName);
-
-    const response = await fetch("/api/game/create-room", {
+    const response = await fetch(`http://localhost:8090/api/game/create-room?roomId=${roomData.roomName}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: formData
+      }
     });
 
     if (!response.ok) {
       throw new Error("Failed to create room");
     }
 
-    navigate(`/game/cockroach/${roomData.roomName}`);
+    const pk = await response.text();
+    navigate(`/game/cockroach/${pk}`);
   } catch (error) {
     console.error("Error creating room:", error);
     alert("Failed to create room");
