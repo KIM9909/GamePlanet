@@ -1,6 +1,7 @@
 package com.meeple.meeple_back.game.cockroach.model.response;
 
 import com.meeple.meeple_back.game.cockroach.model.entity.Card;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 
