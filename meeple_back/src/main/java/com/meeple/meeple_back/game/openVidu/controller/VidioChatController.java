@@ -29,7 +29,7 @@ public class VidioChatController {
         }
     }
 
-    @PostMapping("gernerate-token/{sessionId}")
+    @PostMapping("generate-token/{sessionId}")
     public ResponseEntity<String> generateToken(@PathVariable String sessionId) {
         try {
             String token = openViduService.generateToken(sessionId);

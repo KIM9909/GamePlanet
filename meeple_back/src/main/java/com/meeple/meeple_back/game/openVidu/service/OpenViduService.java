@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class OpenViduService {
     private OpenVidu openVidu;
-    private String OPENVIDU_URL = "https://your-openvidu-server-url";
-    private String SECRET = "SECRET";
+    private String OPENVIDU_URL = "http://localhost:4443";
+    private String SECRET = "MY_SECRET";
 
     public OpenViduService() {
         this.openVidu = new OpenVidu(OPENVIDU_URL, SECRET);
