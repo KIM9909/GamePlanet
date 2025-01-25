@@ -18,52 +18,52 @@ function App() {
   // const { userId } = useSelector((state) => state.user);
 
   return (
-    <BrowserRouter>
-      <TopLayout>
-        <SideLayout>
-          <Routes>
-            {/* Admin */}
-            <Route path="/admin" element={<AdminPage />} />
 
-            {/* Board */}
-            <Route path="/board" element={<BoardPage />} />
-            <Route path="/board/:boardId" element={<BoardPage />} />
+    <Provider store={Store}>
+        <BrowserRouter>
+          <TopLayout>
+            <SideLayout>
+              <Routes>
+                {/* Admin */}
+                <Route path="/admin" element={<AdminPage />} />
 
-            {/* Game */}
-            <Route path="/game/burumabul" element={<BurumabulPage />} />
-            <Route
-              path="/game/cockroachpoker"
-              element={<CockroachPokerPage />}
-            />
+                {/* Board */}
+                <Route path="/board" element={<BoardPage />} />
+                <Route path="/board/:boardId" element={<BoardPage />} />
 
-            {/* GameInfo */}
-            <Route path="/game/:gameId" element={<GameInfoPage />} />
+                {/* Game */}
+                <Route path="/game/burumabul" element={<BurumabulPage />} />
+                <Route path="/game/cockroach/:roomId" element={<CockroachPokerPage />} />
 
-            {/* Home & Main */}
-            <Route path="/home" element={<HomePage />} />
-            <Route path="/" element={<MainPage />} />
+                {/* GameInfo */}
+                <Route path="/game/:gameId" element={<GameInfoPage />} />
 
-            {/* Profile */}
-            <Route path="/profile/:userId" element={<ProfilePage />} />
+                {/* Home & Main */}
+                <Route path="/home" element={<HomePage />} />
+                <Route path="/" element={<MainPage />} />
 
-            {/* Proposal */}
-            <Route path="/proposal" element={<ProposalPage />} />
-            <Route path="/proposal/:proposalId" element={<ProposalPage />} />
+                {/* Profile */}
+                <Route path="/profile/:userId" element={<ProfilePage />} />
 
-            {/* Tournament */}
-            <Route path="/tournament" element={<TournamentPage />} />
-            <Route
-              path="/tournament/:tournamentId"
-              element={<TournamentPage />}
-            />
+                {/* Proposal */}
+                <Route path="/proposal" element={<ProposalPage />} />
+                <Route path="/proposal/:proposalId" element={<ProposalPage />} />
 
-            {/* INTRODUCE */}
-            <Route path="/introduce" element={<Introduce />} />
-          </Routes>
-        </SideLayout>
-      </TopLayout>
-    </BrowserRouter>
-  );
-}
+                {/* Tournament */}
+                <Route path="/tournament" element={<TournamentPage />} />
+                <Route
+                  path="/tournament/:tournamentId"
+                  element={<TournamentPage />}
+                />
+
+                {/* INTRODUCE */}
+                <Route path="/introduce" element={<Introduce />} />
+              </Routes>
+            </SideLayout>
+          </TopLayout>
+        </BrowserRouter>
+      </Provider>
+      );
+    }
 
 export default App;
