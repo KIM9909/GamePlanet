@@ -1,13 +1,12 @@
 package com.meeple.meeple_back.user.controller;
 
+import com.meeple.meeple_back.user.model.PasswordUpdateRequest;
 import com.meeple.meeple_back.user.model.UserProfileResponse;
+import com.meeple.meeple_back.user.model.UserUpdateRequest;
 import com.meeple.meeple_back.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/profile")
@@ -20,5 +19,25 @@ public class ProfileController {
     public ResponseEntity<UserProfileResponse> getUserProfile(@PathVariable("userId") Long userId) {
         UserProfileResponse profile = userService.getUserProfile(userId);
         return ResponseEntity.ok(profile);
+    }
+
+    // 프로필 수정
+    @PutMapping("/{userId}")
+    public ResponseEntity<UserProfileResponse> updateUserProfile(
+            @PathVariable("userId") Long userId,
+            @RequestBody UserUpdateRequest request) {
+        // 수정된 프로필 데이터를 응답으로 반환
+        UserProfileResponse updatedProfile = userService.updateUserProfile(userId, request);
+        return ResponseEntity.ok(updatedProfile); // 수정된 데이터와 함께 200 ok 반환
+    }
+
+    // 비밀번호 수정
+    @PutMapping("/{userId}/password")
+    public ResponseEntity<?> updatePassword (
+            @PathVariable("userId") Long userId,
+            @RequestBody PasswordUpdateRequest request) {
+        // 성공 or 실패 여부만 반환
+        userService.updatePassword(userId, request);
+        return ResponseEntity.ok().build(); // 수정된 데이터 없이 200 ok 반환
     }
 }

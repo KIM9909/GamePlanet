@@ -1,10 +1,14 @@
 import { isAction } from "@reduxjs/toolkit";
 import React, { Children, useEffect, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const SideLayout = ({ children }) => {
+  const { token } = useSelector((state) => state.user);
   const location = useLocation();
-  const showSidebar = location.pathname !== "/";
+  const userId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
+  const showSidebar =
+    location.pathname !== "/" && location.pathname !== `/profile/${userId}`; // 메인과 프로필 페이지에서는 사이드바 안보임
   const [activeLink, setActiveLink] = useState(location.pathname);
 
   const linkStyle =
@@ -21,7 +25,7 @@ const SideLayout = ({ children }) => {
       {showSidebar ? (
         <div style={{ userSelect: "none" }} className="h-screen">
           <div className="flex flex-row">
-            <div className="flex w-1/5 bg-gradient-to-r from-gray-800 to-gray-800 h-screen border-2">
+            <div className="flex w-2/7 bg-gradient-to-r from-gray-800 to-gray-800 h-screen border-2">
               <div className="flex-1 m-2 border-2 box-border">
                 <div className="flex flex-col m-2 text-center py-2 text-[33px]">
                   {/* HOME */}
