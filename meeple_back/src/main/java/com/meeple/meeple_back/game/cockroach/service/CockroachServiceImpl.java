@@ -5,10 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.meeple.meeple_back.game.cockroach.model.entity.Card;
 import com.meeple.meeple_back.game.cockroach.model.entity.ChatMessage;
 import com.meeple.meeple_back.game.cockroach.model.entity.Room;
-import com.meeple.meeple_back.game.cockroach.model.request.RequestMultiCard;
-import com.meeple.meeple_back.game.cockroach.model.request.RequestSingleCard;
-import com.meeple.meeple_back.game.cockroach.model.request.RequestGiveCard;
-import com.meeple.meeple_back.game.cockroach.model.request.RequestSendMessage;
+import com.meeple.meeple_back.game.cockroach.model.request.*;
 import com.meeple.meeple_back.game.cockroach.model.response.*;
 import com.meeple.meeple_back.game.cockroach.repository.ChatMessageRespository;
 import com.meeple.meeple_back.game.cockroach.repository.RoomRepository;
@@ -387,6 +384,57 @@ public class CockroachServiceImpl implements CockroachService {
                 .build();
 
         return response;
+    }
+
+    @Override
+    public ResponseSendVote sendVote(String roomId, RequestSendVote request) {
+        ResponseSendVote response = ResponseSendVote.builder()
+                .voteTarget(request.getVoteTarget())
+                .build();
+
+        return response;
+    }
+
+    @Override
+    public ResponseVote vote(RequestVote request) {
+        ResponseVote response = ResponseVote.builder()
+                .isApproval(request.isApproval())
+                .voter(request.getVoter())
+                .build();
+
+        return response;
+    }
+
+    @Override
+    public ResponseVoteResult voteResult(String roomId, RequestVoteResult request) {
+        if (request.isResult()) {
+            Map<String, Object> roomInfo = (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+            List<String> players = (List<String>) roomInfo.get("players");
+
+            for (int i = 0; i < players.size(); i++) {
+                if (request.getTarget().equals(players.get(i))) {
+                    players.remove(i);
+                    break;
+                }
+            }
+
+            roomInfo.put("players", players);
+            redisTemplate.opsForHash().put(ROOM_KEY, roomId, players);
+
+            ResponseVoteResult response = ResponseVoteResult.builder()
+                    .isLeave(true)
+                    .target(request.getTarget())
+                    .build();
+
+            return response;
+        } else {
+            ResponseVoteResult response = ResponseVoteResult.builder()
+                    .target(request.getTarget())
+                    .isLeave(false)
+                    .build();
+
+            return response;
+        }
     }
 
     /* 카드 초기 설정 */
