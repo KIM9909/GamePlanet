@@ -4,10 +4,7 @@ import com.meeple.meeple_back.game.cockroach.model.request.RequestMultiCard;
 import com.meeple.meeple_back.game.cockroach.model.request.RequestSingleCard;
 import com.meeple.meeple_back.game.cockroach.model.request.RequestGiveCard;
 import com.meeple.meeple_back.game.cockroach.model.request.RequestSendMessage;
-import com.meeple.meeple_back.game.cockroach.model.response.ResponseCheckCard;
-import com.meeple.meeple_back.game.cockroach.model.response.ResponseGiveCard;
-import com.meeple.meeple_back.game.cockroach.model.response.ResponseMultiCard;
-import com.meeple.meeple_back.game.cockroach.model.response.ResponseStartGame;
+import com.meeple.meeple_back.game.cockroach.model.response.*;
 
 public interface CockroachService {
 
@@ -21,4 +18,5 @@ public interface CockroachService {
 
     void sendMessage(String roomId, RequestSendMessage request);
 
+    ResponseExitRoom exitRoom(String roomId, String userNickname);
 }
