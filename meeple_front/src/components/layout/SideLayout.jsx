@@ -11,6 +11,8 @@ const SideLayout = ({ children }) => {
     location.pathname !== "/" && location.pathname !== `/profile/${userId}`; // 메인과 프로필 페이지에서는 사이드바 안보임
   const [activeLink, setActiveLink] = useState(location.pathname);
 
+  const hiddenPaths = ["/", "/game/burumabul", "/game/cockroachpoker"];
+
   const linkStyle =
     "text-white hover:text-[#D7C3F1] transition-colors duration-300 relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-[#9694FF] after:left-0 after:-bottom-1 hover:after:w-full after:transition-all after:duration-300";
 
@@ -18,11 +20,16 @@ const SideLayout = ({ children }) => {
 
   useEffect(() => {
     setActiveLink(location.pathname);
+    if (hiddenPaths.includes(activeLink)) {
+      setIsShowSide(false);
+    } else {
+      setIsShowSide(true);
+    }
   }, [location.pathname]);
 
   return (
     <div>
-      {showSidebar ? (
+      {isShowSide && showSidebar ? (
         <div style={{ userSelect: "none" }} className="h-screen">
           <div className="flex flex-row">
             <div className="flex w-2/7 bg-gradient-to-r from-gray-800 to-gray-800 h-screen border-2">
