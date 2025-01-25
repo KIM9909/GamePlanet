@@ -1,22 +1,29 @@
 import React, { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Canvas, render, useThree, useFrame, useLoader, } from "@react-three/fiber"
+import {
+  Canvas,
+  render,
+  useThree,
+  useFrame,
+  useLoader,
+} from "@react-three/fiber";
 import { OrbitControls, Text, Edges } from "@react-three/drei";
-import Dice from "./Dice"
+import Dice from "./Dice";
 import { TextureLoader } from "three";
-import spaceBackground from "../../assets/burumabul_images/space.jpg"
+import spaceBackground from "../../assets/burumabul_images/space.jpg";
 
-import earthTexture from "../../assets/burumabul_images/earth.jpg"
-import marsTexture from "../../assets/burumabul_images/mars.jpg"
-
+import earthTexture from "../../assets/burumabul_images/earth.jpg";
+import marsTexture from "../../assets/burumabul_images/mars.jpg";
 
 const Cell = ({ position, isHighlight, name, textureUrl, topTextureUrl }) => {
   const textRef = useRef();
   const { camera } = useThree();
 
   // TextureLoader로 텍스쳐 로드
-  const texture = textureUrl ? useLoader(TextureLoader, textureUrl) : null ;
-  const topTexture = topTextureUrl ? useLoader(TextureLoader, topTextureUrl) : null ;
+  const texture = textureUrl ? useLoader(TextureLoader, textureUrl) : null;
+  const topTexture = topTextureUrl
+    ? useLoader(TextureLoader, topTextureUrl)
+    : null;
 
   useFrame(() => {
     if (textRef.current) {
@@ -41,15 +48,9 @@ const Cell = ({ position, isHighlight, name, textureUrl, topTextureUrl }) => {
       {topTexture && (
         <mesh position={[0, 0.101, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[1.5, 1.4]} />
-          <meshStandardMaterial
-            map={topTexture}
-            transparent={true}
-          />
+          <meshStandardMaterial map={topTexture} transparent={true} />
         </mesh>
       )}
-
-
-
 
       {/* 셀 이름 */}
       <Text
@@ -148,67 +149,125 @@ const TravelMap = () => {
 
   const resetCamera = () => {
     if (orbitControlsRef.current) {
-      orbitControlsRef.current.object.position.set(
-        ...initialCameraPosition
-      ); // 카메라 위치 초기화
+      orbitControlsRef.current.object.position.set(...initialCameraPosition); // 카메라 위치 초기화
       orbitControlsRef.current.target.set(...initialTarget); // 타겟 초기화
-      orbitControlsRef.current.update(); // OrbitControls 업데이트 
+      orbitControlsRef.current.update(); // OrbitControls 업데이트
     }
   };
-
 
   // 칸별 내용 생성
   const renderCells = () => {
     const positions = [];
     const step = 1.495;
-    const centerOffset = (size - 1) * step / 2; // 중심 좌표 계산
+    const centerOffset = ((size - 1) * step) / 2; // 중심 좌표 계산
 
     let x = -centerOffset;
     let z = -centerOffset;
 
-    const topTextures = [
-      earthTexture, marsTexture
-    ]
+    const topTextures = [earthTexture, marsTexture];
 
-    for (let i = 0; i < size -1; i++) positions.push([x + i * step, 0, z]);
-    for (let i = 0; i < size - 1; i++) positions.push([x + (size - 1) * step, 0, z + i * step]);
-    for (let i = 0; i < size - 1; i++) positions.push([x + (size - 1 - i) * step, 0, z + (size - 1) * step]);
-    for (let i = 0; i < size - 1; i++) positions.push([x, 0, z + (size - 1 - i) * step]);
+    for (let i = 0; i < size - 1; i++) positions.push([x + i * step, 0, z]);
+    for (let i = 0; i < size - 1; i++)
+      positions.push([x + (size - 1) * step, 0, z + i * step]);
+    for (let i = 0; i < size - 1; i++)
+      positions.push([x + (size - 1 - i) * step, 0, z + (size - 1) * step]);
+    for (let i = 0; i < size - 1; i++)
+      positions.push([x, 0, z + (size - 1 - i) * step]);
 
     return positions.map((pos, index) => (
-      <Cell 
-        key={index} 
-        position={pos} 
-        isHighlight={index === currentPosition} 
+      <Cell
+        key={index}
+        position={pos}
+        isHighlight={index === currentPosition}
         name={cities[index]}
-        topTextureUrl = {topTextures[index]} />
-
-    ))
+        topTextureUrl={topTextures[index]}
+      />
+    ));
   };
-
 
   const rollDice = () => {
     setShowModal(true);
   };
 
+  // 부모요소 참조
+
+  const parentRef = useRef();
+  const [parentBounds, setParentBounds] = useState({
+    top: 0,
+    left: 0,
+    width: 0,
+    height: 0,
+  });
+
+  const updateParentBounds = () => {
+    if (parentRef.current) {
+      const rect = parentRef.current.getBoundingClientRect();
+      setParentBounds({
+        top: rect.top,
+        left: rect.left,
+        width: rect.width,
+        height: rect.height,
+      });
+    }
+  };
+
+  useEffect(() => {
+    // 초기위치 계산
+    const handleResize = () => updateParentBounds();
+    updateParentBounds();
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
     <>
-      <div className="flex h-screen">
-          
-          {/* 좌측 영역 */}
-          <div className="flex flex-col w-1/5 bg-gray-100 p-4 text-center">
-            <div className="h-1/2">
-              user1
-            </div>
-            <div className="h-1/2">
-              user2
-            </div>
+      {/* 이동 버튼 + 주사위 버튼 */}
+      <div className="flex justify-center mb-5">
+        <button
+          onClick={moveToken}
+          className="mt-5 mx-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Move Token
+        </button>
+        <button
+          onClick={rollDice}
+          className="mt-5 mx-3 px-4 py-2 bg-red-300 text-white rounded hover:bg-blue-600"
+        >
+          Roll the Dice
+        </button>
+        <button
+          onClick={resetCamera}
+          className="mt-5 mx-3 px-4 py-2 bg-yellow-300 text-white rounded hover:bg-blue-600"
+        >
+          Reset Camera
+        </button>
+      </div>
+      <div className="text-center">
+        {totalScore !== 0 && (
+          <p className="mt-5 text-lg">
+            마지막 주사위 점수 : <strong>{totalScore}</strong>
+          </p>
+        )}
+      </div>
+      <div ref={parentRef} className="flex h-[100vh]">
+        {/* 좌측 영역 */}
+        <div className="flex flex-col h-full w-1/5 bg-gray-100 border-2 box-border border-black gap-4 text-center hidden xl:block">
+          <div className="h-[48%] border-2 m-2 mb-2 box-border border-black ">
+            <div className="h-full overflow-y-auto min-h-0">user1</div>
           </div>
-          <div style={{ 
-          height: "100vh",
-          width: "80vw"
-        }}>
+          <div className="h-[48%] border-2 m-2 mb-2 box-border border-black">
+            <div className="h-full overflow-y-auto min-h-0">user2</div>
+          </div>
+        </div>
+
+        <div className="sm:block sm:mx-auto">
           <Canvas
+            style={{
+              height: "100vh",
+              width: "70vw",
+            }}
             camera={{
               position: initialCameraPosition, // 카메라 초기 위치
               fov: 75, // 시야각 조절
@@ -216,9 +275,10 @@ const TravelMap = () => {
             onCreated={({ scene }) => {
               const texture = new TextureLoader().load(spaceBackground);
               scene.background = texture;
-            }}>
+            }}
+          >
             <ambientLight intensity={5} />
-            <pointLight position={[10, 20, 10]} intensity={2}/>
+            <pointLight position={[10, 20, 10]} intensity={2} />
 
             {/* 바닥 생성 */}
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.18, 0]}>
@@ -227,9 +287,9 @@ const TravelMap = () => {
             </mesh>
 
             {/* OrbitControls로 카메라 이동 및 확대/축소 제어 */}
-            <OrbitControls 
+            <OrbitControls
               ref={orbitControlsRef}
-              target={initialTarget} 
+              target={initialTarget}
               makeDefault
               maxPolarAngle={Math.PI / 2.5} // 위쪽으로 카메라 제한
               minDistance={10} // 최소 줌 거리
@@ -238,47 +298,38 @@ const TravelMap = () => {
             {renderCells()}
           </Canvas>
         </div>
-          <div className="flex flex-col w-1/5 bg-gray-100 p-4 text-center">
-            <div className="h-1/2">
-              user3
-            </div>
-            <div className="h-1/2">
-              user4
-            </div>
+
+        {/* 우측 영역 */}
+        <div className="flex flex-col h-full w-1/5 bg-gray-100 border-2 box-border border-black gap-4 text-center hidden xl:block">
+          <div className="h-[48%] border-2 m-2 mb-2 box-border border-black ">
+            <div className="h-full overflow-y-auto min-h-0">user3</div>
           </div>
-          
-        
+          <div className="h-[48%] border-2 m-2 mb-2 box-border border-black">
+            <div className="h-full overflow-y-auto min-h-0">user4</div>
+          </div>
+        </div>
       </div>
-          {/* 이동 버튼 + 주사위 버튼 */}
-          <div className="flex justify-center mb-5">
-            <button
-              onClick={moveToken}
-              className="mt-5 mx-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Move Token
-            </button>
-            <button 
-              onClick={rollDice}
-              className="mt-5 mx-3 px-4 py-2 bg-red-300 text-white rounded hover:bg-blue-600"
-            >
-              Roll the Dice
-            </button>
-            <button 
-              onClick={resetCamera} 
-              className="mt-5 mx-3 px-4 py-2 bg-yellow-300 text-white rounded hover:bg-blue-600"
-            >Reset Camera</button>
-          </div>
-          <div className="text-center">
-            {totalScore !== 0 && (
-              <p className="mt-5 text-lg">마지막 주사위 점수 : <strong>{totalScore}</strong></p>
-            )}
-          </div>
-          {showModal && createPortal(
-            <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm z-50">
-                <Dice onComplete={handleDiceComplete} onClose={() => setShowModal(false)} />,
-            </div>,
-            document.body
-          )}
+
+      {showModal &&
+        createPortal(
+          <div
+            className="absolute z-50 text-center flex items-center justify-center"
+            style={{
+              position: "absolute",
+              top: parentBounds.top,
+              left: parentBounds.left,
+              width: parentBounds.width,
+              height: parentBounds.height,
+            }}
+          >
+            <Dice
+              onComplete={handleDiceComplete}
+              onClose={() => setShowModal(false)}
+            />
+            ,
+          </div>,
+          document.body
+        )}
     </>
   );
 };

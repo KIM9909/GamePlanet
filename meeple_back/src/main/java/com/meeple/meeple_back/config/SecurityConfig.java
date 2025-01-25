@@ -55,10 +55,9 @@ public class SecurityConfig {
 				.sessionManagement(
 						session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
-						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-						.requestMatchers("/ws/**", "/topic/**", "/app/**",
-								"/auth/login", "/user/register",
-								"/user/checkEmail/**", "/user/checkNickname/**").permitAll()
+						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // OPTIONS 요청 허용
+						.requestMatchers("/auth/login", "/user/register", "/user/checkEmail/**",
+								"/user/checkNickname/**", "/profile/{userId}", "/profile/{userId}/password").permitAll()
 						.anyRequest().authenticated()
 				)
 				.addFilterBefore(jwtAuthenticationFilter,

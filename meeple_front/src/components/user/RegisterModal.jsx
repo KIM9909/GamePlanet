@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Dialog } from "@headlessui/react";
-import { X } from "lucide-react";
+import { X, Eye, EyeOff } from "lucide-react";
 import { UserAPI } from "../../sources/api/UserAPI";
 import { useDispatch } from "react-redux";
 import { setToken } from "../../sources/api/store/slices/UserSlice";
@@ -8,6 +8,11 @@ import { setToken } from "../../sources/api/store/slices/UserSlice";
 const RegisterModal = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
 
+  // 유효성 검사용 정규식
+  // email: 이메일 형식
+  // password: 영문, 숫자, 특수문자 포함 9-16자
+  // nickname: 한글, 영문, 숫자 2-10자
+  // name: 한글 2-5자
   const REGEX = {
     email: /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
     password:
@@ -16,6 +21,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
     name: /^[가-힣]{2,5}$/,
   };
 
+  // 폼 데이터 초기값
   const initialFormData = {
     userName: "",
     userEmail: "",
@@ -25,23 +31,33 @@ const RegisterModal = ({ isOpen, onClose }) => {
     userBirthday: "",
   };
 
+  // 유효성 검사 상태 초기값
   const initialValidations = {
-    email: false,
-    emailChecked: false,
-    nickname: false,
-    nicknameChecked: false,
-    passwordMatch: true,
-    validName: false,
-    validNickname: false,
-    validPassword: false,
-    validEmail: false,
+    email: false, // 이메일 중복검사 통과 여부
+    emailChecked: false, // 이메일 중복검사 수행 여부
+    nickname: false, // 닉네임 중복검사 통과 여부
+    nicknameChecked: false, // 닉네임 중복검사 수행 여부
+    passwordMatch: true, // 비밀번호 확인 일치 여부
+    validName: false, // 이름 형식 검사
+    validNickname: false, // 닉네임 형식 검사
+    validPassword: false, // 비밀번호 형식 검사
+    validEmail: false, // 이메일 형식 검사
   };
 
+  // 상태 관리
   const [formData, setFormData] = useState(initialFormData);
   const [validations, setValidations] = useState(initialValidations);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+  const [termsAgreed, setTermsAgreed] = useState({
+    terms: false, // 이용약관 동의
+    privacy: false, // 개인정보 동의
+    device: false, // 기기접근 동의
+  });
 
+  // 모달 닫기 시 초기화
   const handleClose = () => {
     setFormData(initialFormData);
     setValidations(initialValidations);
@@ -49,10 +65,12 @@ const RegisterModal = ({ isOpen, onClose }) => {
     onClose();
   };
 
+  // 스크롤 이벤트 전파 방지
   const handleWheel = (e) => {
     e.stopPropagation();
   };
 
+  // 필드별 유효성 검사
   const validateField = (name, value) => {
     switch (name) {
       case "userName":
@@ -68,6 +86,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
     }
   };
 
+  // 입력값 변경 처리
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -77,6 +96,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
 
     const isValid = validateField(name, value);
 
+    // 필드별 유효성 검사 상태 업데이트
     if (name === "userEmail") {
       setValidations((prev) => ({
         ...prev,
@@ -110,6 +130,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
     }
   };
 
+  // 이메일 중복 검사
   const handleEmailCheck = async () => {
     if (!formData.userEmail || !validations.validEmail) {
       setError("유효한 이메일을 입력해주세요.");
@@ -133,6 +154,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
     }
   };
 
+  // 닉네임 중복 검사
   const handleNicknameCheck = async () => {
     if (!formData.userNickname || !validations.validNickname) {
       setError("유효한 닉네임을 입력해주세요.");
@@ -156,31 +178,35 @@ const RegisterModal = ({ isOpen, onClose }) => {
     }
   };
 
+  // 폼 전체 유효성 검사
+  const isFormValid = () => {
+    return (
+      validations.validName && // 이름 형식
+      validations.validPassword && // 비밀번호 형식
+      validations.validEmail && // 이메일 형식
+      validations.validNickname && // 닉네임 형식
+      validations.passwordMatch && // 비밀번호 확인
+      validations.email && // 이메일 중복검사
+      validations.nickname && // 닉네임 중복검사
+      formData.userBirthday && // 생년월일
+      termsAgreed.terms && // 이용약관
+      termsAgreed.privacy && // 개인정보
+      termsAgreed.device // 기기접근
+    );
+  };
+
+  // 회원가입 제출 처리
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (
-      !validations.validName ||
-      !validations.validPassword ||
-      !validations.validEmail ||
-      !validations.validNickname
-    ) {
+    if (!isFormValid()) {
       setError("모든 필드를 올바르게 입력해주세요.");
-      return;
-    }
-
-    if (!validations.passwordMatch) {
-      setError("비밀번호가 일치하지 않습니다.");
-      return;
-    }
-
-    if (!validations.email || !validations.nickname) {
-      setError("이메일과 닉네임 중복 검사를 완료해주세요.");
       return;
     }
 
     setIsLoading(true);
     try {
+      // 생년월일 형식 변환 (YYYY-MM-DDT00:00:00)
       const birthdayDateTime = new Date(formData.userBirthday);
       const formattedBirthday =
         birthdayDateTime.toISOString().split("T")[0] + "T00:00:00";
@@ -193,8 +219,10 @@ const RegisterModal = ({ isOpen, onClose }) => {
         userBirthday: formattedBirthday,
       };
 
+      // 회원가입 API 호출
       const success = await UserAPI.register(userData);
       if (success) {
+        // 회원가입 성공 시 자동 로그인
         const loginData = {
           email: formData.userEmail,
           password: formData.userPassword,
@@ -283,9 +311,6 @@ const RegisterModal = ({ isOpen, onClose }) => {
                   >
                     생년월일
                   </label>
-                  <div className="text-[12px] ml-[2px] text-gray-400">
-                    생년월일 6자리 ex)000101
-                  </div>
                   <input
                     type="date"
                     name="userBirthday"
@@ -384,23 +409,29 @@ const RegisterModal = ({ isOpen, onClose }) => {
                   >
                     비밀번호
                   </label>
-                  <div className="text-[12px] ml-[2px] text-gray-400">
-                    영문 + 숫자 + 특수문자를 포함하여 9 - 16자 작성
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="userPassword"
+                      id="userPassword"
+                      value={formData.userPassword}
+                      onChange={handleChange}
+                      className={`mt-1 block w-full rounded-md border ${
+                        formData.userPassword && !validations.validPassword
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      } px-3 py-2 pr-10`}
+                      required
+                      placeholder="사용할 비밀번호를 입력하세요."
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
                   </div>
-                  <input
-                    type="password"
-                    name="userPassword"
-                    id="userPassword"
-                    value={formData.userPassword}
-                    onChange={handleChange}
-                    className={`mt-1 block w-full rounded-md border ${
-                      formData.userPassword && !validations.validPassword
-                        ? "border-red-500"
-                        : "border-gray-300"
-                    } px-3 py-2`}
-                    required
-                    placeholder="사용할 비밀번호를 입력하세요."
-                  />
                   {formData.userPassword && !validations.validPassword && (
                     <p className="mt-1 text-sm text-red-500">
                       비밀번호는 영문, 숫자, 특수문자를 포함한 9-16자여야
@@ -416,20 +447,36 @@ const RegisterModal = ({ isOpen, onClose }) => {
                   >
                     비밀번호 확인
                   </label>
-                  <input
-                    type="password"
-                    name="userPasswordConfirm"
-                    id="userPasswordConfirm"
-                    value={formData.userPasswordConfirm}
-                    onChange={handleChange}
-                    className={`mt-1 block w-full rounded-md border ${
-                      formData.userPasswordConfirm && !validations.passwordMatch
-                        ? "border-red-500"
-                        : "border-gray-300"
-                    } px-3 py-2`}
-                    required
-                    placeholder="비밀번호를 다시 입력하세요."
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPasswordConfirm ? "text" : "password"}
+                      name="userPasswordConfirm"
+                      id="userPasswordConfirm"
+                      value={formData.userPasswordConfirm}
+                      onChange={handleChange}
+                      className={`mt-1 block w-full rounded-md border ${
+                        formData.userPasswordConfirm &&
+                        !validations.passwordMatch
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      } px-3 py-2 pr-10`}
+                      required
+                      placeholder="비밀번호를 다시 입력하세요."
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowPasswordConfirm(!showPasswordConfirm)
+                      }
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                    >
+                      {showPasswordConfirm ? (
+                        <EyeOff size={20} />
+                      ) : (
+                        <Eye size={20} />
+                      )}
+                    </button>
+                  </div>
                   {formData.userPasswordConfirm &&
                     !validations.passwordMatch && (
                       <p className="mt-1 text-sm text-red-500">
@@ -454,6 +501,13 @@ const RegisterModal = ({ isOpen, onClose }) => {
                       type="checkbox"
                       id="termsAgreement"
                       className="mr-2"
+                      checked={termsAgreed.terms}
+                      onChange={(e) =>
+                        setTermsAgreed((prev) => ({
+                          ...prev,
+                          terms: e.target.checked,
+                        }))
+                      }
                       required
                     />
                     <label htmlFor="termsAgreement" className="text-sm">
@@ -466,6 +520,13 @@ const RegisterModal = ({ isOpen, onClose }) => {
                       type="checkbox"
                       id="privacyAgreement"
                       className="mr-2"
+                      checked={termsAgreed.privacy}
+                      onChange={(e) =>
+                        setTermsAgreed((prev) => ({
+                          ...prev,
+                          privacy: e.target.checked,
+                        }))
+                      }
                       required
                     />
                     <label htmlFor="privacyAgreement" className="text-sm">
@@ -478,6 +539,13 @@ const RegisterModal = ({ isOpen, onClose }) => {
                       type="checkbox"
                       id="deviceAgreement"
                       className="mr-2"
+                      checked={termsAgreed.device}
+                      onChange={(e) =>
+                        setTermsAgreed((prev) => ({
+                          ...prev,
+                          device: e.target.checked,
+                        }))
+                      }
                       required
                     />
                     <label htmlFor="deviceAgreement" className="text-sm">
@@ -490,7 +558,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
 
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || !isFormValid()}
                   className="w-full rounded-md text-xl py-2 text-white bg-gradient-to-tr from-cyan-500 to-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
                 >
                   {isLoading ? "처리중..." : "SIGNUP"}

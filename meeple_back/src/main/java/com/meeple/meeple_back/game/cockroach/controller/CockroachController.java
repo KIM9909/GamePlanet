@@ -1,5 +1,7 @@
 package com.meeple.meeple_back.game.cockroach.controller;
 
+import com.meeple.meeple_back.game.cockroach.model.request.RequestCreateRoom;
+import com.meeple.meeple_back.game.cockroach.model.response.ResponseCreateRoom;
 import com.meeple.meeple_back.game.cockroach.service.CockroachService;
 import com.meeple.meeple_back.game.cockroach.service.GameRoomService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,10 +26,10 @@ public class CockroachController {
     }
 
     @PostMapping("/create-room")
-    public ResponseEntity<String> createRoom(@RequestParam String roomId) {
+    public ResponseEntity<ResponseCreateRoom> createRoom(@RequestBody RequestCreateRoom request) {
         System.out.println("방 생성 호출됨");
-        int savedRoomId = gameRoomService.createRoom(roomId);
-        return ResponseEntity.ok(savedRoomId + "");
+        ResponseCreateRoom response = gameRoomService.createRoom(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/join-room")

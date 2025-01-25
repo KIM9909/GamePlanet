@@ -38,6 +38,7 @@ const UserSlice = createSlice({
   // 초기 상태 정의
   initialState: {
     token: localStorage.getItem("token"), // 브라우저에 저장된 토큰 가져오기
+    userId: null,
     isLoading: false, // 로딩 상태
     error: null, // 에러 상태
     isModalOpen: false, // 모달 표시 상태
@@ -70,9 +71,10 @@ const UserSlice = createSlice({
       })
       // 로그인 요청 성공
       .addCase(loginUser.fulfilled, (state, action) => {
-        state.isLoading = false; // 로딩 상태 비활성화
-        state.token = action.payload; // 받은 토큰 저장
-        state.isModalOpen = false; // 모달 닫기
+        state.isLoading = false;
+        state.token = action.payload;
+        state.userId = JSON.parse(atob(action.payload.split(".")[1])).sub;
+        state.isModalOpen = false;
       })
       // 로그인 요청 실패
       .addCase(loginUser.rejected, (state, action) => {
