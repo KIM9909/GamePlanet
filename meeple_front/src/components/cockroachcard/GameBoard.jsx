@@ -1,6 +1,27 @@
 import React, { useState, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+const getKoreanName = (type) => {
+  const nameMap = {
+    Bat: "박쥐",
+    Rat: "쥐",
+    Fly: "파리",
+    Cockroach: "바퀴벌레",
+    Scorpion: "전갈",
+    Toad: "두꺼비",
+    Stinkbug: "노린재",
+    Joker: "조커",
+    Black: "블랙",
+  };
+
+  if (type.startsWith("King")) {
+    const baseName = type.replace("King", "");
+    return `${nameMap[baseName]}:왕`;
+  }
+
+  return nameMap[type] || type;
+};
+
 const Card = ({ type = null, isBack = false, isRoyal = false }) => {
   if (isBack || !type) {
     return (
@@ -29,7 +50,7 @@ const Card = ({ type = null, isBack = false, isRoyal = false }) => {
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100">
-          <span className="text-sm text-white">{type}</span>
+          <span className="text-sm text-white">{getKoreanName(type)}</span>
         </div>
       </div>
     );
@@ -37,7 +58,7 @@ const Card = ({ type = null, isBack = false, isRoyal = false }) => {
 
   // 일반/킹 카드 처리
   const cardImageType = isRoyal ? `King${type}Card` : `${type}Card`;
-  const displayName = isRoyal ? `King ${type}` : type;
+  const displayName = isRoyal ? `King${type}` : type;
 
   return (
     <div className="flex-shrink-0 w-16 h-24 rounded-lg relative group cursor-pointer overflow-hidden">
@@ -47,7 +68,7 @@ const Card = ({ type = null, isBack = false, isRoyal = false }) => {
         className="w-full h-full object-cover"
       />
       <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100">
-        <span className="text-sm text-white">{displayName}</span>
+        <span className="text-sm text-white">{getKoreanName(displayName)}</span>
       </div>
     </div>
   );

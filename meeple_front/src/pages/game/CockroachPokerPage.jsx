@@ -9,7 +9,6 @@ const CockroachPokerPage = () => {
   const { roomId } = useParams();
   const { connected, sendMessage, startGame } = useSocket(roomId);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [playerCount, setPlayerCount] = useState(4);
   const [gameData, setGameData] = useState(null);
 
   const toggleSidebar = () => {
@@ -26,6 +25,8 @@ const CockroachPokerPage = () => {
       console.error("게임 시작 실패:", error);
     }
   };
+
+  const playerCount = gameData?.players?.length || 0;
 
   return (
     <div className="h-screen w-screen flex bg-gray-900">
@@ -63,24 +64,6 @@ const CockroachPokerPage = () => {
             onStartGame={handleStartGame}
             gameData={gameData}
           />
-        </div>
-
-        {/* 인원 선택 버튼 */}
-        <div className="flex justify-center gap-2 py-2 bg-gray-800">
-          {[2, 3, 4].map((count) => (
-            <button
-              key={count}
-              onClick={() => setPlayerCount(count)}
-              className={`px-3 py-1 text-sm rounded 
-                ${
-                  playerCount === count
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                }`}
-            >
-              {count}인
-            </button>
-          ))}
         </div>
 
         {/* 화상 채팅 영역 */}
