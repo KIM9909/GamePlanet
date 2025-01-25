@@ -30,6 +30,10 @@ const ProfilePage = () => {
       </h1>
       <div>
         <p>이름: {profile.userName}</p>
+        <p>이메일: {profile.userEmail}</p>
+        <p>생년월일: {profile.userBirthday.slice(0, 10)}</p>
+        <p>비밀번호: {profile.userPassword}</p>
+        <p>레벨: {profile.userLevel}</p>
       </div>
     </div>
   );

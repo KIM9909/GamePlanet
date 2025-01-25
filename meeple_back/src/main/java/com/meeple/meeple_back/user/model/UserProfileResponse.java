@@ -10,6 +10,9 @@ import java.time.LocalDateTime;
 public class UserProfileResponse {
     private String userName;
     private String userNickname;
+    private String userEmail;
+    private LocalDateTime userBirthday;
+    private String userPassword;
     private String userProfilePictureUrl;
     private String userTier;
     private int userLevel;

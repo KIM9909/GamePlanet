@@ -1,14 +1,14 @@
 package com.meeple.meeple_back.user.service;
 
 
-import com.meeple.meeple_back.user.model.User;
-import com.meeple.meeple_back.user.model.UserProfileResponse;
-import com.meeple.meeple_back.user.model.UserRegistDto;
+import com.meeple.meeple_back.user.model.*;
 import com.meeple.meeple_back.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 @Service
 public class UserService {
@@ -42,6 +42,7 @@ public class UserService {
 
 	}
 
+	// 프로필 정보 조회
 	@Transactional(readOnly = true)
 	public UserProfileResponse getUserProfile(Long userId) {
 		User user = userRepository.findById(userId)
@@ -50,10 +51,71 @@ public class UserService {
 		return UserProfileResponse.builder()
 				.userName(user.getUserName())
 				.userNickname(user.getUserNickname())
+				.userEmail(user.getUserEmail())
+				.userBirthday(user.getUserBirthday())
+				.userPassword(user.getUserPassword())
 				.userProfilePictureUrl(user.getUserProfilePictureUrl())
 				.userTier(user.getUserTier())
 				.userLevel(user.getUserLevel())
 				.userCreatedAt(user.getUserCreatedAt())
 				.build();
+	}
+
+	// 프로필 정보 수정
+	@Transactional
+	public UserProfileResponse updateUserProfile(Long userId, UserUpdateRequest request) {
+		// 사용자 조회
+		User user = userRepository.findById(userId)
+				.orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+		// 요청된 정보만 선택적으로 업데이트
+		if (request.getUserName() != null) {
+			user.setUserName(request.getUserName());
+		}
+		if (request.getUserNickname() != null) {
+			user.setUserNickname(request.getUserNickname());
+		}
+		if (request.getUserBirthday() != null) {
+			user.setUserBirthday(request.getUserBirthday());
+		}
+
+		// 수정 시간 업데이트 및 저장
+		user.setUserUpdatedAt(LocalDateTime.now());
+		User savedUser = userRepository.save(user);
+
+		// 수정된 정보를 응답 객체로 변환하여 반환
+		return UserProfileResponse.builder()
+				.userName(savedUser.getUserName())
+				.userNickname(savedUser.getUserNickname())
+				.userEmail(savedUser.getUserEmail())
+				.userBirthday(savedUser.getUserBirthday())
+				.userPassword(savedUser.getUserPassword())
+				.userProfilePictureUrl(savedUser.getUserProfilePictureUrl())
+				.userTier(savedUser.getUserTier())
+				.userLevel(savedUser.getUserLevel())
+				.userCreatedAt(savedUser.getUserCreatedAt())
+				.build();
+	}
+
+	// 비밀번호 수정
+	@Transactional
+	public void updatePassword(Long userId, PasswordUpdateRequest request) {
+		User user = userRepository.findById(userId)
+				.orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+		// 현재 비밀번호 확인
+		if (!passwordEncoder.matches(request.getCurrentPassword(), user.getUserPassword())) {
+			throw new IllegalArgumentException("Current password is incorrect");
+		}
+
+		// 새 비밀번호 확인
+		if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
+			throw new IllegalArgumentException("New password and confirm password do not match");
+		}
+
+		// 새 비밀번호 암호화 및 저장
+		user.setUserPassword(passwordEncoder.encode(request.getNewPassword()));
+		user.setUserUpdatedAt(LocalDateTime.now());
+		userRepository.save(user);
 	}
 }
