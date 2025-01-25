@@ -5,15 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.meeple.meeple_back.game.cockroach.model.entity.Card;
 import com.meeple.meeple_back.game.cockroach.model.entity.ChatMessage;
 import com.meeple.meeple_back.game.cockroach.model.entity.Room;
-import com.meeple.meeple_back.game.cockroach.model.request.RequestMultiCard;
-import com.meeple.meeple_back.game.cockroach.model.request.RequestSingleCard;
-import com.meeple.meeple_back.game.cockroach.model.request.RequestGiveCard;
-import com.meeple.meeple_back.game.cockroach.model.request.RequestSendMessage;
-import com.meeple.meeple_back.game.cockroach.model.response.ResponseCheckCard;
-import com.meeple.meeple_back.game.cockroach.model.response.ResponseGiveCard;
-import com.meeple.meeple_back.game.cockroach.model.response.ResponseMessage;
-import com.meeple.meeple_back.game.cockroach.model.response.ResponseMultiCard;
-import com.meeple.meeple_back.game.cockroach.model.response.ResponseStartGame;
+import com.meeple.meeple_back.game.cockroach.model.request.*;
+import com.meeple.meeple_back.game.cockroach.model.response.*;
 import com.meeple.meeple_back.game.cockroach.repository.ChatMessageRespository;
 import com.meeple.meeple_back.game.cockroach.repository.RoomRepository;
 import com.meeple.meeple_back.game.game.model.Game;
@@ -22,6 +15,7 @@ import com.meeple.meeple_back.game.repo.GameRepository;
 import com.meeple.meeple_back.game.repo.GameResultRepository;
 import com.meeple.meeple_back.user.model.User;
 import com.meeple.meeple_back.user.repository.UserRepository;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
@@ -42,7 +37,7 @@ public class CockroachServiceImpl implements CockroachService {
 
     private static final String ROOM_KEY = "GAME_ROOMS";
     private static final String[] CARD_TYPES = {"Bat", "Rat", "Fly",
-        "Cockroach", "Scorpion", "Toad", "Stinkbug"};
+            "Cockroach", "Scorpion", "Toad", "Stinkbug"};
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final SimpMessageSendingOperations messagingTemplate;
@@ -54,9 +49,9 @@ public class CockroachServiceImpl implements CockroachService {
 
     @Autowired
     public CockroachServiceImpl(RedisTemplate<String, Object> redisTemplate,
-        SimpMessageSendingOperations messagingTemplate, RoomRepository roomRepository,
-        ChatMessageRespository chatMessageRespository, UserRepository userRepository,
-        GameRepository gameRepository, GameResultRepository gameResultRepository) {
+                                SimpMessageSendingOperations messagingTemplate, RoomRepository roomRepository,
+                                ChatMessageRespository chatMessageRespository, UserRepository userRepository,
+                                GameRepository gameRepository, GameResultRepository gameResultRepository) {
         this.redisTemplate = redisTemplate;
         this.messagingTemplate = messagingTemplate;
         this.roomRepository = roomRepository;
@@ -73,29 +68,29 @@ public class CockroachServiceImpl implements CockroachService {
         User sender = userRepository.findByUserNickname(request.getSender());
 
         ChatMessage chatMessage = ChatMessage.builder()
-            .roomId(room.get())
-            .sender(sender)
-            .content(request.getMessage())
-            .timestamp(LocalDateTime.now())
-            .build();
+                .roomId(room.get())
+                .sender(sender)
+                .content(request.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
 
         chatMessageRespository.save(chatMessage);
 
         ResponseMessage responseMessage = ResponseMessage.builder()
-            .roomId(String.valueOf(room.get().getRoomId()))
-            .sender(sender.getUserNickname())
-            .timestamp(LocalDateTime.now())
-            .content(request.getMessage())
-            .build();
+                .roomId(String.valueOf(room.get().getRoomId()))
+                .sender(sender.getUserNickname())
+                .timestamp(LocalDateTime.now())
+                .content(request.getMessage())
+                .build();
 
         messagingTemplate
-            .convertAndSend("/topic/messages/" + roomId, responseMessage);
+                .convertAndSend("/topic/messages/" + roomId, responseMessage);
     }
 
     @Override
     public ResponseStartGame startGame(String roomId) {
         Map<String, Object> roomInfo =
-            (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+                (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
 
         ObjectMapper mapper = new ObjectMapper();
         try {
@@ -146,6 +141,7 @@ public class CockroachServiceImpl implements CockroachService {
         gameData.put("publicDeck", publicDeck);
         gameData.put("playerCards", distributedCards);
         gameData.put("userTableCards", userTableCards);
+        gameData.put("isGameStart", true);
         redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
 
         /* 데이터 반환 */
@@ -160,7 +156,7 @@ public class CockroachServiceImpl implements CockroachService {
     public ResponseGiveCard giveCard(String roomId, RequestGiveCard request) {
         // Redis에서 방 정보 가져오기
         Map<String, Object> roomInfo =
-            (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+                (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
 
         if (roomInfo == null) {
             throw new IllegalArgumentException("방을 찾을 수 없습니다: " + roomId);
@@ -185,7 +181,7 @@ public class CockroachServiceImpl implements CockroachService {
 
         if (!cardRemoved) {
             throw new IllegalStateException("전달하려는 카드가 플레이어의 패에 없습니다: "
-                + request.getCard());
+                    + request.getCard());
         }
 
         // 업데이트된 카드 리스트를 playerCards에 반영
@@ -195,13 +191,13 @@ public class CockroachServiceImpl implements CockroachService {
         redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
 
         ResponseGiveCard response = ResponseGiveCard.builder()
-            .to(request.getTo())
-            .from(request.getFrom())
-            .card(request.getCard())
-            .animal(request.getAnimal())
-            .isNagative(request.isNagative())
-            .isKing(request.isKing())
-            .build();
+                .to(request.getTo())
+                .from(request.getFrom())
+                .card(request.getCard())
+                .animal(request.getAnimal())
+                .isNagative(request.isNagative())
+                .isKing(request.isKing())
+                .build();
 
         return response;
     }
@@ -210,24 +206,24 @@ public class CockroachServiceImpl implements CockroachService {
     public ResponseCheckCard singleCard(String roomId, RequestSingleCard request) {
         /* 방 목록 조회 */
         Map<String, Object> roomInfo =
-            (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+                (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
 
         if (roomInfo == null) {
             throw new IllegalArgumentException("방을 찾을 수 없습니다: " + roomId);
         }
 
         Map<String, List<Card>> playerTables = (Map<String, List<Card>>) roomInfo.get(
-            "userTableCards");
+                "userTableCards");
         if (playerTables == null || !playerTables.containsKey(request.getFrom())) {
             throw new IllegalStateException("플레이어 테이블 정보를 찾을 수 없습니다: "
-                + request.getFrom());
+                    + request.getFrom());
         }
 
         /* 만약 정답을 맞췄다면 */
         ResponseCheckCard response = ResponseCheckCard.builder()
-            .userName(request.getFrom())
-            .isEnd(false)
-            .build();
+                .userName(request.getFrom())
+                .isEnd(false)
+                .build();
 
         List<Card> giveCards = new ArrayList<>();
         List<Card> publicDeck = (List<Card>) roomInfo.get("publicDeck");
@@ -291,11 +287,11 @@ public class CockroachServiceImpl implements CockroachService {
     public ResponseMultiCard multiCard(String roomId, RequestMultiCard request) {
         /* 방 목록 조회 */
         Map<String, Object> roomInfo =
-            (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+                (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
 
         Map<String, List<Card>> playerCards = (Map<String, List<Card>>) roomInfo.get("playerCards");
         Map<String, List<Card>> userTables =
-            (Map<String, List<Card>>) roomInfo.get("userTableCards");
+                (Map<String, List<Card>>) roomInfo.get("userTableCards");
 
         List<Card> cards = playerCards.get(request.getUser());
         List<Card> tables = userTables.get(request.getUser());
@@ -336,9 +332,9 @@ public class CockroachServiceImpl implements CockroachService {
         redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
 
         ResponseMultiCard response = ResponseMultiCard.builder()
-            .gameData(roomInfo)
-            .players(players)
-            .build();
+                .gameData(roomInfo)
+                .players(players)
+                .build();
 
         if (!loser.equals("")) {
             response.setEnd(true);
@@ -346,6 +342,99 @@ public class CockroachServiceImpl implements CockroachService {
         }
 
         return response;
+    }
+
+    @Override
+    public ResponseExitRoom exitRoom(String roomId, String userNickname) {
+        Map<String, Object> roomInfo =
+                (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+
+        List<String> userList = (List<String>) roomInfo.get("players");
+
+        if (!userNickname.equals(roomInfo.get("creator"))) {
+            for (int i = 0; i < userList.size(); i++) {
+                String user = userList.get(i);
+                if (user.equals(userNickname)) {
+                    userList.remove(i);
+                    break;
+                }
+            }
+        } else {
+            for (int i = 0; i < userList.size(); i++) {
+                if (!userList.get(i).equals(roomInfo.get("creator"))) {
+                    roomInfo.put("creator", userList.get(i));
+                    break;
+                }
+            }
+
+            for (int i = 0; i < userList.size(); i++) {
+                if (userList.get(i).equals(userNickname)) {
+                    roomInfo.remove(i);
+                    break;
+                }
+            }
+        }
+
+        roomInfo.put("player", userList);
+
+        redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
+
+        ResponseExitRoom response = ResponseExitRoom.builder()
+                .players(userList)
+                .build();
+
+        return response;
+    }
+
+    @Override
+    public ResponseSendVote sendVote(String roomId, RequestSendVote request) {
+        ResponseSendVote response = ResponseSendVote.builder()
+                .voteTarget(request.getVoteTarget())
+                .build();
+
+        return response;
+    }
+
+    @Override
+    public ResponseVote vote(RequestVote request) {
+        ResponseVote response = ResponseVote.builder()
+                .isApproval(request.isApproval())
+                .voter(request.getVoter())
+                .build();
+
+        return response;
+    }
+
+    @Override
+    public ResponseVoteResult voteResult(String roomId, RequestVoteResult request) {
+        if (request.isResult()) {
+            Map<String, Object> roomInfo = (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+            List<String> players = (List<String>) roomInfo.get("players");
+
+            for (int i = 0; i < players.size(); i++) {
+                if (request.getTarget().equals(players.get(i))) {
+                    players.remove(i);
+                    break;
+                }
+            }
+
+            roomInfo.put("players", players);
+            redisTemplate.opsForHash().put(ROOM_KEY, roomId, players);
+
+            ResponseVoteResult response = ResponseVoteResult.builder()
+                    .isLeave(true)
+                    .target(request.getTarget())
+                    .build();
+
+            return response;
+        } else {
+            ResponseVoteResult response = ResponseVoteResult.builder()
+                    .target(request.getTarget())
+                    .isLeave(false)
+                    .build();
+
+            return response;
+        }
     }
 
     /* 카드 초기 설정 */
@@ -372,7 +461,7 @@ public class CockroachServiceImpl implements CockroachService {
         // 1. 기본 카드 분배
         for (int i = 0; i < players.size(); i++) {
             playerCards.put(players.get(i),
-                new ArrayList<>(deck.subList(i * cardsPerPlayer, (i + 1) * cardsPerPlayer)));
+                    new ArrayList<>(deck.subList(i * cardsPerPlayer, (i + 1) * cardsPerPlayer)));
         }
 
         // 2. 나머지 카드 처리
@@ -387,7 +476,7 @@ public class CockroachServiceImpl implements CockroachService {
     public String checkGameFinish(String userName, Map<String, Object> roomInfo) {
         // 같은 카드가 4장이거나 각 카드별로 1장
         Map<String, List<Card>> userTableCards =
-            (Map<String, List<Card>>) roomInfo.get("userTableCards");
+                (Map<String, List<Card>>) roomInfo.get("userTableCards");
 
         boolean isFinished = false;
 
@@ -418,22 +507,22 @@ public class CockroachServiceImpl implements CockroachService {
 
             Optional<Game> game = gameRepository.findById(1);
             for (String user : users) {
-                if(!user.equals(userName)) {
+                if (!user.equals(userName)) {
                     User winner = userRepository.findByUserNickname(user);
                     GameResult gameResult = GameResult.builder()
-                        .game(game.get())
-                        .isWinner('Y')
-                        .user(winner)
-                        .build();
+                            .game(game.get())
+                            .isWinner('Y')
+                            .user(winner)
+                            .build();
 
                     gameResultRepository.save(gameResult);
                 } else {
                     User winner = userRepository.findByUserNickname(user);
                     GameResult gameResult = GameResult.builder()
-                        .game(game.get())
-                        .isWinner('N')
-                        .user(winner)
-                        .build();
+                            .game(game.get())
+                            .isWinner('N')
+                            .user(winner)
+                            .build();
 
                     gameResultRepository.save(gameResult);
                 }

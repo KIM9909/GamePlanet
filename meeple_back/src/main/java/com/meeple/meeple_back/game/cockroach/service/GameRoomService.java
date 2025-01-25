@@ -1,17 +1,19 @@
 package com.meeple.meeple_back.game.cockroach.service;
 
 import com.meeple.meeple_back.game.cockroach.model.entity.Room;
+import com.meeple.meeple_back.game.cockroach.model.request.RequestCreateRoom;
+import com.meeple.meeple_back.game.cockroach.model.response.ResponseCreateRoom;
 import com.meeple.meeple_back.game.cockroach.repository.RoomRepository;
-import java.sql.Timestamp;
+
 import java.time.LocalDateTime;
+
+import com.meeple.meeple_back.game.game.model.Game;
+import com.meeple.meeple_back.game.repo.GameRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,34 +23,50 @@ public class GameRoomService {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final RoomRepository roomRepository;
+    private final GameRepository gameRepository;
 
     @Autowired
     public GameRoomService(RedisTemplate<String, Object> redisTemplate,
-        RoomRepository roomRepository) {
+                           RoomRepository roomRepository,
+                           GameRepository gameRepository) {
         this.redisTemplate = redisTemplate;
         this.roomRepository = roomRepository;
+        this.gameRepository = gameRepository;
     }
 
-    public void  createRoom(String roomId) {
+    public ResponseCreateRoom createRoom(RequestCreateRoom request) {
         Map<String, Object> roomInfo = new HashMap<>();
         List<String> players = new ArrayList<>();
         players.add("user1");
         players.add("user2");
         players.add("user3");
-//        roomInfo.put("players", new ArrayList<>());
+        players.add(request.getCreator());
+
+        Optional<Game> game = gameRepository.findById(request.getGameId());
+
         roomInfo.put("players", players);
         roomInfo.put("gameData", new HashMap<>());
+        roomInfo.put("gameType", game.get().getGameName());
+        roomInfo.put("isPrivate", request.isPrivate());
+        roomInfo.put("password", request.getPassword());
+        roomInfo.put("isGameStart", false);
+        roomInfo.put("creator", request.getCreator());
         System.out.println("createRoom service 호출");
 
         Room room = Room.builder()
-            .roomName(roomId)
-            .createTime(LocalDateTime.now())
-            .build();
+                .roomName(request.getRoomTitle())
+                .createTime(LocalDateTime.now())
+                .game(game.get())
+                .build();
 
         Room savedRoom = roomRepository.save(room);
 
-
         redisTemplate.opsForHash().put(ROOM_KEY, savedRoom.getRoomId() + "", roomInfo);
+
+        ResponseCreateRoom response = ResponseCreateRoom.builder()
+                .roomId(savedRoom.getRoomId())
+                .build();
+        return response;
     }
 
     public Map<String, Object> getRoom(String roomId) {
@@ -68,7 +86,7 @@ public class GameRoomService {
 
     public void addPlayer(String roomId, String playerName) {
         Map<String, Object> room = getRoom(roomId);
-        System.out.println(roomId + "방 " + playerName + " 유저 참가 서비스" );
+        System.out.println(roomId + "방 " + playerName + " 유저 참가 서비스");
         if (room != null) {
             List<String> players = (List<String>) room.get("players");
             players.add(playerName);
