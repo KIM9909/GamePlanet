@@ -189,14 +189,51 @@ const TravelMap = () => {
     setShowModal(true);
   };
 
+  // 부모요소 참조
+
+  const parentRef = useRef();
+  const [parentBounds, setParentBounds] = useState({
+    top: 0,
+    left: 0,
+    width: 0,
+    height: 0,
+  });
+
+  const updateParentBounds = () => {
+    if (parentRef.current) {
+      const rect = parentRef.current.getBoundingClientRect();
+      setParentBounds({
+        top: rect.top,
+        left: rect.left,
+        width: rect.width,
+        height: rect.height,
+      });
+    }
+  };
+
+  useEffect(() => {
+    // 초기위치 계산
+    const handleResize = () => updateParentBounds();
+    updateParentBounds();
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
     <>
-      <div className="flex h-screen">
+      <div ref={parentRef} className="flex h-screen">
         {/* 좌측 영역 */}
-        <div className="flex flex-col w-1/5 bg-gray-100 p-4 text-center">
-          <div className="h-1/2">user1</div>
-          <div className="h-1/2">user2</div>
+        <div className="flex flex-col h-screen w-1/5 bg-gray-100 border-2 box-border border-black gap-4 text-center hidden xl:block">
+          <div className="h-[48%] border-2 m-2 mb-2 box-border border-black ">
+            <div className="h-full overflow-y-auto min-h-0">user1</div>
+          </div>
+          <div className="h-[48%] border-2 m-2 mb-2 box-border border-black">
+            <div className="h-full overflow-y-auto min-h-0">user2</div>
+          </div>
         </div>
+
         <div
           style={{
             height: "100vh",
@@ -234,11 +271,18 @@ const TravelMap = () => {
             {renderCells()}
           </Canvas>
         </div>
-        <div className="flex flex-col w-1/5 bg-gray-100 p-4 text-center">
-          <div className="h-1/2">user3</div>
-          <div className="h-1/2">user4</div>
+
+        {/* 우측 영역 */}
+        <div className="flex flex-col h-screen w-1/5 bg-gray-100 border-2 box-border border-black gap-4 text-center hidden xl:block">
+          <div className="h-[48%] border-2 m-2 mb-2 box-border border-black ">
+            <div className="h-full overflow-y-auto min-h-0">user3</div>
+          </div>
+          <div className="h-[48%] border-2 m-2 mb-2 box-border border-black">
+            <div className="h-full overflow-y-auto min-h-0">user4</div>
+          </div>
         </div>
       </div>
+
       {/* 이동 버튼 + 주사위 버튼 */}
       <div className="flex justify-center mb-5">
         <button
@@ -269,7 +313,16 @@ const TravelMap = () => {
       </div>
       {showModal &&
         createPortal(
-          <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm z-50">
+          <div
+            className="absolute z-50 flex items-center justify-center"
+            style={{
+              position: "absolute",
+              top: parentBounds.top,
+              left: parentBounds.left,
+              width: parentBounds.width,
+              height: parentBounds.height,
+            }}
+          >
             <Dice
               onComplete={handleDiceComplete}
               onClose={() => setShowModal(false)}

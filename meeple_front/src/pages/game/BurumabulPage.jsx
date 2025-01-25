@@ -11,8 +11,8 @@ const BurumabulPage = () => {
   };
 
   return (
-    <div>
-      <div className="fixed left-0 top-0 h-full z-50 flex">
+    <div className="h-screen w-full">
+      <div className="flex h-full left-0 top-0 z-50">
         <div
           className={`transition-transform duration-300 ease-in-out transform 
               ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} 
@@ -33,11 +33,11 @@ const BurumabulPage = () => {
           )}
         </div>
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
+          className={`flex-1 relative transition-all duration-300 ease-in-out ${
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-          <div className="relative h-full">
+          <div className="h-full">
             <div className="text-4xl font-bold text-center">BurumablePage</div>
             <TravelMap />
           </div>
