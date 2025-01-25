@@ -4,7 +4,11 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 const Card = ({ type = null, isBack = false, isRoyal = false }) => {
   if (isBack || !type) {
     return (
-      <div className="flex-shrink-0 w-16 h-24 rounded-lg relative group cursor-pointer overflow-hidden">
+      <div
+        className="flex-shrink-0 w-16 h-24 rounded-lg relative group cursor-pointer overflow-hidden 
+           shadow-[0_0_0_1px_rgba(255,255,255,0.3)] hover:shadow-[0_0_0_2px_rgba(255,255,255,0.5)]
+           transition-shadow duration-200"
+      >
         <img
           src="/src/assets/image/cockroachpoker/CardBack.svg"
           alt="Card Back"
@@ -78,71 +82,12 @@ const PenaltyCardStack = ({ type, count = 3, isRoyal }) => {
   );
 };
 
-const DraggableArea = ({ children, maxWidth = "w-96" }) => {
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
-  const containerRef = useRef(null);
-
-  const scroll = (direction) => {
-    if (containerRef.current) {
-      const scrollAmount = 100;
-      containerRef.current.scrollLeft += direction * scrollAmount;
-    }
-  };
-
-  const handleMouseDown = (e) => {
-    setIsDragging(true);
-    setStartX(e.pageX - containerRef.current.offsetLeft);
-    setScrollLeft(containerRef.current.scrollLeft);
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    const x = e.pageX - containerRef.current.offsetLeft;
-    const walk = (x - startX) * 2;
-    containerRef.current.scrollLeft = scrollLeft - walk;
-  };
-
-  return (
-    <div className={`relative group ${maxWidth}`}>
-      <button
-        onClick={() => scroll(-1)}
-        className="absolute left-0 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white/100 rounded-full p-1.5 shadow-lg z-10 -translate-x-1/2"
-      >
-        <ChevronLeft className="w-5 h-5 text-gray-600" />
-      </button>
-
-      <div
-        ref={containerRef}
-        className="overflow-x-hidden cursor-grab active:cursor-grabbing"
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        onMouseMove={handleMouseMove}
-      >
-        <div className="flex gap-2 pb-8 px-4">{children}</div>
-      </div>
-
-      <button
-        onClick={() => scroll(1)}
-        className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white/100 rounded-full p-1.5 shadow-lg z-10 translate-x-1/2"
-      >
-        <ChevronRight className="w-5 h-5 text-gray-600" />
-      </button>
-
-      <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-white to-transparent opacity-0 group-hover:opacity-100" />
-      <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white to-transparent opacity-0 group-hover:opacity-100" />
-    </div>
-  );
-};
-
-const OpponentArea = ({ playerNumber, penaltyCards = [], handCards = [] }) => {
+const OpponentArea = ({
+  playerNumber,
+  penaltyCards = [],
+  handCards = [],
+  playerName,
+}) => {
   const groupedPenaltyCards = penaltyCards.reduce((acc, card) => {
     const baseType = card.type.startsWith("King")
       ? card.type.replace("King", "")
@@ -154,14 +99,150 @@ const OpponentArea = ({ playerNumber, penaltyCards = [], handCards = [] }) => {
     return acc;
   }, {});
 
+  const sortedPenaltyGroups = Object.values(groupedPenaltyCards).sort(
+    (a, b) => {
+      const animalOrder = [
+        "Bat",
+        "Rat",
+        "Fly",
+        "Cockroach",
+        "Scorpion",
+        "Toad",
+        "Stinkbug",
+        "Joker",
+        "Black",
+      ];
+      const typeA = a.type.replace("King", "");
+      const typeB = b.type.replace("King", "");
+      return animalOrder.indexOf(typeA) - animalOrder.indexOf(typeB);
+    }
+  );
+
   return (
     <div className="w-64 space-y-4">
-      <div className="text-center text-sm font-medium text-gray-600">
-        Player {playerNumber}
+      <div className="px-3 py-1.5 bg-gray-800/90 rounded-lg">
+        <div className="text-center text-sm font-medium text-white">
+          {playerName}
+        </div>
       </div>
       <div className="space-y-4">
-        <DraggableArea maxWidth="w-64">
-          {Object.values(groupedPenaltyCards).map((stack, i) => (
+        {/* 벌칙 카드 영역 - 높이 제한 및 스크롤 추가 */}
+        <div className="h-40 overflow-y-auto">
+          <div className="flex flex-wrap justify-center gap-2 p-2">
+            {sortedPenaltyGroups.map((stack, i) => (
+              <PenaltyCardStack
+                key={i}
+                type={stack.type}
+                count={stack.count}
+                isRoyal={stack.type.includes("King")}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* 핸드 카드 영역 */}
+        <div className="relative h-24">
+          {handCards.length > 4 ? (
+            <div className="relative w-full h-full flex items-center justify-center">
+              <div className="flex">
+                {[...Array(4)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="relative"
+                    style={{
+                      marginLeft: i === 0 ? "0" : "-12px",
+                    }}
+                  >
+                    <Card isBack={true} type={null} />
+                  </div>
+                ))}
+              </div>
+              <div className="ml-2 px-3 py-1 bg-gray-800/80 text-white text-sm rounded-lg">
+                +{handCards.length - 4}
+              </div>
+            </div>
+          ) : (
+            <div className="flex justify-center gap-2">
+              {handCards.map((_, i) => (
+                <Card key={i} isBack={true} type={null} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MyArea = ({ penaltyCards = [], handCards = [] }) => {
+  // 카드 정렬 함수
+  const sortCards = (cards) => {
+    const animalOrder = [
+      "Bat",
+      "Rat",
+      "Fly",
+      "Cockroach",
+      "Scorpion",
+      "Toad",
+      "Stinkbug",
+      "Joker",
+      "Black",
+    ];
+
+    return [...cards].sort((a, b) => {
+      // 기본 타입 추출 (King 제거)
+      const typeA = a.type.replace("King", "");
+      const typeB = b.type.replace("King", "");
+
+      // 같은 동물이면 일반 카드가 먼저 오도록
+      if (typeA === typeB) {
+        return a.type.includes("King") ? 1 : -1;
+      }
+
+      // 동물 순서대로 정렬
+      return animalOrder.indexOf(typeA) - animalOrder.indexOf(typeB);
+    });
+  };
+
+  // 벌칙 카드 그룹화 및 정렬
+  const groupedPenaltyCards = penaltyCards.reduce((acc, card) => {
+    const baseType = card.type.replace("King", "");
+    if (!acc[baseType]) {
+      acc[baseType] = {
+        type: card.type,
+        count: 0,
+        royal: card.type.includes("King"),
+      };
+    }
+    acc[baseType].count += card.count;
+    return acc;
+  }, {});
+
+  const sortedPenaltyGroups = Object.values(groupedPenaltyCards).sort(
+    (a, b) => {
+      const animalOrder = [
+        "Bat",
+        "Rat",
+        "Fly",
+        "Cockroach",
+        "Scorpion",
+        "Toad",
+        "Stinkbug",
+        "Joker",
+        "Black",
+      ];
+      const typeA = a.type.replace("King", "");
+      const typeB = b.type.replace("King", "");
+      return animalOrder.indexOf(typeA) - animalOrder.indexOf(typeB);
+    }
+  );
+
+  return (
+    <div className="absolute bottom-4 left-0 right-0 px-8">
+      {/* 벌칙 카드 영역 */}
+      <div className="mb-6">
+        <div className="flex justify-center gap-4 flex-wrap">
+          {sortedPenaltyGroups.map((stack, i) => (
             <PenaltyCardStack
               key={i}
               type={stack.type}
@@ -169,90 +250,54 @@ const OpponentArea = ({ playerNumber, penaltyCards = [], handCards = [] }) => {
               isRoyal={stack.royal}
             />
           ))}
-        </DraggableArea>
-        <DraggableArea maxWidth="w-64">
-          {handCards.map((card, i) => (
-            <Card key={i} isBack={true} type={null} />
-          ))}
-        </DraggableArea>
+        </div>
       </div>
-    </div>
-  );
-};
 
-const MyArea = ({ penaltyCards = [], handCards = [] }) => {
-  const groupedPenaltyCards = penaltyCards.reduce((acc, card) => {
-    const baseType = card.type.startsWith("King")
-      ? card.type.replace("King", "")
-      : card.type;
-    if (!acc[baseType]) {
-      acc[baseType] = { type: card.type, count: 0 };
-    }
-    acc[baseType].count += card.count;
-    return acc;
-  }, {});
-
-  return (
-    <div className="absolute bottom-0 left-0 right-0 p-8 space-y-8">
-      <DraggableArea maxWidth="w-full">
-        {Object.values(groupedPenaltyCards).map((stack, i) => (
-          <PenaltyCardStack
-            key={i}
-            type={stack.type}
-            count={stack.count}
-            isRoyal={stack.royal}
-          />
-        ))}
-      </DraggableArea>
-      <DraggableArea maxWidth="w-full">
-        {handCards.map((card, i) => (
+      {/* 핸드 카드 영역 */}
+      <div className="flex justify-center gap-4 flex-wrap">
+        {sortCards(handCards).map((card, i) => (
           <Card key={i} isBack={false} type={card.type} isRoyal={card.royal} />
         ))}
-      </DraggableArea>
+      </div>
     </div>
   );
 };
 
 const DeckArea = ({ openCard }) => {
   return (
-    <div className="absolute top-1/3 left-1/2 -translate-x-1/2 bg-white/50 backdrop-blur-sm p-8 rounded-2xl shadow-lg border-2 border-gray-200">
-      <div className="flex gap-16 items-center relative">
-        {/* 덱 영역 */}
-        <div className="relative">
-          <div className="absolute -top-3 -left-3 w-[72px] h-[104px] bg-white/50 rounded-lg -rotate-6" />
-          <div className="absolute -top-2 -left-2 w-[72px] h-[104px] bg-white/70 rounded-lg rotate-3" />
-          {[4, 3, 2, 1, 0].map((index) => (
-            <div
-              key={index}
-              className="absolute"
-              style={{
-                top: `${-index * 2}px`,
-                left: `${-index * 2}px`,
-                zIndex: index,
-              }}
-            >
-              <Card isBack={true} />
-            </div>
-          ))}
-        </div>
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+      <div className="relative">
+        {[4, 3, 2, 1, 0].map((index) => (
+          <div
+            key={index}
+            className="absolute"
+            style={{
+              top: `${-index * 1}px`,
+              left: `${-index * 1}px`,
+              zIndex: index,
+            }}
+          >
+            <Card isBack={true} />
+          </div>
+        ))}
 
-        {/* 간격선 */}
-        <div className="w-px h-28 bg-gray-300/50" />
-
-        {/* 오픈 카드 영역 */}
-        <div className="relative">
-          <div className="absolute inset-0 -m-2 bg-white/70 rounded-lg" />
-          <Card
-            type={openCard?.type}
-            isBack={!openCard}
-            isRoyal={openCard?.royal}
-          />
-        </div>
-      </div>
-
-      {/* 설명 레이블 */}
-      <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-gray-600 text-white px-3 py-1 rounded-full text-sm shadow-sm">
-        덱 & 오픈카드
+        {openCard && (
+          <div
+            className="absolute"
+            style={{
+              top: "-30px",
+              left: "20px",
+              zIndex: 10,
+              transform: "rotate(5deg)",
+            }}
+          >
+            <Card
+              type={openCard.type}
+              isBack={false}
+              isRoyal={openCard.royal}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -270,10 +315,10 @@ const GameBoard = ({ playerCount = 4, onStartGame, gameData }) => {
 
   if (!isGameStarted) {
     return (
-      <div className="relative w-full h-[800px] max-w-[1600px] mx-auto bg-green-50 rounded-3xl flex items-center justify-center">
+      <div className="relative w-full h-[800px] max-w-[1600px] mx-auto bg-gray-700/10 rounded-3xl flex items-center justify-center">
         <div className="text-center space-y-6">
-          <h2 className="text-2xl font-bold text-gray-800">바퀴벌레 포커</h2>
-          <p className="text-gray-600">현재 {playerCount}인 게임</p>
+          <h2 className="text-2xl font-bold text-white">바퀴벌레 포커</h2>
+          <p className="text-gray-200">현재 {playerCount}인 게임</p>
           <button
             onClick={handleStartGame}
             className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
@@ -288,8 +333,8 @@ const GameBoard = ({ playerCount = 4, onStartGame, gameData }) => {
   // gameData가 없으면 로딩 표시
   if (!gameData) {
     return (
-      <div className="relative w-full h-[800px] max-w-[1600px] mx-auto bg-green-50 rounded-3xl flex items-center justify-center">
-        <div className="text-xl text-gray-600">게임 데이터 로딩 중...</div>
+      <div className="relative w-full h-[800px] max-w-[1600px] mx-auto bg-gray-700/10 rounded-3xl flex items-center justify-center">
+        <div className="text-xl text-gray-200">게임 데이터 로딩 중...</div>
       </div>
     );
   }
@@ -302,7 +347,7 @@ const GameBoard = ({ playerCount = 4, onStartGame, gameData }) => {
 
   return (
     <div className="p-4">
-      <div className="relative w-full h-[800px] max-w-[1600px] mx-auto bg-green-50 rounded-3xl">
+      <div className="relative w-full h-[800px] max-w-[1600px] mx-auto bg-gray-700/10 rounded-3xl">
         {/* 상단 플레이어 영역 */}
         {playerCount === 2 ? (
           <div className="absolute top-4 left-0 right-0 flex justify-center">
@@ -310,42 +355,57 @@ const GameBoard = ({ playerCount = 4, onStartGame, gameData }) => {
               playerNumber={2}
               penaltyCards={userTableCards[players[1]] || []}
               handCards={playerCards[players[1]] || []}
+              playerName={players[1]}
             />
           </div>
         ) : (
-          <div className="absolute top-4 left-4 right-4 flex justify-between">
+          <div className="absolute top-4 left-4 right-4">
             {playerCount === 3 ? (
-              <>
-                <OpponentArea
-                  playerNumber={2}
-                  penaltyCards={userTableCards[players[1]] || []}
-                  handCards={playerCards[players[1]] || []}
-                />
-                <OpponentArea
-                  playerNumber={3}
-                  penaltyCards={userTableCards[players[2]] || []}
-                  handCards={playerCards[players[2]] || []}
-                />
-                <div className="w-64" />
-              </>
+              <div className="flex justify-between">
+                <div className="w-[calc(40%-1rem)]">
+                  <OpponentArea
+                    playerNumber={2}
+                    penaltyCards={userTableCards[players[1]] || []}
+                    handCards={playerCards[players[1]] || []}
+                    playerName={players[1]}
+                  />
+                </div>
+                <div className="w-[calc(40%-1rem)]">
+                  <OpponentArea
+                    playerNumber={3}
+                    penaltyCards={userTableCards[players[2]] || []}
+                    handCards={playerCards[players[2]] || []}
+                    playerName={players[2]}
+                  />
+                </div>
+              </div>
             ) : (
-              <>
-                <OpponentArea
-                  playerNumber={2}
-                  penaltyCards={userTableCards[players[1]] || []}
-                  handCards={playerCards[players[1]] || []}
-                />
-                <OpponentArea
-                  playerNumber={3}
-                  penaltyCards={userTableCards[players[2]] || []}
-                  handCards={playerCards[players[2]] || []}
-                />
-                <OpponentArea
-                  playerNumber={4}
-                  penaltyCards={userTableCards[players[3]] || []}
-                  handCards={playerCards[players[3]] || []}
-                />
-              </>
+              <div className="flex justify-between">
+                <div className="w-[calc(33%-1rem)]">
+                  <OpponentArea
+                    playerNumber={2}
+                    penaltyCards={userTableCards[players[1]] || []}
+                    handCards={playerCards[players[1]] || []}
+                    playerName={players[1]}
+                  />
+                </div>
+                <div className="w-[calc(33%-1rem)]">
+                  <OpponentArea
+                    playerNumber={3}
+                    penaltyCards={userTableCards[players[2]] || []}
+                    handCards={playerCards[players[2]] || []}
+                    playerName={players[2]}
+                  />
+                </div>
+                <div className="w-[calc(33%-1rem)]">
+                  <OpponentArea
+                    playerNumber={4}
+                    penaltyCards={userTableCards[players[3]] || []}
+                    handCards={playerCards[players[3]] || []}
+                    playerName={players[3]}
+                  />
+                </div>
+              </div>
             )}
           </div>
         )}
@@ -359,29 +419,6 @@ const GameBoard = ({ playerCount = 4, onStartGame, gameData }) => {
           handCards={playerCards[players[0]] || []}
         />
       </div>
-    </div>
-  );
-};
-
-// 화상 채팅 UI 컴포넌트 추가
-const VideoChat = ({ playerCount }) => {
-  return (
-    <div
-      className="grid gap-2 h-full p-2"
-      style={{
-        gridTemplateColumns: `repeat(${playerCount}, 1fr)`,
-      }}
-    >
-      {Array(playerCount)
-        .fill(null)
-        .map((_, i) => (
-          <div
-            key={i}
-            className="bg-gray-900 rounded-lg flex items-center justify-center"
-          >
-            <div className="text-gray-500 text-sm">Player {i + 1}</div>
-          </div>
-        ))}
     </div>
   );
 };

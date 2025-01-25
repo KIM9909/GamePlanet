@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import useSocket from "../../hooks/useSocket";
 import GameBoard from "../../components/cockroachcard/GameBoard";
 import GameSidebar from "../../components/sidebar/GameSidebar";
+import VideoChat from "../../components/videochat/VideoChat";
 
 const CockroachPokerPage = () => {
   const { roomId } = useParams();
@@ -84,7 +85,7 @@ const CockroachPokerPage = () => {
 
         {/* 화상 채팅 영역 */}
         <div className="h-48 bg-gray-800 border-t border-gray-700">
-          <div className="text-white p-4">화상 채팅 영역 (개발 예정)</div>
+          <VideoChat playerCount={playerCount} />
         </div>
       </div>
 

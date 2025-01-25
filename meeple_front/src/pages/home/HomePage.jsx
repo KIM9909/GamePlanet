@@ -1,18 +1,10 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
-import { logout } from "../../sources/api/store/slices/UserSlice";
 import { useNavigate } from "react-router-dom";
 import CreateRoomModal from "../../components/game/CreateRoomModal";
 
 const HomePage = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [isCreateRoomModalOpen, setCreateRoomModalOpen] = useState(false);
-
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate("/");
-  };
 
   const handleCreateRoom = async (roomData) => {
     console.log('roomData:', roomData);
