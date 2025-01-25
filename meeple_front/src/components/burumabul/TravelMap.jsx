@@ -223,9 +223,37 @@ const TravelMap = () => {
 
   return (
     <>
-      <div ref={parentRef} className="flex h-screen">
+      {/* 이동 버튼 + 주사위 버튼 */}
+      <div className="flex justify-center mb-5">
+        <button
+          onClick={moveToken}
+          className="mt-5 mx-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Move Token
+        </button>
+        <button
+          onClick={rollDice}
+          className="mt-5 mx-3 px-4 py-2 bg-red-300 text-white rounded hover:bg-blue-600"
+        >
+          Roll the Dice
+        </button>
+        <button
+          onClick={resetCamera}
+          className="mt-5 mx-3 px-4 py-2 bg-yellow-300 text-white rounded hover:bg-blue-600"
+        >
+          Reset Camera
+        </button>
+      </div>
+      <div className="text-center">
+        {totalScore !== 0 && (
+          <p className="mt-5 text-lg">
+            마지막 주사위 점수 : <strong>{totalScore}</strong>
+          </p>
+        )}
+      </div>
+      <div ref={parentRef} className="flex h-[100vh]">
         {/* 좌측 영역 */}
-        <div className="flex flex-col h-screen w-1/5 bg-gray-100 border-2 box-border border-black gap-4 text-center hidden xl:block">
+        <div className="flex flex-col h-full w-1/5 bg-gray-100 border-2 box-border border-black gap-4 text-center hidden xl:block">
           <div className="h-[48%] border-2 m-2 mb-2 box-border border-black ">
             <div className="h-full overflow-y-auto min-h-0">user1</div>
           </div>
@@ -234,13 +262,12 @@ const TravelMap = () => {
           </div>
         </div>
 
-        <div
-          style={{
-            height: "100vh",
-            width: "80vw",
-          }}
-        >
+        <div className="sm:block sm:mx-auto">
           <Canvas
+            style={{
+              height: "100vh",
+              width: "70vw",
+            }}
             camera={{
               position: initialCameraPosition, // 카메라 초기 위치
               fov: 75, // 시야각 조절
@@ -273,7 +300,7 @@ const TravelMap = () => {
         </div>
 
         {/* 우측 영역 */}
-        <div className="flex flex-col h-screen w-1/5 bg-gray-100 border-2 box-border border-black gap-4 text-center hidden xl:block">
+        <div className="flex flex-col h-full w-1/5 bg-gray-100 border-2 box-border border-black gap-4 text-center hidden xl:block">
           <div className="h-[48%] border-2 m-2 mb-2 box-border border-black ">
             <div className="h-full overflow-y-auto min-h-0">user3</div>
           </div>
@@ -283,38 +310,10 @@ const TravelMap = () => {
         </div>
       </div>
 
-      {/* 이동 버튼 + 주사위 버튼 */}
-      <div className="flex justify-center mb-5">
-        <button
-          onClick={moveToken}
-          className="mt-5 mx-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Move Token
-        </button>
-        <button
-          onClick={rollDice}
-          className="mt-5 mx-3 px-4 py-2 bg-red-300 text-white rounded hover:bg-blue-600"
-        >
-          Roll the Dice
-        </button>
-        <button
-          onClick={resetCamera}
-          className="mt-5 mx-3 px-4 py-2 bg-yellow-300 text-white rounded hover:bg-blue-600"
-        >
-          Reset Camera
-        </button>
-      </div>
-      <div className="text-center">
-        {totalScore !== 0 && (
-          <p className="mt-5 text-lg">
-            마지막 주사위 점수 : <strong>{totalScore}</strong>
-          </p>
-        )}
-      </div>
       {showModal &&
         createPortal(
           <div
-            className="absolute z-50 flex items-center justify-center"
+            className="absolute z-50 text-center flex items-center justify-center"
             style={{
               position: "absolute",
               top: parentBounds.top,
