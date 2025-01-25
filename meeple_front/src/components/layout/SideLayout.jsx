@@ -7,8 +7,12 @@ const SideLayout = ({ children }) => {
   const { token } = useSelector((state) => state.user);
   const location = useLocation();
   const userId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
+
+  // 게임 페이지 경로 체크 추가
   const showSidebar =
-    location.pathname !== "/" && location.pathname !== `/profile/${userId}`; // 메인과 프로필 페이지에서는 사이드바 안보임
+    location.pathname !== "/" &&
+    location.pathname !== `/profile/${userId}` &&
+    !location.pathname.includes("/game/"); // 게임 페이지에서는 사이드바 숨김
   const [activeLink, setActiveLink] = useState(location.pathname);
 
   const linkStyle =
