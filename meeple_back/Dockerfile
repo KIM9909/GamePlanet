@@ -13,7 +13,7 @@ ENV SPRING_PROFILES_ACTIVE=prod
 
 # 빌드 스테이지에서 복사한 JAR 파일 및 application.yml 파일 복사
 COPY --from=build /app/meeple_back/build/libs/*.jar app.jar
-COPY meeple_back/src/main/resources/application.yml /app/src/main/resources/application.yml
+COPY src/main/resources/application.yml /app/src/main/resources/application.yml
 
-EXPOSE 8090
+EXPOSE 8080
 ENTRYPOINT ["java","-jar","app.jar"]
