@@ -1,5 +1,41 @@
-import React, { useState, useRef } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import GiveCardModal from "./GiveCardModal";
+
+const ANIMAL_ORDER = [
+  "Bat",
+  "Rat",
+  "Fly",
+  "Cockroach",
+  "Scorpion",
+  "Toad",
+  "Stinkbug",
+  "Joker",
+  "Black",
+];
+
+const sortCards = (cards) => {
+  return [...cards].sort((a, b) => {
+    // 기본 타입 추출 (King 제거)
+    const typeA = a.type.replace("King", "");
+    const typeB = b.type.replace("King", "");
+
+    // 같은 동물이면 일반 카드가 먼저 오도록
+    if (typeA === typeB) {
+      return a.type.includes("King") ? 1 : -1;
+    }
+
+    // 동물 순서대로 정렬
+    return ANIMAL_ORDER.indexOf(typeA) - ANIMAL_ORDER.indexOf(typeB);
+  });
+};
+
+const sortPenaltyGroups = (groups) => {
+  return Object.values(groups).sort((a, b) => {
+    const typeA = a.type.replace("King", "");
+    const typeB = b.type.replace("King", "");
+    return ANIMAL_ORDER.indexOf(typeA) - ANIMAL_ORDER.indexOf(typeB);
+  });
+};
 
 const getKoreanName = (type) => {
   const nameMap = {
@@ -16,13 +52,19 @@ const getKoreanName = (type) => {
 
   if (type.startsWith("King")) {
     const baseName = type.replace("King", "");
-    return `${nameMap[baseName]}:왕`;
+    return `${nameMap[baseName]}:킹`;
   }
 
   return nameMap[type] || type;
 };
 
-const Card = ({ type = null, isBack = false, isRoyal = false }) => {
+const Card = ({
+  type = null,
+  isBack = false,
+  isRoyal = false,
+  onClick,
+  selectedCard,
+}) => {
   if (isBack || !type) {
     return (
       <div
@@ -43,7 +85,11 @@ const Card = ({ type = null, isBack = false, isRoyal = false }) => {
   if (type === "Joker" || type === "Black") {
     const cardImageType = type === "Joker" ? "JockerCard" : "BlackCard";
     return (
-      <div className="flex-shrink-0 w-16 h-24 rounded-lg relative group cursor-pointer overflow-hidden">
+      <div
+        onClick={() => onClick?.({ type })}
+        className={`flex-shrink-0 w-16 h-24 rounded-lg relative group cursor-pointer overflow-hidden
+          ${selectedCard?.type === type ? "ring-2 ring-blue-500" : ""}`}
+      >
         <img
           src={`/src/assets/image/cockroachpoker/${cardImageType}.svg`}
           alt={type}
@@ -61,7 +107,11 @@ const Card = ({ type = null, isBack = false, isRoyal = false }) => {
   const displayName = isRoyal ? `King${type}` : type;
 
   return (
-    <div className="flex-shrink-0 w-16 h-24 rounded-lg relative group cursor-pointer overflow-hidden">
+    <div
+      onClick={() => onClick?.({ type, isRoyal })}
+      className={`flex-shrink-0 w-16 h-24 rounded-lg relative group cursor-pointer overflow-hidden
+        ${selectedCard?.type === type ? "ring-2 ring-blue-500" : ""}`}
+    >
       <img
         src={`/src/assets/image/cockroachpoker/${cardImageType}.svg`}
         alt={displayName}
@@ -94,11 +144,6 @@ const PenaltyCardStack = ({ type, count = 3, isRoyal }) => {
           <Card type={type} isRoyal={isRoyal} />
         </div>
       ))}
-      <div className="absolute -top-8 left-0 w-full text-center">
-        <div className="text-sm font-semibold bg-white/90 px-2 py-1 rounded shadow-sm">
-          {count}장
-        </div>
-      </div>
     </div>
   );
 };
@@ -108,6 +153,9 @@ const OpponentArea = ({
   penaltyCards = [],
   handCards = [],
   playerName,
+  isMyTurn,
+  selectedCard,
+  handlePlayerClick,
 }) => {
   const groupedPenaltyCards = penaltyCards.reduce((acc, card) => {
     const baseType = card.type.startsWith("King")
@@ -120,42 +168,46 @@ const OpponentArea = ({
     return acc;
   }, {});
 
-  const sortedPenaltyGroups = Object.values(groupedPenaltyCards).sort(
-    (a, b) => {
-      const animalOrder = [
-        "Bat",
-        "Rat",
-        "Fly",
-        "Cockroach",
-        "Scorpion",
-        "Toad",
-        "Stinkbug",
-        "Joker",
-        "Black",
-      ];
-      const typeA = a.type.replace("King", "");
-      const typeB = b.type.replace("King", "");
-      return animalOrder.indexOf(typeA) - animalOrder.indexOf(typeB);
-    }
-  );
+  const sortedPenaltyGroups = sortPenaltyGroups(groupedPenaltyCards);
 
   return (
-    <div className="w-64 space-y-4">
+    <div
+      className={`w-64 space-y-4 ${
+        isMyTurn && !selectedCard ? "opacity-50" : ""
+      } 
+     ${
+       isMyTurn && selectedCard
+         ? "cursor-pointer hover:ring-2 hover:ring-blue-500 rounded-lg"
+         : ""
+     }`}
+      onClick={() => isMyTurn && selectedCard && handlePlayerClick(playerName)}
+      style={{
+        "--scrollbar-track": "rgba(31, 41, 55, 0.3)",
+        "--scrollbar-thumb": "rgba(107, 114, 128, 0.5)",
+        "--scrollbar-thumb-hover": "rgba(107, 114, 128, 0.7)",
+      }}
+    >
       <div className="px-3 py-1.5 bg-gray-800/90 rounded-lg">
         <div className="text-center text-sm font-medium text-white">
           {playerName}
         </div>
       </div>
       <div className="space-y-4">
-        {/* 벌칙 카드 영역 - 높이 제한 및 스크롤 추가 */}
-        <div className="h-40 overflow-y-auto">
+        <div
+          className="h-40 overflow-y-auto"
+          style={{
+            scrollbarWidth: "thin",
+            scrollbarColor: "rgba(107, 114, 128, 0.5) rgba(31, 41, 55, 0.3)",
+            msOverflowStyle: "-ms-autohiding-scrollbar",
+          }}
+        >
           <div className="flex flex-wrap justify-center gap-2 p-2">
             {sortedPenaltyGroups.map((stack, i) => (
               <PenaltyCardStack
                 key={i}
                 type={stack.type}
                 count={stack.count}
-                isRoyal={stack.type.includes("King")}
+                isRoyal={stack.royal}
               />
             ))}
           </div>
@@ -195,36 +247,13 @@ const OpponentArea = ({
   );
 };
 
-const MyArea = ({ penaltyCards = [], handCards = [] }) => {
-  // 카드 정렬 함수
-  const sortCards = (cards) => {
-    const animalOrder = [
-      "Bat",
-      "Rat",
-      "Fly",
-      "Cockroach",
-      "Scorpion",
-      "Toad",
-      "Stinkbug",
-      "Joker",
-      "Black",
-    ];
-
-    return [...cards].sort((a, b) => {
-      // 기본 타입 추출 (King 제거)
-      const typeA = a.type.replace("King", "");
-      const typeB = b.type.replace("King", "");
-
-      // 같은 동물이면 일반 카드가 먼저 오도록
-      if (typeA === typeB) {
-        return a.type.includes("King") ? 1 : -1;
-      }
-
-      // 동물 순서대로 정렬
-      return animalOrder.indexOf(typeA) - animalOrder.indexOf(typeB);
-    });
-  };
-
+const MyArea = ({
+  penaltyCards = [],
+  handCards = [],
+  isMyTurn,
+  selectedCard,
+  handleCardClick,
+}) => {
   // 벌칙 카드 그룹화 및 정렬
   const groupedPenaltyCards = penaltyCards.reduce((acc, card) => {
     const baseType = card.type.replace("King", "");
@@ -239,24 +268,7 @@ const MyArea = ({ penaltyCards = [], handCards = [] }) => {
     return acc;
   }, {});
 
-  const sortedPenaltyGroups = Object.values(groupedPenaltyCards).sort(
-    (a, b) => {
-      const animalOrder = [
-        "Bat",
-        "Rat",
-        "Fly",
-        "Cockroach",
-        "Scorpion",
-        "Toad",
-        "Stinkbug",
-        "Joker",
-        "Black",
-      ];
-      const typeA = a.type.replace("King", "");
-      const typeB = b.type.replace("King", "");
-      return animalOrder.indexOf(typeA) - animalOrder.indexOf(typeB);
-    }
-  );
+  const sortedPenaltyGroups = sortPenaltyGroups(groupedPenaltyCards);
 
   return (
     <div className="absolute bottom-4 left-0 right-0 px-8">
@@ -277,7 +289,13 @@ const MyArea = ({ penaltyCards = [], handCards = [] }) => {
       {/* 핸드 카드 영역 */}
       <div className="flex justify-center gap-4 flex-wrap">
         {sortCards(handCards).map((card, i) => (
-          <Card key={i} isBack={false} type={card.type} isRoyal={card.royal} />
+          <Card
+            key={i}
+            type={card.type}
+            isRoyal={card.royal}
+            onClick={isMyTurn ? handleCardClick : undefined}
+            selectedCard={selectedCard}
+          />
         ))}
       </div>
     </div>
@@ -324,14 +342,55 @@ const DeckArea = ({ openCard }) => {
   );
 };
 
-const GameBoard = ({ playerCount = 4, onStartGame, gameData }) => {
+const GameBoard = ({ playerCount = 4, onStartGame, gameData, currentUser }) => {
   const [isGameStarted, setIsGameStarted] = useState(false);
+  const [selectedCard, setSelectedCard] = useState(null);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [isMyTurn, setIsMyTurn] = useState(false);
+  const [showGiveCardModal, setShowGiveCardModal] = useState(false);
+
+  useEffect(() => {
+    if (gameData?.gameData?.gameState?.currentTurn) {
+      setIsMyTurn(gameData.gameData.gameState.currentTurn === currentUser);
+    }
+  }, [gameData, currentUser]);
 
   const handleStartGame = () => {
     setIsGameStarted(true);
     if (onStartGame) {
       onStartGame();
     }
+  };
+
+  const handleCardClick = (card) => {
+    if (!isMyTurn) return;
+    setSelectedCard(card);
+  };
+
+  const handlePlayerClick = (playerNickname) => {
+    if (!isMyTurn || !selectedCard) return;
+    setSelectedPlayer(playerNickname);
+    // 여기서 카드 전달 모달 표시
+    setShowGiveCardModal(true);
+  };
+
+  const handleGiveCard = (claimData) => {
+    const giveCardData = {
+      to: selectedPlayer,
+      from: currentUser,
+      card: selectedCard,
+      animal: claimData.animal,
+      isKing: claimData.isKing,
+      isNagative: claimData.isNegative,
+    };
+
+    // TODO: 서버로 전송
+    console.log("카드 전달 데이터:", giveCardData);
+
+    // 상태 초기화
+    setSelectedCard(null);
+    setSelectedPlayer(null);
+    setShowGiveCardModal(false);
   };
 
   if (!isGameStarted) {
@@ -377,6 +436,9 @@ const GameBoard = ({ playerCount = 4, onStartGame, gameData }) => {
               penaltyCards={userTableCards[players[1]] || []}
               handCards={playerCards[players[1]] || []}
               playerName={players[1]}
+              isMyTurn={isMyTurn}
+              selectedCard={selectedCard}
+              handlePlayerClick={handlePlayerClick}
             />
           </div>
         ) : (
@@ -389,6 +451,9 @@ const GameBoard = ({ playerCount = 4, onStartGame, gameData }) => {
                     penaltyCards={userTableCards[players[1]] || []}
                     handCards={playerCards[players[1]] || []}
                     playerName={players[1]}
+                    isMyTurn={isMyTurn}
+                    selectedCard={selectedCard}
+                    handlePlayerClick={handlePlayerClick}
                   />
                 </div>
                 <div className="w-[calc(40%-1rem)]">
@@ -397,6 +462,9 @@ const GameBoard = ({ playerCount = 4, onStartGame, gameData }) => {
                     penaltyCards={userTableCards[players[2]] || []}
                     handCards={playerCards[players[2]] || []}
                     playerName={players[2]}
+                    isMyTurn={isMyTurn}
+                    selectedCard={selectedCard}
+                    handlePlayerClick={handlePlayerClick}
                   />
                 </div>
               </div>
@@ -408,6 +476,9 @@ const GameBoard = ({ playerCount = 4, onStartGame, gameData }) => {
                     penaltyCards={userTableCards[players[1]] || []}
                     handCards={playerCards[players[1]] || []}
                     playerName={players[1]}
+                    isMyTurn={isMyTurn}
+                    selectedCard={selectedCard}
+                    handlePlayerClick={handlePlayerClick}
                   />
                 </div>
                 <div className="w-[calc(33%-1rem)]">
@@ -416,6 +487,9 @@ const GameBoard = ({ playerCount = 4, onStartGame, gameData }) => {
                     penaltyCards={userTableCards[players[2]] || []}
                     handCards={playerCards[players[2]] || []}
                     playerName={players[2]}
+                    isMyTurn={isMyTurn}
+                    selectedCard={selectedCard}
+                    handlePlayerClick={handlePlayerClick}
                   />
                 </div>
                 <div className="w-[calc(33%-1rem)]">
@@ -424,6 +498,9 @@ const GameBoard = ({ playerCount = 4, onStartGame, gameData }) => {
                     penaltyCards={userTableCards[players[3]] || []}
                     handCards={playerCards[players[3]] || []}
                     playerName={players[3]}
+                    isMyTurn={isMyTurn}
+                    selectedCard={selectedCard}
+                    handlePlayerClick={handlePlayerClick}
                   />
                 </div>
               </div>
@@ -438,8 +515,19 @@ const GameBoard = ({ playerCount = 4, onStartGame, gameData }) => {
         <MyArea
           penaltyCards={userTableCards[players[0]] || []}
           handCards={playerCards[players[0]] || []}
+          isMyTurn={isMyTurn}
+          selectedCard={selectedCard}
+          handleCardClick={handleCardClick}
         />
       </div>
+
+      <GiveCardModal
+        isOpen={showGiveCardModal}
+        onClose={() => setShowGiveCardModal(false)}
+        selectedCard={selectedCard}
+        selectedPlayer={selectedPlayer}
+        onSubmit={handleGiveCard}
+      />
     </div>
   );
 };

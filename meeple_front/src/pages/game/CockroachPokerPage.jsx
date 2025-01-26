@@ -10,12 +10,15 @@ const CockroachPokerPage = () => {
   const { connected, sendMessage, startGame } = useSocket(roomId);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [gameData, setGameData] = useState(null);
+  const currentUser = "user1"; // 실제로는 로그인 정보나 context에서 가져와야 함
 
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen);
   };
 
   const handleStartGame = async () => {
+    // 실제 서버 연동 코드 (현재는 주석처리)
+    /*
     try {
       const response = await startGame();
       if (response && response.data) {
@@ -24,6 +27,69 @@ const CockroachPokerPage = () => {
     } catch (error) {
       console.error("게임 시작 실패:", error);
     }
+    */
+
+    // 테스트용 임시 데이터
+    const mockGameData = {
+      players: ["user1", "user2", "user3", "user4"],
+      gameData: {
+        gameState: {
+          currentTurn: "user1",
+          currentPhase: "CHOOSE_PLAYER",
+        },
+        playerCards: {
+          user1: [
+            { type: "Rat", royal: true },
+            { type: "Bat", royal: false },
+            { type: "Bat", royal: false },
+            { type: "Fly", royal: false },
+            { type: "Black", royal: false },
+            { type: "Cockroach", royal: true },
+            { type: "Scorpion", royal: false },
+            { type: "Toad", royal: false },
+            { type: "Joker", royal: false },
+          ],
+          user2: Array(8).fill(null),
+          user3: Array(8).fill(null),
+          user4: Array(8).fill(null),
+        },
+        publicDeck: [
+          { type: "Scorpion", royal: false },
+          { type: "Toad", royal: true },
+          { type: "Stinkbug", royal: false },
+        ],
+        userTableCards: {
+          user1: [
+            { type: "Bat", count: 2 },
+            { type: "Rat", count: 1, royal: true },
+            { type: "Cockroach", count: 2 },
+            { type: "Scorpion", count: 1 },
+            { type: "Toad", count: 1, royal: true },
+          ],
+          user2: [
+            { type: "Bat", count: 2 },
+            { type: "Rat", count: 1, royal: true },
+            { type: "Fly", count: 1 },
+          ],
+          user3: [
+            { type: "Cockroach", count: 3 },
+            { type: "Scorpion", count: 1, royal: true },
+            { type: "Scorpion", count: 1 },
+            { type: "Toad", count: 2 },
+            { type: "Stinkbug", count: 1 },
+            { type: "Rat", count: 2 },
+          ],
+          user4: [
+            { type: "Bat", count: 1, royal: true },
+            { type: "Rat", count: 2 },
+            { type: "Fly", count: 2 },
+            { type: "Cockroach", count: 1 },
+          ],
+        },
+      },
+    };
+
+    setGameData(mockGameData);
   };
 
   const playerCount = gameData?.players?.length || 0;
@@ -63,6 +129,7 @@ const CockroachPokerPage = () => {
             playerCount={playerCount}
             onStartGame={handleStartGame}
             gameData={gameData}
+            currentUser={currentUser}
           />
         </div>
 
