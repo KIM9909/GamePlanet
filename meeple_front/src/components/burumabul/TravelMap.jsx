@@ -381,6 +381,14 @@ const TravelMap = () => {
               maxPolarAngle={Math.PI / 2.5} // 위쪽으로 카메라 제한
               minDistance={5} // 최소 줌 거리
               maxDistance={15} // 최대 줌 거리
+              mouseButtons={{
+                LEFT: 0,
+                MIDDLE: 1,
+                RIGHT: 2,
+              }}
+              enablePan={false}
+              zoomToCursor={true}
+              rotateSpeed={0.15}
             />
             {renderCells()}
           </Canvas>
