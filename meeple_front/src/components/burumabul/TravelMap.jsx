@@ -178,64 +178,86 @@ const TravelMap = () => {
 
     const topTextures = [earthTexture, marsTexture];
 
-    const gap = 0.25; // 간격 추가
-    const stepX = horizontalSize[0] + gap; // 가로 셀 간격
-    const stepZ = verticalSize[2] + gap; // 세로 셀 간격
-
-    const centerOffsetX = ((size - 1) * stepX) / 2; // 중심 좌표 계산
-    const centerOffsetZ = ((size - 1) * stepZ) / 2; // 중심 좌표 계산
+    // 보드 전체 크기 계산 (간격 없이)
+    const boardWidth = 2 * cornerSize[0] + (size - 2) * horizontalSize[0];
+    const boardHeight = 2 * cornerSize[2] + (size - 2) * verticalSize[2];
+    const centerOffsetX = boardWidth / 2;
+    const centerOffsetZ = boardHeight / 2;
 
     // 위쪽 면
     for (let i = 0; i < size; i++) {
       if (i === 0) {
-        // 왼쪽 위 코너
         cellSizes.push(cornerSize);
-        positions.push([-centerOffsetX - gap / 2, 0, -centerOffsetZ - gap / 2]);
-      } else if (i === size - 1) {
-        // 오른쪽 위 코너
-        cellSizes.push(cornerSize);
-        positions.push([centerOffsetX + gap / 2, 0, -centerOffsetZ - gap / 2]);
-      } else {
-        // 일반 셀 (가로)
-        cellSizes.push(horizontalSize);
         positions.push([
-          -centerOffsetX + i * stepX,
+          -centerOffsetX + cornerSize[0] / 2,
           0,
-          -centerOffsetZ - gap / 2,
+          -centerOffsetZ + cornerSize[2] / 2,
         ]);
+      } else if (i === size - 1) {
+        cellSizes.push(cornerSize);
+        positions.push([
+          centerOffsetX - cornerSize[0] / 2,
+          0,
+          -centerOffsetZ + cornerSize[2] / 2,
+        ]);
+      } else {
+        cellSizes.push(horizontalSize);
+        const xPos =
+          -centerOffsetX +
+          cornerSize[0] +
+          (i - 1) * horizontalSize[0] +
+          horizontalSize[0] / 2;
+        positions.push([xPos, 0, -centerOffsetZ + horizontalSize[2] / 2]);
       }
     }
+
     // 오른쪽 면
     for (let i = 1; i < size - 1; i++) {
       cellSizes.push(verticalSize);
-      positions.push([centerOffsetX + gap / 2, 0, -centerOffsetZ + i * stepZ]);
+      const zPos =
+        -centerOffsetZ +
+        cornerSize[2] +
+        (i - 1) * verticalSize[2] +
+        verticalSize[2] / 2;
+      positions.push([centerOffsetX - verticalSize[0] / 2, 0, zPos]);
     }
 
     // 아래쪽 면
     for (let i = size - 1; i >= 0; i--) {
       if (i === 0) {
-        // 왼쪽 아래 코너
         cellSizes.push(cornerSize);
-        positions.push([-centerOffsetX - gap / 2, 0, centerOffsetZ + gap / 2]);
-      } else if (i === size - 1) {
-        // 오른쪽 아래 코너
-        cellSizes.push(cornerSize);
-        positions.push([centerOffsetX + gap / 2, 0, centerOffsetZ + gap / 2]);
-      } else {
-        // 일반 셀 (가로)
-        cellSizes.push(horizontalSize);
         positions.push([
-          -centerOffsetX + i * stepX,
+          -centerOffsetX + cornerSize[0] / 2,
           0,
-          centerOffsetZ + gap / 2,
+          centerOffsetZ - cornerSize[2] / 2,
         ]);
+      } else if (i === size - 1) {
+        cellSizes.push(cornerSize);
+        positions.push([
+          centerOffsetX - cornerSize[0] / 2,
+          0,
+          centerOffsetZ - cornerSize[2] / 2,
+        ]);
+      } else {
+        cellSizes.push(horizontalSize);
+        const xPos =
+          -centerOffsetX +
+          cornerSize[0] +
+          (i - 1) * horizontalSize[0] +
+          horizontalSize[0] / 2;
+        positions.push([xPos, 0, centerOffsetZ - horizontalSize[2] / 2]);
       }
     }
 
     // 왼쪽 면
     for (let i = size - 2; i > 0; i--) {
       cellSizes.push(verticalSize);
-      positions.push([-centerOffsetX - gap / 2, 0, -centerOffsetZ + i * stepZ]);
+      const zPos =
+        -centerOffsetZ +
+        cornerSize[2] +
+        (i - 1) * verticalSize[2] +
+        verticalSize[2] / 2;
+      positions.push([-centerOffsetX + verticalSize[0] / 2, 0, zPos]);
     }
 
     return positions.map((pos, index) => (
