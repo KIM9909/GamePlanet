@@ -50,13 +50,13 @@ pipeline {
             steps {
                 script {
                     sh """
-                        if [ \$(docker ps -q -f name=${CONTAINER_NAME}) ]; then
+                        if [ \$(docker ps -aq -f name=${CONTAINER_NAME}) ]; then
                             docker rm -f ${CONTAINER_NAME}
                         fi
                     """
 
                     sh """
-                        docker run -d --name ${CONTAINER_NAME} -p 8090:8080 ${IMAGE_NAME}:${IMAGE_TAG}
+                        docker run -d --name ${CONTAINER_NAME} -p 8090:8090 ${IMAGE_NAME}:${IMAGE_TAG}
                     """
                 }
             }
