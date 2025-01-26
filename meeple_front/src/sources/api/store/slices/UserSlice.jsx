@@ -6,7 +6,7 @@ import { UserAPI } from "../../UserAPI";
 // 로그인 비동기 액션 생성
 // createAsyncThunk: Redux에서 비동기 작업을 처리하기 위한 액션 생성자
 export const loginUser = createAsyncThunk(
-  "user/login", // 액션 타입 문자열: 'user/login/pending', 'user/login/fulfilled', 'user/login/rejected' 자동 생성
+  "auth/login", // 액션 타입 문자열: 'user/login/pending', 'user/login/fulfilled', 'user/login/rejected' 자동 생성
   async (credentials) => {
     try {
       // UserAPI를 통해 로그인 요청 수행
@@ -20,7 +20,7 @@ export const loginUser = createAsyncThunk(
 );
 
 export const logoutUser = createAsyncThunk(
-  "user/logout",
+  "auth/logout",
   async (_, { rejectWithValue }) => {
     try {
       await UserAPI.logout();

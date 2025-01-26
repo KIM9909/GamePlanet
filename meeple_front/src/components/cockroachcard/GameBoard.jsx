@@ -234,9 +234,7 @@ const DeckArea = () => {
   );
 };
 
-const GameBoard = () => {
-  const [playerCount, setPlayerCount] = useState(4);
-
+const GameBoard = ({ playerCount = 4 }) => {
   const baseCardTypes = ['BAT', 'COCKROACH', 'FLY', 'RAT', 'SCORPION', 'STINKBUG', 'TOAD'];
   
   const cardCounts = baseCardTypes.reduce((acc, type) => {
@@ -289,20 +287,9 @@ const GameBoard = () => {
   }));
 
   return (
-    <div className="p-8">
-      <div className="mb-8 flex justify-center gap-4">
-        {[2, 3, 4].map(count => (
-          <button 
-            key={count}
-            onClick={() => setPlayerCount(count)}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            {count}인
-          </button>
-        ))}
-      </div>
-
-      <div className="relative w-full h-[700px] max-w-6xl mx-auto bg-green-50 rounded-3xl">
+    
+    <div className="p-4">
+      <div className="relative w-full h-[800px] max-w-[1600px] mx-auto bg-green-50 rounded-3xl">
         {/* 상단 플레이어 영역 */}
         {playerCount === 2 ? (
           // 2인 게임일 때는 중앙 정렬

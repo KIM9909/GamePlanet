@@ -17,8 +17,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * 모든 요청에 대해 JWT를 검사해서 인증 정보를 설정하는 필터
- */
+* 모든 요청에 대해 JWT를 검사해서 인증 정보를 설정하는 필터
+*/
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 

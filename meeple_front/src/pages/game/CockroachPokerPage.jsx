@@ -1,44 +1,83 @@
-import { Card, CardList, CARD_TYPES } from '../../components/cockroachcard';
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import useSocket from '../../hooks/useSocket';
 import GameBoard from '../../components/cockroachcard/GameBoard';
+import GameSidebar from '../../components/sidebar/GameSidebar';
 
-const GamePage = () => {
-    const [cards, setCards] = useState([
-        { type: 'BAT', isFlipped: false },
-        { type: 'COCKROACH', isFlipped: false },
-        { type: 'FLY', isFlipped: false },
-        { type: 'RAT', isFlipped: false },
-        { type: 'SCORPION', isFlipped: false },
-        { type: 'STINKBUG', isFlipped: false },
-        { type: 'TOAD', isFlipped: false },
-        { type: 'KING_BAT', isFlipped: false },
-        { type: 'KING_COCKROACH', isFlipped: false },
-        { type: 'KING_FLY', isFlipped: false },
-        { type: 'KING_RAT', isFlipped: false },
-        { type: 'KING_SCORPION', isFlipped: false },
-        { type: 'KING_STINKBUG', isFlipped: false },
-        { type: 'KING_TOAD', isFlipped: false },
-        { type: 'JOCKER', isFlipped: false },
-        { type: 'BLACK' , isFlipped: false}
-    ]);
+const CockroachPokerPage = () => {
+  const { roomId } = useParams();
+  const { connected, sendMessage, startGame } = useSocket(roomId);
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [playerCount, setPlayerCount] = useState(4);
 
-    
-
-  const handleCardClick = (index) => {
-    setCards(cards.map((card, i) => 
-      i === index ? { ...card, isFlipped: !card.isFlipped } : card
-    ));
+  const toggleSidebar = () => {
+    setSidebarOpen(!isSidebarOpen);
   };
 
   return (
-    <div>
-      <CardList 
-        cards={cards} 
-        onCardClick={handleCardClick}
-      />
-      <GameBoard/>
+    <div className="h-screen w-screen flex bg-gray-900">
+      {/* 사이드바 */}
+      <div className={`transition-all duration-300 ease-in-out
+        ${isSidebarOpen ? 'w-72' : 'w-0'} 
+        relative z-50`}>
+        <div className={`fixed top-0 left-0 h-full transition-transform duration-300 ease-in-out transform 
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <GameSidebar />
+          <button
+            onClick={toggleSidebar}
+            className="absolute -right-12 top-1/2 -translate-y-1/2 w-12 h-12 
+              bg-gray-800 rounded-r text-white hover:bg-gray-700 
+              focus:outline-none flex items-center justify-center"
+          >
+            {isSidebarOpen ? '←' : '→'}
+          </button>
+        </div>
+      </div>
+
+      {/* 메인 게임 영역 */}
+      <div className={`flex-1 flex flex-col transition-all duration-300 ease-in-out
+        ${isSidebarOpen ? 'ml-0' : 'ml-0'}`}>
+        {/* 게임 보드 */}
+        <div className="flex-1 overflow-hidden">
+          <GameBoard playerCount={playerCount} />
+        </div>
+
+        {/* 인원 선택 버튼 */}
+        <div className="flex justify-center gap-2 py-2 bg-gray-800">
+          {[2, 3, 4].map(count => (
+            <button 
+              key={count}
+              onClick={() => setPlayerCount(count)}
+              className={`px-3 py-1 text-sm rounded 
+                ${playerCount === count 
+                  ? 'bg-blue-500 text-white' 
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+            >
+              {count}인
+            </button>
+          ))}
+        </div>
+
+        {/* 화상 채팅 영역 */}
+        <div className="h-48 bg-gray-800 border-t border-gray-700">
+          <div className="text-white p-4">화상 채팅 영역 (개발 예정)</div>
+        </div>
+      </div>
+
+      {/* 토글 버튼 (사이드바가 닫혀있을 때) */}
+      {!isSidebarOpen && (
+        <button
+          onClick={toggleSidebar}
+          className="fixed left-0 top-1/2 -translate-y-1/2 w-12 h-12 
+            bg-gray-800 rounded-r text-white hover:bg-gray-700 
+            focus:outline-none flex items-center justify-center
+            z-50"
+        >
+          →
+        </button>
+      )}
     </div>
   );
 };
 
-export default GamePage
+export default CockroachPokerPage;

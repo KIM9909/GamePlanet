@@ -1,19 +1,14 @@
 package com.meeple.meeple_back.game.cockroach.controller;
 
-import com.meeple.meeple_back.game.cockroach.model.request.RequestMultiCard;
-import com.meeple.meeple_back.game.cockroach.model.request.RequestSingleCard;
-import com.meeple.meeple_back.game.cockroach.model.request.RequestGiveCard;
-import com.meeple.meeple_back.game.cockroach.model.request.RequestSendMessage;
-import com.meeple.meeple_back.game.cockroach.model.response.ResponseCheckCard;
-import com.meeple.meeple_back.game.cockroach.model.response.ResponseGiveCard;
-import com.meeple.meeple_back.game.cockroach.model.response.ResponseMultiCard;
-import com.meeple.meeple_back.game.cockroach.model.response.ResponseStartGame;
+import com.meeple.meeple_back.game.cockroach.model.request.*;
+import com.meeple.meeple_back.game.cockroach.model.response.*;
 import com.meeple.meeple_back.game.cockroach.service.CockroachService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @Controller
@@ -87,6 +82,43 @@ public class WebSocketController {
     ) {
         ResponseMultiCard response = cockroachService.multiCard(roomId, request);
 
+        messagingTemplate.convertAndSend("/topic/game/" + roomId, response);
+    }
+
+    @MessageMapping("/game/exit-room/{roomId}")
+    public void exitRoom(
+            @DestinationVariable String roomId,
+            @PathVariable String userNickname
+    ) {
+        ResponseExitRoom response = cockroachService.exitRoom(roomId, userNickname);
+        messagingTemplate.convertAndSend("/topic/game/" + roomId, response);
+    }
+
+    @MessageMapping("/game/send-vote/{roomId}")
+    private void sendVote(
+            @DestinationVariable String roomId,
+            @RequestBody RequestSendVote request
+    ) {
+        ResponseSendVote response = cockroachService.sendVote(roomId, request);
+        messagingTemplate.convertAndSend("/topic/game/" + roomId, response);
+    }
+
+    @MessageMapping("/game/vote/{roomId}")
+    private void vote(
+            @DestinationVariable String roomId,
+            @RequestBody RequestVote request
+    ) {
+        ResponseVote response = cockroachService.vote(request);
+
+        messagingTemplate.convertAndSend("/topic/game/" + roomId, response);
+    }
+
+    @MessageMapping("/game/vote-result/{roomId}")
+    private void voteResult(
+            @DestinationVariable String roomId,
+            @RequestBody RequestVoteResult request
+    ) {
+        ResponseVoteResult response = cockroachService.voteResult(roomId, request);
         messagingTemplate.convertAndSend("/topic/game/" + roomId, response);
     }
 

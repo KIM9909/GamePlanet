@@ -28,7 +28,6 @@ const MainPage = () => {
     }
   }, [token]);
 
-  // 스크롤 이벤트 처리
   useEffect(() => {
     const handleWheel = (e) => {
       // 스크롤 애니메이션 중복 방지
@@ -57,7 +56,6 @@ const MainPage = () => {
     };
   }, [isFirstSection, isScrolling]);
 
-  // 마지막 텍스트 타이핑 완료 후 스크롤 다운 표시
   const handleLastTextComplete = () => {
     scrollDownTimeoutRef.current = setTimeout(() => {
       setShowScrollDown(true);
