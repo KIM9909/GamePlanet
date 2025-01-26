@@ -2,10 +2,9 @@ pipeline {
     agent any
 
     environment {
-        // Docker 이미지 이름 및 태그
-        IMAGE_NAME = "meeple-backend"
-        IMAGE_TAG = "${env.BUILD_NUMBER}"  // 빌드 번호를 태그로 사용
-        CONTAINER_NAME = "meeple-backend"
+        IMAGE_NAME = "meeple"
+        IMAGE_TAG = "${env.BUILD_NUMBER}"
+        CONTAINER_NAME = "meeple-app"
     }
 
     stages {
@@ -17,18 +16,30 @@ pipeline {
             }
         }
 
-        stage('Build & Test') {
+        stage('Prepare Config') {
             steps {
-                dir('meeple_back') {
-                    sh "./gradlew clean build"
+                    withCredentials([file(credentialsId: 'app-config', variable: 'APP_CONFIG')]) {
+                        // 현재 작업 디렉토리 확인
+                        sh 'pwd'
+                        sh 'ls -la'
+
+                        // 디렉토리 생성 및 파일 복사
+                        sh 'mkdir -p meeple_back/src/main/resources'
+                        sh 'cp $APP_CONFIG meeple_back/src/main/resources/application.yml'
+
+                        // 복사된 파일 확인
+                        sh 'ls -la meeple_back/src/main/resources/'
+                        // 민감 정보가 포함된 경우 아래 명령어는 주석 처리
+                        // sh 'cat meeple_back/src/main/resources/application.yml'
+                    }
                 }
-            }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
                     dir('meeple_back') {
+                        // Docker 이미지를 빌드
                         sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
                     }
                 }
