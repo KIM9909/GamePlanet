@@ -12,7 +12,7 @@ import Dice from "./Dice";
 import { TextureLoader } from "three";
 import spaceBackground from "../../assets/burumabul_images/space.jpg";
 
-import earthTexture from "../../assets/burumabul_images/earth.jpg";
+import earthTexture from "../../assets/burumabul_images/earth.png";
 import marsTexture from "../../assets/burumabul_images/mars.jpg";
 
 const Cell = ({
@@ -381,14 +381,6 @@ const TravelMap = () => {
               maxPolarAngle={Math.PI / 2.5} // 위쪽으로 카메라 제한
               minDistance={5} // 최소 줌 거리
               maxDistance={15} // 최대 줌 거리
-              mouseButtons={{
-                LEFT: 0,
-                MIDDLE: 1,
-                RIGHT: 2,
-              }}
-              enablePan={false}
-              zoomToCursor={true}
-              rotateSpeed={0.18}
             />
             {renderCells()}
           </Canvas>
