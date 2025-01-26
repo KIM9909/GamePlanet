@@ -22,4 +22,6 @@ public interface CockroachService {
     ResponseVote vote(RequestVote request);
 
     ResponseVoteResult voteResult(String roomId, RequestVoteResult request);
+
+    ResponseGuessCard guessCard(String roomId, RequestGuessCard request);
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.meeple.meeple_back.game.cockroach.model.entity.Card;
 import com.meeple.meeple_back.game.cockroach.model.entity.ChatMessage;
+import com.meeple.meeple_back.game.cockroach.model.entity.GameState;
 import com.meeple.meeple_back.game.cockroach.model.entity.Room;
 import com.meeple.meeple_back.game.cockroach.model.request.*;
 import com.meeple.meeple_back.game.cockroach.model.response.*;
@@ -142,6 +143,19 @@ public class CockroachServiceImpl implements CockroachService {
         gameData.put("playerCards", distributedCards);
         gameData.put("userTableCards", userTableCards);
         gameData.put("isGameStart", true);
+
+        // GameState 객체 생성 및 초기화
+        GameState gameState = new GameState();
+        gameState.setCurrentTurn(players.get(0));
+        gameState.setCurrentPhase("CHOOSE_PLAYER");
+        gameState.setCurrentCard(null);
+        gameState.setClaimedAnimal(null);
+        gameState.setKing(false);
+        gameState.setCardSender(null);
+        gameState.setCardReceiver(null);
+        gameState.setPassCount(0);
+
+        gameData.put("gameState", gameState);
         redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
 
         /* 데이터 반환 */
@@ -154,52 +168,57 @@ public class CockroachServiceImpl implements CockroachService {
 
     @Override
     public ResponseGiveCard giveCard(String roomId, RequestGiveCard request) {
-        // Redis에서 방 정보 가져오기
-        Map<String, Object> roomInfo =
+        Map<String, Object> roomInfo = 
                 (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+        Map<String, Object> gameData = (Map<String, Object>) roomInfo.get("gameData");
+        GameState gameState = (GameState) gameData.get("gameState");
 
-        if (roomInfo == null) {
-            throw new IllegalArgumentException("방을 찾을 수 없습니다: " + roomId);
+        // 현재 턴이 아닌 경우 예외 처리
+        if (!gameState.getCurrentTurn().equals(request.getFrom())) {
+            throw new IllegalStateException("현재 턴이 아닙니다.");
         }
 
-        // 플레이어 카드 데이터 가져오기
-        Map<String, List<Card>> playerCards = (Map<String, List<Card>>) roomInfo.get("playerCards");
-        if (playerCards == null || !playerCards.containsKey(request.getFrom())) {
-            throw new IllegalStateException("플레이어 카드 정보를 찾을 수 없습니다: " + request.getFrom());
-        }
-
-        List<Card> cards = playerCards.get(request.getFrom());
-
-        boolean cardRemoved = false;
-        for (int i = 0; i < cards.size(); i++) {
-            if (cards.get(i).getType().equals(request.getCard().getType())) {
-                cards.remove(i);
-                cardRemoved = true;
+        // 카드 이동 처리
+        Map<String, List<Card>> playerCards = (Map<String, List<Card>>) gameData.get("playerCards");
+        List<Card> fromCards = playerCards.get(request.getFrom());
+        
+        // 카드 찾아서 제거
+        boolean cardFound = false;
+        for (int i = 0; i < fromCards.size(); i++) {
+            if (fromCards.get(i).getType().equals(request.getCard().getType())) {
+                fromCards.remove(i);
+                cardFound = true;
                 break;
             }
         }
 
-        if (!cardRemoved) {
-            throw new IllegalStateException("전달하려는 카드가 플레이어의 패에 없습니다: "
-                    + request.getCard());
+        if (!cardFound) {
+            throw new IllegalStateException("해당 카드를 가지고 있지 않습니다.");
         }
 
-        // 업데이트된 카드 리스트를 playerCards에 반영
-        playerCards.put(request.getFrom(), cards);
-        roomInfo.put("playerCards", playerCards);
+        // 게임 상태 업데이트
+        gameState.setCurrentCard(request.getCard());
+        gameState.setClaimedAnimal(request.getAnimal());
+        gameState.setKing(request.isKing());
+        gameState.setCardSender(request.getFrom());
+        gameState.setCardReceiver(request.getTo());
+        gameState.setCurrentPhase("GUESS_OR_FORWARD");
+        gameState.setPassCount(0);
+        gameState.setPassedPlayers(new HashSet<>());
 
+        // Redis 업데이트
+        playerCards.put(request.getFrom(), fromCards);
+        gameData.put("gameState", gameState);
         redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
 
-        ResponseGiveCard response = ResponseGiveCard.builder()
+        return ResponseGiveCard.builder()
                 .to(request.getTo())
                 .from(request.getFrom())
                 .card(request.getCard())
                 .animal(request.getAnimal())
-                .isNagative(request.isNagative())
                 .isKing(request.isKing())
+                .isNagative(request.isNagative())
                 .build();
-
-        return response;
     }
 
     @Override
@@ -437,15 +456,109 @@ public class CockroachServiceImpl implements CockroachService {
         }
     }
 
+    @Override
+    public ResponseGuessCard guessCard(String roomId, RequestGuessCard request) {
+        Map<String, Object> roomInfo = 
+                (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+        Map<String, Object> gameData = (Map<String, Object>) roomInfo.get("gameData");
+        GameState gameState = (GameState) gameData.get("gameState");
+
+        // 현재 차례가 아닌 경우
+        if (!gameState.getCardReceiver().equals(request.getFrom())) {
+            throw new IllegalStateException("현재 차례가 아닙니다.");
+        }
+
+        if (request.getAction().equals("PASS")) {
+            // 현재 플레이어를 패스 목록에 추가
+            if (gameState.getPassedPlayers() == null) {
+                gameState.setPassedPlayers(new HashSet<>());
+            }
+            gameState.getPassedPlayers().add(request.getFrom());
+            gameState.setPassCount(gameState.getPassCount() + 1);
+            
+            // 다음 플레이어 찾기 (패스하지 않은 플레이어 중에서)
+            List<String> players = (List<String>) roomInfo.get("players");
+            int currentIndex = players.indexOf(request.getFrom());
+            String nextPlayer = null;
+            
+            // 패스하지 않은 다음 플레이어 찾기
+            for (int i = 1; i <= players.size(); i++) {
+                int nextIndex = (currentIndex + i) % players.size();
+                String candidate = players.get(nextIndex);
+                if (!gameState.getPassedPlayers().contains(candidate) && 
+                    !candidate.equals(gameState.getCardSender())) {
+                    nextPlayer = candidate;
+                    break;
+                }
+            }
+            
+            // 다음 플레이어가 없거나 카드를 준 사람이면 무조건 맞춰야 함
+            if (nextPlayer == null || nextPlayer.equals(gameState.getCardSender())) {
+                gameState.setCurrentPhase("GUESS_ONLY");  // 이제 무조건 맞춰야 함
+                nextPlayer = request.getFrom();  // 현재 플레이어가 맞춰야 함
+            }
+
+            gameState.setCardReceiver(nextPlayer);
+            gameData.put("gameState", gameState);
+            redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
+
+            return ResponseGuessCard.builder()
+                    .nextTurn(nextPlayer)
+                    .isCorrect(false)
+                    .isGameOver(false)
+                    .build();
+        } else {
+            // 참/거짓 판단
+            boolean actualTruth = checkCardTruth(
+                gameState.getCurrentCard(), 
+                gameState.getClaimedAnimal(), 
+                gameState.isKing()
+            );
+
+            boolean guessedCorrectly = (actualTruth == request.getIsTrue());
+            String losingPlayer = guessedCorrectly ? gameState.getCardSender() : request.getFrom();
+
+            // 카드 처리 및 게임 상태 업데이트
+            Map<String, List<Card>> playerTables = (Map<String, List<Card>>) gameData.get("userTableCards");
+            List<Card> loserTable = playerTables.get(losingPlayer);
+            loserTable.add(gameState.getCurrentCard());
+
+            // 게임 종료 체크
+            String gameOverPlayer = checkGameFinish(losingPlayer, roomInfo);
+            boolean isGameOver = !gameOverPlayer.isEmpty();
+
+            // 다음 턴 설정
+            gameState.setCurrentTurn(losingPlayer);
+            gameState.setCurrentPhase("CHOOSE_PLAYER");
+            gameState.setCurrentCard(null);
+            gameState.setClaimedAnimal(null);
+            gameState.setKing(false);
+            gameState.setCardSender(null);
+            gameState.setCardReceiver(null);
+            gameState.setPassCount(0);
+            gameState.setPassedPlayers(new HashSet<>());
+
+            gameData.put("gameState", gameState);
+            redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
+
+            return ResponseGuessCard.builder()
+                    .nextTurn(losingPlayer)
+                    .isCorrect(guessedCorrectly)
+                    .losingPlayer(losingPlayer)
+                    .isGameOver(isGameOver)
+                    .build();
+        }
+    }
+
     /* 카드 초기 설정 */
     private static List<Card> initializeDeck() {
         List<Card> deck = new ArrayList<>();
 
         for (String type : CARD_TYPES) {
             for (int i = 0; i < 7; i++) {
-                deck.add(new Card(type, false));
+                deck.add(new Card(type, false));  // 일반 카드 7장
             }
-            deck.add(new Card(type, true));
+            deck.add(new Card(type, true));      // 킹 카드 1장
         }
 
         Collections.shuffle(deck);
@@ -532,5 +645,26 @@ public class CockroachServiceImpl implements CockroachService {
         } else {
             return "";
         }
+    }
+
+    private boolean checkCardTruth(Card card, String claimedAnimal, boolean isKing) {
+        // 블랙 카드의 경우
+        if (card.getType().equals("Black")) {
+            return claimedAnimal.equals("Black");
+        }
+        
+        // 조커 카드의 경우
+        if (card.getType().equals("Joker")) {
+            // 왕으로 선언했다면 무조건 거짓
+            if (isKing) {
+                return false;
+            }
+            // 일반 동물로 선언했다면 참 (조커는 어떤 동물이든 될 수 있음)
+            return true;
+        }
+        
+        // 일반/왕 카드의 경우
+        String baseType = card.getType().replace("King", "");
+        return baseType.equals(claimedAnimal) && card.isRoyal() == isKing;
     }
 }
