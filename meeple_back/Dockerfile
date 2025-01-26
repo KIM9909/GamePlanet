@@ -1,9 +1,8 @@
 # Stage 1: Build
-FROM gradle:7.5.1-jdk17 AS build
+FROM gradle:8.11.1-jdk17 AS build
 WORKDIR /app
 COPY . /app
 
-RUN rm -rf /home/gradle/.gradle/caches/
 RUN gradle clean build -x test --no-daemon --stacktrace --refresh-dependencies
 
 # Stage 2: Run
