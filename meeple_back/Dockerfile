@@ -9,7 +9,7 @@ WORKDIR /app
 ENV SPRING_PROFILES_ACTIVE=prod
 
 COPY --from=build /app/build/libs/*.jar app.jar
-COPY back/src/main/resources/application.yml /app/src/main/resources/application.yml
+COPY meeple_back/src/main/resources/application.yml /app/src/main/resources/application.yml
 
 COPY --from=build /app/build/libs/*.jar app.jar
 EXPOSE 8090
