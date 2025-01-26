@@ -15,7 +15,14 @@ import spaceBackground from "../../assets/burumabul_images/space.jpg";
 import earthTexture from "../../assets/burumabul_images/earth.jpg";
 import marsTexture from "../../assets/burumabul_images/mars.jpg";
 
-const Cell = ({ position, isHighlight, name, textureUrl, topTextureUrl }) => {
+const Cell = ({
+  position,
+  isHighlight,
+  name,
+  textureUrl,
+  topTextureUrl,
+  size,
+}) => {
   const textRef = useRef();
   const { camera } = useThree();
 
@@ -31,10 +38,12 @@ const Cell = ({ position, isHighlight, name, textureUrl, topTextureUrl }) => {
     }
   });
 
+  // 특정 셀의 크기 조정
+
   return (
     <mesh position={position}>
-      {/* 셀 박스 + 둥근 직육면체 */}
-      <boxGeometry args={[1.5, 0.2, 1.4]} />
+      {/* 셀 박스 = 직육면체 */}
+      <boxGeometry args={size} />
       {/* 각 면의 텍스처 및 색상 설정 */}
       <meshStandardMaterial color={isHighlight ? "#ff6b6b" : "white"} />
 
@@ -46,8 +55,11 @@ const Cell = ({ position, isHighlight, name, textureUrl, topTextureUrl }) => {
 
       {/* 윗면에만 텍스쳐 적용 */}
       {topTexture && (
-        <mesh position={[0, 0.101, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[1.5, 1.4]} />
+        <mesh
+          position={[0, size[1] / 2 + 0.001, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
+        >
+          <planeGeometry args={[size[0], size[2]]} />
           <meshStandardMaterial map={topTexture} transparent={true} />
         </mesh>
       )}
@@ -55,8 +67,8 @@ const Cell = ({ position, isHighlight, name, textureUrl, topTextureUrl }) => {
       {/* 셀 이름 */}
       <Text
         ref={textRef}
-        position={[0, 0.8, 0]} // 박스 위에 텍스트 표시
-        fontSize={0.2}
+        position={[0, size[1] + 0.4, 0]} // 박스 위에 텍스트 표시
+        fontSize={0.3}
         color="gray"
         anchorX="center"
         anchorY="middle"
@@ -158,21 +170,73 @@ const TravelMap = () => {
   // 칸별 내용 생성
   const renderCells = () => {
     const positions = [];
-    const step = 1.495;
-    const centerOffset = ((size - 1) * step) / 2; // 중심 좌표 계산
+    const cellSizes = [];
 
-    let x = -centerOffset;
-    let z = -centerOffset;
+    const cornerSize = [2.5, 0.2, 2.5]; // 코너 셀 크기
+    const horizontalSize = [1.8, 0.2, 2.5]; // 가로 일반 셀 크기
+    const verticalSize = [2.5, 0.2, 1.8]; // 세로 일반 셀 크기
 
     const topTextures = [earthTexture, marsTexture];
 
-    for (let i = 0; i < size - 1; i++) positions.push([x + i * step, 0, z]);
-    for (let i = 0; i < size - 1; i++)
-      positions.push([x + (size - 1) * step, 0, z + i * step]);
-    for (let i = 0; i < size - 1; i++)
-      positions.push([x + (size - 1 - i) * step, 0, z + (size - 1) * step]);
-    for (let i = 0; i < size - 1; i++)
-      positions.push([x, 0, z + (size - 1 - i) * step]);
+    const gap = 0.25; // 간격 추가
+    const stepX = horizontalSize[0] + gap; // 가로 셀 간격
+    const stepZ = verticalSize[2] + gap; // 세로 셀 간격
+
+    const centerOffsetX = ((size - 1) * stepX) / 2; // 중심 좌표 계산
+    const centerOffsetZ = ((size - 1) * stepZ) / 2; // 중심 좌표 계산
+
+    // 위쪽 면
+    for (let i = 0; i < size; i++) {
+      if (i === 0) {
+        // 왼쪽 위 코너
+        cellSizes.push(cornerSize);
+        positions.push([-centerOffsetX - gap / 2, 0, -centerOffsetZ - gap / 2]);
+      } else if (i === size - 1) {
+        // 오른쪽 위 코너
+        cellSizes.push(cornerSize);
+        positions.push([centerOffsetX + gap / 2, 0, -centerOffsetZ - gap / 2]);
+      } else {
+        // 일반 셀 (가로)
+        cellSizes.push(horizontalSize);
+        positions.push([
+          -centerOffsetX + i * stepX,
+          0,
+          -centerOffsetZ - gap / 2,
+        ]);
+      }
+    }
+    // 오른쪽 면
+    for (let i = 1; i < size - 1; i++) {
+      cellSizes.push(verticalSize);
+      positions.push([centerOffsetX + gap / 2, 0, -centerOffsetZ + i * stepZ]);
+    }
+
+    // 아래쪽 면
+    for (let i = size - 1; i >= 0; i--) {
+      if (i === 0) {
+        // 왼쪽 아래 코너
+        cellSizes.push(cornerSize);
+        positions.push([-centerOffsetX - gap / 2, 0, centerOffsetZ + gap / 2]);
+      } else if (i === size - 1) {
+        // 오른쪽 아래 코너
+        cellSizes.push(cornerSize);
+        positions.push([centerOffsetX + gap / 2, 0, centerOffsetZ + gap / 2]);
+      } else {
+        // 일반 셀 (가로)
+        cellSizes.push(horizontalSize);
+        positions.push([
+          -centerOffsetX + i * stepX,
+          0,
+          centerOffsetZ + gap / 2,
+        ]);
+      }
+    }
+
+    // 왼쪽 면
+    for (let i = size - 2; i > 0; i--) {
+      cellSizes.push(verticalSize);
+      positions.push([-centerOffsetX - gap / 2, 0, -centerOffsetZ + i * stepZ]);
+    }
 
     return positions.map((pos, index) => (
       <Cell
@@ -180,7 +244,8 @@ const TravelMap = () => {
         position={pos}
         isHighlight={index === currentPosition}
         name={cities[index]}
-        topTextureUrl={topTextures[index]}
+        topTextureUrl={index < topTextures.length ? topTextures[index] : null}
+        size={cellSizes[index]}
       />
     ));
   };
