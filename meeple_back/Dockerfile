@@ -8,14 +8,12 @@ RUN gradle clean build -x test
 FROM openjdk:17-jdk-slim
 WORKDIR /app
 
-# 환경 변수 설정 (필요 시)
-ENV SPRING_PROFILES_ACTIVE=prod
 
 # 빌드 스테이지에서 복사한 JAR 파일 복사
 COPY --from=build /app/meeple_back/build/libs/*.jar app.jar
 
 # application.yml 파일 복사
-COPY meeple_back/src/main/resources/application.yml /app/src/main/resources/application.yml
+COPY src/main/resources/application.yml /app/src/main/resources/application.yml
 
-EXPOSE 8080
+EXPOSE 8090
 ENTRYPOINT ["java","-jar","app.jar"]
