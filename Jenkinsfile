@@ -56,7 +56,7 @@ pipeline {
                     """
 
                     sh """
-                        docker run -d --name ${CONTAINER_NAME} -p 8090:8090 ${IMAGE_NAME}:${IMAGE_TAG}
+                        docker run -d --name ${CONTAINER_NAME} --network my-network -p 8090:8090 ${IMAGE_NAME}:${IMAGE_TAG}
                     """
                 }
             }
