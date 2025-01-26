@@ -4,7 +4,8 @@ import TopNavbar from "../Navbar/TopNavBar";
 
 const TopLayout = ({ children }) => {
   const location = useLocation();
-  const showNavbar = location.pathname !== "/";
+  const showNavbar =
+    location.pathname !== "/" && location.pathname !== "/game/burumabul";
 
   return (
     <div>

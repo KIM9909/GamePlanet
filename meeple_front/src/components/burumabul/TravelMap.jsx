@@ -71,42 +71,42 @@ const TravelMap = () => {
   // cities 배열
   const cities = [
     "지구 Start",
+    "달",
+    "텔레파시 카드",
     "화성",
-    "텔레파시 카드",
     "목성",
+    "직녀성",
     "토성",
-    "뉴런의 골짜기",
-    "천왕성",
     "텔레파시 카드",
+    "천왕성",
     "해왕성",
-    "명왕성",
-    "타임머신",
-    "궁수자리",
-    "물병자리",
+    "시간 여행",
+    "양자리",
+    "황소자리",
     "텔레파시 카드",
     "쌍둥이 자리",
-    "직녀성",
-    "시리우스",
-    "UFO",
-    "헤라클레스 자리",
-    "카시오페아 자리",
-    "공포의 블랙홀",
-    "백조자리",
+    "뉴런의 골짜기 카드",
+    "게자리",
+    "타임머신",
+    "사자자리",
     "처녀자리",
-    "텔레파시 카드",
+    "공포의 블랙홀",
     "천칭자리",
-    "뉴런의 골짜기",
-    "오리온 자리",
-    "전갈 자리",
-    "큰곰자리",
+    "전갈자리",
+    "텔레파시 카드",
+    "궁수자리",
+    "견우성",
+    "염소자리",
+    "물병자리",
+    "물고기자리",
     "텔레파시 카드",
     "우주조난기지",
-    "황소자리",
-    "사자자리",
+    "큰곰자리",
+    "안드로메다",
     "텔레파시 카드",
-    "안드로메다 자리",
-    "견우성",
-    "페가수스 자리",
+    "오리온 자리",
+    "뉴런의 골짜기 카드",
+    "백조자리",
     "헬리 혜성",
     "수성",
     "금성",
@@ -222,7 +222,7 @@ const TravelMap = () => {
   }, []);
 
   return (
-    <>
+    <div className="h-[100%] flex flex-col">
       {/* 이동 버튼 + 주사위 버튼 */}
       <div className="flex justify-center mb-5">
         <button
@@ -251,9 +251,9 @@ const TravelMap = () => {
           </p>
         )}
       </div>
-      <div ref={parentRef} className="flex h-[100vh]">
+      <div ref={parentRef} className="flex w-[100%] h-[100%]">
         {/* 좌측 영역 */}
-        <div className="flex flex-col h-full w-1/5 bg-gray-100 border-2 box-border border-black gap-4 text-center hidden xl:block">
+        <div className="flex flex-col h-[100%] w-1/5 bg-gray-100 border-2 box-border border-black gap-4 text-center hidden xl:block">
           <div className="h-[48%] border-2 m-2 mb-2 box-border border-black ">
             <div className="h-full overflow-y-auto min-h-0">user1</div>
           </div>
@@ -262,11 +262,11 @@ const TravelMap = () => {
           </div>
         </div>
 
-        <div className="sm:block sm:mx-auto">
+        <div className="sm:block sm:mx-auto w-3/5">
           <Canvas
             style={{
-              height: "100vh",
-              width: "70vw",
+              height: "100%",
+              width: "100%",
             }}
             camera={{
               position: initialCameraPosition, // 카메라 초기 위치
@@ -292,7 +292,7 @@ const TravelMap = () => {
               target={initialTarget}
               makeDefault
               maxPolarAngle={Math.PI / 2.5} // 위쪽으로 카메라 제한
-              minDistance={10} // 최소 줌 거리
+              minDistance={5} // 최소 줌 거리
               maxDistance={15} // 최대 줌 거리
             />
             {renderCells()}
@@ -330,7 +330,7 @@ const TravelMap = () => {
           </div>,
           document.body
         )}
-    </>
+    </div>
   );
 };
 
