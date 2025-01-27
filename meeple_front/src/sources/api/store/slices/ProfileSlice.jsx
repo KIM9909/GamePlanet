@@ -46,6 +46,19 @@ export const updatePassword = createAsyncThunk(
   }
 );
 
+// 회원 탈퇴 액션 생성
+export const deleteUser = createAsyncThunk(
+  "profile/deleteUser",
+  async ({ userId, password }, { rejectWithValue }) => {
+    try {
+      await UserAPI.deleteUser(userId, password);
+      return true;
+    } catch (error) {
+      throw rejectWithValue(error.message || "회원 탈퇴에 실패했습니다.");
+    }
+  }
+);
+
 // 프로필 관련 Redux 슬라이스 생성
 const ProfileSlice = createSlice({
   name: "profile",
@@ -57,7 +70,9 @@ const ProfileSlice = createSlice({
     error: null, // 에러 상태
     isEditing: false, // 수정 모드 상태
     isPasswordModalOpen: false, // 비밀번호 변경 모달 상태
+    isDeleteModalOpen: false,
     updateSuccess: false, // 수정 성공 상태
+    deleteSuccess: false,
   },
 
   // 동기적 액션에 대한 리듀서
@@ -70,9 +85,17 @@ const ProfileSlice = createSlice({
     setPasswordModalOpen: (state, action) => {
       state.isPasswordModalOpen = action.payload;
     },
+    // 회원 탈퇴 모달 토글
+    setDeleteModalOpen: (state, action) => {
+      state.isDeleteModalOpen = action.payload;
+    },
     // 수정 성공 상태 초기화
     resetUpdateSuccess: (state) => {
       state.updateSuccess = false;
+    },
+    // 회원 탈퇴 상태 초기화
+    resetDeleteSuccess: (state) => {
+      state.deleteSuccess = false;
     },
     // 에러 상태 초기화
     clearError: (state) => {
@@ -126,6 +149,21 @@ const ProfileSlice = createSlice({
       .addCase(updatePassword.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
+      })
+      // 회원 탈퇴 상태 처리
+      .addCase(deleteUser.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(deleteUser.fulfilled, (state) => {
+        state.isLoading = false;
+        state.isDeleteModalOpen = false;
+        state.deleteSuccess = true;
+        state.profileData = null;
+      })
+      .addCase(deleteUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
       });
   },
 });
@@ -134,7 +172,9 @@ const ProfileSlice = createSlice({
 export const {
   setEditing,
   setPasswordModalOpen,
+  setDeleteModalOpen,
   resetUpdateSuccess,
+  resetDeleteSuccess,
   clearError,
 } = ProfileSlice.actions;
 

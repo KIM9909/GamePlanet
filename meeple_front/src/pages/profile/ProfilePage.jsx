@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import PasswordChangePage from "./PasswordChangePage";
+import UserDeletePage from "./UserDeletePage";
 // Redux 액션들과 API 임포트
 import {
   fetchProfile,
@@ -11,6 +12,7 @@ import {
   setPasswordModalOpen,
   resetUpdateSuccess,
   clearError,
+  setDeleteModalOpen,
 } from "../../sources/api/store/slices/ProfileSlice";
 import { UserAPI } from "../../sources/api/UserAPI";
 
@@ -40,6 +42,7 @@ const ProfilePage = () => {
     error,
     isEditing,
     isPasswordModalOpen,
+    isDeleteModalOpen,
     updateSuccess,
   } = useSelector((state) => state.profile);
 
@@ -249,6 +252,12 @@ const ProfilePage = () => {
               >
                 수정하기
               </button>
+              <button
+                onClick={() => dispatch(setDeleteModalOpen(true))}
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              >
+                회원탈퇴
+              </button>
             </div>
           )}
         </div>
@@ -388,6 +397,14 @@ const ProfilePage = () => {
           <PasswordChangePage
             userId={userId}
             onClose={() => dispatch(setPasswordModalOpen(false))}
+          />
+        )}
+
+        {/* 회원 탈퇴퇴 모달 */}
+        {isDeleteModalOpen && (
+          <UserDeletePage
+            userId={userId}
+            onClose={() => dispatch(setDeleteModalOpen(false))}
           />
         )}
       </div>

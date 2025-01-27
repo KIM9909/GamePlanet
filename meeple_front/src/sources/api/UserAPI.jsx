@@ -119,10 +119,11 @@ export const UserAPI = {
   },
 
   // 회원 탈퇴
-  deleteAccount: async (userId) => {
+  deleteUser: async (userId, password) => {
     try {
-      await API.delete(`/user/${userId}`);
-      localStorage.removeItem("token");
+      await API.delete(`/profile/${userId}/delete`, {
+        data: { password },
+      });
     } catch (error) {
       throw error.response?.data || "회원 탈퇴에 실패했습니다.";
     }
