@@ -34,18 +34,19 @@ const CockroachPokerPage = () => {
       players: ["user1", "user2", "user3", "user4"],
       gameData: {
         gameState: {
-          currentTurn: "user1",
-          currentPhase: "GUESS_OR_FORWARD", // 카드 전달 단계
+          currentTurn: "user2",
+          currentPhase: "GUESS_OR_FORWARD",
           currentCard: {
-            // 현재 전달 중인 카드 정보
-            type: "Bat",
+            type: "Rat",
             royal: false,
           },
-          cardSender: "user3", // 카드를 보낸 사람
-          cardReceiver: "user1", // 카드를 받은 사람
-          claimedAnimal: "Bat", // 선언한 동물
-          isKing: false, // 왕 선언 여부
-          isNegative: false, // 추가
+          cardSender: "user3",
+          cardReceiver: "user1",
+          claimedAnimal: "Stinkbug",
+          isKing: false,
+          isNegative: false,
+          passedPlayers: ["user2", "user3"], // PASS한 플레이어들
+          passCount: 3, // 현재까지 PASS 횟수
         },
         playerCards: {
           user1: [

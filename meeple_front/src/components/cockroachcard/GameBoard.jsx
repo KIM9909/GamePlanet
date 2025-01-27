@@ -1,6 +1,15 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import GiveCardModal from "./GiveCardModal";
 import GuessCardModal from "./GuessCardModal";
+import PenaltyCardSelectModal from "./PenaltyCardSelectModal";
+import ActiveCardArea from "./ActiveCardArea";
+import Card from "./Card";
 
 const ANIMAL_ORDER = [
   "Bat",
@@ -16,16 +25,13 @@ const ANIMAL_ORDER = [
 
 const sortCards = (cards) => {
   return [...cards].sort((a, b) => {
-    // 기본 타입 추출 (King 제거)
     const typeA = a.type.replace("King", "");
     const typeB = b.type.replace("King", "");
 
-    // 같은 동물이면 일반 카드가 먼저 오도록
     if (typeA === typeB) {
       return a.type.includes("King") ? 1 : -1;
     }
 
-    // 동물 순서대로 정렬
     return ANIMAL_ORDER.indexOf(typeA) - ANIMAL_ORDER.indexOf(typeB);
   });
 };
@@ -57,80 +63,6 @@ const getKoreanName = (type) => {
   }
 
   return nameMap[type] || type;
-};
-
-const Card = ({
-  type = null,
-  isBack = false,
-  isRoyal = false,
-  onClick,
-  selectedCard,
-  isActive = false,
-}) => {
-  if (isBack || !type) {
-    return (
-      <div
-        className="flex-shrink-0 w-16 h-24 rounded-lg relative group cursor-pointer overflow-hidden 
-           shadow-[0_0_0_1px_rgba(255,255,255,0.3)] hover:shadow-[0_0_0_2px_rgba(255,255,255,0.5)]
-           transition-shadow duration-200"
-      >
-        <img
-          src="/src/assets/image/cockroachpoker/CardBack.svg"
-          alt="Card Back"
-          className="w-full h-full object-cover"
-        />
-      </div>
-    );
-  }
-
-  // 특수 카드(Joker, Black) 처리
-  if (type === "Joker" || type === "Black") {
-    const cardImageType = type === "Joker" ? "JockerCard" : "BlackCard";
-    return (
-      <div
-        onClick={() => onClick?.({ type })}
-        className={`flex-shrink-0 w-16 h-24 rounded-lg relative group cursor-pointer overflow-hidden
-          ${selectedCard?.type === type ? "ring-2 ring-blue-500" : ""} ${
-          isActive ? "ring-2 ring-green-500" : ""
-        }`}
-      >
-        <img
-          src={`/src/assets/image/cockroachpoker/${cardImageType}.svg`}
-          alt={type}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100">
-          <span className="text-sm text-white">{getKoreanName(type)}</span>
-        </div>
-      </div>
-    );
-  }
-
-  // 일반/킹 카드 처리
-  const cardImageType = isRoyal ? `King${type}Card` : `${type}Card`;
-  const displayName = isRoyal ? `King${type}` : type;
-
-  return (
-    <div
-      data-card-id={type}
-      onClick={() => onClick?.({ type, isRoyal })}
-      className={`
-        flex-shrink-0 w-16 h-24 rounded-lg relative group cursor-pointer overflow-hidden
-        transition-all duration-300 ease-in-out
-        ${selectedCard?.type === type ? "ring-2 ring-blue-500" : ""}
-        ${isActive ? "shadow-lg shadow-blue-500/50" : ""}
-      `}
-    >
-      <img
-        src={`/src/assets/image/cockroachpoker/${cardImageType}.svg`}
-        alt={displayName}
-        className="w-full h-full object-cover"
-      />
-      <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100">
-        <span className="text-sm text-white">{getKoreanName(displayName)}</span>
-      </div>
-    </div>
-  );
 };
 
 const PenaltyCardStack = ({ type, count = 3, isRoyal }) => {
@@ -166,6 +98,9 @@ const OpponentArea = ({
   selectedCard,
   handlePlayerClick,
   isPassing,
+  passedPlayers,
+  cardSender,
+  remainingPlayers,
 }) => {
   const groupedPenaltyCards = penaltyCards.reduce((acc, card) => {
     const baseType = card.type.startsWith("King")
@@ -180,20 +115,29 @@ const OpponentArea = ({
 
   const sortedPenaltyGroups = sortPenaltyGroups(groupedPenaltyCards);
 
+  // 선택 가능 여부 판단 로직 수정
+  const isSelectable = useMemo(() => {
+    return (
+      isPassing &&
+      remainingPlayers.includes(playerName) &&
+      !passedPlayers.includes(playerName)
+    );
+  }, [isPassing, remainingPlayers, playerName, passedPlayers]);
+
   return (
     <div
       className={`w-64 space-y-4 
-        ${!isMyTurn && !isPassing ? "opacity-50" : ""} 
+        ${!isSelectable ? "opacity-50" : ""} 
         ${
-          isMyTurn || isPassing
+          isSelectable
             ? "cursor-pointer hover:ring-2 hover:ring-blue-500 rounded-lg"
-            : ""
+            : "cursor-not-allowed"
         }
-        ${
-          isPassing ? "ring-2 ring-green-500" : ""
-        }  // PASS 모드일 때 녹색 테두리
       `}
-      onClick={() => (isMyTurn || isPassing) && handlePlayerClick(playerName)}
+      onClick={() => {
+        if (!isSelectable) return;
+        handlePlayerClick(playerName);
+      }}
     >
       <div className="px-3 py-1.5 bg-gray-800/90 rounded-lg">
         <div className="text-center text-sm font-medium text-white">
@@ -221,7 +165,6 @@ const OpponentArea = ({
           </div>
         </div>
 
-        {/* 핸드 카드 영역 */}
         <div className="relative h-24">
           {handCards.length > 4 ? (
             <div className="relative w-full h-full flex items-center justify-center">
@@ -262,7 +205,6 @@ const MyArea = ({
   selectedCard,
   handleCardClick,
 }) => {
-  // 벌칙 카드 그룹화 및 정렬
   const groupedPenaltyCards = penaltyCards.reduce((acc, card) => {
     const baseType = card.type.replace("King", "");
     if (!acc[baseType]) {
@@ -280,7 +222,6 @@ const MyArea = ({
 
   return (
     <div className="absolute bottom-4 left-0 right-0 px-8">
-      {/* 벌칙 카드 영역 */}
       <div className="mb-6">
         <div className="flex justify-center gap-4 flex-wrap">
           {sortedPenaltyGroups.map((stack, i) => (
@@ -294,7 +235,6 @@ const MyArea = ({
         </div>
       </div>
 
-      {/* 핸드 카드 영역 */}
       <div className="flex justify-center gap-4 flex-wrap">
         {sortCards(handCards).map((card, i) => (
           <Card
@@ -350,70 +290,6 @@ const DeckArea = ({ openCard }) => {
   );
 };
 
-// 현재 전달 중인 카드를 보여주는 컴포넌트
-const ActiveCardArea = ({
-  currentCard,
-  cardSender,
-  cardReceiver,
-  currentUser,
-  handlePass,
-  setShowGuessModal,
-  gameData,
-  isPassing,
-}) => {
-  if (!currentCard) return null;
-
-  const shouldShowFront = () => {
-    if (cardSender === currentUser || isPassing) return true;
-    return false;
-  };
-
-  return (
-    <div className="absolute top-[60%] right-4 w-72 active-card-area">
-      <div className="bg-gray-800/90 p-4 rounded-lg space-y-4">
-        <div className="text-sm text-gray-300 text-center">
-          {cardSender} → {cardReceiver}
-        </div>
-        <div className="relative flex justify-center">
-          <Card
-            type={shouldShowFront() ? currentCard.type : null}
-            isBack={!shouldShowFront()}
-            isRoyal={currentCard.royal}
-            isActive={true}
-          />
-        </div>
-
-        {/* 내가 받는 카드일 때만 버튼 표시 */}
-        {cardReceiver === currentUser && (
-          <div className="flex justify-center gap-4 mt-4">
-            {/* PASS 모드가 아닐 때만 PASS 버튼 활성화 */}
-            {!isPassing && (
-              <button
-                className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600"
-                onClick={handlePass}
-              >
-                PASS
-              </button>
-            )}
-            {/* PASS 모드일 때는 GUESS 버튼 비활성화 */}
-            <button
-              className={`px-4 py-2 ${
-                isPassing
-                  ? "bg-gray-500 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-500"
-              } text-white rounded`}
-              onClick={() => !isPassing && setShowGuessModal(true)}
-              disabled={isPassing}
-            >
-              GUESS
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
 const GameBoard = ({
   playerCount = 4,
   onStartGame,
@@ -427,7 +303,23 @@ const GameBoard = ({
   const [isMyTurn, setIsMyTurn] = useState(false);
   const [showGiveCardModal, setShowGiveCardModal] = useState(false);
   const [showGuessModal, setShowGuessModal] = useState(false);
-  const [isPassing, setIsPassing] = useState(false); // PASS 모드 상태 추가
+  const [isPassing, setIsPassing] = useState(false);
+  const [showPenaltyCardModal, setShowPenaltyCardModal] = useState(false);
+  const [currentLoser, setCurrentLoser] = useState(null);
+  const [penaltyCardCount, setPenaltyCardCount] = useState(0);
+  const [passedPlayers, setPassedPlayers] = useState([]);
+  const [passCount, setPassCount] = useState(0);
+
+  // 남은 플레이어 계산
+  const remainingPlayers = useMemo(() => {
+    if (!gameData?.players || !gameData?.gameData?.gameState) return [];
+
+    const { cardSender, passedPlayers = [] } = gameData.gameData.gameState;
+
+    return gameData.players.filter(
+      (player) => player !== cardSender && !passedPlayers.includes(player)
+    );
+  }, [gameData]);
 
   useEffect(() => {
     if (gameData?.gameData?.gameState?.currentTurn) {
@@ -449,14 +341,10 @@ const GameBoard = ({
 
   const handlePlayerClick = (playerNickname) => {
     if (!isPassing && (!isMyTurn || !selectedCard)) return;
-    if (playerNickname === currentUser) return; // 자기 자신은 선택 불가
+    if (playerNickname === currentUser) return;
 
     setSelectedPlayer(playerNickname);
     setShowGiveCardModal(true);
-    // PASS 모드일 때는 isPassing을 false로 설정하지 않음
-    if (!isPassing) {
-      setIsPassing(false);
-    }
   };
 
   const handleGiveCard = (claimData) => {
@@ -471,96 +359,164 @@ const GameBoard = ({
 
     console.log("카드 전달 데이터:", giveCardData);
 
-    // 카드 전달이 완료되면 모든 상태 초기화
     setSelectedCard(null);
     setSelectedPlayer(null);
     setShowGiveCardModal(false);
-    setIsPassing(false); // 카드 전달이 완료되면 PASS 모드 해제
+    setIsPassing(false);
   };
 
   const handleModalClose = () => {
-    // 모달만 닫고 플레이어 선택으로 돌아가기
     setShowGiveCardModal(false);
     setSelectedPlayer(null);
-    // isPassing 상태는 유지
+  };
+  const handlePass = () => {
+    const players = gameData.players;
+    const currentCard = gameData.gameData.gameState;
+
+    const newPassedPlayers = [
+      ...(gameData.gameData.gameState.passedPlayers || []),
+      currentUser,
+    ];
+
+    if (remainingPlayers.length === 0) {
+      console.log("마지막 플레이어는 무조건 맞춰야 합니다!");
+      setShowGuessModal(true);
+      return;
+    }
+
+    setIsPassing(true);
+    setSelectedCard({
+      type: currentCard.currentCard.type,
+      isRoyal: currentCard.currentCard.royal,
+    });
+    setPassedPlayers(newPassedPlayers);
+    setPassCount((prev) => prev + 1);
+    setIsMyTurn(false);
+
+    console.log("PASS 후 상태:", {
+      isPassing: true,
+      selectedCard: currentCard.currentCard,
+      passedPlayers: newPassedPlayers,
+      remainingPlayers,
+    });
   };
 
-  const handlePass = () => {
-    // PASS 모드 활성화
-    setIsPassing(true);
-    // 현재 전달받은 카드를 선택된 카드로 설정 (isRoyal 속성도 함께 전달)
-    setSelectedCard({
-      type: gameData.gameData.gameState.currentCard.type,
-      isRoyal: gameData.gameData.gameState.currentCard.royal,
+  const handleGuess = async (guess) => {
+    const currentCard = gameData.gameData.gameState.currentCard;
+    const loser = determineLoser(guess);
+    const claimedAnimal = gameData.gameData.gameState.claimedAnimal;
+
+    console.log("추측 데이터:", {
+      guess,
+      currentCard,
+      loser,
+      claimedAnimal,
+      isKing: gameData.gameData.gameState.isKing,
     });
 
-    // 핸드카드 선택 비활성화를 위해 isMyTurn false로 설정
-    setIsMyTurn(false);
-  };
+    if (currentCard.type === "Black" || currentCard.type === "Joker") {
+      const loserHand = playerCards[loser] || [];
+      const validLoserHand = loserHand.filter((card) => card && card.type);
+      const hasClaimedCard = validLoserHand.some(
+        (card) => card.type === claimedAnimal
+      );
 
-  const handleGuess = async (isTrue) => {
-    const currentCard = gameData.gameData.gameState.currentCard;
-    const openCard =
-      gameData.gameData.publicDeck[gameData.gameData.publicDeck.length - 1];
-    const loser = determineLoser(isTrue);
-
-    try {
-      if (currentCard.type === "Black" || currentCard.type === "Joker") {
-        // 특수 카드(블랙/조커)인 경우 multicard API 사용
-        await sendMessage({
-          type: "MULTI_CARD_PENALTY",
-          data: {
-            loser,
-            cardType: currentCard.type,
-            isRoyal: currentCard.royal,
-          },
-        });
-      } else {
-        // 일반/왕 카드인 경우
-        await sendMessage({
-          type: "SINGLE_CARD_PENALTY",
-          data: {
-            loser,
-            cardType: currentCard.type,
-            isRoyal: currentCard.royal,
-          },
-        });
-
-        // 왕 카드인 경우 공개 카드도 패널티로 추가
-        if (currentCard.royal && openCard) {
-          await sendMessage({
-            type: "SINGLE_CARD_PENALTY",
-            data: {
-              loser,
-              cardType: openCard.type,
-              isRoyal: openCard.royal,
-            },
-          });
-        }
-      }
-    } catch (error) {
-      console.error("패널티 카드 처리 실패:", error);
+      setCurrentLoser(loser);
+      setShowPenaltyCardModal(true);
+      setPenaltyCardCount(hasClaimedCard ? 1 : 2);
+    } else {
+      await sendPenaltyCard(loser, currentCard);
     }
 
     setShowGuessModal(false);
   };
 
-  // 패자 결정 함수
-  const determineLoser = (isTrue) => {
+  const handlePenaltyCardSelect = useCallback(
+    async (selectedCards) => {
+      console.log("패널티 카드 선택:", {
+        user: currentLoser,
+        selectedCards,
+        isBlack: gameData.gameData.gameState.currentCard.type === "Black",
+      });
+
+      await sendMessage({
+        type: "MULTI_CARD",
+        data: {
+          user: currentLoser,
+          cards: selectedCards,
+          isBlack: gameData.gameData.gameState.currentCard.type === "Black",
+        },
+      });
+      setShowPenaltyCardModal(false);
+    },
+    [currentLoser, gameData, sendMessage]
+  );
+
+  const determineLoser = (guess) => {
     const { cardSender, cardReceiver, currentCard, claimedAnimal, isKing } =
       gameData.gameData.gameState;
 
-    // 실제 카드와 선언이 일치하는지 확인
+    if (currentCard.type === "Black") {
+      return guess === "Black" ? cardSender : cardReceiver;
+    }
+
     const isCorrectClaim =
       currentCard.type === claimedAnimal && currentCard.royal === isKing;
-
-    // 선언이 맞았는데 거짓이라고 했거나, 선언이 틀렸는데 진실이라고 한 경우 추측한 사람이 패배
-    if ((isCorrectClaim && !isTrue) || (!isCorrectClaim && isTrue)) {
-      return cardReceiver; // 추측한 사람(카드 받은 사람)이 패배
+    if (
+      (isCorrectClaim && guess === "FALSE") ||
+      (!isCorrectClaim && guess === "TRUE")
+    ) {
+      return cardReceiver;
     } else {
-      return cardSender; // 선언한 사람(카드 보낸 사람)이 패배
+      return cardSender;
     }
   };
+
+  const sendPenaltyCard = async (loser, currentCard) => {
+    try {
+      console.log("일반 패널티 카드 처리:", {
+        loser,
+        cardType: currentCard.type,
+        isRoyal: currentCard.royal,
+      });
+
+      await sendMessage({
+        type: "SINGLE_CARD_PENALTY",
+        data: {
+          loser,
+          cardType: currentCard.type,
+          isRoyal: currentCard.royal,
+        },
+      });
+
+      if (currentCard.royal && gameData.gameData.publicDeck.length > 0) {
+        const openCard =
+          gameData.gameData.publicDeck[gameData.gameData.publicDeck.length - 1];
+        console.log("왕 카드 추가 패널티:", {
+          loser,
+          openCard,
+        });
+        await sendMessage({
+          type: "SINGLE_CARD_PENALTY",
+          data: {
+            loser,
+            cardType: openCard.type,
+            isRoyal: openCard.royal,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("패널티 카드 처리 실패:", error);
+    }
+  };
+
+  // 새로운 카드가 전달될 때마다 PASS 관련 상태 초기화
+  useEffect(() => {
+    if (gameData?.gameData?.gameState?.currentCard) {
+      setPassedPlayers(new Set());
+      setPassCount(0); // PASS 카운트 초기화
+    }
+  }, [gameData?.gameData?.gameState?.currentCard]);
 
   if (!isGameStarted) {
     return (
@@ -579,7 +535,6 @@ const GameBoard = ({
     );
   }
 
-  // gameData가 없으면 로딩 표시
   if (!gameData) {
     return (
       <div className="relative w-full h-[800px] max-w-[1600px] mx-auto bg-gray-700/10 rounded-3xl flex items-center justify-center">
@@ -588,7 +543,6 @@ const GameBoard = ({
     );
   }
 
-  // 서버에서 받은 게임 데이터 사용
   const {
     players = [],
     gameData: { playerCards = {}, publicDeck = [], userTableCards = {} } = {},
@@ -597,7 +551,6 @@ const GameBoard = ({
   return (
     <div className="p-4">
       <div className="relative w-full h-[800px] max-w-[1600px] mx-auto bg-gray-700/10 rounded-3xl">
-        {/* 상단 플레이어 영역 */}
         {playerCount === 2 ? (
           <div className="absolute top-4 left-0 right-0 flex justify-center">
             <OpponentArea
@@ -605,10 +558,13 @@ const GameBoard = ({
               penaltyCards={userTableCards[players[1]] || []}
               handCards={playerCards[players[1]] || []}
               playerName={players[1]}
-              isMyTurn={isMyTurn || isPassing} // PASS 모드일 때도 클릭 가능하도록
+              isMyTurn={isMyTurn || isPassing}
               selectedCard={selectedCard}
               handlePlayerClick={handlePlayerClick}
-              isPassing={isPassing} // PASS 모드 전달
+              isPassing={isPassing}
+              passedPlayers={gameData?.gameData?.gameState?.passedPlayers || []}
+              cardSender={gameData?.gameData?.gameState?.cardSender}
+              remainingPlayers={remainingPlayers}
             />
           </div>
         ) : (
@@ -621,10 +577,15 @@ const GameBoard = ({
                     penaltyCards={userTableCards[players[1]] || []}
                     handCards={playerCards[players[1]] || []}
                     playerName={players[1]}
-                    isMyTurn={isMyTurn || isPassing} // PASS 모드일 때도 클릭 가능하도록
+                    isMyTurn={isMyTurn || isPassing}
                     selectedCard={selectedCard}
                     handlePlayerClick={handlePlayerClick}
-                    isPassing={isPassing} // PASS 모드 전달
+                    isPassing={isPassing}
+                    passedPlayers={
+                      gameData?.gameData?.gameState?.passedPlayers || []
+                    }
+                    cardSender={gameData?.gameData?.gameState?.cardSender}
+                    remainingPlayers={remainingPlayers}
                   />
                 </div>
                 <div className="w-[calc(40%-1rem)]">
@@ -633,10 +594,15 @@ const GameBoard = ({
                     penaltyCards={userTableCards[players[2]] || []}
                     handCards={playerCards[players[2]] || []}
                     playerName={players[2]}
-                    isMyTurn={isMyTurn || isPassing} // PASS 모드일 때도 클릭 가능하도록
+                    isMyTurn={isMyTurn || isPassing}
                     selectedCard={selectedCard}
                     handlePlayerClick={handlePlayerClick}
-                    isPassing={isPassing} // PASS 모드 전달
+                    isPassing={isPassing}
+                    passedPlayers={
+                      gameData?.gameData?.gameState?.passedPlayers || []
+                    }
+                    cardSender={gameData?.gameData?.gameState?.cardSender}
+                    remainingPlayers={remainingPlayers}
                   />
                 </div>
               </div>
@@ -648,10 +614,13 @@ const GameBoard = ({
                     penaltyCards={userTableCards[players[1]] || []}
                     handCards={playerCards[players[1]] || []}
                     playerName={players[1]}
-                    isMyTurn={isMyTurn || isPassing} // PASS 모드일 때도 클릭 가능하도록
+                    isMyTurn={false}
                     selectedCard={selectedCard}
                     handlePlayerClick={handlePlayerClick}
-                    isPassing={isPassing} // PASS 모드 전달
+                    isPassing={isPassing}
+                    passedPlayers={passedPlayers}
+                    cardSender={gameData?.gameData?.gameState?.cardSender}
+                    remainingPlayers={remainingPlayers}
                   />
                 </div>
                 <div className="w-[calc(33%-1rem)]">
@@ -660,10 +629,13 @@ const GameBoard = ({
                     penaltyCards={userTableCards[players[2]] || []}
                     handCards={playerCards[players[2]] || []}
                     playerName={players[2]}
-                    isMyTurn={isMyTurn || isPassing} // PASS 모드일 때도 클릭 가능하도록
+                    isMyTurn={false}
                     selectedCard={selectedCard}
                     handlePlayerClick={handlePlayerClick}
-                    isPassing={isPassing} // PASS 모드 전달
+                    isPassing={isPassing}
+                    passedPlayers={passedPlayers}
+                    cardSender={gameData?.gameData?.gameState?.cardSender}
+                    remainingPlayers={remainingPlayers}
                   />
                 </div>
                 <div className="w-[calc(33%-1rem)]">
@@ -672,10 +644,13 @@ const GameBoard = ({
                     penaltyCards={userTableCards[players[3]] || []}
                     handCards={playerCards[players[3]] || []}
                     playerName={players[3]}
-                    isMyTurn={isMyTurn || isPassing} // PASS 모드일 때도 클릭 가능하도록
+                    isMyTurn={false}
                     selectedCard={selectedCard}
                     handlePlayerClick={handlePlayerClick}
-                    isPassing={isPassing} // PASS 모드 전달
+                    isPassing={isPassing}
+                    passedPlayers={passedPlayers}
+                    cardSender={gameData?.gameData?.gameState?.cardSender}
+                    remainingPlayers={remainingPlayers}
                   />
                 </div>
               </div>
@@ -683,25 +658,21 @@ const GameBoard = ({
           </div>
         )}
 
-        {/* 중앙 덱 영역 */}
         <DeckArea openCard={publicDeck[publicDeck.length - 1]} />
 
-        {/* 내 영역 */}
         <MyArea
           penaltyCards={userTableCards[players[0]] || []}
           handCards={playerCards[players[0]] || []}
-          isMyTurn={isMyTurn && !isPassing} // PASS 모드일 때는 핸드카드 선택 불가
+          isMyTurn={isMyTurn && !isPassing}
           selectedCard={selectedCard}
           handleCardClick={handleCardClick}
         />
 
-        {/* 현재 전달 중인 카드 영역 */}
         <ActiveCardArea
           currentCard={gameData?.gameData?.gameState?.currentCard}
           cardSender={gameData?.gameData?.gameState?.cardSender}
           cardReceiver={gameData?.gameData?.gameState?.cardReceiver}
           currentUser={currentUser}
-          currentPhase={gameData?.gameData?.gameState?.currentPhase}
           handlePass={handlePass}
           setShowGuessModal={setShowGuessModal}
           gameData={gameData}
@@ -711,7 +682,7 @@ const GameBoard = ({
 
       <GiveCardModal
         isOpen={showGiveCardModal}
-        onClose={handleModalClose} // 새로운 핸들러 사용
+        onClose={handleModalClose}
         selectedCard={selectedCard}
         selectedPlayer={selectedPlayer}
         onSubmit={handleGiveCard}
@@ -729,6 +700,17 @@ const GameBoard = ({
           from={gameData.gameData.gameState.cardSender}
           to={gameData.gameData.gameState.cardReceiver}
           isNegative={gameData.gameData.gameState.isNegative}
+        />
+      )}
+
+      {showPenaltyCardModal && currentLoser === currentUser && (
+        <PenaltyCardSelectModal
+          isOpen={showPenaltyCardModal}
+          onClose={() => setShowPenaltyCardModal(false)}
+          handCards={playerCards[currentLoser] || []}
+          onSubmit={handlePenaltyCardSelect}
+          count={penaltyCardCount}
+          claimedAnimal={gameData.gameData.gameState.claimedAnimal}
         />
       )}
     </div>

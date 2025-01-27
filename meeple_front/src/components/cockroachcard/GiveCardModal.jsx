@@ -13,15 +13,13 @@ const GiveCardModal = ({
   const [isNegative, setIsNegative] = useState(false);
 
   const getSelectableAnimals = () => {
-    if (selectedCard?.type === "Black") {
-      return ["Black"];
-    }
+    // 모든 카드가 모든 동물 선택 가능
     return ["Bat", "Rat", "Fly", "Cockroach", "Scorpion", "Toad", "Stinkbug"];
   };
 
   useEffect(() => {
-    if (selectedCard?.type === "Black") {
-      setClaimedAnimal("Black");
+    if (selectedCard) {
+      setClaimedAnimal(getSelectableAnimals()[0]);
       setIsKing(false);
       setIsNegative(false);
     }
@@ -82,7 +80,6 @@ const GiveCardModal = ({
             value={claimedAnimal}
             onChange={(e) => setClaimedAnimal(e.target.value)}
             className="w-full p-2 rounded bg-gray-700 text-white"
-            disabled={selectedCard?.type === "Black"}
           >
             {getSelectableAnimals().map((animal) => (
               <option key={animal} value={animal}>
@@ -92,56 +89,50 @@ const GiveCardModal = ({
           </select>
         </div>
 
-        {/* 블랙카드가 아닐 때만 추가 옵션 표시 */}
-        {selectedCard?.type !== "Black" && (
-          <>
-            {/* 카드 타입 선택 */}
-            <div className="space-y-2">
-              <label className="text-white">카드 타입:</label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  className={`p-2 rounded ${
-                    !isKing ? "bg-blue-500" : "bg-gray-700"
-                  } text-white`}
-                  onClick={() => setIsKing(false)}
-                >
-                  일반
-                </button>
-                <button
-                  className={`p-2 rounded ${
-                    isKing ? "bg-blue-500" : "bg-gray-700"
-                  } text-white`}
-                  onClick={() => setIsKing(true)}
-                >
-                  킹
-                </button>
-              </div>
-            </div>
+        {/* 모든 카드에 대해 추가 옵션 표시 */}
+        <div className="space-y-2">
+          <label className="text-white">카드 타입:</label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              className={`p-2 rounded ${
+                !isKing ? "bg-blue-500" : "bg-gray-700"
+              } text-white`}
+              onClick={() => setIsKing(false)}
+            >
+              일반
+            </button>
+            <button
+              className={`p-2 rounded ${
+                isKing ? "bg-blue-500" : "bg-gray-700"
+              } text-white`}
+              onClick={() => setIsKing(true)}
+            >
+              킹
+            </button>
+          </div>
+        </div>
 
-            {/* 긍정/부정 선택 */}
-            <div className="space-y-2">
-              <label className="text-white">선언 방식:</label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  className={`p-2 rounded ${
-                    !isNegative ? "bg-blue-500" : "bg-gray-700"
-                  } text-white`}
-                  onClick={() => setIsNegative(false)}
-                >
-                  진실
-                </button>
-                <button
-                  className={`p-2 rounded ${
-                    isNegative ? "bg-blue-500" : "bg-gray-700"
-                  } text-white`}
-                  onClick={() => setIsNegative(true)}
-                >
-                  거짓
-                </button>
-              </div>
-            </div>
-          </>
-        )}
+        <div className="space-y-2">
+          <label className="text-white">선언 방식:</label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              className={`p-2 rounded ${
+                !isNegative ? "bg-blue-500" : "bg-gray-700"
+              } text-white`}
+              onClick={() => setIsNegative(false)}
+            >
+              진실
+            </button>
+            <button
+              className={`p-2 rounded ${
+                isNegative ? "bg-blue-500" : "bg-gray-700"
+              } text-white`}
+              onClick={() => setIsNegative(true)}
+            >
+              거짓
+            </button>
+          </div>
+        </div>
 
         {/* 버튼 영역 */}
         <div className="flex justify-end gap-4">
