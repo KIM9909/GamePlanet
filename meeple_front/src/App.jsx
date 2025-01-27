@@ -13,12 +13,12 @@ import MainPage from "./pages/main/MainPage";
 import TopLayout from "./components/layout/TopLayout";
 import SideLayout from "./components/layout/SideLayout";
 import Introduce from "./pages/introduce/Introduce";
+import ScrollToTop from "./components/layout/ScrollToTop";
 
 function App() {
-  // const { userId } = useSelector((state) => state.user);
-
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <TopLayout>
         <SideLayout>
           <Routes>
