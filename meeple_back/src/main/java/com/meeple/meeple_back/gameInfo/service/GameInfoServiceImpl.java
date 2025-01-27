@@ -107,4 +107,28 @@ public class GameInfoServiceImpl implements GameInfoService{
 
         return new ResponseUpdateGameInfo(200, gameInfoId + "번 게임 정보 업데이트 성공");
     }
+
+    @Override
+    public ResponseDeleteGameInfo deleteGameInfo(int gameInfoId) {
+        GameInfo gameInfo = gameInfoRepository.findById(gameInfoId)
+                .orElseThrow(() -> new EntityNotFoundException("게임 정보를 찾을 수 없습니다."));
+
+        try {
+            gameInfoRepository.delete(gameInfo);
+
+            ResponseDeleteGameInfo response = ResponseDeleteGameInfo
+                    .builder()
+                    .code(200)
+                    .message("삭제 성공")
+                    .build();
+
+            return response;
+        } catch (Exception e) {
+            ResponseDeleteGameInfo response = ResponseDeleteGameInfo.builder()
+                    .code(500)
+                    .message("삭제 실패")
+                    .build();
+            return response;
+        }
+    }
 }

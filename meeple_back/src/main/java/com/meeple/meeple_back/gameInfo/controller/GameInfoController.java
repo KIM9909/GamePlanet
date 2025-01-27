@@ -7,6 +7,7 @@ import com.meeple.meeple_back.gameInfo.model.response.ResponseGameInfo;
 import com.meeple.meeple_back.gameInfo.model.response.ResponseGameInfoList;
 import com.meeple.meeple_back.gameInfo.model.response.ResponseUpdateGameInfo;
 import com.meeple.meeple_back.gameInfo.service.GameInfoService;
+import com.meeple.meeple_back.gameInfo.service.ResponseDeleteGameInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -58,6 +59,15 @@ public class GameInfoController {
         ResponseUpdateGameInfo response = gameInfoService.updateGameInfo(gameInfoId, request);
 
         return ResponseEntity.status(response.getCode()).body(response.getMessage());
+    }
+
+    @DeleteMapping("/{gameInfoId}")
+    public ResponseEntity<String> deleteGameInfo(
+            @PathVariable int gameInfoId
+    ) {
+        ResponseDeleteGameInfo deleteGameInfo = gameInfoService.deleteGameInfo(gameInfoId);
+
+        return ResponseEntity.status(deleteGameInfo.getCode()).body(deleteGameInfo.getMessage());
     }
 
 

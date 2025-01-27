@@ -16,4 +16,6 @@ public interface GameInfoService {
     ResponseGameInfo getGameInfo(int gameInfoId);
 
     ResponseUpdateGameInfo updateGameInfo(int gameInfoId, RequestUpdateGameInfo request);
+
+    ResponseDeleteGameInfo deleteGameInfo(int gameInfoId);
 }
