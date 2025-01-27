@@ -77,6 +77,13 @@ dependencies {
     implementation 'io.openvidu:openvidu-java-client:2.25.0'
 }
 
+jar {
+    archiveBaseName.set('meeple_back') // 기본 이름 설정
+    archiveVersion.set('')
+    archiveClassifier.set('')
+    archiveFileName.set('meeple_back.jar') // Gradle 버전에 따라 사용 가능
+}
+
 tasks.named('test') {
     useJUnitPlatform()
 }
