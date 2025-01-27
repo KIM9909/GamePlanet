@@ -5,9 +5,9 @@ pipeline {
      }
      environment {
             // 필요한 환경 변수 설정
-            DOCKER_IMAGE_FRONT = "kimgon/meeple_front_image"
-            DOCKER_IMAGE_BACK = "kimgon/meeple_back_image"
-            DOCKER_IMAGE_NGINX = "kimgon/nginx_image"
+            DOCKER_IMAGE_FRONT = "kimgon/meeple_front"
+            DOCKER_IMAGE_BACK = "kimgon/meeple_back"
+            DOCKER_IMAGE_NGINX = "kimgon/nginx"
             REGISTRY = "registry.hub.docker.com"
         }
     stages {
