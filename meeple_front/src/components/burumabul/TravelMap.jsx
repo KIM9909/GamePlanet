@@ -12,10 +12,17 @@ import Dice from "./Dice";
 import { TextureLoader } from "three";
 import spaceBackground from "../../assets/burumabul_images/space.jpg";
 
-import earthTexture from "../../assets/burumabul_images/earth.jpg";
+import earthTexture from "../../assets/burumabul_images/earth.png";
 import marsTexture from "../../assets/burumabul_images/mars.jpg";
 
-const Cell = ({ position, isHighlight, name, textureUrl, topTextureUrl }) => {
+const Cell = ({
+  position,
+  isHighlight,
+  name,
+  textureUrl,
+  topTextureUrl,
+  size,
+}) => {
   const textRef = useRef();
   const { camera } = useThree();
 
@@ -31,10 +38,12 @@ const Cell = ({ position, isHighlight, name, textureUrl, topTextureUrl }) => {
     }
   });
 
+  // 특정 셀의 크기 조정
+
   return (
     <mesh position={position}>
-      {/* 셀 박스 + 둥근 직육면체 */}
-      <boxGeometry args={[1.5, 0.2, 1.4]} />
+      {/* 셀 박스 = 직육면체 */}
+      <boxGeometry args={size} />
       {/* 각 면의 텍스처 및 색상 설정 */}
       <meshStandardMaterial color={isHighlight ? "#ff6b6b" : "white"} />
 
@@ -46,8 +55,11 @@ const Cell = ({ position, isHighlight, name, textureUrl, topTextureUrl }) => {
 
       {/* 윗면에만 텍스쳐 적용 */}
       {topTexture && (
-        <mesh position={[0, 0.101, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[1.5, 1.4]} />
+        <mesh
+          position={[0, size[1] / 2 + 0.001, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
+        >
+          <planeGeometry args={[size[0], size[2]]} />
           <meshStandardMaterial map={topTexture} transparent={true} />
         </mesh>
       )}
@@ -55,8 +67,8 @@ const Cell = ({ position, isHighlight, name, textureUrl, topTextureUrl }) => {
       {/* 셀 이름 */}
       <Text
         ref={textRef}
-        position={[0, 0.8, 0]} // 박스 위에 텍스트 표시
-        fontSize={0.2}
+        position={[0, size[1] + 0.4, 0]} // 박스 위에 텍스트 표시
+        fontSize={0.3}
         color="gray"
         anchorX="center"
         anchorY="middle"
@@ -71,42 +83,42 @@ const TravelMap = () => {
   // cities 배열
   const cities = [
     "지구 Start",
+    "달",
+    "텔레파시 카드",
     "화성",
-    "텔레파시 카드",
     "목성",
+    "직녀성",
     "토성",
-    "뉴런의 골짜기",
-    "천왕성",
     "텔레파시 카드",
+    "천왕성",
     "해왕성",
-    "명왕성",
-    "타임머신",
-    "궁수자리",
-    "물병자리",
+    "시간 여행",
+    "양자리",
+    "황소자리",
     "텔레파시 카드",
     "쌍둥이 자리",
-    "직녀성",
-    "시리우스",
-    "UFO",
-    "헤라클레스 자리",
-    "카시오페아 자리",
-    "공포의 블랙홀",
-    "백조자리",
+    "뉴런의 골짜기 카드",
+    "게자리",
+    "타임머신",
+    "사자자리",
     "처녀자리",
-    "텔레파시 카드",
+    "공포의 블랙홀",
     "천칭자리",
-    "뉴런의 골짜기",
-    "오리온 자리",
-    "전갈 자리",
-    "큰곰자리",
+    "전갈자리",
+    "텔레파시 카드",
+    "궁수자리",
+    "견우성",
+    "염소자리",
+    "물병자리",
+    "물고기자리",
     "텔레파시 카드",
     "우주조난기지",
-    "황소자리",
-    "사자자리",
+    "큰곰자리",
+    "안드로메다",
     "텔레파시 카드",
-    "안드로메다 자리",
-    "견우성",
-    "페가수스 자리",
+    "오리온 자리",
+    "뉴런의 골짜기 카드",
+    "백조자리",
     "헬리 혜성",
     "수성",
     "금성",
@@ -158,21 +170,95 @@ const TravelMap = () => {
   // 칸별 내용 생성
   const renderCells = () => {
     const positions = [];
-    const step = 1.495;
-    const centerOffset = ((size - 1) * step) / 2; // 중심 좌표 계산
+    const cellSizes = [];
 
-    let x = -centerOffset;
-    let z = -centerOffset;
+    const cornerSize = [2.5, 0.2, 2.5]; // 코너 셀 크기
+    const horizontalSize = [1.8, 0.2, 2.5]; // 가로 일반 셀 크기
+    const verticalSize = [2.5, 0.2, 1.8]; // 세로 일반 셀 크기
 
     const topTextures = [earthTexture, marsTexture];
 
-    for (let i = 0; i < size - 1; i++) positions.push([x + i * step, 0, z]);
-    for (let i = 0; i < size - 1; i++)
-      positions.push([x + (size - 1) * step, 0, z + i * step]);
-    for (let i = 0; i < size - 1; i++)
-      positions.push([x + (size - 1 - i) * step, 0, z + (size - 1) * step]);
-    for (let i = 0; i < size - 1; i++)
-      positions.push([x, 0, z + (size - 1 - i) * step]);
+    // 보드 전체 크기 계산 (간격 없이)
+    const boardWidth = 2 * cornerSize[0] + (size - 2) * horizontalSize[0];
+    const boardHeight = 2 * cornerSize[2] + (size - 2) * verticalSize[2];
+    const centerOffsetX = boardWidth / 2;
+    const centerOffsetZ = boardHeight / 2;
+
+    // 위쪽 면
+    for (let i = 0; i < size; i++) {
+      if (i === 0) {
+        cellSizes.push(cornerSize);
+        positions.push([
+          -centerOffsetX + cornerSize[0] / 2,
+          0,
+          -centerOffsetZ + cornerSize[2] / 2,
+        ]);
+      } else if (i === size - 1) {
+        cellSizes.push(cornerSize);
+        positions.push([
+          centerOffsetX - cornerSize[0] / 2,
+          0,
+          -centerOffsetZ + cornerSize[2] / 2,
+        ]);
+      } else {
+        cellSizes.push(horizontalSize);
+        const xPos =
+          -centerOffsetX +
+          cornerSize[0] +
+          (i - 1) * horizontalSize[0] +
+          horizontalSize[0] / 2;
+        positions.push([xPos, 0, -centerOffsetZ + horizontalSize[2] / 2]);
+      }
+    }
+
+    // 오른쪽 면
+    for (let i = 1; i < size - 1; i++) {
+      cellSizes.push(verticalSize);
+      const zPos =
+        -centerOffsetZ +
+        cornerSize[2] +
+        (i - 1) * verticalSize[2] +
+        verticalSize[2] / 2;
+      positions.push([centerOffsetX - verticalSize[0] / 2, 0, zPos]);
+    }
+
+    // 아래쪽 면
+    for (let i = size - 1; i >= 0; i--) {
+      if (i === 0) {
+        cellSizes.push(cornerSize);
+        positions.push([
+          -centerOffsetX + cornerSize[0] / 2,
+          0,
+          centerOffsetZ - cornerSize[2] / 2,
+        ]);
+      } else if (i === size - 1) {
+        cellSizes.push(cornerSize);
+        positions.push([
+          centerOffsetX - cornerSize[0] / 2,
+          0,
+          centerOffsetZ - cornerSize[2] / 2,
+        ]);
+      } else {
+        cellSizes.push(horizontalSize);
+        const xPos =
+          -centerOffsetX +
+          cornerSize[0] +
+          (i - 1) * horizontalSize[0] +
+          horizontalSize[0] / 2;
+        positions.push([xPos, 0, centerOffsetZ - horizontalSize[2] / 2]);
+      }
+    }
+
+    // 왼쪽 면
+    for (let i = size - 2; i > 0; i--) {
+      cellSizes.push(verticalSize);
+      const zPos =
+        -centerOffsetZ +
+        cornerSize[2] +
+        (i - 1) * verticalSize[2] +
+        verticalSize[2] / 2;
+      positions.push([-centerOffsetX + verticalSize[0] / 2, 0, zPos]);
+    }
 
     return positions.map((pos, index) => (
       <Cell
@@ -180,7 +266,8 @@ const TravelMap = () => {
         position={pos}
         isHighlight={index === currentPosition}
         name={cities[index]}
-        topTextureUrl={topTextures[index]}
+        topTextureUrl={index < topTextures.length ? topTextures[index] : null}
+        size={cellSizes[index]}
       />
     ));
   };
@@ -222,7 +309,7 @@ const TravelMap = () => {
   }, []);
 
   return (
-    <>
+    <div className="h-[100%] flex flex-col">
       {/* 이동 버튼 + 주사위 버튼 */}
       <div className="flex justify-center mb-5">
         <button
@@ -251,9 +338,9 @@ const TravelMap = () => {
           </p>
         )}
       </div>
-      <div ref={parentRef} className="flex h-[100vh]">
+      <div ref={parentRef} className="flex w-[100%] h-[100%]">
         {/* 좌측 영역 */}
-        <div className="flex flex-col h-full w-1/5 bg-gray-100 border-2 box-border border-black gap-4 text-center hidden xl:block">
+        <div className="flex flex-col h-[100%] w-1/5 bg-gray-100 border-2 box-border border-black gap-4 text-center hidden xl:block">
           <div className="h-[48%] border-2 m-2 mb-2 box-border border-black ">
             <div className="h-full overflow-y-auto min-h-0">user1</div>
           </div>
@@ -262,11 +349,11 @@ const TravelMap = () => {
           </div>
         </div>
 
-        <div className="sm:block sm:mx-auto">
+        <div className="sm:block sm:mx-auto w-3/5">
           <Canvas
             style={{
-              height: "100vh",
-              width: "70vw",
+              height: "100%",
+              width: "100%",
             }}
             camera={{
               position: initialCameraPosition, // 카메라 초기 위치
@@ -292,8 +379,16 @@ const TravelMap = () => {
               target={initialTarget}
               makeDefault
               maxPolarAngle={Math.PI / 2.5} // 위쪽으로 카메라 제한
-              minDistance={10} // 최소 줌 거리
+              minDistance={5} // 최소 줌 거리
               maxDistance={15} // 최대 줌 거리
+              mouseButtons={{
+                LEFT: 0,
+                MIDDLE: 1,
+                RIGHT: 2,
+              }}
+              enablePan={false}
+              zoomToCursor={true}
+              rotateSpeed={0.15}
             />
             {renderCells()}
           </Canvas>
@@ -330,7 +425,7 @@ const TravelMap = () => {
           </div>,
           document.body
         )}
-    </>
+    </div>
   );
 };
 

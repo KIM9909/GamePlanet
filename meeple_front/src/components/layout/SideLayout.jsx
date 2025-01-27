@@ -8,7 +8,9 @@ const SideLayout = ({ children }) => {
   const location = useLocation();
   const userId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
   const showSidebar =
-    location.pathname !== "/" && location.pathname !== `/profile/${userId}`; // 메인과 프로필 페이지에서는 사이드바 안보임
+    location.pathname !== "/" &&
+    location.pathname !== `/profile/${userId}` &&
+    location.pathname !== "/game/burumabul"; // 메인과 프로필 페이지에서는 사이드바 안보임
   const [activeLink, setActiveLink] = useState(location.pathname);
 
   const linkStyle =
