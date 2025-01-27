@@ -1,6 +1,8 @@
 pipeline {
     agent any
-
+    tools {
+            nodejs 'nodejs-22'
+     }
      environment {
             // 필요한 환경 변수 설정
             DOCKER_IMAGE_FRONT = "meeple_front_image"
