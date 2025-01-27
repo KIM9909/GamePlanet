@@ -9,7 +9,7 @@ COPY package.json package-lock.json ./
 RUN npm install
 
 COPY . .
-RUN npm build
+RUN npm run build
 
 # 배포 단계
 FROM nginx:stable-alpine
