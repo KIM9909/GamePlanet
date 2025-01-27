@@ -4,13 +4,17 @@ import com.meeple.meeple_back.game.game.model.Game;
 import com.meeple.meeple_back.game.repo.GameRepository;
 import com.meeple.meeple_back.gameInfo.model.entity.GameInfo;
 import com.meeple.meeple_back.gameInfo.model.request.RequestCreateGameInfo;
+import com.meeple.meeple_back.gameInfo.model.request.RequestUpdateGameInfo;
 import com.meeple.meeple_back.gameInfo.model.response.ResponseCreateGameInfo;
 import com.meeple.meeple_back.gameInfo.model.response.ResponseGameInfo;
 import com.meeple.meeple_back.gameInfo.model.response.ResponseGameInfoList;
+import com.meeple.meeple_back.gameInfo.model.response.ResponseUpdateGameInfo;
 import com.meeple.meeple_back.gameInfo.repository.GameCommunityCommentRepository;
 import com.meeple.meeple_back.gameInfo.repository.GameCommunityRepository;
 import com.meeple.meeple_back.gameInfo.repository.GameInfoRepository;
 import com.meeple.meeple_back.gameInfo.repository.GameReviewRepository;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -52,6 +56,7 @@ public class GameInfoServiceImpl implements GameInfoService{
     }
 
     @Override
+    @Transactional
     public ResponseCreateGameInfo createGameInfo(RequestCreateGameInfo request) {
         Game game = gameRepository.findById(request.getGameId()).get();
 
@@ -82,5 +87,24 @@ public class GameInfoServiceImpl implements GameInfoService{
                 .build();
 
         return response;
+    }
+
+    @Override
+    @Transactional
+    public ResponseUpdateGameInfo updateGameInfo(int gameInfoId, RequestUpdateGameInfo request) {
+        GameInfo gameInfo = gameInfoRepository.findById(gameInfoId)
+                .orElseThrow(() -> new EntityNotFoundException("게임 정보를 찾을 수 없습니다."));
+
+        if (request.getGameInfoContent() != null) {
+            gameInfo.setGameInfoContent(request.getGameInfoContent());
+        }
+
+        if (request.getGameRule() != null) {
+            gameInfo.setGameRule(request.getGameRule());
+        }
+
+        gameInfoRepository.save(gameInfo);
+
+        return new ResponseUpdateGameInfo(200, gameInfoId + "번 게임 정보 업데이트 성공");
     }
 }

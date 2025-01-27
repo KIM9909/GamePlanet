@@ -1,9 +1,11 @@
 package com.meeple.meeple_back.gameInfo.controller;
 
 import com.meeple.meeple_back.gameInfo.model.request.RequestCreateGameInfo;
+import com.meeple.meeple_back.gameInfo.model.request.RequestUpdateGameInfo;
 import com.meeple.meeple_back.gameInfo.model.response.ResponseCreateGameInfo;
 import com.meeple.meeple_back.gameInfo.model.response.ResponseGameInfo;
 import com.meeple.meeple_back.gameInfo.model.response.ResponseGameInfoList;
+import com.meeple.meeple_back.gameInfo.model.response.ResponseUpdateGameInfo;
 import com.meeple.meeple_back.gameInfo.service.GameInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -47,5 +49,17 @@ public class GameInfoController {
 
         return ResponseEntity.ok(response);
     }
+
+    @PutMapping("/{gameInfoId}")
+    public ResponseEntity<String> updateGameInfo(
+            @PathVariable int gameInfoId,
+            @RequestBody RequestUpdateGameInfo request
+            ) {
+        ResponseUpdateGameInfo response = gameInfoService.updateGameInfo(gameInfoId, request);
+
+        return ResponseEntity.status(response.getCode()).body(response.getMessage());
+    }
+
+
 }
 
