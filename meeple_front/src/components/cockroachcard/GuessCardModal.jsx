@@ -1,17 +1,21 @@
 import React from "react";
 
 const GuessCardModal = ({
-  isOpen,
-  onClose,
-  cardInfo, // { from: "user2", animal: "Bat", isKing: true, isNegative: false }
-  onGuess, // (isTrue) => void
-  onPass, // () => void
+  isOpen = false,
+  onClose = () => {},
+  onSubmit = () => {},
+  currentCard = null,
+  claimedAnimal = "",
+  isKing = false,
+  from = "",
+  to = "",
+  isNegative = false,
 }) => {
   if (!isOpen) return null;
 
-  const message = `${cardInfo.from}님이 "${cardInfo.animal}${
-    cardInfo.isKing ? " 왕" : ""
-  }${cardInfo.isNegative ? " 아니야" : "야"}" 라고 했습니다.`;
+  const message = `${from}님이 "${claimedAnimal}${isKing ? " 킹이" : "일반이"}${
+    isNegative ? " 아니야" : "야"
+  }" 라고 했습니다.`;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -22,24 +26,18 @@ const GuessCardModal = ({
 
         <p className="text-white text-center">{message}</p>
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-4">
           <button
-            onClick={() => onGuess(true)}
+            onClick={() => onSubmit(true)}
             className="p-3 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             진실이야!
           </button>
           <button
-            onClick={() => onGuess(false)}
+            onClick={() => onSubmit(false)}
             className="p-3 bg-red-500 text-white rounded hover:bg-red-600"
           >
             거짓이야!
-          </button>
-          <button
-            onClick={onPass}
-            className="p-3 bg-gray-600 text-white rounded hover:bg-gray-700"
-          >
-            패스
           </button>
         </div>
       </div>

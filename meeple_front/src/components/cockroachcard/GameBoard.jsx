@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import GiveCardModal from "./GiveCardModal";
+import GuessCardModal from "./GuessCardModal";
 
 const ANIMAL_ORDER = [
   "Bat",
@@ -64,6 +65,7 @@ const Card = ({
   isRoyal = false,
   onClick,
   selectedCard,
+  isActive = false,
 }) => {
   if (isBack || !type) {
     return (
@@ -88,7 +90,9 @@ const Card = ({
       <div
         onClick={() => onClick?.({ type })}
         className={`flex-shrink-0 w-16 h-24 rounded-lg relative group cursor-pointer overflow-hidden
-          ${selectedCard?.type === type ? "ring-2 ring-blue-500" : ""}`}
+          ${selectedCard?.type === type ? "ring-2 ring-blue-500" : ""} ${
+          isActive ? "ring-2 ring-green-500" : ""
+        }`}
       >
         <img
           src={`/src/assets/image/cockroachpoker/${cardImageType}.svg`}
@@ -108,9 +112,14 @@ const Card = ({
 
   return (
     <div
+      data-card-id={type}
       onClick={() => onClick?.({ type, isRoyal })}
-      className={`flex-shrink-0 w-16 h-24 rounded-lg relative group cursor-pointer overflow-hidden
-        ${selectedCard?.type === type ? "ring-2 ring-blue-500" : ""}`}
+      className={`
+        flex-shrink-0 w-16 h-24 rounded-lg relative group cursor-pointer overflow-hidden
+        transition-all duration-300 ease-in-out
+        ${selectedCard?.type === type ? "ring-2 ring-blue-500" : ""}
+        ${isActive ? "shadow-lg shadow-blue-500/50" : ""}
+      `}
     >
       <img
         src={`/src/assets/image/cockroachpoker/${cardImageType}.svg`}
@@ -156,6 +165,7 @@ const OpponentArea = ({
   isMyTurn,
   selectedCard,
   handlePlayerClick,
+  isPassing,
 }) => {
   const groupedPenaltyCards = penaltyCards.reduce((acc, card) => {
     const baseType = card.type.startsWith("King")
@@ -172,20 +182,18 @@ const OpponentArea = ({
 
   return (
     <div
-      className={`w-64 space-y-4 ${
-        isMyTurn && !selectedCard ? "opacity-50" : ""
-      } 
-     ${
-       isMyTurn && selectedCard
-         ? "cursor-pointer hover:ring-2 hover:ring-blue-500 rounded-lg"
-         : ""
-     }`}
-      onClick={() => isMyTurn && selectedCard && handlePlayerClick(playerName)}
-      style={{
-        "--scrollbar-track": "rgba(31, 41, 55, 0.3)",
-        "--scrollbar-thumb": "rgba(107, 114, 128, 0.5)",
-        "--scrollbar-thumb-hover": "rgba(107, 114, 128, 0.7)",
-      }}
+      className={`w-64 space-y-4 
+        ${!isMyTurn && !isPassing ? "opacity-50" : ""} 
+        ${
+          isMyTurn || isPassing
+            ? "cursor-pointer hover:ring-2 hover:ring-blue-500 rounded-lg"
+            : ""
+        }
+        ${
+          isPassing ? "ring-2 ring-green-500" : ""
+        }  // PASS 모드일 때 녹색 테두리
+      `}
+      onClick={() => (isMyTurn || isPassing) && handlePlayerClick(playerName)}
     >
       <div className="px-3 py-1.5 bg-gray-800/90 rounded-lg">
         <div className="text-center text-sm font-medium text-white">
@@ -342,12 +350,84 @@ const DeckArea = ({ openCard }) => {
   );
 };
 
-const GameBoard = ({ playerCount = 4, onStartGame, gameData, currentUser }) => {
+// 현재 전달 중인 카드를 보여주는 컴포넌트
+const ActiveCardArea = ({
+  currentCard,
+  cardSender,
+  cardReceiver,
+  currentUser,
+  handlePass,
+  setShowGuessModal,
+  gameData,
+  isPassing,
+}) => {
+  if (!currentCard) return null;
+
+  const shouldShowFront = () => {
+    if (cardSender === currentUser || isPassing) return true;
+    return false;
+  };
+
+  return (
+    <div className="absolute top-[60%] right-4 w-72 active-card-area">
+      <div className="bg-gray-800/90 p-4 rounded-lg space-y-4">
+        <div className="text-sm text-gray-300 text-center">
+          {cardSender} → {cardReceiver}
+        </div>
+        <div className="relative flex justify-center">
+          <Card
+            type={shouldShowFront() ? currentCard.type : null}
+            isBack={!shouldShowFront()}
+            isRoyal={currentCard.royal}
+            isActive={true}
+          />
+        </div>
+
+        {/* 내가 받는 카드일 때만 버튼 표시 */}
+        {cardReceiver === currentUser && (
+          <div className="flex justify-center gap-4 mt-4">
+            {/* PASS 모드가 아닐 때만 PASS 버튼 활성화 */}
+            {!isPassing && (
+              <button
+                className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600"
+                onClick={handlePass}
+              >
+                PASS
+              </button>
+            )}
+            {/* PASS 모드일 때는 GUESS 버튼 비활성화 */}
+            <button
+              className={`px-4 py-2 ${
+                isPassing
+                  ? "bg-gray-500 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-500"
+              } text-white rounded`}
+              onClick={() => !isPassing && setShowGuessModal(true)}
+              disabled={isPassing}
+            >
+              GUESS
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const GameBoard = ({
+  playerCount = 4,
+  onStartGame,
+  gameData,
+  currentUser,
+  sendMessage,
+}) => {
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [isMyTurn, setIsMyTurn] = useState(false);
   const [showGiveCardModal, setShowGiveCardModal] = useState(false);
+  const [showGuessModal, setShowGuessModal] = useState(false);
+  const [isPassing, setIsPassing] = useState(false); // PASS 모드 상태 추가
 
   useEffect(() => {
     if (gameData?.gameData?.gameState?.currentTurn) {
@@ -368,10 +448,15 @@ const GameBoard = ({ playerCount = 4, onStartGame, gameData, currentUser }) => {
   };
 
   const handlePlayerClick = (playerNickname) => {
-    if (!isMyTurn || !selectedCard) return;
+    if (!isPassing && (!isMyTurn || !selectedCard)) return;
+    if (playerNickname === currentUser) return; // 자기 자신은 선택 불가
+
     setSelectedPlayer(playerNickname);
-    // 여기서 카드 전달 모달 표시
     setShowGiveCardModal(true);
+    // PASS 모드일 때는 isPassing을 false로 설정하지 않음
+    if (!isPassing) {
+      setIsPassing(false);
+    }
   };
 
   const handleGiveCard = (claimData) => {
@@ -384,13 +469,97 @@ const GameBoard = ({ playerCount = 4, onStartGame, gameData, currentUser }) => {
       isNagative: claimData.isNegative,
     };
 
-    // TODO: 서버로 전송
     console.log("카드 전달 데이터:", giveCardData);
 
-    // 상태 초기화
+    // 카드 전달이 완료되면 모든 상태 초기화
     setSelectedCard(null);
     setSelectedPlayer(null);
     setShowGiveCardModal(false);
+    setIsPassing(false); // 카드 전달이 완료되면 PASS 모드 해제
+  };
+
+  const handleModalClose = () => {
+    // 모달만 닫고 플레이어 선택으로 돌아가기
+    setShowGiveCardModal(false);
+    setSelectedPlayer(null);
+    // isPassing 상태는 유지
+  };
+
+  const handlePass = () => {
+    // PASS 모드 활성화
+    setIsPassing(true);
+    // 현재 전달받은 카드를 선택된 카드로 설정 (isRoyal 속성도 함께 전달)
+    setSelectedCard({
+      type: gameData.gameData.gameState.currentCard.type,
+      isRoyal: gameData.gameData.gameState.currentCard.royal,
+    });
+
+    // 핸드카드 선택 비활성화를 위해 isMyTurn false로 설정
+    setIsMyTurn(false);
+  };
+
+  const handleGuess = async (isTrue) => {
+    const currentCard = gameData.gameData.gameState.currentCard;
+    const openCard =
+      gameData.gameData.publicDeck[gameData.gameData.publicDeck.length - 1];
+    const loser = determineLoser(isTrue);
+
+    try {
+      if (currentCard.type === "Black" || currentCard.type === "Joker") {
+        // 특수 카드(블랙/조커)인 경우 multicard API 사용
+        await sendMessage({
+          type: "MULTI_CARD_PENALTY",
+          data: {
+            loser,
+            cardType: currentCard.type,
+            isRoyal: currentCard.royal,
+          },
+        });
+      } else {
+        // 일반/왕 카드인 경우
+        await sendMessage({
+          type: "SINGLE_CARD_PENALTY",
+          data: {
+            loser,
+            cardType: currentCard.type,
+            isRoyal: currentCard.royal,
+          },
+        });
+
+        // 왕 카드인 경우 공개 카드도 패널티로 추가
+        if (currentCard.royal && openCard) {
+          await sendMessage({
+            type: "SINGLE_CARD_PENALTY",
+            data: {
+              loser,
+              cardType: openCard.type,
+              isRoyal: openCard.royal,
+            },
+          });
+        }
+      }
+    } catch (error) {
+      console.error("패널티 카드 처리 실패:", error);
+    }
+
+    setShowGuessModal(false);
+  };
+
+  // 패자 결정 함수
+  const determineLoser = (isTrue) => {
+    const { cardSender, cardReceiver, currentCard, claimedAnimal, isKing } =
+      gameData.gameData.gameState;
+
+    // 실제 카드와 선언이 일치하는지 확인
+    const isCorrectClaim =
+      currentCard.type === claimedAnimal && currentCard.royal === isKing;
+
+    // 선언이 맞았는데 거짓이라고 했거나, 선언이 틀렸는데 진실이라고 한 경우 추측한 사람이 패배
+    if ((isCorrectClaim && !isTrue) || (!isCorrectClaim && isTrue)) {
+      return cardReceiver; // 추측한 사람(카드 받은 사람)이 패배
+    } else {
+      return cardSender; // 선언한 사람(카드 보낸 사람)이 패배
+    }
   };
 
   if (!isGameStarted) {
@@ -436,9 +605,10 @@ const GameBoard = ({ playerCount = 4, onStartGame, gameData, currentUser }) => {
               penaltyCards={userTableCards[players[1]] || []}
               handCards={playerCards[players[1]] || []}
               playerName={players[1]}
-              isMyTurn={isMyTurn}
+              isMyTurn={isMyTurn || isPassing} // PASS 모드일 때도 클릭 가능하도록
               selectedCard={selectedCard}
               handlePlayerClick={handlePlayerClick}
+              isPassing={isPassing} // PASS 모드 전달
             />
           </div>
         ) : (
@@ -451,9 +621,10 @@ const GameBoard = ({ playerCount = 4, onStartGame, gameData, currentUser }) => {
                     penaltyCards={userTableCards[players[1]] || []}
                     handCards={playerCards[players[1]] || []}
                     playerName={players[1]}
-                    isMyTurn={isMyTurn}
+                    isMyTurn={isMyTurn || isPassing} // PASS 모드일 때도 클릭 가능하도록
                     selectedCard={selectedCard}
                     handlePlayerClick={handlePlayerClick}
+                    isPassing={isPassing} // PASS 모드 전달
                   />
                 </div>
                 <div className="w-[calc(40%-1rem)]">
@@ -462,9 +633,10 @@ const GameBoard = ({ playerCount = 4, onStartGame, gameData, currentUser }) => {
                     penaltyCards={userTableCards[players[2]] || []}
                     handCards={playerCards[players[2]] || []}
                     playerName={players[2]}
-                    isMyTurn={isMyTurn}
+                    isMyTurn={isMyTurn || isPassing} // PASS 모드일 때도 클릭 가능하도록
                     selectedCard={selectedCard}
                     handlePlayerClick={handlePlayerClick}
+                    isPassing={isPassing} // PASS 모드 전달
                   />
                 </div>
               </div>
@@ -476,9 +648,10 @@ const GameBoard = ({ playerCount = 4, onStartGame, gameData, currentUser }) => {
                     penaltyCards={userTableCards[players[1]] || []}
                     handCards={playerCards[players[1]] || []}
                     playerName={players[1]}
-                    isMyTurn={isMyTurn}
+                    isMyTurn={isMyTurn || isPassing} // PASS 모드일 때도 클릭 가능하도록
                     selectedCard={selectedCard}
                     handlePlayerClick={handlePlayerClick}
+                    isPassing={isPassing} // PASS 모드 전달
                   />
                 </div>
                 <div className="w-[calc(33%-1rem)]">
@@ -487,9 +660,10 @@ const GameBoard = ({ playerCount = 4, onStartGame, gameData, currentUser }) => {
                     penaltyCards={userTableCards[players[2]] || []}
                     handCards={playerCards[players[2]] || []}
                     playerName={players[2]}
-                    isMyTurn={isMyTurn}
+                    isMyTurn={isMyTurn || isPassing} // PASS 모드일 때도 클릭 가능하도록
                     selectedCard={selectedCard}
                     handlePlayerClick={handlePlayerClick}
+                    isPassing={isPassing} // PASS 모드 전달
                   />
                 </div>
                 <div className="w-[calc(33%-1rem)]">
@@ -498,9 +672,10 @@ const GameBoard = ({ playerCount = 4, onStartGame, gameData, currentUser }) => {
                     penaltyCards={userTableCards[players[3]] || []}
                     handCards={playerCards[players[3]] || []}
                     playerName={players[3]}
-                    isMyTurn={isMyTurn}
+                    isMyTurn={isMyTurn || isPassing} // PASS 모드일 때도 클릭 가능하도록
                     selectedCard={selectedCard}
                     handlePlayerClick={handlePlayerClick}
+                    isPassing={isPassing} // PASS 모드 전달
                   />
                 </div>
               </div>
@@ -515,19 +690,47 @@ const GameBoard = ({ playerCount = 4, onStartGame, gameData, currentUser }) => {
         <MyArea
           penaltyCards={userTableCards[players[0]] || []}
           handCards={playerCards[players[0]] || []}
-          isMyTurn={isMyTurn}
+          isMyTurn={isMyTurn && !isPassing} // PASS 모드일 때는 핸드카드 선택 불가
           selectedCard={selectedCard}
           handleCardClick={handleCardClick}
+        />
+
+        {/* 현재 전달 중인 카드 영역 */}
+        <ActiveCardArea
+          currentCard={gameData?.gameData?.gameState?.currentCard}
+          cardSender={gameData?.gameData?.gameState?.cardSender}
+          cardReceiver={gameData?.gameData?.gameState?.cardReceiver}
+          currentUser={currentUser}
+          currentPhase={gameData?.gameData?.gameState?.currentPhase}
+          handlePass={handlePass}
+          setShowGuessModal={setShowGuessModal}
+          gameData={gameData}
+          isPassing={isPassing}
         />
       </div>
 
       <GiveCardModal
         isOpen={showGiveCardModal}
-        onClose={() => setShowGiveCardModal(false)}
+        onClose={handleModalClose} // 새로운 핸들러 사용
         selectedCard={selectedCard}
         selectedPlayer={selectedPlayer}
         onSubmit={handleGiveCard}
+        isPassing={isPassing}
       />
+
+      {showGuessModal && gameData?.gameData?.gameState && (
+        <GuessCardModal
+          isOpen={showGuessModal}
+          onClose={() => setShowGuessModal(false)}
+          onSubmit={handleGuess}
+          currentCard={gameData.gameData.gameState.currentCard}
+          claimedAnimal={gameData.gameData.gameState.claimedAnimal}
+          isKing={gameData.gameData.gameState.isKing}
+          from={gameData.gameData.gameState.cardSender}
+          to={gameData.gameData.gameState.cardReceiver}
+          isNegative={gameData.gameData.gameState.isNegative}
+        />
+      )}
     </div>
   );
 };

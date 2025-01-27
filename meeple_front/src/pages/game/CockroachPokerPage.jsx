@@ -35,7 +35,17 @@ const CockroachPokerPage = () => {
       gameData: {
         gameState: {
           currentTurn: "user1",
-          currentPhase: "CHOOSE_PLAYER",
+          currentPhase: "GUESS_OR_FORWARD", // 카드 전달 단계
+          currentCard: {
+            // 현재 전달 중인 카드 정보
+            type: "Bat",
+            royal: false,
+          },
+          cardSender: "user3", // 카드를 보낸 사람
+          cardReceiver: "user1", // 카드를 받은 사람
+          claimedAnimal: "Bat", // 선언한 동물
+          isKing: false, // 왕 선언 여부
+          isNegative: false, // 추가
         },
         playerCards: {
           user1: [
@@ -130,6 +140,7 @@ const CockroachPokerPage = () => {
             onStartGame={handleStartGame}
             gameData={gameData}
             currentUser={currentUser}
+            sendMessage={sendMessage}
           />
         </div>
 
