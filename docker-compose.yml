@@ -2,8 +2,7 @@ version: '3.8'
 
 services:
   meeple_front:
-    build:
-      context: ./meeple_front
+    image: kimgon/meeple_front:latest  # Docker Hub 이미지 이름
     container_name: meeple_front
     restart: always
     ports:
@@ -12,8 +11,7 @@ services:
       - meeple_network
 
   meeple_back:
-    build:
-      context: ./meeple_back
+    image: kimgon/meeple_back:latest  # Docker Hub 이미지 이름
     container_name: meeple_back
     restart: always
     ports:
@@ -22,12 +20,12 @@ services:
       - meeple_network
 
   nginx:
-    build:
-      context: ./nginx
+    image: kimgon/nginx:latest  # Docker Hub 이미지 이름
     container_name: nginx
     restart: always
     ports:
       - "80:80"
+      - "443:443"  # HTTPS 포트 (옵션)
     depends_on:
       - meeple_front
       - meeple_back
