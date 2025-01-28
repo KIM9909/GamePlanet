@@ -75,7 +75,7 @@ public class CatchMindServiceImpl implements CatchMindService {
     @Override
     public ResponseJoinRoom joinRoom(RequestJoinRoom request) {
         Map<String, Object> roomInfo =
-                (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, request.getRoomId()+ "");
+                (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, request.getRoomId() + "");
 
         if (roomInfo != null) {
             List<String> players = (List<String>) roomInfo.get("players");
@@ -141,6 +141,7 @@ public class CatchMindServiceImpl implements CatchMindService {
         gameInfo.put("playerScore", playerScore);
 
         roomInfo.put("gameInfo", gameInfo);
+        roomInfo.put("isGameStart", true);
 
         redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
 
@@ -244,6 +245,39 @@ public class CatchMindServiceImpl implements CatchMindService {
             messagingTemplate
                     .convertAndSend("/topic/catch-mind-messages/" + roomId, responseMessage);
         }
+    }
+
+    @Override
+    public List<ResponseGameResult> gameResult(String roomId) {
+        Map<String, Object> roomInfo = (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+        Map<String, Object> gameInfo = (Map<String, Object>) roomInfo.get("gameInfo");
+        Map<String, Integer> playerScore = (Map<String, Integer>) roomInfo.get("playerScore");
+
+        List<ResponseGameResult> response = new ArrayList<>();
+
+        for (String player : playerScore.keySet()) {
+            int score = playerScore.get(player);
+            ResponseGameResult result = ResponseGameResult.builder()
+                    .point(score)
+                    .player(player)
+                    .build();
+
+            response.add(result);
+        }
+
+        response = response.stream()
+                .sorted(Comparator.comparingInt(ResponseGameResult::getPoint).reversed())
+                .collect(Collectors.toList());
+
+        int rank = 1;
+        for (int i = 0; i < response.size(); i++) {
+            if (i > 0 && response.get(i).getPoint() < response.get(i - 1).getPoint()) {
+                rank = i + 1; // 동일 점수가 아닐 경우 rank 갱신
+            }
+            response.get(i).setRank(rank); // rank 설정
+        }
+
+        return response;
     }
 
     @Override

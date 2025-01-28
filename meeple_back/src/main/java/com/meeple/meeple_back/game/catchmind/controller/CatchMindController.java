@@ -86,6 +86,13 @@ public class CatchMindController {
         catchMindService.sendMessage(roomId, request);
     }
 
+    @MessageMapping("/game-result/{roomId}")
+    public void gameResult(
+            @DestinationVariable String roomId
+    ) {
+        List<ResponseGameResult> response = catchMindService.gameResult(roomId);
+    }
+
     @MessageMapping("/send-vote/{roomId}")
     private void sendVote(
             @DestinationVariable String roomId,
