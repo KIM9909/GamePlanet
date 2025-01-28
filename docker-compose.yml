@@ -1,6 +1,12 @@
 version: '3.8'
 
 services:
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+
   meeple_front:
     image: kimgon/meeple_front:latest  # Docker Hub 이미지 이름
     container_name: meeple_front
