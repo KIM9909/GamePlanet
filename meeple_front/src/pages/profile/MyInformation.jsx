@@ -12,7 +12,7 @@ import {
   resetUpdateSuccess,
   clearError,
   setDeleteModalOpen,
-} from "../../sources/api/store/slices/ProfileSlice";
+} from "../../sources/store/slices/ProfileSlice";
 import { UserAPI } from "../../sources/api/UserAPI";
 
 const MyInformation = () => {

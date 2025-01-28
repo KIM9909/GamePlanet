@@ -1,7 +1,7 @@
 // Redux Toolkit의 필수 기능들을 임포트
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 // API 통신을 위한 유틸리티 임포트
-import { UserAPI } from "../../UserAPI";
+import { UserAPI } from "../../api/UserAPI";
 
 // 로그인 비동기 액션 생성
 // createAsyncThunk: Redux에서 비동기 작업을 처리하기 위한 액션 생성자

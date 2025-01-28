@@ -13,7 +13,7 @@ import {
   resetUpdateSuccess,
   clearError,
   setDeleteModalOpen,
-} from "../../sources/api/store/slices/ProfileSlice";
+} from "../../sources/store/slices/ProfileSlice";
 import MyAward from "./MyAward";
 import MyFavoriteGame from "./MyFavoriteGame";
 import MyCustomRequest from "./MyCustomRequest";

@@ -3,7 +3,7 @@ import { Dialog } from "@headlessui/react";
 import { X, Eye, EyeOff } from "lucide-react";
 import { UserAPI } from "../../sources/api/UserAPI";
 import { useDispatch } from "react-redux";
-import { setToken } from "../../sources/api/store/slices/UserSlice";
+import { setToken } from "../../sources/store/slices/UserSlice";
 
 const RegisterModal = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
