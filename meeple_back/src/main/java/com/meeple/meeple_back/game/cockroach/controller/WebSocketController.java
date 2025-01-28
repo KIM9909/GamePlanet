@@ -24,7 +24,7 @@ public class WebSocketController {
         this.messagingTemplate = messagingTemplate;
     }
 
-    @MessageMapping("/chat/{roomId}")
+    @MessageMapping("/game/chat/{roomId}")
     public void handleMessage(
         @DestinationVariable String roomId,
         @RequestBody RequestSendMessage request) {
