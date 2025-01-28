@@ -1,13 +1,9 @@
 package com.meeple.meeple_back.game.catchmind.controller;
 
-import com.meeple.meeple_back.game.catchmind.model.request.RequestJoinRoom;
-import com.meeple.meeple_back.game.catchmind.model.request.RequestSendMessage;
-import com.meeple.meeple_back.game.catchmind.model.response.ResponseCreateRoom;
-import com.meeple.meeple_back.game.catchmind.model.response.ResponseJoinRoom;
-import com.meeple.meeple_back.game.catchmind.model.response.ResponseQuiz;
-import com.meeple.meeple_back.game.catchmind.model.response.ResponseStartGame;
+import com.meeple.meeple_back.game.catchmind.model.request.*;
+import com.meeple.meeple_back.game.catchmind.model.response.*;
 import com.meeple.meeple_back.game.catchmind.service.CatchMindService;
-import com.meeple.meeple_back.game.cockroach.model.request.RequestCreateRoom;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -88,5 +84,33 @@ public class CatchMindController {
             @RequestBody RequestSendMessage request
             ) {
         catchMindService.sendMessage(roomId, request);
+    }
+
+    @MessageMapping("/send-vote/{roomId}")
+    private void sendVote(
+            @DestinationVariable String roomId,
+            @RequestBody RequestSendVote request
+    ) {
+        ResponseSendVote response = catchMindService.sendVote(roomId, request);
+        messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
+    }
+
+    @MessageMapping("/vote/{roomId}")
+    private void vote(
+            @DestinationVariable String roomId,
+            @RequestBody RequestVote request
+    ) {
+        ResponseVote response = catchMindService.vote(request);
+
+        messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
+    }
+
+    @MessageMapping("/vote-result/{roomId}")
+    private void voteResult(
+            @DestinationVariable String roomId,
+            @RequestBody RequestVoteResult request
+    ) {
+        ResponseVoteResult response = catchMindService.voteResult(roomId, request);
+        messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
     }
 }

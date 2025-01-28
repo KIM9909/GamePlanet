@@ -1,12 +1,7 @@
 package com.meeple.meeple_back.game.catchmind.service;
 
-import com.meeple.meeple_back.game.catchmind.model.request.RequestJoinRoom;
-import com.meeple.meeple_back.game.catchmind.model.request.RequestSendMessage;
-import com.meeple.meeple_back.game.catchmind.model.response.ResponseCreateRoom;
-import com.meeple.meeple_back.game.catchmind.model.response.ResponseJoinRoom;
-import com.meeple.meeple_back.game.catchmind.model.response.ResponseQuiz;
-import com.meeple.meeple_back.game.catchmind.model.response.ResponseStartGame;
-import com.meeple.meeple_back.game.cockroach.model.request.RequestCreateRoom;
+import com.meeple.meeple_back.game.catchmind.model.request.*;
+import com.meeple.meeple_back.game.catchmind.model.response.*;
 
 import java.util.List;
 
@@ -24,4 +19,10 @@ public interface CatchMindService {
     void sendMessage(String roomId, RequestSendMessage request);
 
     ResponseQuiz requestQuiz(String roomId);
+
+    ResponseSendVote sendVote(String roomId, RequestSendVote request);
+
+    ResponseVote vote(RequestVote request);
+
+    ResponseVoteResult voteResult(String roomId, RequestVoteResult request);
 }
