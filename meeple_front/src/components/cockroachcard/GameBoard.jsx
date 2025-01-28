@@ -357,8 +357,6 @@ const GameBoard = ({
       isNagative: claimData.isNegative,
     };
 
-    console.log("카드 전달 데이터:", giveCardData);
-
     setSelectedCard(null);
     setSelectedPlayer(null);
     setShowGiveCardModal(false);
@@ -401,18 +399,77 @@ const GameBoard = ({
     });
   };
 
+  const handleGameEnd = useCallback(
+    async (gameFinishResult) => {
+      console.log("게임 종료:", gameFinishResult);
+
+      await sendMessage({
+        type: "GAME_END",
+        data: {
+          loser: gameFinishResult.loser,
+          reason: gameFinishResult.reason,
+        },
+      });
+    },
+    [sendMessage]
+  );
+
+  const checkGameFinish = useCallback(
+    (userName, tableCards) => {
+      // 1. 같은 카드 4장 체크
+      const cardCount = {};
+      tableCards.forEach((card) => {
+        const type = card.type;
+        cardCount[type] = (cardCount[type] || 0) + card.count;
+
+        if (cardCount[type] >= 4) {
+          const result = {
+            isFinished: true,
+            reason: `${getKoreanName(type)} 카드 4장 모음`,
+            loser: userName,
+          };
+          handleGameEnd(result);
+          return result;
+        }
+      });
+
+      // 2. 모든 종류 카드 1장씩 체크
+      const REQUIRED_TYPES = [
+        "Bat",
+        "Rat",
+        "Fly",
+        "Cockroach",
+        "Scorpion",
+        "Toad",
+        "Stinkbug",
+      ];
+      const playerCardTypes = new Set(
+        tableCards.map((card) => card.type.replace("King", ""))
+      );
+
+      const hasAllTypes = REQUIRED_TYPES.every((type) =>
+        playerCardTypes.has(type)
+      );
+      if (hasAllTypes) {
+        const result = {
+          isFinished: true,
+          reason: "모든 종류의 카드를 1장씩 모음",
+          loser: userName,
+        };
+        handleGameEnd(result);
+        return result;
+      }
+
+      return { isFinished: false };
+    },
+    [handleGameEnd]
+  );
+
   const handleGuess = async (guess) => {
     const currentCard = gameData.gameData.gameState.currentCard;
     const loser = determineLoser(guess);
     const claimedAnimal = gameData.gameData.gameState.claimedAnimal;
-
-    console.log("추측 데이터:", {
-      guess,
-      currentCard,
-      loser,
-      claimedAnimal,
-      isKing: gameData.gameData.gameState.isKing,
-    });
+    const loserTableCards = gameData.gameData.userTableCards[loser] || [];
 
     if (currentCard.type === "Black" || currentCard.type === "Joker") {
       const loserHand = playerCards[loser] || [];
@@ -433,12 +490,6 @@ const GameBoard = ({
 
   const handlePenaltyCardSelect = useCallback(
     async (selectedCards) => {
-      console.log("패널티 카드 선택:", {
-        user: currentLoser,
-        selectedCards,
-        isBlack: gameData.gameData.gameState.currentCard.type === "Black",
-      });
-
       await sendMessage({
         type: "MULTI_CARD",
         data: {
@@ -447,9 +498,19 @@ const GameBoard = ({
           isBlack: gameData.gameData.gameState.currentCard.type === "Black",
         },
       });
+
+      // 게임 종료 체크
+      const loserTableCards =
+        gameData.gameData.userTableCards[currentLoser] || [];
+      const gameFinishResult = checkGameFinish(currentLoser, loserTableCards);
+      if (gameFinishResult.isFinished) {
+        console.log("게임 종료:", gameFinishResult);
+        return;
+      }
+
       setShowPenaltyCardModal(false);
     },
-    [currentLoser, gameData, sendMessage]
+    [currentLoser, gameData, sendMessage, checkGameFinish]
   );
 
   const determineLoser = (guess) => {
@@ -474,12 +535,6 @@ const GameBoard = ({
 
   const sendPenaltyCard = async (loser, currentCard) => {
     try {
-      console.log("일반 패널티 카드 처리:", {
-        loser,
-        cardType: currentCard.type,
-        isRoyal: currentCard.royal,
-      });
-
       await sendMessage({
         type: "SINGLE_CARD_PENALTY",
         data: {
@@ -489,13 +544,20 @@ const GameBoard = ({
         },
       });
 
+      // 게임 종료 체크
+      const loserTableCards = gameData.gameData.userTableCards[loser] || [];
+      const gameFinishResult = checkGameFinish(loser, loserTableCards);
+      if (gameFinishResult.isFinished) {
+        console.log("게임 종료:", gameFinishResult);
+        return;
+      }
+
+      // 킹 카드일 경우 추가 패널티
       if (currentCard.royal && gameData.gameData.publicDeck.length > 0) {
         const openCard =
           gameData.gameData.publicDeck[gameData.gameData.publicDeck.length - 1];
-        console.log("왕 카드 추가 패널티:", {
-          loser,
-          openCard,
-        });
+        console.log("왕 카드 추가 패널티:", { loser, openCard });
+
         await sendMessage({
           type: "SINGLE_CARD_PENALTY",
           data: {
@@ -504,6 +566,14 @@ const GameBoard = ({
             isRoyal: openCard.royal,
           },
         });
+
+        // 추가 패널티 후 다시 게임 종료 체크
+        const updatedTableCards = gameData.gameData.userTableCards[loser] || [];
+        const finalGameFinishResult = checkGameFinish(loser, updatedTableCards);
+        if (finalGameFinishResult.isFinished) {
+          console.log("게임 종료 (추가 패널티 후):", finalGameFinishResult);
+          return;
+        }
       }
     } catch (error) {
       console.error("패널티 카드 처리 실패:", error);

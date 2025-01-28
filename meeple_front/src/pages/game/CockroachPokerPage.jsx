@@ -37,7 +37,7 @@ const CockroachPokerPage = () => {
           currentTurn: "user2",
           currentPhase: "GUESS_OR_FORWARD",
           currentCard: {
-            type: "Rat",
+            type: "Black",
             royal: false,
           },
           cardSender: "user3",
@@ -46,7 +46,7 @@ const CockroachPokerPage = () => {
           isKing: false,
           isNegative: false,
           passedPlayers: ["user2", "user3"], // PASS한 플레이어들
-          passCount: 3, // 현재까지 PASS 횟수
+          passCount: 2, // 현재까지 PASS 횟수
         },
         playerCards: {
           user1: [
