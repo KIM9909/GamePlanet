@@ -251,7 +251,7 @@ public class CatchMindServiceImpl implements CatchMindService {
     public List<ResponseGameResult> gameResult(String roomId) {
         Map<String, Object> roomInfo = (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
         Map<String, Object> gameInfo = (Map<String, Object>) roomInfo.get("gameInfo");
-        Map<String, Integer> playerScore = (Map<String, Integer>) roomInfo.get("playerScore");
+        Map<String, Integer> playerScore = (Map<String, Integer>) gameInfo.get("playerScore");
 
         List<ResponseGameResult> response = new ArrayList<>();
 
