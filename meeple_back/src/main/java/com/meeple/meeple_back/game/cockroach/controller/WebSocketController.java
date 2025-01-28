@@ -122,4 +122,14 @@ public class WebSocketController {
         messagingTemplate.convertAndSend("/topic/game/" + roomId, response);
     }
 
+    @MessageMapping("/game/hand-check/{roomId}")
+    private void handCheck(
+            @DestinationVariable String roomId,
+            @RequestBody RequestHandCheck request
+    ) {
+        ResponseHandCheck response = cockroachService.handCheck(roomId, request);
+
+        messagingTemplate.convertAndSend("/topic/game/" + roomId, response);
+    }
+
 }
