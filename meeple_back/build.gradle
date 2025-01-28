@@ -77,7 +77,7 @@ dependencies {
     implementation 'io.openvidu:openvidu-java-client:2.25.0'
 }
 
-jar {
+bootJar {
     archiveBaseName.set('meeple_back') // 기본 이름 설정
     archiveVersion.set('')
     archiveClassifier.set('')
