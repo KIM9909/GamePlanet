@@ -12,8 +12,49 @@ import Dice from "./Dice";
 import { TextureLoader } from "three";
 import spaceBackground from "../../assets/burumabul_images/space.jpg";
 
+// 셀 topTexture 이미지
 import earthTexture from "../../assets/burumabul_images/earth.png";
-import marsTexture from "../../assets/burumabul_images/mars.jpg";
+import moonTexture from "../../assets/burumabul_images/moon.png";
+import telepathyTexture1 from "../../assets/burumabul_images/telepathy.png";
+import marsTexture from "../../assets/burumabul_images/mars.png";
+import jupiterTexture from "../../assets/burumabul_images/jupiter.png";
+import vegaTexture from "../../assets/burumabul_images/vega.png";
+import saturnTexture from "../../assets/burumabul_images/saturn.png";
+import uranusTexture from "../../assets/burumabul_images/uranus.png";
+import neptuneTexture from "../../assets/burumabul_images/neptune.png";
+import timetravelTexture from "../../assets/burumabul_images/timetravel.png";
+import ariesTexture from "../../assets/burumabul_images/aries.png";
+import taurusTexture from "../../assets/burumabul_images/taurus.png";
+import telepathyTexture2 from "../../assets/burumabul_images/telepathy2.png";
+import geminiTexture from "../../assets/burumabul_images/gemini.png";
+import neuronsTexture1 from "../../assets/burumabul_images/neurons1.png";
+import cancerTexture from "../../assets/burumabul_images/cancer.png";
+import timemachineTexture from "../../assets/burumabul_images/timemachine.png";
+import leoTexture from "../../assets/burumabul_images/leo.png";
+import virgoTexture from "../../assets/burumabul_images/virgo.png";
+import blackholeTexture from "../../assets/burumabul_images/blackhole.png";
+import libraTexture from "../../assets/burumabul_images/libra.png";
+import scorpioTexture from "../../assets/burumabul_images/scorpio.png";
+import telepathyTexture3 from "../../assets/burumabul_images/telepathy3.png";
+import sagittariusTexture from "../../assets/burumabul_images/sagittarius.png";
+import altairTexture from "../../assets/burumabul_images/altair.png";
+import capricornTexture from "../../assets/burumabul_images/capricorn.png";
+import aquariusTexture from "../../assets/burumabul_images/aquarius.png";
+import piscesTexture from "../../assets/burumabul_images/pisces.png";
+import resquebaseTexture from "../../assets/burumabul_images/resquebase.png";
+import ursamajorTexture from "../../assets/burumabul_images/ursamajor.png";
+import andromedaTexture from "../../assets/burumabul_images/andromeda.png";
+import telepathyTexture4 from "../../assets/burumabul_images/telepathy4.png";
+import orionTexture from "../../assets/burumabul_images/orion.png";
+import neuronsTexture2 from "../../assets/burumabul_images/neurons2.png";
+import cygnusTexture from "../../assets/burumabul_images/cygnus.png";
+import halleyTexture from "../../assets/burumabul_images/halley.png";
+import mercuryTexture from "../../assets/burumabul_images/mercury.png";
+import venusTexture from "../../assets/burumabul_images/venus.png";
+import floorTexture from "../../assets/burumabul_images/floor.png";
+import timemachineStop from "../../assets/burumabul_images/timemachinestop.png";
+import telepathyCard from "../../assets/burumabul_images/telepathycard.png";
+import neuronsCard from "../../assets/burumabul_images/neuronscard.png";
 
 const Cell = ({
   position,
@@ -51,6 +92,7 @@ const Cell = ({
         scale={1}
         threshold={15} // 모서리 표시 임계값
         color="black"
+        thickness={5}
       />
 
       {/* 윗면에만 텍스쳐 적용 */}
@@ -60,12 +102,17 @@ const Cell = ({
           rotation={[-Math.PI / 2, 0, 0]}
         >
           <planeGeometry args={[size[0], size[2]]} />
-          <meshStandardMaterial map={topTexture} transparent={true} />
+          <meshStandardMaterial
+            map={topTexture}
+            transparent={true}
+            encoding={3000} // sRGB 인코딩 사용
+            toneMapped={false} // 톤 매핑 비활성화
+          />
         </mesh>
       )}
 
       {/* 셀 이름 */}
-      <Text
+      {/* <Text
         ref={textRef}
         position={[0, size[1] + 0.4, 0]} // 박스 위에 텍스트 표시
         fontSize={0.3}
@@ -74,12 +121,14 @@ const Cell = ({
         anchorY="middle"
       >
         {name}
-      </Text>
+      </Text> */}
     </mesh>
   );
 };
 
 const TravelMap = () => {
+  const floor = useLoader(TextureLoader, floorTexture);
+
   // cities 배열
   const cities = [
     "지구 Start",
@@ -176,7 +225,48 @@ const TravelMap = () => {
     const horizontalSize = [1.8, 0.2, 2.5]; // 가로 일반 셀 크기
     const verticalSize = [2.5, 0.2, 1.8]; // 세로 일반 셀 크기
 
-    const topTextures = [earthTexture, marsTexture];
+    const topTextures = [
+      earthTexture,
+      moonTexture,
+      telepathyTexture1,
+      marsTexture,
+      jupiterTexture,
+      vegaTexture,
+      saturnTexture,
+      telepathyTexture1,
+      uranusTexture,
+      neptuneTexture,
+      timetravelTexture,
+      ariesTexture,
+      taurusTexture,
+      telepathyTexture2,
+      geminiTexture,
+      neuronsTexture1,
+      cancerTexture,
+      timemachineTexture,
+      leoTexture,
+      virgoTexture,
+      blackholeTexture,
+      libraTexture,
+      scorpioTexture,
+      telepathyTexture3,
+      sagittariusTexture,
+      altairTexture,
+      capricornTexture,
+      aquariusTexture,
+      piscesTexture,
+      telepathyTexture3,
+      resquebaseTexture,
+      ursamajorTexture,
+      andromedaTexture,
+      telepathyTexture4,
+      orionTexture,
+      neuronsTexture2,
+      cygnusTexture,
+      halleyTexture,
+      mercuryTexture,
+      venusTexture,
+    ];
 
     // 보드 전체 크기 계산 (간격 없이)
     const boardWidth = 2 * cornerSize[0] + (size - 2) * horizontalSize[0];
@@ -365,12 +455,39 @@ const TravelMap = () => {
             }}
           >
             <ambientLight intensity={5} />
-            <pointLight position={[10, 20, 10]} intensity={2} />
+            <pointLight position={[10, 20, 10]} intensity={1.5} color="white" />
 
             {/* 바닥 생성 */}
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.18, 0]}>
               <planeGeometry args={[16.5, 16.5]} />
-              <meshStandardMaterial color="#d1d1d1" />
+              <meshStandardMaterial map={floor} color="#ffffff" />
+            </mesh>
+
+            {/* 타임머신 탑승장 */}
+            <mesh position={[5, 0.01, -5]} rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[5, 5]} />
+              <meshStandardMaterial
+                map={useLoader(TextureLoader, timemachineStop)} // 추가 이미지 텍스처
+                transparent={true}
+              />
+            </mesh>
+
+            {/* 텔레파시 카드 */}
+            <mesh position={[5, 0.01, 4.5]} rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[3, 5]} />
+              <meshStandardMaterial
+                map={useLoader(TextureLoader, telepathyCard)} // 추가 이미지 텍스처
+                transparent={true}
+              />
+            </mesh>
+
+            {/* 뉴런의 골짜기 */}
+            <mesh position={[-5, 0.01, -5]} rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[5, 5]} />
+              <meshStandardMaterial
+                map={useLoader(TextureLoader, neuronsCard)} // 추가 이미지 텍스처
+                transparent={true}
+              />
             </mesh>
 
             {/* OrbitControls로 카메라 이동 및 확대/축소 제어 */}
@@ -379,14 +496,14 @@ const TravelMap = () => {
               target={initialTarget}
               makeDefault
               maxPolarAngle={Math.PI / 2.5} // 위쪽으로 카메라 제한
-              minDistance={5} // 최소 줌 거리
+              minDistance={1} // 최소 줌 거리
               maxDistance={15} // 최대 줌 거리
               mouseButtons={{
                 LEFT: 0,
                 MIDDLE: 1,
                 RIGHT: 2,
               }}
-              enablePan={false}
+              enablePan={true}
               zoomToCursor={true}
               rotateSpeed={0.15}
             />
