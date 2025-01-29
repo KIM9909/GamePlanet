@@ -1,18 +1,124 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import useSocket from "../../hooks/useSocket";
-import GameBoard from "../../components/game/cockroachcard/GameBoard";
+import GameBoard from "../../components/cockroachcard/GameBoard";
 import GameSidebar from "../../components/sidebar/GameSidebar";
+import VideoChat from "../../components/videochat/VideoChat";
 
 const CockroachPokerPage = () => {
   const { roomId } = useParams();
   const { connected, sendMessage, startGame } = useSocket(roomId);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [playerCount, setPlayerCount] = useState(4);
+  const [gameData, setGameData] = useState(null);
+  const currentUser = "user1"; // 실제로는 로그인 정보나 context에서 가져와야 함
+
+  // 방 정보 가져오기
+  useEffect(() => {
+    const fetchRoomInfo = async () => {
+      try {
+        const response = await fetch(`/api/game/room/${roomId}`);
+        const data = await response.json();
+        setGameData(data); // 여기서 room_name이 포함된 데이터를 받아옴
+      } catch (error) {
+        console.error("방 정보 가져오기 실패:", error);
+      }
+    };
+
+    fetchRoomInfo();
+  }, [roomId]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen);
   };
+
+  const handleStartGame = async () => {
+    // 실제 서버 연동 코드 (현재는 주석처리)
+    /*
+    try {
+      const response = await startGame();
+      if (response && response.data) {
+        setGameData(response.data);
+      }
+    } catch (error) {
+      console.error("게임 시작 실패:", error);
+    }
+    */
+
+    // 테스트용 임시 데이터
+    const mockGameData = {
+      players: ["user1", "user2", "user3", "user4"],
+      gameData: {
+        gameState: {
+          currentTurn: "user2",
+          currentPhase: "GUESS_OR_FORWARD",
+          currentCard: {
+            type: "Black",
+            royal: false,
+          },
+          cardSender: "user3",
+          cardReceiver: "user1",
+          claimedAnimal: "Stinkbug",
+          isKing: false,
+          isNegative: false,
+          passedPlayers: ["user2", "user3"], // PASS한 플레이어들
+          passCount: 2, // 현재까지 PASS 횟수
+        },
+        playerCards: {
+          user1: [
+            { type: "Rat", royal: true },
+            { type: "Bat", royal: false },
+            { type: "Bat", royal: false },
+            { type: "Fly", royal: false },
+            { type: "Black", royal: false },
+            { type: "Cockroach", royal: true },
+            { type: "Scorpion", royal: false },
+            { type: "Toad", royal: false },
+            { type: "Joker", royal: false },
+          ],
+          user2: Array(8).fill(null),
+          user3: Array(8).fill(null),
+          user4: Array(8).fill(null),
+        },
+        publicDeck: [
+          { type: "Scorpion", royal: false },
+          { type: "Toad", royal: true },
+          { type: "Stinkbug", royal: false },
+        ],
+        userTableCards: {
+          user1: [
+            { type: "Bat", count: 2 },
+            { type: "Rat", count: 1, royal: true },
+            { type: "Cockroach", count: 2 },
+            { type: "Scorpion", count: 1 },
+            { type: "Toad", count: 1, royal: true },
+          ],
+          user2: [
+            { type: "Bat", count: 2 },
+            { type: "Rat", count: 1, royal: true },
+            { type: "Fly", count: 1 },
+          ],
+          user3: [
+            { type: "Cockroach", count: 3 },
+            { type: "Scorpion", count: 1, royal: true },
+            { type: "Scorpion", count: 1 },
+            { type: "Toad", count: 2 },
+            { type: "Stinkbug", count: 1 },
+            { type: "Rat", count: 2 },
+          ],
+          user4: [
+            { type: "Bat", count: 1, royal: true },
+            { type: "Rat", count: 2 },
+            { type: "Fly", count: 2 },
+            { type: "Cockroach", count: 1 },
+          ],
+        },
+      },
+    };
+
+    setGameData(mockGameData);
+  };
+
+  const playerCount = gameData?.players?.length || 0;
 
   return (
     <div className="h-screen w-screen flex bg-gray-900">
@@ -45,30 +151,18 @@ const CockroachPokerPage = () => {
       >
         {/* 게임 보드 */}
         <div className="flex-1 overflow-hidden">
-          <GameBoard playerCount={playerCount} />
-        </div>
-
-        {/* 인원 선택 버튼 */}
-        <div className="flex justify-center gap-2 py-2 bg-gray-800">
-          {[2, 3, 4].map((count) => (
-            <button
-              key={count}
-              onClick={() => setPlayerCount(count)}
-              className={`px-3 py-1 text-sm rounded 
-                ${
-                  playerCount === count
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                }`}
-            >
-              {count}인
-            </button>
-          ))}
+          <GameBoard
+            playerCount={playerCount}
+            onStartGame={handleStartGame}
+            gameData={gameData}
+            currentUser={currentUser}
+            sendMessage={sendMessage}
+          />
         </div>
 
         {/* 화상 채팅 영역 */}
         <div className="h-48 bg-gray-800 border-t border-gray-700">
-          <div className="text-white p-4">화상 채팅 영역 (개발 예정)</div>
+          <VideoChat playerCount={playerCount} />
         </div>
       </div>
 

@@ -11,7 +11,7 @@ const TopLayout = ({ children }) => {
     !location.pathname.match(/^\/game\/cockroach\/[\w-]+$/);
 
   return (
-    <div>
+    <div className="min-h-screen bg-gray-900">
       {showNavbar && <TopNavbar />}
       <main>{children}</main>
     </div>

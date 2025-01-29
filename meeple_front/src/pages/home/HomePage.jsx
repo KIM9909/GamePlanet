@@ -6,32 +6,41 @@ const HomePage = () => {
   const navigate = useNavigate();
   const [isCreateRoomModalOpen, setCreateRoomModalOpen] = useState(false);
 
+ const handleLogout = () => {
+   dispatch(logout());
+   navigate("/");
+ };
+
   const handleCreateRoom = async (roomData) => {
+    console.log('roomData:', roomData);
     try {
       const response = await fetch(
-        `http://localhost:8090/api/game/create-room?roomId=${roomData.roomName}`,
+        `http://localhost:8090/api/game/create-room`,
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
+            "Content-Type": "application/json",
           },
+          body: JSON.stringify(roomData),
         }
       );
-
+  
       if (!response.ok) {
-        throw new Error("Failed to create room");
+        throw new Error(`Failed to create room: ${response.status}`);
       }
-
-      const pk = await response.text();
-      navigate(`/game/cockroach/${pk}`);
+  
+      const data = await response.json();
+      console.log('Response data:', data);
+      navigate(`/game/cockroach/${data.roomId}`);
     } catch (error) {
       console.error("Error creating room:", error);
-      alert("Failed to create room");
+      alert("방 생성에 실패했습니다.");
     }
   };
 
   return (
     <div className="min-h-screen relative">
+
       <div className="min-h-screen bg-gray-100 p-8">
         <div className="max-w-7xl mx-auto">
           <div className="bg-white rounded-lg shadow-lg p-6">

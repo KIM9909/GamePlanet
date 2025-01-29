@@ -34,18 +34,28 @@ const ChatView = ({ connected, sendMessage, messages }) => {
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto p-2">
-        <div className="space-y-2 mb-4">
+        <div className="space-y-1.5 mb-4">
           {messages.map((msg, index) => (
             <div
               key={index}
-              className={`bg-gray-800 rounded p-2 ${
-                msg.sender === currentUser.userNickname ? "ml-auto" : ""
-              } max-w-[80%] mb-2`}
+              className={`flex ${
+                msg.sender === currentUser.userNickname
+                  ? "justify-end"
+                  : "justify-start"
+              }`}
             >
-              <div className="text-sm text-gray-400">{msg.sender}</div>
-              <div>{msg.content}</div>
-              <div className="text-xs text-gray-500">
-                {new Date(msg.timestamp).toLocaleTimeString()}
+              <div
+                className={`rounded-lg p-2 max-w-[75%] ${
+                  msg.sender === currentUser.userNickname
+                    ? "bg-gray-600 text-white"
+                    : "bg-gray-700 text-white"
+                }`}
+              >
+                <div className="text-xs opacity-75 mb-0.5">{msg.sender}</div>
+                <div className="break-words text-sm">{msg.content}</div>
+                <div className="text-[10px] opacity-50 mt-0.5">
+                  {new Date(msg.timestamp).toLocaleTimeString()}
+                </div>
               </div>
             </div>
           ))}

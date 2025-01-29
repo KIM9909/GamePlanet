@@ -7,6 +7,8 @@ const SideLayout = ({ children }) => {
   const { token } = useSelector((state) => state.user);
   const location = useLocation();
   const userId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
+
+  // 게임 페이지 경로 체크 추가
   const showSidebar =
     location.pathname !== "/" &&
     location.pathname !== `/profile/${userId}` &&
