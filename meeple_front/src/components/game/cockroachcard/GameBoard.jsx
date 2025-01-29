@@ -12,6 +12,7 @@ import ActiveCardArea from "./ActiveCardArea";
 import Card from "./Card";
 import GameStartScreen from "./GameStartScreen";
 import UpdateRoomModal from "./modal/UpdateRoomModal";
+import GameEndModal from "./modal/GameEndModal";
 
 const ANIMAL_ORDER = [
   "Bat",
@@ -315,6 +316,8 @@ const GameBoard = ({
   const [passedPlayers, setPassedPlayers] = useState([]);
   const [passCount, setPassCount] = useState(0);
   const [isUpdateModalOpen, setUpdateModalOpen] = useState(false);
+  const [showGameEndModal, setShowGameEndModal] = useState(false);
+  const [gameEndInfo, setGameEndInfo] = useState({ loser: "", reason: "" });
 
   // 남은 플레이어 계산
   const remainingPlayers = useMemo(() => {
@@ -329,9 +332,24 @@ const GameBoard = ({
 
   useEffect(() => {
     if (gameData?.gameData?.gameState?.currentTurn) {
-      setIsMyTurn(gameData.gameData.gameState.currentTurn === currentUser);
+      const isCurrentTurn =
+        gameData.gameData.gameState.currentTurn === currentUser;
+      setIsMyTurn(isCurrentTurn);
+
+      // 내 턴인데 패가 비어있으면 게임 종료
+      if (isCurrentTurn) {
+        const myHand = gameData?.gameData?.playerCards[currentUser] || [];
+        if (myHand.length === 0) {
+          sendMessage({
+            type: "HAND_CHECK",
+            data: {
+              player: currentUser,
+            },
+          });
+        }
+      }
     }
-  }, [gameData, currentUser]);
+  }, [gameData, currentUser, sendMessage]);
 
   const handleStartGame = () => {
     setIsGameStarted(true);
@@ -373,6 +391,7 @@ const GameBoard = ({
     setShowGiveCardModal(false);
     setSelectedPlayer(null);
   };
+
   const handlePass = () => {
     const players = gameData.players;
     const currentCard = gameData.gameData.gameState;
@@ -496,6 +515,20 @@ const GameBoard = ({
 
   const handlePenaltyCardSelect = useCallback(
     async (selectedCards) => {
+      // 패널티 카드를 낼 수 없는 경우만 체크
+      const myHand = gameData?.gameData?.playerCards[currentUser] || [];
+      const requiredCards = penaltyCardCount;
+
+      if (myHand.length < requiredCards) {
+        await sendMessage({
+          type: "HAND_CHECK",
+          data: {
+            player: currentUser,
+          },
+        });
+        return;
+      }
+
       await sendMessage({
         type: "MULTI_CARD",
         data: {
@@ -505,18 +538,9 @@ const GameBoard = ({
         },
       });
 
-      // 게임 종료 체크
-      const loserTableCards =
-        gameData.gameData.userTableCards[currentLoser] || [];
-      const gameFinishResult = checkGameFinish(currentLoser, loserTableCards);
-      if (gameFinishResult.isFinished) {
-        console.log("게임 종료:", gameFinishResult);
-        return;
-      }
-
       setShowPenaltyCardModal(false);
     },
-    [currentLoser, gameData, sendMessage, checkGameFinish]
+    [currentLoser, gameData, sendMessage, currentUser, penaltyCardCount]
   );
 
   const determineLoser = (guess) => {
@@ -603,13 +627,33 @@ const GameBoard = ({
       (message) => {
         const data = JSON.parse(message.body);
 
-        // 모든 게임 데이터 업데이트
-        setGameData(data);
+        // 게임 종료 메시지 처리
+        if (data.type === "HAND_CHECK" && data.isEnd) {
+          let reason;
+          // 현재 게임 상태에 따라 reason 설정
+          if (
+            gameData?.gameData?.gameState?.currentCard?.type === "Black" ||
+            gameData?.gameData?.gameState?.currentCard?.type === "Joker"
+          ) {
+            reason = "패널티 카드를 낼 수 없음";
+          } else {
+            reason = "낼 카드가 없음";
+          }
+
+          setGameEndInfo({
+            loser: data.loser,
+            reason: reason,
+          });
+          setShowGameEndModal(true);
+        } else {
+          // 모든 게임 데이터 업데이트
+          setGameData(data);
+        }
       }
     );
 
     return () => subscription.unsubscribe();
-  }, [stompClient, roomId, setGameData]);
+  }, [stompClient, roomId, setGameData, gameData]);
 
   const handleUpdateRoom = (updateData) => {
     sendMessage({
@@ -825,6 +869,13 @@ const GameBoard = ({
           claimedAnimal={gameData.gameData.gameState.claimedAnimal}
         />
       )}
+
+      <GameEndModal
+        isOpen={showGameEndModal}
+        onClose={() => setShowGameEndModal(false)}
+        loser={gameEndInfo.loser}
+        reason={gameEndInfo.reason}
+      />
     </div>
   );
 };
