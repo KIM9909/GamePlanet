@@ -15,6 +15,7 @@ import SideLayout from "./components/layout/SideLayout";
 import Introduce from "./pages/introduce/Introduce";
 import ScrollToTop from "./components/layout/ScrollToTop";
 import CatchMindPage from "./pages/game/CatchMindPage";
+import WaitingRoom from "./components/game/burumabul/WaitingRoom";
 
 function App() {
   return (
@@ -33,6 +34,10 @@ function App() {
             {/* Game */}
             <Route path="/game/burumabul" element={<BurumabulPage />} />
             <Route
+              path="/game/burumabul/waitingroom"
+              element={<WaitingRoom />}
+            />
+            <Route
               path="/game/cockroach/:roomId"
               element={<CockroachPokerPage />}
             />
@@ -41,9 +46,9 @@ function App() {
             {/* GameInfo */}
             <Route path="/game/:gameId" element={<GameInfoPage />} />
 
-                {/* Home & Main */}
-                <Route path="/home" element={<HomePage />} />
-                <Route path="/" element={<MainPage />} />
+            {/* Home & Main */}
+            <Route path="/home" element={<HomePage />} />
+            <Route path="/" element={<MainPage />} />
 
             {/* Profile */}
             <Route path="/profile/:userId" element={<ProfilePage />} />
