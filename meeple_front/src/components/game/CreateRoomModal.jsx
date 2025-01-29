@@ -12,7 +12,7 @@ const CreateRoomModal = ({ isOpen, onClose, onCreateRoom }) => {
       gameId: 1, // 바퀴벌레 포커 게임 ID
       roomTitle,
       creator: "testUser", // TODO: 실제 로그인된 사용자 정보로 교체 필요
-      private : isPrivate,
+      private: isPrivate,
       password: isPrivate ? password : "",
     };
     await onCreateRoom(roomData);
