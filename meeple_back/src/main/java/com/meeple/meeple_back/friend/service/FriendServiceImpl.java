@@ -89,6 +89,14 @@ public class FriendServiceImpl implements FriendService {
             } else if (request.getRequirements().equals("ACCEPT")) {    // 승인
                 friend.setFriendStatus(FriendStatus.ACCEPTED);
                 friendRepository.save(friend);
+
+                Friend newFriend = Friend.builder()
+                        .friendStatus(FriendStatus.ACCEPTED)
+                        .friend(friend.getUser())
+                        .user(friend.getFriend())
+                        .build();
+
+                friendRepository.save(newFriend);
             }
         }
     }
