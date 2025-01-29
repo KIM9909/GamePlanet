@@ -1,49 +1,62 @@
 import axios from "axios";
 
-// Axios 인스턴스 생성 및 기본 설정
 const API = axios.create({
-  baseURL: "http://localhost:8090", // API 서버 기본 URL
+  baseURL: "http://localhost:8090",
   headers: {
     "Content-Type": "application/json",
   },
   withCredentials: true,
 });
 
-// 요청 인터셉터 설정
+// 요청 인터셉터 수정
 API.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
     if (token) {
+      // Bearer 토큰 형식으로 변경
       config.headers.Authorization = `Bearer ${token}`;
     }
-    // 요청 URL 로깅
-    console.log("Request URL:", `${config.baseURL}${config.url}`);
+
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error("Request interceptor error:", error);
+    return Promise.reject(error);
+  }
+);
+
+// 응답 인터셉터 수정
+API.interceptors.response.use(
+  (response) => {
+    return response.data;
+  },
+  (error) => {
+    console.error("API Response Error:", {
+      url: error.config?.url,
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+      headers: error.config?.headers,
+    });
+    return Promise.reject(error.response?.data || error);
+  }
 );
 
 export const UserAPI = {
-  // 프로필 정보 조회
   getProfile: async (userId) => {
     try {
+      // /profile/ 엔드포인트 사용
       const response = await API.get(`/profile/${userId}`);
-      return response.data;
+      return response;
     } catch (error) {
-      throw error.response?.data || "프로필 정보를 불러오는데 실패했습니다.";
+      console.error("Profile fetch error:", error);
+      throw error;
     }
   },
 
   // 프로필 정보 수정
   updateProfile: async (userId, data) => {
     try {
-      // API 요청 전 정보 로깅
-      console.log(
-        "Making request to:",
-        API.defaults.baseURL + `/profile/${userId}`
-      );
-      console.log("Request data:", data);
-
       const response = await API.put(`/profile/${userId}`, data);
       return response.data;
     } catch (error) {
@@ -70,7 +83,6 @@ export const UserAPI = {
       // 응답에서 토큰을 받아오면 localStorage에 저장
       if (response.data) {
         localStorage.setItem("token", response.data);
-        console.log(response.data);
       }
       return response.data;
     } catch (error) {
