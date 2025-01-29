@@ -55,6 +55,8 @@ import floorTexture from "../../../assets/burumabul_images/floor.png";
 import timemachineStop from "../../../assets/burumabul_images/timemachinestop.png";
 import telepathyCard from "../../../assets/burumabul_images/telepathycard.png";
 import neuronsCard from "../../../assets/burumabul_images/neuronscard.png";
+import Spaceship from "./Spaceship";
+import SpaceBase from "./SpaceBase";
 
 const Cell = ({
   position,
@@ -173,6 +175,9 @@ const TravelMap = () => {
     "금성",
   ];
 
+  const [positions, setPositions] = useState([]);
+  const [cellSizes, setCellSizes] = useState([]);
+
   const size = 11; // 각 변의 칸 수
   const totalCells = size * 4 - 4; // 전체 칸 개수
   const cells = Array.from({ length: totalCells }, (_, i) => i); // 칸 번호
@@ -183,10 +188,10 @@ const TravelMap = () => {
   // 주사위 점수 저장
   const [totalScore, setTotalScore] = useState(0);
 
-  const handleDiceComplete = (score) => {
-    setTotalScore(score); //점수 업데이트
-    setShowModal(false);
-  };
+  // const handleDiceComplete = (score) => {
+  //   setTotalScore(score); //점수 업데이트
+  //   setShowModal(false);
+  // };
 
   // 칸 스타일
   const cellClass =
@@ -205,7 +210,7 @@ const TravelMap = () => {
 
   // 카메라 위치 초기화하기 위한..
   const orbitControlsRef = useRef();
-  const initialCameraPosition = [-20, 30, 0]; // 초기 카메라 위치
+  const initialCameraPosition = [-20, 200, 0]; // 초기 카메라 위치
   const initialTarget = [0, 0, 0]; // 초기 카메라 타겟
 
   const resetCamera = () => {
@@ -216,15 +221,103 @@ const TravelMap = () => {
     }
   };
 
+  const cornerSize = [2.5, 0.2, 2.5]; // 코너 셀 크기
+  const horizontalSize = [1.8, 0.2, 2.5]; // 가로 일반 셀 크기
+  const verticalSize = [2.5, 0.2, 1.8]; // 세로 일반 셀 크기
+
+  // 보드 전체 크기 계산 (간격 없이)
+  const boardWidth = 2 * cornerSize[0] + (size - 2) * horizontalSize[0];
+  const boardHeight = 2 * cornerSize[2] + (size - 2) * verticalSize[2];
+  const centerOffsetX = boardWidth / 2;
+  const centerOffsetZ = boardHeight / 2;
+
+  // positions 초기화를 위한 useEffect 추가
+  useEffect(() => {
+    const newPositions = [];
+    const newCellSizes = [];
+
+    // 위쪽 면
+    for (let i = 0; i < size; i++) {
+      if (i === 0) {
+        newCellSizes.push(cornerSize);
+        newPositions.push([
+          -centerOffsetX + cornerSize[0] / 2,
+          0,
+          -centerOffsetZ + cornerSize[2] / 2,
+        ]);
+      } else if (i === size - 1) {
+        newCellSizes.push(cornerSize);
+        newPositions.push([
+          centerOffsetX - cornerSize[0] / 2,
+          0,
+          -centerOffsetZ + cornerSize[2] / 2,
+        ]);
+      } else {
+        newCellSizes.push(horizontalSize);
+        const xPos =
+          -centerOffsetX +
+          cornerSize[0] +
+          (i - 1) * horizontalSize[0] +
+          horizontalSize[0] / 2;
+        newPositions.push([xPos, 0, -centerOffsetZ + horizontalSize[2] / 2]);
+      }
+    }
+
+    // 오른쪽 면
+    for (let i = 1; i < size - 1; i++) {
+      newCellSizes.push(verticalSize);
+      const zPos =
+        -centerOffsetZ +
+        cornerSize[2] +
+        (i - 1) * verticalSize[2] +
+        verticalSize[2] / 2;
+      newPositions.push([centerOffsetX - verticalSize[0] / 2, 0, zPos]);
+    }
+
+    // 아래쪽 면
+    for (let i = size - 1; i >= 0; i--) {
+      if (i === 0) {
+        newCellSizes.push(cornerSize);
+        newPositions.push([
+          -centerOffsetX + cornerSize[0] / 2,
+          0,
+          centerOffsetZ - cornerSize[2] / 2,
+        ]);
+      } else if (i === size - 1) {
+        newCellSizes.push(cornerSize);
+        newPositions.push([
+          centerOffsetX - cornerSize[0] / 2,
+          0,
+          centerOffsetZ - cornerSize[2] / 2,
+        ]);
+      } else {
+        newCellSizes.push(horizontalSize);
+        const xPos =
+          -centerOffsetX +
+          cornerSize[0] +
+          (i - 1) * horizontalSize[0] +
+          horizontalSize[0] / 2;
+        newPositions.push([xPos, 0, centerOffsetZ - horizontalSize[2] / 2]);
+      }
+    }
+
+    // 왼쪽 면
+    for (let i = size - 2; i > 0; i--) {
+      newCellSizes.push(verticalSize);
+      const zPos =
+        -centerOffsetZ +
+        cornerSize[2] +
+        (i - 1) * verticalSize[2] +
+        verticalSize[2] / 2;
+      newPositions.push([-centerOffsetX + verticalSize[0] / 2, 0, zPos]);
+    }
+
+    setPositions(newPositions);
+    setCellSizes(newCellSizes);
+  }, []);
+
   // 칸별 내용 생성
   const renderCells = () => {
-    const positions = [];
-    const cellSizes = [];
-
-    const cornerSize = [2.5, 0.2, 2.5]; // 코너 셀 크기
-    const horizontalSize = [1.8, 0.2, 2.5]; // 가로 일반 셀 크기
-    const verticalSize = [2.5, 0.2, 1.8]; // 세로 일반 셀 크기
-
     const topTextures = [
       earthTexture,
       moonTexture,
@@ -267,88 +360,6 @@ const TravelMap = () => {
       mercuryTexture,
       venusTexture,
     ];
-
-    // 보드 전체 크기 계산 (간격 없이)
-    const boardWidth = 2 * cornerSize[0] + (size - 2) * horizontalSize[0];
-    const boardHeight = 2 * cornerSize[2] + (size - 2) * verticalSize[2];
-    const centerOffsetX = boardWidth / 2;
-    const centerOffsetZ = boardHeight / 2;
-
-    // 위쪽 면
-    for (let i = 0; i < size; i++) {
-      if (i === 0) {
-        cellSizes.push(cornerSize);
-        positions.push([
-          -centerOffsetX + cornerSize[0] / 2,
-          0,
-          -centerOffsetZ + cornerSize[2] / 2,
-        ]);
-      } else if (i === size - 1) {
-        cellSizes.push(cornerSize);
-        positions.push([
-          centerOffsetX - cornerSize[0] / 2,
-          0,
-          -centerOffsetZ + cornerSize[2] / 2,
-        ]);
-      } else {
-        cellSizes.push(horizontalSize);
-        const xPos =
-          -centerOffsetX +
-          cornerSize[0] +
-          (i - 1) * horizontalSize[0] +
-          horizontalSize[0] / 2;
-        positions.push([xPos, 0, -centerOffsetZ + horizontalSize[2] / 2]);
-      }
-    }
-
-    // 오른쪽 면
-    for (let i = 1; i < size - 1; i++) {
-      cellSizes.push(verticalSize);
-      const zPos =
-        -centerOffsetZ +
-        cornerSize[2] +
-        (i - 1) * verticalSize[2] +
-        verticalSize[2] / 2;
-      positions.push([centerOffsetX - verticalSize[0] / 2, 0, zPos]);
-    }
-
-    // 아래쪽 면
-    for (let i = size - 1; i >= 0; i--) {
-      if (i === 0) {
-        cellSizes.push(cornerSize);
-        positions.push([
-          -centerOffsetX + cornerSize[0] / 2,
-          0,
-          centerOffsetZ - cornerSize[2] / 2,
-        ]);
-      } else if (i === size - 1) {
-        cellSizes.push(cornerSize);
-        positions.push([
-          centerOffsetX - cornerSize[0] / 2,
-          0,
-          centerOffsetZ - cornerSize[2] / 2,
-        ]);
-      } else {
-        cellSizes.push(horizontalSize);
-        const xPos =
-          -centerOffsetX +
-          cornerSize[0] +
-          (i - 1) * horizontalSize[0] +
-          horizontalSize[0] / 2;
-        positions.push([xPos, 0, centerOffsetZ - horizontalSize[2] / 2]);
-      }
-    }
-
-    // 왼쪽 면
-    for (let i = size - 2; i > 0; i--) {
-      cellSizes.push(verticalSize);
-      const zPos =
-        -centerOffsetZ +
-        cornerSize[2] +
-        (i - 1) * verticalSize[2] +
-        verticalSize[2] / 2;
-      positions.push([-centerOffsetX + verticalSize[0] / 2, 0, zPos]);
-    }
 
     return positions.map((pos, index) => (
       <Cell
@@ -398,6 +409,125 @@ const TravelMap = () => {
     };
   }, []);
 
+  // 플레이어 상태 관리
+  const [players, setPlayers] = useState([
+    { id: 1, position: 0, color: "#E82561" },
+    { id: 2, position: 0, color: "#4635B1" },
+    { id: 3, position: 0, color: "#15F5BA" },
+    { id: 4, position: 0, color: "#FFDC00" },
+  ]);
+  const [numPlayers, setNumPlayers] = useState(2); //기본 2명
+  const [currentPlayer, setCurrentPlayer] = useState(0);
+
+  const [spaceBases, setSpaceBases] = useState([]);
+
+  // 주사위 굴린 후 플레이어 이동 처리
+  const handleDiceComplete = (score) => {
+    setTotalScore(score);
+    const player = players[currentPlayer];
+    const targetPosition = (player.position + score) % totalCells;
+
+    console.log(`🎲 Player ${currentPlayer + 1} rolled: ${score}`);
+    console.log(`➡️ Moving to position: ${targetPosition}`);
+
+    const animateMovement = (current, target) => {
+      if (current !== target) {
+        setPlayers((prevPlayers) => {
+          const newPlayers = [...prevPlayers];
+          newPlayers[currentPlayer].position = (current + 1) % totalCells;
+          return newPlayers;
+        });
+        setTimeout(
+          () => animateMovement((current + 1) % totalCells, target),
+          300
+        );
+      } else {
+        // 우주기지 생성 로직
+        console.log("Building space base at:", positions[target]);
+        setSpaceBases((prevBases) => {
+          if (prevBases.some((base) => base.position === positions[target])) {
+            console.log("⚠️ Space base already exists at this position!");
+            return prevBases; // 기존 상태 유지 (새로 추가하지 않음)
+          }
+
+          const newBase = { position: positions[target], color: player.color };
+          return [...prevBases, newBase];
+        });
+        setCurrentPlayer((prev) => (prev + 1) % numPlayers);
+      }
+    };
+    animateMovement(player.position, targetPosition);
+
+    setShowModal(false);
+  };
+
+  // 플레이어 수 변경 핸들러
+  const handlePlayerCountChange = (count) => {
+    setNumPlayers(count);
+    setCurrentPlayer(0);
+    // 모든 플레이어 위치 초기화
+    setPlayers((prevPlayers) =>
+      prevPlayers.map((player) => ({ ...player, position: 0 }))
+    );
+  };
+
+  // positions 배열에서 각 플레이어의 위치 좌표 계산
+  const getPlayerPosition = (playerPosition, playerIndex) => {
+    if (!positions[playerPosition]) {
+      return [0, 0, 0];
+    }
+    const basePosition = positions[playerPosition];
+    // 말이 같은 칸에 있을 때 겹치지 않도록 약간의 오프셋 추가
+    const offset = 0.4;
+    switch (playerIndex) {
+      case 0:
+        return [
+          basePosition[0] - offset,
+          basePosition[1],
+          basePosition[2] - offset,
+        ];
+      case 1:
+        return [
+          basePosition[0] + offset,
+          basePosition[1],
+          basePosition[2] - offset,
+        ];
+      case 2:
+        return [
+          basePosition[0] - offset,
+          basePosition[1],
+          basePosition[2] + offset,
+        ];
+      case 3:
+        return [
+          basePosition[0] + offset,
+          basePosition[1],
+          basePosition[2] + offset,
+        ];
+    }
+  };
+
+  // Canvas 내부에 우주선 렌더링 추가
+  const renderSpaceships = () => {
+    return players
+      .slice(0, numPlayers)
+      .map((player, index) => (
+        <Spaceship
+          key={player.id}
+          position={getPlayerPosition(player.position, index)}
+          color={player.color}
+        />
+      ));
+  };
+
+  // 우주 기지 렌더링 추가
+  const renderSpaceBases = () => {
+    console.log("render base");
+    return spaceBases.map((base, index) => (
+      <SpaceBase key={index} position={base.position} color={base.color} />
+    ));
+  };
+
   return (
     <div className="h-[100%] flex flex-col">
       {/* 이동 버튼 + 주사위 버튼 */}
@@ -420,6 +550,15 @@ const TravelMap = () => {
         >
           Reset Camera
         </button>
+        <select
+          value={numPlayers}
+          onChange={(e) => handlePlayerCountChange(e.target.value)}
+          className="mt-5 mx-3 px-4 py-2 bg-yellow-300 text-white rounded hover:bg-blue-600"
+        >
+          <option value={2}>2 players</option>
+          <option value={3}>3 players</option>
+          <option value={4}>4 players</option>
+        </select>
       </div>
       <div className="text-center">
         {totalScore !== 0 && (
@@ -508,6 +647,8 @@ const TravelMap = () => {
               rotateSpeed={0.15}
             />
             {renderCells()}
+            {renderSpaceships()}
+            {renderSpaceBases()}
           </Canvas>
         </div>
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import useSocket from "../../hooks/useSocket";
-import GameBoard from "../../components/cockroachcard/GameBoard";
+import GameBoard from "../../components/game/cockroachcard/GameBoard";
 import GameSidebar from "../../components/sidebar/GameSidebar";
 import VideoChat from "../../components/videochat/VideoChat";
 
