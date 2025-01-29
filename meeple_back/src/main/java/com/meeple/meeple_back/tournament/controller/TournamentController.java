@@ -1,9 +1,11 @@
 package com.meeple.meeple_back.tournament.controller;
 
 import com.meeple.meeple_back.tournament.model.request.RequestCreateTournament;
+import com.meeple.meeple_back.tournament.model.request.RequestUpdateTournament;
 import com.meeple.meeple_back.tournament.model.response.ResponseCreateTournament;
 import com.meeple.meeple_back.tournament.model.response.ResponseTournament;
 import com.meeple.meeple_back.tournament.model.response.ResponseTournamentList;
+import com.meeple.meeple_back.tournament.model.response.ResponseUpdateTournament;
 import com.meeple.meeple_back.tournament.service.TournamentService;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -24,7 +26,7 @@ public class TournamentController {
     @PostMapping
     public ResponseEntity<ResponseCreateTournament> createTournament(
             @RequestBody RequestCreateTournament request
-            ) {
+    ) {
         ResponseCreateTournament response = tournamentService.createTournament(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -45,4 +47,17 @@ public class TournamentController {
 
         return ResponseEntity.ok(response);
     }
+
+    @PutMapping("/{tournamentId}")
+    public ResponseEntity<ResponseUpdateTournament> updateTournament(
+            @PathVariable long tournamentId,
+            @RequestBody RequestUpdateTournament request
+    ) {
+
+        ResponseUpdateTournament response = tournamentService.updateTournament(tournamentId, request);
+
+        return ResponseEntity.ok(response);
+    }
+
+
 }

@@ -4,9 +4,11 @@ import com.meeple.meeple_back.game.game.model.Game;
 import com.meeple.meeple_back.game.repo.GameRepository;
 import com.meeple.meeple_back.tournament.model.entity.Tournament;
 import com.meeple.meeple_back.tournament.model.request.RequestCreateTournament;
+import com.meeple.meeple_back.tournament.model.request.RequestUpdateTournament;
 import com.meeple.meeple_back.tournament.model.response.ResponseCreateTournament;
 import com.meeple.meeple_back.tournament.model.response.ResponseTournament;
 import com.meeple.meeple_back.tournament.model.response.ResponseTournamentList;
+import com.meeple.meeple_back.tournament.model.response.ResponseUpdateTournament;
 import com.meeple.meeple_back.tournament.repository.TournamentRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
@@ -60,5 +62,56 @@ public class TournamentServiceImpl implements TournamentService {
         mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
 
         return mapper.map(tournament, ResponseTournament.class);
+    }
+
+    @Override
+    public ResponseUpdateTournament updateTournament(long tournamentId, RequestUpdateTournament request) {
+        Tournament tournament = tournamentRepository.findById(tournamentId)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 토너먼트 입니다."));
+
+        if (!request.getTournamentTitle().equals(tournament.getTournamentTitle())) {
+            tournament.setTournamentTitle(request.getTournamentTitle());
+        }
+
+        if (request.getTournamentTotalRound() != tournament.getTournamentTotalRound()) {
+            tournament.setTournamentTotalRound(request.getTournamentTotalRound());
+        }
+
+        if (!request.getTournamentInfo().equals(tournament.getTournamentInfo())) {
+            tournament.setTournamentInfo(request.getTournamentInfo());
+        }
+
+        if (request.getTournamentRequireRank() != tournament.getTournamentRequireRank()) {
+            tournament.setTournamentRequireRank(request.getTournamentRequireRank());
+        }
+
+        if (request.getTournamentPublicState() != tournament.getTournamentPublicState()) {
+            tournament.setTournamentPublicState(request.getTournamentPublicState());
+        }
+
+        if (!request.getTournamentEndDate().isEqual(tournament.getTournamentEndDate())) {
+            tournament.setTournamentStartTime(request.getTournamentStartTime());
+        }
+
+        if (!request.getTournamentStartTime().isEqual(tournament.getTournamentStartTime())) {
+            tournament.setTournamentStartTime(request.getTournamentStartTime());
+        }
+
+        if (!request.getTournamentEndTime().isEqual(tournament.getTournamentEndTime())) {
+            tournament.setTournamentEndTime(request.getTournamentEndTime());
+        }
+
+        if (request.getGameId() != tournament.getGame().getGameId()) {
+            Game game = gameRepository.findById(request.getGameId())
+                    .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게임입니다."));
+
+            tournament.setGame(game);
+        }
+
+        Tournament updatedTournament = tournamentRepository.save(tournament);
+
+        mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+
+        return mapper.map(updatedTournament, ResponseUpdateTournament.class);
     }
 }

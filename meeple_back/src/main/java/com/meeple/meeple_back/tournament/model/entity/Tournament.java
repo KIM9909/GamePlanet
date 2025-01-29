@@ -2,6 +2,7 @@ package com.meeple.meeple_back.tournament.model.entity;
 
 import com.meeple.meeple_back.game.game.model.Game;
 import jakarta.persistence.*;
+import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "tbl_tournament")
 @Setter
+@Getter
 public class Tournament {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
