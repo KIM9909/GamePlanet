@@ -10,6 +10,7 @@ import GuessCardModal from "./GuessCardModal";
 import PenaltyCardSelectModal from "./PenaltyCardSelectModal";
 import ActiveCardArea from "./ActiveCardArea";
 import Card from "./Card";
+import GameStartScreen from "./GameStartScreen";
 
 const ANIMAL_ORDER = [
   "Bat",
@@ -294,8 +295,11 @@ const GameBoard = ({
   playerCount = 4,
   onStartGame,
   gameData,
+  setGameData,
   currentUser,
   sendMessage,
+  stompClient,
+  roomId,
 }) => {
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
@@ -588,20 +592,31 @@ const GameBoard = ({
     }
   }, [gameData?.gameData?.gameState?.currentCard]);
 
+  // WebSocket 메시지 처리
+  useEffect(() => {
+    if (!stompClient) return;
+
+    const subscription = stompClient.subscribe(
+      `/topic/game/${roomId}`,
+      (message) => {
+        const data = JSON.parse(message.body);
+
+        // 모든 게임 데이터 업데이트
+        setGameData(data);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [stompClient, roomId, setGameData]);
+
   if (!isGameStarted) {
+    console.log("GameBoard gameData:", gameData);
     return (
-      <div className="relative w-full h-[800px] max-w-[1600px] mx-auto bg-gray-700/10 rounded-3xl flex items-center justify-center">
-        <div className="text-center space-y-6">
-          <h2 className="text-2xl font-bold text-white">바퀴벌레 포커</h2>
-          <p className="text-gray-200">현재 {playerCount}인 게임</p>
-          <button
-            onClick={handleStartGame}
-            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-          >
-            게임 시작
-          </button>
-        </div>
-      </div>
+      <GameStartScreen
+        playerCount={playerCount}
+        onStart={handleStartGame}
+        roomTitle={gameData?.roomName || "바퀴벌레 포커"}
+      />
     );
   }
 

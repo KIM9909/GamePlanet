@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import useSocket from "../../hooks/useSocket";
 import GameBoard from "../../components/cockroachcard/GameBoard";
@@ -11,6 +11,21 @@ const CockroachPokerPage = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [gameData, setGameData] = useState(null);
   const currentUser = "user1"; // 실제로는 로그인 정보나 context에서 가져와야 함
+
+  // 방 정보 가져오기
+  useEffect(() => {
+    const fetchRoomInfo = async () => {
+      try {
+        const response = await fetch(`/api/game/room/${roomId}`);
+        const data = await response.json();
+        setGameData(data); // 여기서 room_name이 포함된 데이터를 받아옴
+      } catch (error) {
+        console.error("방 정보 가져오기 실패:", error);
+      }
+    };
+
+    fetchRoomInfo();
+  }, [roomId]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen);
