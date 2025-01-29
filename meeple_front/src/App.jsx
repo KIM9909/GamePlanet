@@ -14,6 +14,7 @@ import TopLayout from "./components/layout/TopLayout";
 import SideLayout from "./components/layout/SideLayout";
 import Introduce from "./pages/introduce/Introduce";
 import ScrollToTop from "./components/layout/ScrollToTop";
+import CatchMindPage from "./pages/game/CatchMindPage";
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
               path="/game/cockroach/:roomId"
               element={<CockroachPokerPage />}
             />
+            <Route path="/catch-mind/:roomId" element={<CatchMindPage />} />
 
             {/* GameInfo */}
             <Route path="/game/:gameId" element={<GameInfoPage />} />

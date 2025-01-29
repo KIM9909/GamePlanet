@@ -1,6 +1,6 @@
 // src/sources/api/store/slices/ProfileSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { UserAPI } from "../../UserAPI";
+import { UserAPI } from "../../api/UserAPI";
 
 // 프로필 조회를 위한 비동기 액션 생성
 export const fetchProfile = createAsyncThunk(

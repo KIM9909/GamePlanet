@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { logout } from "../../sources/api/store/slices/UserSlice";
+import { logout } from "../../sources/store/slices/UserSlice";
 import { useNavigate } from "react-router-dom";
 import Twinkle from "../../assets/images/decorate_twinkle.png";
 

@@ -5,8 +5,8 @@ import {
   deleteUser,
   setDeleteModalOpen,
   resetDeleteSuccess,
-} from "../../sources/api/store/slices/ProfileSlice";
-import { logout } from "../../sources/api/store/slices/UserSlice";
+} from "../../sources/store/slices/ProfileSlice";
+import { logout } from "../../sources/store/slices/UserSlice";
 import { Eye, EyeOff } from "lucide-react";
 
 const UserDeletePage = ({ userId, onClose }) => {

@@ -3,10 +3,7 @@ import React, { useState } from "react";
 // Redux 관련 훅 임포트: dispatch는 액션 발생, useSelector는 상태 조회
 import { useDispatch, useSelector } from "react-redux";
 // 로그인 관련 액션과 모달 상태 제어 액션을 임포트
-import {
-  loginUser,
-  setModalOpen,
-} from "../../sources/api/store/slices/UserSlice";
+import { loginUser, setModalOpen } from "../../sources/store/slices/UserSlice";
 // HeadlessUI의 Dialog 컴포넌트: 접근성이 고려된 모달 구현을 위해 사용
 import { Dialog } from "@headlessui/react";
 // Lucide 아이콘: 모달 닫기 버튼과 비밀번호 표시/숨김에 사용될 아이콘

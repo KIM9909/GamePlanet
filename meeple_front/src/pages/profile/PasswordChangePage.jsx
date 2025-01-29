@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { updatePassword } from "../../sources/api/store/slices/ProfileSlice";
+import { updatePassword } from "../../sources/store/slices/ProfileSlice";
 import { Eye, EyeOff } from "lucide-react";
 
 const PasswordChangePage = ({ userId, onClose }) => {

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import TravelMap from "../../components/burumabul/TravelMap";
+import TravelMap from "../../components/game/burumabul/TravelMap";
 import GameSidebar from "../../components/sidebar/GameSidebar";
 import { ChevronLeft, ChevronRight, Menu, X } from "lucide-react";
 
