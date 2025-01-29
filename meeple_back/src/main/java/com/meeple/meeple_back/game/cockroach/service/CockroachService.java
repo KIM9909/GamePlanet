@@ -24,4 +24,6 @@ public interface CockroachService {
     ResponseVoteResult voteResult(String roomId, RequestVoteResult request);
 
     ResponseHandCheck handCheck(String roomId, RequestHandCheck request);
+
+    ResponseUpdateRoom updateRoom(String roomId, RequestUpdateRoom request);
 }

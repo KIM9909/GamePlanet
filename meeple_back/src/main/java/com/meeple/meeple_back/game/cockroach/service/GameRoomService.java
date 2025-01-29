@@ -51,6 +51,7 @@ public class GameRoomService {
         roomInfo.put("password", request.getPassword());
         roomInfo.put("isGameStart", false);
         roomInfo.put("creator", request.getCreator());
+        roomInfo.put("maxPeople", request.getMaxPeople());
         System.out.println("createRoom service 호출");
 
         Room room = Room.builder()
