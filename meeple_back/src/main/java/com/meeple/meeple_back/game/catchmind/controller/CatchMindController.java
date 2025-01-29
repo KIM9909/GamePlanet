@@ -69,6 +69,14 @@ public class CatchMindController {
         messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
     }
 
+    @MessageMapping("/drawing/{roomId}")
+    public void drawing(
+            @DestinationVariable String roomId,
+            @RequestBody RequestDrawing request
+    ) {
+        messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, request);
+    }
+
     @MessageMapping("/request-quiz/{roomId}")
     public void requestQuiz(
             @DestinationVariable String roomId
