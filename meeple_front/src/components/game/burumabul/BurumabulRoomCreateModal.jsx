@@ -152,7 +152,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
               {/* 일단 생성 누르면 부루마불 대기방으로 */}
               <button
                 className="bg-green-500 rounded-lg text-white w-24"
-                onClick={() => navigate("game/burumabul/waitingroom")}
+                onClick={() => navigate("/game/burumabul/waitingroom")}
                 type="submit"
               >
                 생성

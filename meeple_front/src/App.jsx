@@ -32,7 +32,7 @@ function App() {
             <Route path="/board/:boardId" element={<BoardPage />} />
 
             {/* Game */}
-            <Route path="/game/burumabul" element={<BurumabulPage />} />
+            <Route path="/game/burumabul/start" element={<BurumabulPage />} />
             <Route
               path="/game/burumabul/waitingroom"
               element={<WaitingRoom />}
