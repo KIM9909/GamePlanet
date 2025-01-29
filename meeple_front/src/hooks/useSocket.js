@@ -11,6 +11,10 @@ if (typeof global === "undefined") {
 const useSocket = (roomId) => {
   const clientRef = useRef(null);
   const [messages, setMessages] = useState([]);
+  const [connected, setConnected] = useState(false);
+
+  // stompClient 상태 추가
+  const [stompClient, setStompClient] = useState(null);
 
   const connect = useCallback(() => {
     const client = new Client({
@@ -21,14 +25,18 @@ const useSocket = (roomId) => {
     });
 
     client.onConnect = () => {
+      setConnected(true);
+      setStompClient(client); // 연결된 후에 stompClient 설정
+
       client.subscribe(`/topic/messages/${roomId}`, (message) => {
         const newMessage = JSON.parse(message.body);
         setMessages((prev) => [...prev, newMessage]);
       });
+    };
 
-      client.subscribe(`/topic/game/${roomId}`, (message) => {
-        const data = JSON.parse(message.body);
-      });
+    client.onDisconnect = () => {
+      setConnected(false);
+      setStompClient(null); // 연결 해제시 stompClient null로 설정
     };
 
     clientRef.current = client;
@@ -64,14 +72,13 @@ const useSocket = (roomId) => {
         body: JSON.stringify({}),
       });
 
-      // 게임 시작 응답을 받기 위한 구독
       return new Promise((resolve) => {
         const subscription = clientRef.current.subscribe(
           `/topic/game/${roomId}`,
           (message) => {
             const response = JSON.parse(message.body);
             console.log("게임 시작 응답:", response);
-            subscription.unsubscribe(); // 응답을 받은 후 구독 해제
+            subscription.unsubscribe();
             resolve({ data: response });
           }
         );
@@ -89,10 +96,11 @@ const useSocket = (roomId) => {
   }, [roomId, connect, disconnect]);
 
   return {
-    connected: !!clientRef.current?.connected,
+    connected,
     sendMessage,
     messages,
     startGame,
+    stompClient: stompClient,
   };
 };
 
