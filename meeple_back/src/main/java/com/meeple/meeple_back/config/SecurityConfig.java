@@ -62,6 +62,7 @@ public class SecurityConfig {
 						.requestMatchers(HttpMethod.PUT, "/profile/{userId}").authenticated()  // PUT 요청 허용
 						.requestMatchers(HttpMethod.PUT, "/profile/{userId}/password").permitAll()
 						.requestMatchers(HttpMethod.DELETE, "/profile/{userId}/delete").permitAll()
+						.requestMatchers("/api/video/**").permitAll()
 						.anyRequest().authenticated()
 				)
 				.addFilterBefore(jwtAuthenticationFilter,
