@@ -5,12 +5,13 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import GiveCardModal from "./GiveCardModal";
-import GuessCardModal from "./GuessCardModal";
-import PenaltyCardSelectModal from "./PenaltyCardSelectModal";
+import GiveCardModal from "./modal/GiveCardModal";
+import GuessCardModal from "./modal/GuessCardModal";
+import PenaltyCardSelectModal from "./modal/PenaltyCardSelectModal";
 import ActiveCardArea from "./ActiveCardArea";
 import Card from "./Card";
 import GameStartScreen from "./GameStartScreen";
+import UpdateRoomModal from "./modal/UpdateRoomModal";
 
 const ANIMAL_ORDER = [
   "Bat",
@@ -313,6 +314,7 @@ const GameBoard = ({
   const [penaltyCardCount, setPenaltyCardCount] = useState(0);
   const [passedPlayers, setPassedPlayers] = useState([]);
   const [passCount, setPassCount] = useState(0);
+  const [isUpdateModalOpen, setUpdateModalOpen] = useState(false);
 
   // 남은 플레이어 계산
   const remainingPlayers = useMemo(() => {
@@ -609,14 +611,39 @@ const GameBoard = ({
     return () => subscription.unsubscribe();
   }, [stompClient, roomId, setGameData]);
 
+  const handleUpdateRoom = (updateData) => {
+    sendMessage({
+      type: "UPDATE_ROOM",
+      data: updateData,
+    });
+  };
+
   if (!isGameStarted) {
-    console.log("GameBoard gameData:", gameData);
     return (
-      <GameStartScreen
-        playerCount={playerCount}
-        onStart={handleStartGame}
-        roomTitle={gameData?.roomName || "바퀴벌레 포커"}
-      />
+      <>
+        <GameStartScreen
+          playerCount={playerCount}
+          onStart={handleStartGame}
+          roomTitle={
+            gameData?.roomName || gameData?.roomTitle || "바퀴벌레 포커"
+          }
+          maxPeople={gameData?.maxPeople || 4}
+        />
+        {currentUser === gameData?.creator && (
+          <button
+            onClick={() => setUpdateModalOpen(true)}
+            className="absolute top-4 right-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            방 설정
+          </button>
+        )}
+        <UpdateRoomModal
+          isOpen={isUpdateModalOpen}
+          onClose={() => setUpdateModalOpen(false)}
+          onUpdateRoom={handleUpdateRoom}
+          initialData={gameData}
+        />
+      </>
     );
   }
 

@@ -1,24 +1,41 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import useSocket from "../../hooks/useSocket";
-import GameBoard from "../../components/cockroachcard/GameBoard";
+import GameBoard from "../../components/game/cockroachcard/GameBoard";
 import GameSidebar from "../../components/sidebar/GameSidebar";
 import VideoChat from "../../components/videochat/VideoChat";
+import axios from "axios";
+import { toast } from "react-hot-toast";
 
 const CockroachPokerPage = () => {
   const { roomId } = useParams();
   const { connected, sendMessage, startGame } = useSocket(roomId);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [gameData, setGameData] = useState(null);
-  const currentUser = "user1"; // 실제로는 로그인 정보나 context에서 가져와야 함
+  const currentUser = "testUser"; // creator와 같은 값으로 변경
 
   // 방 정보 가져오기
   useEffect(() => {
     const fetchRoomInfo = async () => {
       try {
+        // 임시로 mock 데이터 사용
+        const mockRoomData = {
+          roomId: roomId,
+          roomName: "테스트 방",
+          maxPeople: 4,
+          currentPlayers: 4,
+          players: ["user1", "user2", "user3", "testUser"],
+          creator: "testUser", // creator 명시적으로 추가
+          gameData: null,
+        };
+        setGameData(mockRoomData);
+
+        // 실제 API 구현 후 아래 코드 사용
+        /*
         const response = await fetch(`/api/game/room/${roomId}`);
         const data = await response.json();
-        setGameData(data); // 여기서 room_name이 포함된 데이터를 받아옴
+        setGameData(data);
+        */
       } catch (error) {
         console.error("방 정보 가져오기 실패:", error);
       }
@@ -119,6 +136,30 @@ const CockroachPokerPage = () => {
   };
 
   const playerCount = gameData?.players?.length || 0;
+
+  const handleJoinRoom = async (roomId) => {
+    try {
+      const response = await axios.get(`/api/room/${roomId}`);
+      const roomData = response.data;
+
+      if (roomData.currentPlayers >= roomData.maxPeople) {
+        toast.error("방이 가득 찼습니다.");
+        return;
+      }
+
+      const joinResponse = await axios.post(`/api/room/${roomId}/join`, {
+        userId: currentUser,
+      });
+
+      if (joinResponse.data.success) {
+        // 성공 메시지만 표시
+        toast.success("방에 입장했습니다.");
+      }
+    } catch (error) {
+      console.error("방 입장 실패:", error);
+      toast.error("방 입장에 실패했습니다.");
+    }
+  };
 
   return (
     <div className="h-screen w-screen flex bg-gray-900">

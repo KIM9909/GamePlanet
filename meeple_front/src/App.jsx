@@ -41,9 +41,9 @@ function App() {
             {/* GameInfo */}
             <Route path="/game/:gameId" element={<GameInfoPage />} />
 
-                {/* Home & Main */}
-                <Route path="/home" element={<HomePage />} />
-                <Route path="/" element={<MainPage />} />
+            {/* Home & Main */}
+            <Route path="/home" element={<HomePage />} />
+            <Route path="/" element={<MainPage />} />
 
             {/* Profile */}
             <Route path="/profile/:userId" element={<ProfilePage />} />

@@ -1,46 +1,48 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import CreateRoomModal from "../../components/game/CreateRoomModal";
+import CreateRoomModal from "../../components/game/cockroachcard/modal/CreateRoomModal";
 
 const HomePage = () => {
   const navigate = useNavigate();
   const [isCreateRoomModalOpen, setCreateRoomModalOpen] = useState(false);
 
- const handleLogout = () => {
-   dispatch(logout());
-   navigate("/");
- };
-
   const handleCreateRoom = async (roomData) => {
-    console.log('roomData:', roomData);
+    console.log("Request URL:", "/api/game/create-room");
+    console.log("Request Data:", roomData);
+    console.log("Stringified Request:", JSON.stringify(roomData));
+
     try {
-      const response = await fetch(
-        `http://localhost:8090/api/game/create-room`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(roomData),
-        }
-      );
-  
+      const response = await fetch("/api/game/create-room", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(roomData),
+      });
+
+      // 응답 상태 및 헤더 로깅
+      console.log("Response Status:", response.status);
+      console.log("Response Headers:", [...response.headers.entries()]);
+
+      const responseText = await response.text();
+      console.log("Raw Response:", responseText);
+
       if (!response.ok) {
-        throw new Error(`Failed to create room: ${response.status}`);
+        throw new Error(`서버 오류: ${response.status} - ${responseText}`);
       }
-  
-      const data = await response.json();
-      console.log('Response data:', data);
+
+      const data = JSON.parse(responseText);
+      console.log("Parsed Response:", data);
       navigate(`/game/cockroach/${data.roomId}`);
     } catch (error) {
-      console.error("Error creating room:", error);
-      alert("방 생성에 실패했습니다.");
+      console.error("Error details:", error);
+      throw new Error(`방 생성 실패: ${error.message}`);
     }
   };
 
   return (
     <div className="min-h-screen relative">
-
       <div className="min-h-screen bg-gray-100 p-8">
         <div className="max-w-7xl mx-auto">
           <div className="bg-white rounded-lg shadow-lg p-6">
