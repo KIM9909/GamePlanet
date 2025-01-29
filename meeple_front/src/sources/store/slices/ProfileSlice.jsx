@@ -10,6 +10,7 @@ export const fetchProfile = createAsyncThunk(
       const response = await UserAPI.getProfile(userId);
       return response;
     } catch (error) {
+      console.error("ProfileSlice: Error fetching profile:", error);
       return rejectWithValue(error.message || "프로필 조회에 실패했습니다.");
     }
   }
@@ -21,13 +22,11 @@ export const updateProfile = createAsyncThunk(
   async ({ userId, data }, { rejectWithValue }) => {
     try {
       // userId와 data가 제대로 전달되는지 확인 (디버깅용)
-      console.log("Updating profile for userId:", userId, "with data:", data);
 
       const response = await UserAPI.updateProfile(userId, data);
       return response;
     } catch (error) {
       // 에러 발생 시 자세한 정보 로깅
-      console.error("Profile update thunk error:", error);
       return rejectWithValue(error.message);
     }
   }
