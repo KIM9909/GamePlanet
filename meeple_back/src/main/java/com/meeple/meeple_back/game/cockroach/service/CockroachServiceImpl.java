@@ -89,6 +89,40 @@ public class CockroachServiceImpl implements CockroachService {
     }
 
     @Override
+    public ResponseUpdateRoom updateRoom(String roomId, RequestUpdateRoom request) {
+        Map<String, Object> roomInfo =
+                (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+
+        if (!request.getRoomTitle().equals(roomInfo.get("roomTitle"))) {
+            roomInfo.put("roomTitle", request.getRoomTitle());
+        }
+
+        if (request.isPrivate() != Boolean.parseBoolean(String.valueOf(roomInfo.get("isPrivate")))) {
+            roomInfo.put("isPrivate", request.isPrivate());
+        }
+
+        if (!request.getPassword().equals(roomInfo.get("password"))) {
+            roomInfo.put("password", request.getPassword());
+        }
+
+        if (request.getMaxPeople() != Integer.parseInt(String.valueOf(roomInfo.get("password")))) {
+            roomInfo.put("maxPeople", request.getMaxPeople());
+        }
+
+
+        redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
+
+        ResponseUpdateRoom response = ResponseUpdateRoom.builder()
+                .roomTitle(request.getRoomTitle())
+                .isPrivate(request.isPrivate())
+                .password(request.getPassword())
+                .maxPeople(request.getMaxPeople())
+                .build();
+
+        return response;
+    }
+
+    @Override
     public ResponseStartGame startGame(String roomId) {
         Map<String, Object> roomInfo =
                 (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
