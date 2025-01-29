@@ -5,35 +5,39 @@ import { ChevronLeft, ChevronRight, Menu, X } from "lucide-react";
 
 const BurumabulPage = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  // const [playerCount, setPlayerCount] = useState()
 
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen);
   };
 
   return (
-    <div className="h-screen w-full flex">
-      <div
-        className={`fixed top-0 left-0 h-full transition-transform duration-300 ease-in-out transform 
+    <>
+      <div className="fixed left-0 top-0 h-full z-50 flex">
+        {/* 사이드바 */}
+        <div
+          className={`transition-transform duration-300 ease-in-out transform 
               ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} 
-              `}
-      >
-        <GameSidebar />
-        {isSidebarOpen && (
-          <button
-            onClick={toggleSidebar}
-            className="absolute -right-12 top-1/2 -translate-y-1/2 w-12 h-12 
+              relative`}
+        >
+          <GameSidebar />
+          {isSidebarOpen && (
+            <button
+              onClick={toggleSidebar}
+              className="absolute -right-12 top-1/2 -translate-y-1/2 w-12 h-12 
                 bg-gray-800 rounded-r text-white
                 hover:bg-gray-700 focus:outline-none 
                 flex items-center justify-center
                 shadow-lg"
-          >
-            <X className="w-8 h-8" />
-          </button>
-        )}
+            >
+              <X className="w-8 h-8" />
+            </button>
+          )}
+        </div>
       </div>
       {/* Main Content 영역 */}
       <div
-        className={`flex-1 transition-all duration-300 ease-in-out ${
+        className={`transition-all duration-300 ease-in-out ${
           isSidebarOpen ? "ml-64" : "ml-0"
         }`}
       >
@@ -52,16 +56,16 @@ const BurumabulPage = () => {
       {!isSidebarOpen && (
         <button
           onClick={toggleSidebar}
-          className="fixed left-0 top-1/2 -translate-y-1/2 w-12 h-12 
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-12 
               bg-gray-800 rounded-r text-white
               hover:bg-gray-700 focus:outline-none 
               flex items-center justify-center
-              shadow-lg"
+              shadow-lg z-50"
         >
           <Menu className="w-8 h-8" />
         </button>
       )}
-    </div>
+    </>
   );
 };
 
