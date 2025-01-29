@@ -43,6 +43,16 @@ public class WebSocketController {
         cockroachService.sendMessage(roomId, request);
     }
 
+    @MessageMapping("/game/update-room/{roomId}")
+    public void updateRoom(
+            @DestinationVariable String roomId,
+            @RequestBody RequestUpdateRoom request
+    ) {
+        ResponseUpdateRoom response = cockroachService.updateRoom(roomId, request);
+
+        messagingTemplate.convertAndSend("/topic/game/" + roomId, response);
+    }
+
 
     // MessageMapping 경로를 분리해서 행위별로 구분
     @MessageMapping("/game/start-game/{roomId}")

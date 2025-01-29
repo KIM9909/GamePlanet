@@ -62,6 +62,10 @@ public class CatchMindServiceImpl implements CatchMindService {
         roomInfo.put("password", request.getPassword());
         roomInfo.put("isGameStart", false);
         roomInfo.put("creator", request.getCreator());
+        roomInfo.put("maxPeople", request.getMaxPeople());
+        roomInfo.put("quizCount", request.getQuizCount());
+        roomInfo.put("timeLimit", request.getTimeLimit());
+
 
         redisTemplate.opsForHash().put(ROOM_KEY, savedRoom.getRoomId() + "", roomInfo);
 
@@ -102,6 +106,49 @@ public class CatchMindServiceImpl implements CatchMindService {
     }
 
     @Override
+    public ResponseUpdateRoom updateRoom(String roomId, RequestUpdateRoom request) {
+        Map<String, Object> roomInfo =
+                (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+
+        if (!request.getRoomTitle().equals(roomInfo.get("roomTitle"))) {
+            roomInfo.put("roomTitle", request.getRoomTitle());
+        }
+
+        if (request.isPrivate() != Boolean.parseBoolean(String.valueOf(roomInfo.get("isPrivate")))) {
+            roomInfo.put("isPrivate", request.isPrivate());
+        }
+
+        if (!request.getPassword().equals(roomInfo.get("password"))) {
+            roomInfo.put("password", request.getPassword());
+        }
+
+        if (request.getMaxPeople() != Integer.parseInt(String.valueOf(roomInfo.get("password")))) {
+            roomInfo.put("maxPeople", request.getMaxPeople());
+        }
+
+        if (request.getTimeLimit() != Integer.parseInt(String.valueOf(roomInfo.get("timeLimit")))) {
+            roomInfo.put("timeLimit", request.getTimeLimit());
+        }
+
+        if (request.getQuizCount() != Integer.parseInt(String.valueOf(roomInfo.get("quizCount")))) {
+            roomInfo.put("quizCount", request.getQuizCount());
+        }
+
+        redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
+
+        ResponseUpdateRoom response = ResponseUpdateRoom.builder()
+                .roomTitle(request.getRoomTitle())
+                .isPrivate(request.isPrivate())
+                .password(request.getPassword())
+                .maxPeople(request.getMaxPeople())
+                .timeLimit(request.getTimeLimit())
+                .quizCount(request.getQuizCount())
+                .build();
+
+        return response;
+    }
+
+    @Override
     public List<String> getList() {
         return redisTemplate.opsForHash()
                 .keys(ROOM_KEY)
@@ -127,6 +174,7 @@ public class CatchMindServiceImpl implements CatchMindService {
 
         Collections.shuffle(quizList);
         Collections.shuffle(players);
+        quizList = quizList.subList(0, (Integer) roomInfo.get("quizCount"));
 
         Map<String, Object> gameInfo = new HashMap<>();
 

@@ -28,4 +28,5 @@ public interface CatchMindService {
 
     List<ResponseGameResult> gameResult(String roomId);
 
+    ResponseUpdateRoom updateRoom(String roomId, RequestUpdateRoom request);
 }

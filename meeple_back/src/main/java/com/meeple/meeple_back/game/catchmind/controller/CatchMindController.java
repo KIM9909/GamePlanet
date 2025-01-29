@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,6 +43,16 @@ public class CatchMindController {
         ResponseJoinRoom response = catchMindService.joinRoom(request);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @MessageMapping("/update-room/{roomId}")
+    public void updateRoom(
+            @DestinationVariable String roomId,
+            @RequestBody RequestUpdateRoom request
+    ) {
+        ResponseUpdateRoom response = catchMindService.updateRoom(roomId, request);
+
+        messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
     }
 
     @GetMapping
@@ -99,6 +108,8 @@ public class CatchMindController {
             @DestinationVariable String roomId
     ) {
         List<ResponseGameResult> response = catchMindService.gameResult(roomId);
+
+        messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
     }
 
     @MessageMapping("/send-vote/{roomId}")
