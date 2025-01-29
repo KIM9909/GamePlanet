@@ -4,9 +4,11 @@ import TopNavbar from "../Navbar/TopNavBar";
 
 const TopLayout = ({ children }) => {
   const location = useLocation();
-  // 메인 페이지와 게임 페이지 모두에서 상단바 숨김
   const showNavbar =
-    location.pathname !== "/" && !location.pathname.includes("/game/");
+    location.pathname !== "/" &&
+    location.pathname !== "/game/burumabul" &&
+    !location.pathname.match(/^\/catch-mind\/[\w-]+$/) &&
+    !location.pathname.match(/^\/game\/cockroach\/[\w-]+$/);
 
   return (
     <div className="min-h-screen bg-gray-900">

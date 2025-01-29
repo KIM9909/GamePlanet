@@ -24,7 +24,7 @@ public class WebSocketController {
         this.messagingTemplate = messagingTemplate;
     }
 
-    @MessageMapping("/chat/{roomId}")
+    @MessageMapping("/game/chat/{roomId}")
     public void handleMessage(
         @DestinationVariable String roomId,
         @RequestBody RequestSendMessage request) {
@@ -119,6 +119,16 @@ public class WebSocketController {
             @RequestBody RequestVoteResult request
     ) {
         ResponseVoteResult response = cockroachService.voteResult(roomId, request);
+        messagingTemplate.convertAndSend("/topic/game/" + roomId, response);
+    }
+
+    @MessageMapping("/game/hand-check/{roomId}")
+    private void handCheck(
+            @DestinationVariable String roomId,
+            @RequestBody RequestHandCheck request
+    ) {
+        ResponseHandCheck response = cockroachService.handCheck(roomId, request);
+
         messagingTemplate.convertAndSend("/topic/game/" + roomId, response);
     }
 

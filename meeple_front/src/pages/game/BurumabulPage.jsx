@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import TravelMap from "../../components/burumabul/TravelMap";
+import TravelMap from "../../components/game/burumabul/TravelMap";
 import GameSidebar from "../../components/sidebar/GameSidebar";
 import { ChevronLeft, ChevronRight, Menu, X } from "lucide-react";
 
@@ -37,13 +37,13 @@ const BurumabulPage = () => {
           isSidebarOpen ? "ml-64" : "ml-0"
         }`}
       >
-        <div className="h-screen h-full flex flex-col">
+        <div className="h-screen w-full flex flex-col">
           {/* <div className="text-4xl font-bold text-center">BurumablePage</div> */}
-          <div className="flex-1">
+          <div className="h-3/4">
             <TravelMap />
           </div>
 
-          <div className="flex-1 bg-gray-300 flex items-center justify-center">
+          <div className="h-1/4 bg-gray-300 flex items-center justify-center">
             여기
           </div>
         </div>

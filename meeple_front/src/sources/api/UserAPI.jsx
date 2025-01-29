@@ -1,61 +1,94 @@
-// Axios 라이브러리 임포트
 import axios from "axios";
 
 // Axios 인스턴스 생성 및 기본 설정
 const API = axios.create({
   baseURL: "http://localhost:8090", // API 서버 기본 URL
   headers: {
-    "Content-Type": "application/json", // 기본 Content-Type 설정
+    "Content-Type": "application/json",
   },
+  withCredentials: true,
 });
 
 // 요청 인터셉터 설정
-// 모든 요청이 실행되기 전에 실행되는 미들웨어
 API.interceptors.request.use(
   (config) => {
-    // localStorage에서 인증 토큰 가져오기
     const token = localStorage.getItem("token");
-    // 토큰이 존재하면 요청 헤더에 추가
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // 요청 URL 로깅
+    console.log("Request URL:", `${config.baseURL}${config.url}`);
     return config;
   },
-  (error) => {
-    // 요청 전송 중 에러 발생 시 처리
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// API 함수들을 담은 객체
 export const UserAPI = {
+  // 프로필 정보 조회
+  getProfile: async (userId) => {
+    try {
+      const response = await API.get(`/profile/${userId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || "프로필 정보를 불러오는데 실패했습니다.";
+    }
+  },
+
+  // 프로필 정보 수정
+  updateProfile: async (userId, data) => {
+    try {
+      // API 요청 전 정보 로깅
+      console.log(
+        "Making request to:",
+        API.defaults.baseURL + `/profile/${userId}`
+      );
+      console.log("Request data:", data);
+
+      const response = await API.put(`/profile/${userId}`, data);
+      return response.data;
+    } catch (error) {
+      // 자세한 에러 정보 로깅
+      console.error("API Error:", error);
+      throw new Error("프로필 수정에 실패했습니다.");
+    }
+  },
+
+  // 비밀번호 변경
+  updatePassword: async (userId, data) => {
+    try {
+      const response = await API.put(`/profile/${userId}/password`, data);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || "비밀번호 변경에 실패했습니다.";
+    }
+  },
+
   // 로그인 API 호출 함수
   login: async (credentials) => {
     try {
-      // POST 요청으로 로그인 시도
       const response = await API.post("/auth/login", credentials);
       // 응답에서 토큰을 받아오면 localStorage에 저장
       if (response.data) {
         localStorage.setItem("token", response.data);
         console.log(response.data);
       }
-      return response.data; // 토큰 반환
+      return response.data;
     } catch (error) {
-      // 에러 발생 시 처리
-      // response가 있으면 서버에서 전달한 에러 메시지 사용, 없으면 기본 메시지 사용
       throw error.response?.data || "로그인에 실패했습니다.";
     }
   },
 
+  // 회원가입 API 호출 함수
   register: async (userData) => {
     try {
       const response = await API.post("/user/register", userData);
-      return response.status === 201; // 회원가입 성공 여부만 반환
+      return response.status === 201;
     } catch (error) {
       throw error.response?.data || "회원가입에 실패했습니다.";
     }
   },
 
+  // 닉네임 중복 체크
   checkNickname: async (nickname) => {
     try {
       const response = await API.get(`/user/checkNickname/${nickname}`);
@@ -65,6 +98,7 @@ export const UserAPI = {
     }
   },
 
+  // 이메일 중복 체크
   checkEmail: async (email) => {
     try {
       const response = await API.get(`/user/checkEmail/${email}`);
@@ -74,23 +108,24 @@ export const UserAPI = {
     }
   },
 
+  // 로그아웃
   logout: async () => {
     try {
-      // POST 요청으로 로그아웃 요청
-      await API.post("/user/logout");
-      // 로컬 스토리지의 토큰 제거
+      await API.post("/auth/logout");
       localStorage.removeItem("token");
     } catch (error) {
       throw error.response?.data || "로그아웃에 실패했습니다.";
     }
   },
 
-  getProfile: async (userId) => {
+  // 회원 탈퇴
+  deleteUser: async (userId, password) => {
     try {
-      const response = await API.get(`/profile/${userId}`);
-      return response.data;
+      await API.delete(`/profile/${userId}/delete`, {
+        data: { password },
+      });
     } catch (error) {
-      throw error.response?.data || "프로필 정보를 불러오는데 실패했습니다.";
+      throw error.response?.data || "회원 탈퇴에 실패했습니다.";
     }
   },
 };

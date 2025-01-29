@@ -37,6 +37,6 @@ class UserRepositoryTest {
     User result = userRepository.save(user);
 
     //then
-    assertThat(result.getId()).isNotNull();
+    assertThat(result.getUserId()).isNotNull();
   }
 }

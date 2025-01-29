@@ -6,6 +6,11 @@ const HomePage = () => {
   const navigate = useNavigate();
   const [isCreateRoomModalOpen, setCreateRoomModalOpen] = useState(false);
 
+ const handleLogout = () => {
+   dispatch(logout());
+   navigate("/");
+ };
+
   const handleCreateRoom = async (roomData) => {
     console.log('roomData:', roomData);
     try {

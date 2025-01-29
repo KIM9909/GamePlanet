@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -28,7 +29,7 @@ public class JwtUtil {
 
 	private final RedisTemplate<String, String> redisTemplate;
 
-	
+	@Autowired
 	public JwtUtil(RedisTemplate<String, String> redisTemplate, UserRepository userRepository) {
 		this.redisTemplate = redisTemplate;
 		this.userRepository = userRepository;

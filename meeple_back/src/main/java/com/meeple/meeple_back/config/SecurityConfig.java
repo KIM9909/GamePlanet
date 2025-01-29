@@ -55,9 +55,13 @@ public class SecurityConfig {
 				.sessionManagement(
 						session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
-						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // OPTIONS 요청 허용
+						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 						.requestMatchers("/auth/login", "/user/register", "/user/checkEmail/**",
-								"/user/checkNickname/**", "/profile/{userId}", "/profile/{userId}/password").permitAll()
+								"/user/checkNickname/**").permitAll()
+						.requestMatchers(HttpMethod.GET, "/profile/{userId}").permitAll()
+						.requestMatchers(HttpMethod.PUT, "/profile/{userId}").authenticated()  // PUT 요청 허용
+						.requestMatchers(HttpMethod.PUT, "/profile/{userId}/password").permitAll()
+						.requestMatchers(HttpMethod.DELETE, "/profile/{userId}/delete").permitAll()
 						.anyRequest().authenticated()
 				)
 				.addFilterBefore(jwtAuthenticationFilter,

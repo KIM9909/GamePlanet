@@ -118,4 +118,20 @@ public class UserService {
 		user.setUserUpdatedAt(LocalDateTime.now());
 		userRepository.save(user);
 	}
+
+	// 회원 탈퇴
+	@Transactional
+	public void deleteUser(Long userId, String password) {
+		User user = userRepository.findById(userId)
+				.orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+		// 탈퇴 전 비밀번호로 사용자 검증
+		if (!passwordEncoder.matches(password, user.getUserPassword())) {
+			throw new IllegalArgumentException("Not matches password");
+		}
+
+		user.setUserDeletedAt(LocalDateTime.now());
+		user.setUserUpdatedAt(LocalDateTime.now());
+		userRepository.save(user);
+	}
 }

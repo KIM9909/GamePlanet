@@ -61,6 +61,8 @@ public class GameRoomService {
 
         Room savedRoom = roomRepository.save(room);
 
+        roomInfo.put("roomId", savedRoom.getRoomId());
+
         redisTemplate.opsForHash().put(ROOM_KEY, savedRoom.getRoomId() + "", roomInfo);
 
         ResponseCreateRoom response = ResponseCreateRoom.builder()

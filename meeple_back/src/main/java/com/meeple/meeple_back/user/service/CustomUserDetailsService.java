@@ -25,6 +25,11 @@ public class CustomUserDetailsService implements UserDetailsService {
        User user = userRepository.findByUserEmail(username)
                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
 
+       // 회원탈퇴한 회원(userDeleteAt 필드가 채워져 있는 회원)의 접속 차단
+       if (user.getUserDeletedAt() != null) {
+           throw new IllegalStateException("탈퇴한 회원입니다.");
+       }
+
        return org.springframework.security.core.userdetails.User.builder()
                .username(user.getUserEmail())
                .password(user.getUserPassword())

@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
@@ -454,6 +455,42 @@ public class CockroachServiceImpl implements CockroachService {
 
             return response;
         }
+    }
+
+    @Override
+    public ResponseHandCheck handCheck(String roomId, RequestHandCheck request) {
+        Map<String, Object> roomInfo = (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+        List<String> players = (List<String>) roomInfo.get("players");
+
+        Game game = gameRepository.findById(1)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게임"));
+
+        for (String player : players) {
+            User user = userRepository.findByUserNickname(player);
+
+            if (player.equals(request.getPlayer())) {
+                GameResult gameResult = GameResult.builder()
+                        .game(game)
+                        .user(user)
+                        .isWinner('N')
+                        .build();
+                gameResultRepository.save(gameResult);
+
+            } else {
+                GameResult gameResult = GameResult.builder()
+                        .game(game)
+                        .user(user)
+                        .isWinner('N')
+                        .build();
+                gameResultRepository.save(gameResult);
+            }
+        }
+        ResponseHandCheck response = ResponseHandCheck.builder()
+                .isEnd(true)
+                .loser(request.getPlayer())
+                .build();
+
+        return response;
     }
 
     @Override

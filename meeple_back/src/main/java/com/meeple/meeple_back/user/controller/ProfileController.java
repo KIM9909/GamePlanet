@@ -1,5 +1,6 @@
 package com.meeple.meeple_back.user.controller;
 
+import com.meeple.meeple_back.user.model.PasswordConfirmRequest;
 import com.meeple.meeple_back.user.model.PasswordUpdateRequest;
 import com.meeple.meeple_back.user.model.UserProfileResponse;
 import com.meeple.meeple_back.user.model.UserUpdateRequest;
@@ -39,5 +40,14 @@ public class ProfileController {
         // 성공 or 실패 여부만 반환
         userService.updatePassword(userId, request);
         return ResponseEntity.ok().build(); // 수정된 데이터 없이 200 ok 반환
+    }
+
+    // 회원탈퇴
+    @DeleteMapping("/{userId}/delete")
+    public ResponseEntity<?> deleteUser(
+            @PathVariable("userId") Long userId,
+            @RequestBody PasswordConfirmRequest request) {
+        userService.deleteUser(userId, request.getPassword());
+        return ResponseEntity.ok().build();
     }
 }

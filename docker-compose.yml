@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - meeple_network
+
+  meeple_front:
+    image: kimgon/meeple_front:latest  # Docker Hub 이미지 이름
+    container_name: meeple_front
+    restart: always
+    ports:
+      - "3000:80" # 호스트의 3000 포트를 컨테이너의 80 포트에 매핑
+    networks:
+      - meeple_network
+
+  meeple_back:
+    image: kimgon/meeple_back:latest  # Docker Hub 이미지 이름
+    container_name: meeple_back
+    restart: always
+    ports:
+      - "8090:8090"
+    networks:
+      - meeple_network
+
+  nginx:
+    image: kimgon/nginx:latest  # Docker Hub 이미지 이름
+    container_name: nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"  # HTTPS 포트 (옵션)
+    depends_on:
+      - meeple_front
+      - meeple_back
+    networks:
+      - meeple_network
+
+networks:
+  meeple_network:
+    driver: bridge
