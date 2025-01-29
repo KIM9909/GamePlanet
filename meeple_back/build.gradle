@@ -75,6 +75,9 @@ dependencies {
 
     // openVidu
     implementation 'io.openvidu:openvidu-java-client:2.25.0'
+
+    // mapper
+    implementation 'org.modelmapper:modelmapper:3.1.0'
 }
 
 bootJar {
