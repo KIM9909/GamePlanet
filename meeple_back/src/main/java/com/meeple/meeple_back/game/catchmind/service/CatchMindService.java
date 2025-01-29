@@ -27,4 +27,5 @@ public interface CatchMindService {
     ResponseVoteResult voteResult(String roomId, RequestVoteResult request);
 
     List<ResponseGameResult> gameResult(String roomId);
+
 }

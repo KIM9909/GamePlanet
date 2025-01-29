@@ -154,6 +154,7 @@ public class CatchMindServiceImpl implements CatchMindService {
         return response;
     }
 
+
     @Override
     public ResponseQuiz requestQuiz(String roomId) {
         Map<String, Object> roomInfo =
