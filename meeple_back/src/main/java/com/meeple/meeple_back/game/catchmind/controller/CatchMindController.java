@@ -55,7 +55,7 @@ public class CatchMindController {
         messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
     }
 
-    @GetMapping
+    @GetMapping()
     public ResponseEntity<List<String>> roomList() {
         List<String> response = catchMindService.getList();
 
