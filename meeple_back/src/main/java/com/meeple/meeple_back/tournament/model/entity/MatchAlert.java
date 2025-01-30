@@ -18,8 +18,4 @@ public class MatchAlert {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "tournament_round_id")
-    private TournamentMatch tournamentRound;
-
 }
