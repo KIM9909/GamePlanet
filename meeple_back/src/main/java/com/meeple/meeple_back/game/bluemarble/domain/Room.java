@@ -1,9 +1,11 @@
 package com.meeple.meeple_back.game.bluemarble.domain;
 
+import com.meeple.meeple_back.common.domain.exception.ResourceNotFoundException;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -52,6 +54,17 @@ public class Room {
 				.maxPlayers(roomUpdate.getMaxPlayers())
 				.players(players)
 				.build();
+	}
+
+	public Room addPlayer(Player player) {
+		if (Objects.isNull(players)) {
+			throw new ResourceNotFoundException("Player", player.getPlayerId());
+		}
+		if (players.size() >= maxPlayers) {
+			throw new ResourceNotFoundException("Room", roomId);
+		}
+		players.add(player);
+		return this;
 	}
 
 }
