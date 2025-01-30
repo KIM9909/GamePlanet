@@ -1,10 +1,10 @@
 import React from "react";
-import BatCard from "../../assets/image/cockroachpoker/BatCard.svg";
-import CockroachCard from "../../assets/image/cockroachpoker/CockroachCard.svg";
-import RatCard from "../../assets/image/cockroachpoker/RatCard.svg";
-import ScorpionCard from "../../assets/image/cockroachpoker/ScorpionCard.svg";
-import ToadCard from "../../assets/image/cockroachpoker/ToadCard.svg";
-import CockroachPokerLogo from "../../assets/image/cockroachpoker/cockroachpoker.svg";
+import BatCard from "../../../assets/image/cockroachpoker/BatCard.svg";
+import CockroachCard from "../../../assets/image/cockroachpoker/CockroachCard.svg";
+import RatCard from "../../../assets/image/cockroachpoker/RatCard.svg";
+import ScorpionCard from "../../../assets/image/cockroachpoker/ScorpionCard.svg";
+import ToadCard from "../../../assets/image/cockroachpoker/ToadCard.svg";
+import CockroachPokerLogo from "../../../assets/image/cockroachpoker/cockroachpoker.svg";
 
 const GameStartScreen = ({
   playerCount,

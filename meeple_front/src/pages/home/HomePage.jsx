@@ -1,18 +1,29 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CreateRoomModal from "../../components/game/CreateRoomModal";
+import { createPortal } from "react-dom";
+import BurumabulRoomCreateModal from "../../components/game/burumabul/BurumabulRoomCreateModal";
+import FriendModal from "../../components/friend/FriendModal";
+import { useSelector, useDispatch } from "react-redux";
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [isCreateRoomModalOpen, setCreateRoomModalOpen] = useState(false);
 
- const handleLogout = () => {
-   dispatch(logout());
-   navigate("/");
- };
+  // 부루마불
+  const [isCreateBurumabulRoomModalOpen, setIsCreateBurumabulRoomModalOpen] =
+    useState(false);
+
+  const userId = useSelector((state) => state.user.userId);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate("/");
+  };
 
   const handleCreateRoom = async (roomData) => {
-    console.log('roomData:', roomData);
+    console.log("roomData:", roomData);
     try {
       const response = await fetch(
         `http://localhost:8090/api/game/create-room`,
@@ -24,13 +35,13 @@ const HomePage = () => {
           body: JSON.stringify(roomData),
         }
       );
-  
+
       if (!response.ok) {
         throw new Error(`Failed to create room: ${response.status}`);
       }
-  
+
       const data = await response.json();
-      console.log('Response data:', data);
+      console.log("Response data:", data);
       navigate(`/game/cockroach/${data.roomId}`);
     } catch (error) {
       console.error("Error creating room:", error);
@@ -38,14 +49,19 @@ const HomePage = () => {
     }
   };
 
+  // 부루마불 방생성 -> 후에 백엔드와 연결 예정
+  const handleCreateBurumabulRoom = () => {
+    navigate("/game/burumabul/waitingroom");
+  };
+
   return (
     <div className="min-h-screen relative">
-
       <div className="min-h-screen bg-gray-100 p-8">
         <div className="max-w-7xl mx-auto">
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h1 className="text-2xl font-bold mb-6">게임 목록</h1>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* 바퀴벌레 포커 */}
               <div className="bg-gray-50 p-6 rounded-lg shadow">
                 <h2 className="text-xl font-semibold mb-4">바퀴벌레 포커</h2>
                 <p className="text-gray-600 mb-4">
@@ -53,6 +69,20 @@ const HomePage = () => {
                 </p>
                 <button
                   onClick={() => setCreateRoomModalOpen(true)}
+                  className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                >
+                  방 만들기
+                </button>
+              </div>
+
+              {/* 부루마불 */}
+              <div className="bg-gray-50 p-6 rounded-lg shadow">
+                <h2 className="text-xl font-semibold mb-4">부루마불</h2>
+                <p className="text-gray-600 mb-4">
+                  친구들과 함께 떠나는 미플만의 우주여행!
+                </p>
+                <button
+                  onClick={() => setIsCreateBurumabulRoomModalOpen(true)}
                   className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
                 >
                   방 만들기
@@ -68,6 +98,17 @@ const HomePage = () => {
         onClose={() => setCreateRoomModalOpen(false)}
         onCreateRoom={handleCreateRoom}
       />
+
+      {/* 부루마불 */}
+      {isCreateBurumabulRoomModalOpen &&
+        createPortal(
+          <BurumabulRoomCreateModal
+            onClose={() => setIsCreateBurumabulRoomModalOpen(false)}
+          />,
+          document.body
+        )}
+
+      <FriendModal userId={userId} />
     </div>
   );
 };

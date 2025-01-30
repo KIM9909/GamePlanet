@@ -56,12 +56,14 @@ public class SecurityConfig {
 						session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+						.requestMatchers("/ws/**").permitAll()
 						.requestMatchers("/auth/login", "/user/register", "/user/checkEmail/**",
 								"/user/checkNickname/**").permitAll()
 						.requestMatchers(HttpMethod.GET, "/profile/{userId}").permitAll()
 						.requestMatchers(HttpMethod.PUT, "/profile/{userId}").authenticated()  // PUT 요청 허용
 						.requestMatchers(HttpMethod.PUT, "/profile/{userId}/password").permitAll()
 						.requestMatchers(HttpMethod.DELETE, "/profile/{userId}/delete").permitAll()
+						.requestMatchers("/api/video/**").permitAll()
 						.anyRequest().authenticated()
 				)
 				.addFilterBefore(jwtAuthenticationFilter,
@@ -79,7 +81,11 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
+		configuration.setAllowedOrigins(Arrays.asList(
+				"http://localhost:5173",
+				"ws://localhost:5173",
+				"wss://localhost:5173"
+		));
 		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(Arrays.asList(
 				"Authorization",
@@ -90,6 +96,8 @@ public class SecurityConfig {
 				"Sec-WebSocket-Version",
 				"Upgrade",
 				"Connection",
+				"Host",
+				"Origin",
 				"*"
 		));
 		configuration.setExposedHeaders(Arrays.asList("*"));

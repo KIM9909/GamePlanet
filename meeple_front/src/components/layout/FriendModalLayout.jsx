@@ -1,0 +1,56 @@
+import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
+import FriendModal from "../friend/FriendModal";
+import { FaUserFriends } from "react-icons/fa";
+import { IoMdCloseCircleOutline } from "react-icons/io";
+
+const FriendModalLayout = ({ children }) => {
+  const { token } = useSelector((state) => state.user);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const location = useLocation();
+  const userId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
+
+  const showButton =
+    location.pathname !== "/" &&
+    location.pathname !== `/profile/${userId}` &&
+    !location.pathname.match(/^\/game\/burumabul\/[\w-]+$/) &&
+    !location.pathname.match(/^\/catch-mind\/[\w-]+$/) &&
+    !location.pathname.match(/^\/game\/cockroach\/[\w-]+$/);
+
+  return (
+    <>
+      {children}
+      {showButton && ( // 조건부 렌더링 수정
+        <>
+          <div className="fixed right-0 top-1/2 transform -translate-y-1/2">
+            <div className="relative group">
+              <button
+                className="invisible group-hover:visible bg-blue-500 text-white p-2 rounded-l-lg transition-all duration-300 shadow-lg"
+                onClick={() => setIsModalOpen(true)}
+              >
+                <FaUserFriends size={25} />
+              </button>
+            </div>
+          </div>
+
+          {isModalOpen && (
+            <div className="fixed right-3 bottom-3 h-2/3 w-80 bg-white shadow-lg rounded-lg">
+              <div className="p-4">
+                <button
+                  className="absolute bottom-4 right-4 text-gray-500 hover:text-gray-700"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  <IoMdCloseCircleOutline size={25} />
+                </button>
+                <FriendModal userId={userId} />
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </>
+  );
+};
+
+export default FriendModalLayout;
