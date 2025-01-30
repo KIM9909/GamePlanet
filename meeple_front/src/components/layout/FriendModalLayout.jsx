@@ -26,7 +26,7 @@ const FriendModalLayout = ({ children }) => {
           <div className="fixed right-0 top-1/2 transform -translate-y-1/2">
             <div className="relative group">
               <button
-                className="invisible group-hover:visible bg-blue-500 text-white p-2 rounded-l-lg transition-all duration-300 shadow-lg"
+                className="invisible group-hover:visible bg-blue-500 text-white p-2 rounded-l-lg transition-all duration-300 shadow-lg z-50"
                 onClick={() => setIsModalOpen(true)}
               >
                 <FaUserFriends size={25} />

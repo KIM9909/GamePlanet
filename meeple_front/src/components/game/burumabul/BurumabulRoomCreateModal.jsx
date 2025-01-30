@@ -56,7 +56,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
               </label>
               <div>
                 <button
-                  className={`bg-slate-500 mx-2 text-white w-14 rounded ${
+                  className={`bg-green-500 mx-2 text-white w-14 rounded ${
                     isPrivate ? "bg-green-500" : "bg-slate-500"
                   }`}
                   onClick={() => setIsPrivate(true)}

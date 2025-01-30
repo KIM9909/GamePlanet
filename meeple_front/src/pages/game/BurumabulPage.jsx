@@ -54,16 +54,20 @@ const BurumabulPage = () => {
       </div>
 
       {!isSidebarOpen && (
-        <button
-          onClick={toggleSidebar}
-          className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-12 
+        <div className="fixed left-0 top-1/2 transform -translate-y-1/2 z-50">
+          <div className="relative group">
+            <button
+              onClick={toggleSidebar}
+              className="invisible group-hover:visible transition-all duration-300
               bg-gray-800 rounded-r text-white
               hover:bg-gray-700 focus:outline-none 
               flex items-center justify-center
-              shadow-lg z-50"
-        >
-          <Menu className="w-8 h-8" />
-        </button>
+              shadow-lg w-12 h-12"
+            >
+              <Menu className="w-8 h-8" />
+            </button>
+          </div>
+        </div>
       )}
     </>
   );
