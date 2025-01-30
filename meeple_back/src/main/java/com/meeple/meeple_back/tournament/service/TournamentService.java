@@ -1,6 +1,7 @@
 package com.meeple.meeple_back.tournament.service;
 
 import com.meeple.meeple_back.tournament.model.request.RequestCreateTournament;
+import com.meeple.meeple_back.tournament.model.request.RequestJoinTournament;
 import com.meeple.meeple_back.tournament.model.request.RequestUpdateTournament;
 import com.meeple.meeple_back.tournament.model.response.ResponseCreateTournament;
 import com.meeple.meeple_back.tournament.model.response.ResponseTournament;
@@ -17,4 +18,6 @@ public interface TournamentService {
     ResponseTournament getTournament(long tournamentId);
 
     ResponseUpdateTournament updateTournament(long tournamentId, RequestUpdateTournament request);
+
+    String joinTournament(RequestJoinTournament request);
 }

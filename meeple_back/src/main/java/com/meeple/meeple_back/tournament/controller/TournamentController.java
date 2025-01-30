@@ -1,6 +1,7 @@
 package com.meeple.meeple_back.tournament.controller;
 
 import com.meeple.meeple_back.tournament.model.request.RequestCreateTournament;
+import com.meeple.meeple_back.tournament.model.request.RequestJoinTournament;
 import com.meeple.meeple_back.tournament.model.request.RequestUpdateTournament;
 import com.meeple.meeple_back.tournament.model.response.ResponseCreateTournament;
 import com.meeple.meeple_back.tournament.model.response.ResponseTournament;
@@ -57,6 +58,16 @@ public class TournamentController {
         ResponseUpdateTournament response = tournamentService.updateTournament(tournamentId, request);
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/join")
+    public ResponseEntity<String> joinTournament(
+            @RequestBody RequestJoinTournament request
+    ) {
+
+        String response = tournamentService.joinTournament(request);
+
+        return ResponseEntity.ok("");
     }
 
 
