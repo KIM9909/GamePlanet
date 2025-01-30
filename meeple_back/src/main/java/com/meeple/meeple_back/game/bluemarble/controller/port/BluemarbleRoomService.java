@@ -13,7 +13,7 @@ public interface BluemarbleRoomService {
 
 	List<Room> getList();
 
-	Room delete(int roomId);
+	Room delete(int roomId, long userId);
 
 	Room update(int roomId, RoomUpdate roomUpdate);
 }
