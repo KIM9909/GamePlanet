@@ -12,6 +12,7 @@ import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -50,5 +51,12 @@ public class BluemarbleRoomController {
 	public ResponseEntity<List<RoomResponse>> getRooms() {
 		return ResponseEntity.ok(
 				bluemarbleRoomService.getList().stream().map(RoomResponse::from).toList());
+	}
+
+	@DeleteMapping("/{roomId}")
+	@Operation(summary = "게임방 삭제", description = "게임방을 삭제합니다.")
+	public ResponseEntity<RoomResponse> delete(@PathVariable int roomId) {
+		return ResponseEntity.status(HttpStatus.NO_CONTENT)
+				.body(RoomResponse.from(bluemarbleRoomService.delete(roomId)));
 	}
 }

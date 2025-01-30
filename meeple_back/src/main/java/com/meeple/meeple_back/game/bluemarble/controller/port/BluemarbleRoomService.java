@@ -11,4 +11,6 @@ public interface BluemarbleRoomService {
 	Room join(int roomId, long userId);
 
 	List<Room> getList();
+
+	Room delete(int roomId);
 }

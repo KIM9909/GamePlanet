@@ -65,6 +65,13 @@ public class BluemarbleRoomServiceImpl implements BluemarbleRoomService {
 				.map(Room.class::cast).filter(room -> !room.isPrivate()).toList();
 	}
 
+	@Override
+	public Room delete(int roomId) {
+		Room deletedRoom = getRoom(roomId);
+		roomRedisTemplate.opsForHash().delete(ROOM_KEY, roomId);
+		return deletedRoom;
+	}
+
 	public Room getRoom(int roomId) {
 		Room room = (Room) roomRedisTemplate.opsForHash().get(ROOM_KEY, roomId);
 		if (Objects.isNull(room)) {
