@@ -56,8 +56,8 @@ public class CockroachServiceImpl implements CockroachService {
     private final UserRepository userRepository;
     private final GameRepository gameRepository;
     private final GameResultRepository gameResultRepository;
-    private final MatchRepository matchRepository;
-    private final TournamentParticipantRepository tournamentParticipantRepository;
+//    private final MatchRepository matchRepository;
+//    private final TournamentParticipantRepository tournamentParticipantRepository;
 
 
     @Override
