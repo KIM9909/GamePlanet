@@ -1,11 +1,19 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import TravelMap from "../../components/game/burumabul/TravelMap";
 import GameSidebar from "../../components/sidebar/GameSidebar";
 import { ChevronLeft, ChevronRight, Menu, X } from "lucide-react";
+import DiceImage from "../../assets/burumabul_images/Dice.png";
+import PlayerVideo from "../../components/game/burumabul/PlayerVideo";
 
 const BurumabulPage = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   // const [playerCount, setPlayerCount] = useState()
+  const [rollDice, setRollDice] = useState(null);
+  const playerInfoList = [1, 2, 3, 4];
+
+  const handleRollDiceRef = useCallback((rollDiceFn) => {
+    setRollDice(() => rollDiceFn);
+  }, []);
 
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen);
@@ -13,6 +21,13 @@ const BurumabulPage = () => {
 
   return (
     <>
+      <style>{`
+        .thin-scrollbar::-webkit-scrollbar { width: 5px;  position: absolute; right: 0;}
+        .thin-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .thin-scrollbar::-webkit-scrollbar-thumb { background: #888; border-radius: 15px;}
+        .thin-scrollbar::-webkit-scrollbar-track { display: none; }
+
+      `}</style>
       <div className="fixed left-0 top-0 h-full z-50 flex">
         {/* 사이드바 */}
         <div
@@ -36,19 +51,45 @@ const BurumabulPage = () => {
         </div>
       </div>
       {/* Main Content 영역 */}
+      <div className="bg-white h-12">정보</div>
       <div
         className={`transition-all duration-300 ease-in-out ${
           isSidebarOpen ? "ml-64" : "ml-0"
         }`}
       >
-        <div className="h-screen w-full flex flex-col">
+        <div className="h-screen w-full flex">
           {/* <div className="text-4xl font-bold text-center">BurumablePage</div> */}
-          <div className="h-3/4">
-            <TravelMap />
+          <div className="w-3/4">
+            <TravelMap onRollDice={handleRollDiceRef} />
           </div>
 
-          <div className="h-1/4 bg-gray-300 flex items-center justify-center">
-            여기
+          <div className="w-1/4 bg-gray-300 flex items-center justify-center h-screen">
+            {/* 화상 칸 */}
+            <div className="flex flex-col items-center w-full h-full">
+              <div className="h-2/3 w-full border-2 overflow-y-auto thin-scrollbar max-h-[70vh]">
+                <h2 className="text-lg text-center my-2">현재 플레이어 순서</h2>
+                <div className="mx-2 mb-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-2">
+                    {playerInfoList.map((player, index) => (
+                      <PlayerVideo key={index} playerInfo={player} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 내 정보 칸 */}
+              <div className="h-1/3 w-full border-2">
+                <div className="h-[78%]">내 정보</div>
+                <div className="text-center">
+                  <button
+                    className="w-16 h-16"
+                    onClick={() => rollDice && rollDice()}
+                  >
+                    <img src={DiceImage} alt="" />
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

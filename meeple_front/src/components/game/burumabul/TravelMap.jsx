@@ -128,7 +128,7 @@ const Cell = ({
   );
 };
 
-const TravelMap = () => {
+const TravelMap = ({ onRollDice }) => {
   const floor = useLoader(TextureLoader, floorTexture);
 
   // cities 배열
@@ -185,13 +185,15 @@ const TravelMap = () => {
   const [isFirstMove, setIsFirstMove] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
+  // 주사위 버튼을 눌렀는지 안 눌렀는지 추적
+  useEffect(() => {
+    if (onRollDice) {
+      onRollDice(() => setShowModal(true));
+    }
+  }, [onRollDice]);
+
   // 주사위 점수 저장
   const [totalScore, setTotalScore] = useState(0);
-
-  // const handleDiceComplete = (score) => {
-  //   setTotalScore(score); //점수 업데이트
-  //   setShowModal(false);
-  // };
 
   // 칸 스타일
   const cellClass =
@@ -373,10 +375,6 @@ const TravelMap = () => {
     ));
   };
 
-  const rollDice = () => {
-    setShowModal(true);
-  };
-
   // 부모요소 참조
 
   const parentRef = useRef();
@@ -538,12 +536,7 @@ const TravelMap = () => {
         >
           Move Token
         </button>
-        <button
-          onClick={rollDice}
-          className="mt-5 mx-3 px-4 py-2 bg-red-300 text-white rounded hover:bg-blue-600"
-        >
-          Roll the Dice
-        </button>
+
         <button
           onClick={resetCamera}
           className="mt-5 mx-3 px-4 py-2 bg-yellow-300 text-white rounded hover:bg-blue-600"
@@ -567,23 +560,9 @@ const TravelMap = () => {
           </p>
         )}
       </div>
-      <div ref={parentRef} className="flex w-[100%] h-[100%]">
-        {/* 좌측 영역 */}
-        <div className="flex flex-col h-[100%] w-1/5 bg-gray-100 border-2 box-border border-black gap-4 text-center hidden xl:block">
-          <div className="h-[48%] border-2 m-2 mb-2 box-border border-black ">
-            <div className="h-full overflow-y-auto min-h-0">user1</div>
-          </div>
-          <div className="h-[48%] border-2 m-2 mb-2 box-border border-black">
-            <div className="h-full overflow-y-auto min-h-0">user2</div>
-          </div>
-        </div>
-
-        <div className="sm:block sm:mx-auto w-3/5">
+      <div ref={parentRef} className="flex w-full h-full">
+        <div className=" w-full h-full">
           <Canvas
-            style={{
-              height: "100%",
-              width: "100%",
-            }}
             camera={{
               position: initialCameraPosition, // 카메라 초기 위치
               fov: 75, // 시야각 조절
@@ -650,16 +629,6 @@ const TravelMap = () => {
             {renderSpaceships()}
             {renderSpaceBases()}
           </Canvas>
-        </div>
-
-        {/* 우측 영역 */}
-        <div className="flex flex-col h-full w-1/5 bg-gray-100 border-2 box-border border-black gap-4 text-center hidden xl:block">
-          <div className="h-[48%] border-2 m-2 mb-2 box-border border-black ">
-            <div className="h-full overflow-y-auto min-h-0">user3</div>
-          </div>
-          <div className="h-[48%] border-2 m-2 mb-2 box-border border-black">
-            <div className="h-full overflow-y-auto min-h-0">user4</div>
-          </div>
         </div>
       </div>
 
