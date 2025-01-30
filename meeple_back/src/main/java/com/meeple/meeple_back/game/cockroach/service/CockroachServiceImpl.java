@@ -14,12 +14,12 @@ import com.meeple.meeple_back.game.game.model.Game;
 import com.meeple.meeple_back.game.game.model.GameResult;
 import com.meeple.meeple_back.game.repo.GameRepository;
 import com.meeple.meeple_back.game.repo.GameResultRepository;
-import com.meeple.meeple_back.tournament.model.MatchStatus;
-import com.meeple.meeple_back.tournament.model.ParticipantStatus;
-import com.meeple.meeple_back.tournament.model.entity.Match;
-import com.meeple.meeple_back.tournament.model.entity.TournamentParticipant;
-import com.meeple.meeple_back.tournament.repository.MatchRepository;
-import com.meeple.meeple_back.tournament.repository.TournamentParticipantRepository;
+//import com.meeple.meeple_back.tournament.model.MatchStatus;
+//import com.meeple.meeple_back.tournament.model.ParticipantStatus;
+//import com.meeple.meeple_back.tournament.model.entity.Match;
+//import com.meeple.meeple_back.tournament.model.entity.TournamentParticipant;
+//import com.meeple.meeple_back.tournament.repository.MatchRepository;
+//import com.meeple.meeple_back.tournament.repository.TournamentParticipantRepository;
 import com.meeple.meeple_back.user.model.User;
 import com.meeple.meeple_back.user.repository.UserRepository;
 
