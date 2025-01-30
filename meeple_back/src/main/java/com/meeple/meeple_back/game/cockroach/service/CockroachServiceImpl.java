@@ -709,41 +709,41 @@ public class CockroachServiceImpl implements CockroachService {
                 }
             }
 
-            if (roomInfo.getOrDefault("isTournament", "").equals("Y")) {
-                long matchId = Long.parseLong(String.valueOf(roomInfo.get("matchId")));
-                Match match = matchRepository.findById(matchId)
-                        .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 매치"));
-                match.setMatchStatus(MatchStatus.END);
-                matchRepository.save(match);
-                if (roomInfo.get("isFinal").equals("Y")) {
-                    if (match.getTournamentParticipant().getUser().getUserNickname().equals(userName)) {
-                        TournamentParticipant tournamentParticipant = match.getTournamentParticipant();
-                        tournamentParticipant.setParticipantStatus(ParticipantStatus.LOSE);
-                        TournamentParticipant tournamentParticipant2 = match.getTournamentParticipant2();
-                        tournamentParticipant.setParticipantStatus(ParticipantStatus.WIN);
-                        tournamentParticipantRepository.save(tournamentParticipant);
-                        tournamentParticipantRepository.save(tournamentParticipant2);
-                    } else {
-                        TournamentParticipant tournamentParticipant = match.getTournamentParticipant();
-                        tournamentParticipant.setParticipantStatus(ParticipantStatus.WIN);
-                        TournamentParticipant tournamentParticipant2 = match.getTournamentParticipant2();
-                        tournamentParticipant2.setParticipantStatus(ParticipantStatus.LOSE);
-                        tournamentParticipantRepository.save(tournamentParticipant);
-                        tournamentParticipantRepository.save(tournamentParticipant2);
-                    }
-                } else {
-                    if (match.getTournamentParticipant().getUser().getUserNickname().equals(userName)) {
-                        TournamentParticipant tournamentParticipant = match.getTournamentParticipant();
-                        tournamentParticipant.setParticipantStatus(ParticipantStatus.LOSE);
-                        tournamentParticipantRepository.save(tournamentParticipant);
-
-                    } else {
-                        TournamentParticipant tournamentParticipant2 = match.getTournamentParticipant2();
-                        tournamentParticipant2.setParticipantStatus(ParticipantStatus.LOSE);
-                        tournamentParticipantRepository.save(tournamentParticipant2);
-                    }
-                }
-            }
+//            if (roomInfo.getOrDefault("isTournament", "").equals("Y")) {
+//                long matchId = Long.parseLong(String.valueOf(roomInfo.get("matchId")));
+//                Match match = matchRepository.findById(matchId)
+//                        .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 매치"));
+//                match.setMatchStatus(MatchStatus.END);
+//                matchRepository.save(match);
+//                if (roomInfo.get("isFinal").equals("Y")) {
+//                    if (match.getTournamentParticipant().getUser().getUserNickname().equals(userName)) {
+//                        TournamentParticipant tournamentParticipant = match.getTournamentParticipant();
+//                        tournamentParticipant.setParticipantStatus(ParticipantStatus.LOSE);
+//                        TournamentParticipant tournamentParticipant2 = match.getTournamentParticipant2();
+//                        tournamentParticipant.setParticipantStatus(ParticipantStatus.WIN);
+//                        tournamentParticipantRepository.save(tournamentParticipant);
+//                        tournamentParticipantRepository.save(tournamentParticipant2);
+//                    } else {
+//                        TournamentParticipant tournamentParticipant = match.getTournamentParticipant();
+//                        tournamentParticipant.setParticipantStatus(ParticipantStatus.WIN);
+//                        TournamentParticipant tournamentParticipant2 = match.getTournamentParticipant2();
+//                        tournamentParticipant2.setParticipantStatus(ParticipantStatus.LOSE);
+//                        tournamentParticipantRepository.save(tournamentParticipant);
+//                        tournamentParticipantRepository.save(tournamentParticipant2);
+//                    }
+//                } else {
+//                    if (match.getTournamentParticipant().getUser().getUserNickname().equals(userName)) {
+//                        TournamentParticipant tournamentParticipant = match.getTournamentParticipant();
+//                        tournamentParticipant.setParticipantStatus(ParticipantStatus.LOSE);
+//                        tournamentParticipantRepository.save(tournamentParticipant);
+//
+//                    } else {
+//                        TournamentParticipant tournamentParticipant2 = match.getTournamentParticipant2();
+//                        tournamentParticipant2.setParticipantStatus(ParticipantStatus.LOSE);
+//                        tournamentParticipantRepository.save(tournamentParticipant2);
+//                    }
+//                }
+//            }
 
             return userName;
         } else {
