@@ -92,6 +92,7 @@ public class CatchMindServiceImpl implements CatchMindService {
             ResponseJoinRoom response = ResponseJoinRoom.builder()
                     .code(200)
                     .message(request.getPlayerName() + " " + request.getRoomId() + "번 방 입장 성공")
+                    .roomInfo(roomInfo)
                     .build();
 
             return response;
