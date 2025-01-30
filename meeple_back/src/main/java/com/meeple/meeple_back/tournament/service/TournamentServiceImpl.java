@@ -79,9 +79,14 @@ public class TournamentServiceImpl implements TournamentService {
         Tournament tournament = tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 토너먼트 입니다."));
 
-        mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        List<Match> matchList = matchRepository.findByTournament_TournamentId(tournamentId);
 
-        return mapper.map(tournament, ResponseTournament.class);
+        ResponseTournament responseTournament = ResponseTournament.builder()
+                .tournament(tournament)
+                .matchList(matchList)
+                .build();
+
+        return responseTournament;
     }
 
     @Override
