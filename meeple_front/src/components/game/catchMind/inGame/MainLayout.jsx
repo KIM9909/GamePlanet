@@ -19,32 +19,57 @@ import Canvas from "./Canvas";
 import ChatBox from "./ChatBox";
 import PlayerCard from "./PlayerCard";
 import { Timer, Pencil, Eraser, Trash2, Users } from "lucide-react";
-import { updatePlayerNickname } from "../../../sources/store/slices/CatchMindSlice";
-import { fetchProfile } from "../../../sources/store/slices/ProfileSlice";
+import { updatePlayerNickname } from "../../../../sources/store/slices/CatchMindSlice";
+import { fetchProfile } from "../../../../sources/store/slices/ProfileSlice";
+import { useParams } from "react-router-dom";
+import { useState } from "react";
 
 /**
  * 게임 정보를 표시하는 컴포넌트
  * 현재 라운드, 남은 시간, 제시어 정보를 표시
  */
-const GameInfo = ({ round, timer, word }) => {
+const GameInfo = ({ round, timer, word, roomInfo }) => {
   return (
     <div className="flex items-center justify-between px-6 py-3 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-t-lg border-b border-gray-700">
-      {/* 라운드 정보 */}
-      <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full">
-        <Users className="w-5 h-5 text-blue-400" />
-        <span className="text-lg font-medium text-gray-100">
-          Round {round}/10
-        </span>
-      </div>
-      {/* 타이머 */}
+      {/* 방 제목 추가 */}
       <div className="flex items-center gap-2">
-        <Timer className="w-5 h-5 text-blue-400" />
-        <span className="text-2xl font-bold text-gray-100">{timer}</span>
+        <h2 className="text-xl font-bold">{roomInfo?.roomName}</h2>
+        {roomInfo?.isPrivate && <Lock className="w-4 h-4 text-gray-400" />}
       </div>
-      {/* 제시어 표시 */}
-      <div className="px-4 py-1 bg-blue-500/10 rounded-full border border-blue-400/20">
-        <span className="text-lg font-medium text-blue-100">
-          제시어: {word}
+
+      {/* 게임 정보 */}
+      <div className="flex items-center gap-6">
+        {/* 라운드 정보 */}
+        <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full">
+          <Users className="w-5 h-5 text-blue-400" />
+          <span className="text-lg font-medium text-gray-100">
+            Round {round}/{roomInfo?.quizCount || 10}
+          </span>
+        </div>
+
+        {/* 타이머 */}
+        <div className="flex items-center gap-2">
+          <Timer className="w-5 h-5 text-blue-400" />
+          <span className="text-2xl font-bold text-gray-100">
+            {timer || roomInfo?.timeLimit}초
+          </span>
+        </div>
+
+        {/* 제시어 표시 */}
+        {word && (
+          <div className="px-4 py-1 bg-blue-500/10 rounded-full border border-blue-400/20">
+            <span className="text-lg font-medium text-blue-100">
+              제시어: {word}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* 현재 참가자 수 표시 */}
+      <div className="flex items-center gap-2 text-gray-300">
+        <Users className="w-4 h-4" />
+        <span>
+          {roomInfo?.players?.length || 0}/{roomInfo?.maxPeople}
         </span>
       </div>
     </div>
@@ -103,6 +128,25 @@ const MainLayout = () => {
   const profileData = useSelector((state) => state.profile.profileData);
   const currentPlayer = gameState.players.find((p) => p.isTurn);
 
+  const { roomId } = useParams();
+  const [roomInfo, setRoomInfo] = useState(null);
+
+  // 방 정보 가져오기
+  useEffect(() => {
+    const fetchRoomInfo = async () => {
+      try {
+        const response = await API.get(`/api/catch-mind/rooms/${roomId}`);
+        setRoomInfo(response);
+      } catch (error) {
+        console.error("방 정보 가져오기 실패:", error);
+      }
+    };
+
+    if (roomId) {
+      fetchRoomInfo();
+    }
+  }, [roomId]);
+
   // 프로필 정보 가져오기
   useEffect(() => {
     if (userId) {
@@ -124,7 +168,6 @@ const MainLayout = () => {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-900 to-gray-800">
-      {/* 왼쪽 - 메인 게임 영역 */}
       <div className="flex-1 p-4">
         <div className="h-full flex flex-col bg-gray-800 rounded-lg border border-gray-700 shadow-lg">
           <GameInfo
@@ -135,6 +178,7 @@ const MainLayout = () => {
                 ? gameState.currentWord
                 : "???"
             }
+            roomInfo={roomInfo}
           />
           {/* 캔버스 영역 */}
           <div className="flex-1 p-6">

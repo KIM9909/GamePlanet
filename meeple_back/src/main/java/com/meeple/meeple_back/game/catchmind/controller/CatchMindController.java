@@ -4,6 +4,7 @@ import com.meeple.meeple_back.game.catchmind.model.request.*;
 import com.meeple.meeple_back.game.catchmind.model.response.*;
 import com.meeple.meeple_back.game.catchmind.service.CatchMindService;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,10 +14,12 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/catch-mind")
 public class CatchMindController {
+    private static final String ROOM_KEY = "CATCH_MIND_GAME_ROOMS";
     private final CatchMindService catchMindService;
     private final SimpMessageSendingOperations messagingTemplate;
 
@@ -27,7 +30,17 @@ public class CatchMindController {
         this.messagingTemplate = messagingTemplate;
     }
 
-    @GetMapping("/create-room")
+    @GetMapping("/rooms/{roomId}")
+    public ResponseEntity<Map<String, Object>> getRoomDetail(@PathVariable String roomId) {
+        try {
+            Map<String, Object> roomInfo = catchMindService.getRoomDetail(roomId);
+            return ResponseEntity.ok(roomInfo);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/create-room")
     public ResponseEntity<ResponseCreateRoom> createRoom(
             @RequestBody RequestCreateRoom request
             ) {

@@ -8,7 +8,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { Send } from "lucide-react";
-import useCatchSocket from "../../../hooks/useCatchSocket";
+import useCatchSocket from "../../../../hooks/useCatchSocket";
 
 const ChatBox = ({ roomId, currentUser, correctAnswer }) => {
   const [message, setMessage] = useState("");

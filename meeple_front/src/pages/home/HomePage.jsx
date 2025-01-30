@@ -88,6 +88,25 @@ const HomePage = () => {
                   방 만들기
                 </button>
               </div>
+
+              {/* 캐치마인드 */}
+              <div className="bg-gray-50 p-6 rounded-lg shadow">
+                <h2 className="text-xl font-semibold mb-4">캐치마인드</h2>
+                <p className="text-gray-600 mb-4">
+                  폭풍을 부르는 그림 그림 대소동 퀴즈 작전!
+                </p>
+                <div className="flex gap-4 justify-between">
+                  <button className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                    게임 정보
+                  </button>
+                  <button
+                    onClick={() => navigate("/catch-mind")}
+                    className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                  >
+                    게임 보기
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
