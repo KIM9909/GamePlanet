@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://boardjjigae/duck.org/api/firend"; // 배포 API 주소
+const API_BASE_URL = "http://boardjjigae/duckdns.org/api/firend"; // 배포 API 주소
 
 // 친구 목록 가져오기
 export const fetchFriendList = async (userId) => {
@@ -17,7 +17,7 @@ export const fetchFriendList = async (userId) => {
 export const requestFriend = async (userId, requestData) => {
   try {
     const response = await axios.post(
-      `/ws/request-friend/${userId}`,
+      `${API_BASE_URL}/request-friend/${userId}`,
       requestData,
       { headers: { "Content-Type": "application/json" } }
     );
@@ -32,7 +32,7 @@ export const requestFriend = async (userId, requestData) => {
 export const processRequest = async (friendId, requestData) => {
   try {
     const response = await axios.post(
-      `/ws/process-request/${friendId}`,
+      `${API_BASE_URL}/process-request/${friendId}`,
       requestData,
       {
         headers: { "Content-Type": "application/json" },
