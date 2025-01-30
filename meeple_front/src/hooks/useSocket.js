@@ -26,11 +26,20 @@ const useSocket = (roomId) => {
 
     client.onConnect = () => {
       setConnected(true);
-      setStompClient(client); // 연결된 후에 stompClient 설정
+      setStompClient(client);
 
       client.subscribe(`/topic/messages/${roomId}`, (message) => {
+        console.log("Received message:", message.body);
         const newMessage = JSON.parse(message.body);
-        setMessages((prev) => [...prev, newMessage]);
+        console.log("Parsed message:", newMessage); // 디버깅용
+        setMessages((prev) => [
+          ...prev,
+          {
+            content: newMessage.content,
+            sender: newMessage.sender,
+            timestamp: newMessage.timestamp,
+          },
+        ]);
       });
     };
 
@@ -52,8 +61,9 @@ const useSocket = (roomId) => {
   const sendMessage = useCallback(
     (messageData) => {
       if (clientRef.current?.connected) {
+        console.log("Sending message:", messageData);
         clientRef.current.publish({
-          destination: `/app/chat/${roomId}`,
+          destination: `/app/game/chat/${roomId}`,
           body: JSON.stringify({
             message: messageData.message,
             sender: messageData.sender,

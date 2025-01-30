@@ -1,5 +1,5 @@
 import React from "react";
-import Card from "./Card"; // Card 컴포넌트도 분리하면 좋을 것 같네요
+import Card from "../Card"; // Card 컴포넌트도 분리하면 좋을 것 같네요
 
 const ActiveCardArea = ({
   currentCard,

@@ -5,6 +5,10 @@ import axios from "axios";
 
 const OPENVIDU_SERVER_URL = "https://localhost:4443";
 const OPENVIDU_SERVER_SECRET = "MY_SECRET";
+const HEADERS = {
+  Authorization: "Basic " + btoa(`OPENVIDUAPP:${OPENVIDU_SERVER_SECRET}`),
+  "Content-Type": "application/json",
+};
 
 const VideoChat = ({ playerCount, userId }) => {
   const [session, setSession] = useState(null);
@@ -13,8 +17,10 @@ const VideoChat = ({ playerCount, userId }) => {
   const [isCameraOn, setIsCameraOn] = useState(true);
   const [error, setError] = useState(null);
   const [subscribers, setSubscribers] = useState([]);
+  const [isConnecting, setIsConnecting] = useState(true);
 
   const videoRefs = useRef([]);
+  const OVRef = useRef(null);
 
   const toggleMic = () => {
     if (publisher) {
@@ -32,138 +38,108 @@ const VideoChat = ({ playerCount, userId }) => {
     }
   };
 
+  const checkSession = async (sessionId) => {
+    try {
+      const response = await axios.get(
+        `${OPENVIDU_SERVER_URL}/openvidu/api/sessions/${sessionId}`,
+        {
+          headers: {
+            Authorization:
+              "Basic " + btoa(`OPENVIDUAPP:${OPENVIDU_SERVER_SECRET}`),
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.warn("Session check failed:", error);
+      return null;
+    }
+  };
+
   const createSession = async (sessionId) => {
     try {
       const response = await axios.post(
         `${OPENVIDU_SERVER_URL}/openvidu/api/sessions`,
         { customSessionId: sessionId },
-        {
-          headers: {
-            Authorization:
-              "Basic " + btoa(`OPENVIDUAPP:${OPENVIDU_SERVER_SECRET}`),
-            "Content-Type": "application/json",
-          },
-          validateStatus: () => true,
-        }
+        { headers: HEADERS, validateStatus: () => true }
       );
 
       if (response.status === 409) {
         return sessionId;
       }
-      if (response.status !== 200) {
-        throw new Error(`Failed to create session: ${response.status}`);
-      }
       return response.data.id;
     } catch (error) {
-      if (
-        error.message.includes("certificate") ||
-        error.code === "ERR_BAD_REQUEST"
-      ) {
-        console.warn("Certificate/request error, proceeding with session ID");
-        return sessionId;
-      }
-      throw error;
+      return sessionId;
     }
   };
 
   const createToken = async (sessionId) => {
+    const response = await axios.post(
+      `${OPENVIDU_SERVER_URL}/openvidu/api/sessions/${sessionId}/connection`,
+      {},
+      { headers: HEADERS }
+    );
+    return response.data.token;
+  };
+
+  const handleStreamCreated = (event) => {
     try {
-      const response = await axios.post(
-        `${OPENVIDU_SERVER_URL}/openvidu/api/sessions/${sessionId}/connection`,
-        {},
-        {
-          headers: {
-            Authorization:
-              "Basic " + btoa(`OPENVIDUAPP:${OPENVIDU_SERVER_SECRET}`),
-            "Content-Type": "application/json",
-          },
-          validateStatus: () => true,
-        }
+      const streamUserId = JSON.parse(event.stream.connection.data).clientData;
+      if (streamUserId === userId) return;
+
+      const emptySlot = videoRefs.current.findIndex(
+        (ref, index) =>
+          index > 0 &&
+          !subscribers.some(
+            (sub) =>
+              sub.stream.streamManager.stream.streamId === event.stream.streamId
+          )
       );
 
-      if (response.status !== 200) {
-        throw new Error(`Failed to create token: ${response.status}`);
-      }
-      return response.data.token;
+      if (emptySlot === -1) return;
+
+      const subscriber = session.subscribe(
+        event.stream,
+        videoRefs.current[emptySlot]
+      );
+      setSubscribers((prev) => [
+        ...prev,
+        { ...subscriber, slotIndex: emptySlot },
+      ]);
     } catch (error) {
-      console.error("Token creation error:", error);
-      throw error;
+      setError("스트림 구독 중 오류가 발생했습니다.");
     }
   };
 
-  useEffect(() => {
-    const initializeSession = async () => {
-      try {
-        const OV = new OpenVidu();
-        console.log("OpenVidu object created:", OV);
+  const handleStreamDestroyed = (event) => {
+    console.log("Stream destroyed event:", event);
+    setSubscribers((prev) =>
+      prev.filter((sub) => sub.stream.streamId !== event.stream.streamId)
+    );
+  };
 
-        // 세션 생성
-        const sessionId = await createSession(userId);
-        console.log("Session ID created:", sessionId);
+  const initializeSession = async () => {
+    try {
+      setIsConnecting(true);
+      setError(null);
 
-        const session = OV.initSession();
-        console.log("Session initialized");
+      OVRef.current = new OpenVidu();
+      const sessionId = await createSession(userId);
+      const session = OVRef.current.initSession();
 
-        setSession(session);
+      session.on("streamCreated", handleStreamCreated);
+      session.on("streamDestroyed", handleStreamDestroyed);
+      session.on("exception", () => setError("세션 오류가 발생했습니다."));
 
-        // 토큰 생성
-        const token = await createToken(sessionId);
-        console.log("Token created");
+      setSession(session);
 
-        // 이벤트 리스너 설정
-        session.on("streamCreated", (event) => {
-          console.log("Stream created event:", event);
-          // 스트림의 연결 데이터에서 사용자 ID 확인
-          const streamUserId = JSON.parse(
-            event.stream.connection.data
-          ).clientData;
+      const token = await createToken(sessionId);
+      await session.connect(token, { clientData: userId });
 
-          // 자신의 스트림은 구독하지 않음
-          if (streamUserId !== userId) {
-            // 빈 슬롯을 찾아서 거기에 subscriber 할당
-            const emptySlot = videoRefs.current.findIndex(
-              (ref, index) =>
-                index > 0 &&
-                !subscribers.some(
-                  (sub) =>
-                    sub.stream.streamManager.stream.streamId ===
-                    event.stream.streamId
-                )
-            );
-
-            if (emptySlot !== -1) {
-              const subscriber = session.subscribe(
-                event.stream,
-                videoRefs.current[emptySlot],
-                {
-                  insertMode: "APPEND",
-                }
-              );
-              setSubscribers((prev) => [
-                ...prev,
-                { ...subscriber, slotIndex: emptySlot },
-              ]);
-            }
-          }
-        });
-
-        session.on("streamDestroyed", (event) => {
-          console.log("Stream destroyed event:", event);
-          setSubscribers((prev) =>
-            prev.filter((sub) => sub.stream.streamId !== event.stream.streamId)
-          );
-        });
-
-        session.on("exception", (exception) => {
-          console.warn("Session exception:", exception);
-        });
-
-        // 세션 연결
-        await session.connect(token, { clientData: userId });
-        console.log("Session connected");
-
-        // 퍼블리셔 초기화
-        const publisher = await OV.initPublisher(videoRefs.current[0], {
+      const publisher = await OVRef.current.initPublisher(
+        videoRefs.current[0],
+        {
           audioSource: undefined,
           videoSource: undefined,
           publishAudio: true,
@@ -172,27 +148,49 @@ const VideoChat = ({ playerCount, userId }) => {
           frameRate: 30,
           insertMode: "APPEND",
           mirror: false,
-        });
+        }
+      );
 
-        // 스트림 발행
-        await session.publish(publisher);
-        console.log("Publisher created and stream published");
-        setPublisher(publisher);
-      } catch (error) {
-        console.error("Session initialization error:", error);
-        setError(error.message || "비디오 초기화 중 오류 발생");
-      }
-    };
+      await session.publish(publisher);
+      setPublisher(publisher);
+      setIsConnecting(false);
+    } catch (error) {
+      setError("비디오 초기화 중 오류가 발생했습니다");
+      setIsConnecting(false);
+    }
+  };
 
+  useEffect(() => {
     initializeSession();
 
     return () => {
+      // Cleanup function
+      if (publisher) {
+        try {
+          publisher.stream?.dispose();
+        } catch (error) {
+          console.warn("Publisher cleanup error:", error);
+        }
+      }
+
+      subscribers.forEach((subscriber) => {
+        try {
+          subscriber.stream?.dispose();
+        } catch (error) {
+          console.warn("Subscriber cleanup error:", error);
+        }
+      });
+
       if (session) {
         console.log("Cleaning up session");
         session.disconnect();
       }
+
+      if (OVRef.current) {
+        OVRef.current = null;
+      }
     };
-  }, [userId]);
+  }, []);
 
   const renderVideoElement = (index) => {
     // 첫 번째 칸은 자신의 비디오 (publisher)
@@ -207,7 +205,18 @@ const VideoChat = ({ playerCount, userId }) => {
             {userId} (나)
           </div>
 
-          {!publisher && <div className="text-gray-500 text-sm">내 비디오</div>}
+          {error && (
+            <div className="absolute top-2 right-2 bg-red-500/80 px-2 py-1 rounded text-xs text-white">
+              {error}
+            </div>
+          )}
+
+          {!publisher && !error && (
+            <div className="text-gray-500 text-sm">
+              {isConnecting ? "연결 중..." : "내 비디오"}
+            </div>
+          )}
+
           {publisher && (
             <div className="absolute bottom-2 right-2 flex gap-2 z-10">
               <button
@@ -238,8 +247,6 @@ const VideoChat = ({ playerCount, userId }) => {
 
     // 나머지 칸은 다른 참가자의 비디오 (subscribers)
     const subscriber = subscribers.find((sub) => sub.slotIndex === index);
-
-    // 구독자의 사용자 정보 가져오기
     const subscriberData = subscriber?.stream?.connection?.data
       ? JSON.parse(subscriber.stream.connection.data).clientData
       : `Player ${index}`;

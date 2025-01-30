@@ -8,11 +8,14 @@ import React, {
 import GiveCardModal from "./modal/GiveCardModal";
 import GuessCardModal from "./modal/GuessCardModal";
 import PenaltyCardSelectModal from "./modal/PenaltyCardSelectModal";
-import ActiveCardArea from "./ActiveCardArea";
+import ActiveCardArea from "./areas/ActiveCardArea";
 import Card from "./Card";
 import GameStartScreen from "./GameStartScreen";
 import UpdateRoomModal from "./modal/UpdateRoomModal";
 import GameEndModal from "./modal/GameEndModal";
+import MyArea from "./areas/MyArea";
+import DeckArea from "./areas/DeckArea";
+import OpponentArea from "./areas/OpponentArea";
 
 const ANIMAL_ORDER = [
   "Bat",
@@ -88,207 +91,6 @@ const PenaltyCardStack = ({ type, count = 3, isRoyal }) => {
           <Card type={type} isRoyal={isRoyal} />
         </div>
       ))}
-    </div>
-  );
-};
-
-const OpponentArea = ({
-  playerNumber,
-  penaltyCards = [],
-  handCards = [],
-  playerName,
-  isMyTurn,
-  selectedCard,
-  handlePlayerClick,
-  isPassing,
-  passedPlayers,
-  cardSender,
-  remainingPlayers,
-}) => {
-  const groupedPenaltyCards = penaltyCards.reduce((acc, card) => {
-    const baseType = card.type.startsWith("King")
-      ? card.type.replace("King", "")
-      : card.type;
-    if (!acc[baseType]) {
-      acc[baseType] = { type: card.type, count: 0 };
-    }
-    acc[baseType].count += card.count;
-    return acc;
-  }, {});
-
-  const sortedPenaltyGroups = sortPenaltyGroups(groupedPenaltyCards);
-
-  // 선택 가능 여부 판단 로직 수정
-  const isSelectable = useMemo(() => {
-    return (
-      isPassing &&
-      remainingPlayers.includes(playerName) &&
-      !passedPlayers.includes(playerName)
-    );
-  }, [isPassing, remainingPlayers, playerName, passedPlayers]);
-
-  return (
-    <div
-      className={`w-64 space-y-4 
-        ${!isSelectable ? "opacity-50" : ""} 
-        ${
-          isSelectable
-            ? "cursor-pointer hover:ring-2 hover:ring-blue-500 rounded-lg"
-            : "cursor-not-allowed"
-        }
-      `}
-      onClick={() => {
-        if (!isSelectable) return;
-        handlePlayerClick(playerName);
-      }}
-    >
-      <div className="px-3 py-1.5 bg-gray-800/90 rounded-lg">
-        <div className="text-center text-sm font-medium text-white">
-          {playerName}
-        </div>
-      </div>
-      <div className="space-y-4">
-        <div
-          className="h-40 overflow-y-auto"
-          style={{
-            scrollbarWidth: "thin",
-            scrollbarColor: "rgba(107, 114, 128, 0.5) rgba(31, 41, 55, 0.3)",
-            msOverflowStyle: "-ms-autohiding-scrollbar",
-          }}
-        >
-          <div className="flex flex-wrap justify-center gap-2 p-2">
-            {sortedPenaltyGroups.map((stack, i) => (
-              <PenaltyCardStack
-                key={i}
-                type={stack.type}
-                count={stack.count}
-                isRoyal={stack.royal}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="relative h-24">
-          {handCards.length > 4 ? (
-            <div className="relative w-full h-full flex items-center justify-center">
-              <div className="flex">
-                {[...Array(4)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="relative"
-                    style={{
-                      marginLeft: i === 0 ? "0" : "-12px",
-                    }}
-                  >
-                    <Card isBack={true} type={null} />
-                  </div>
-                ))}
-              </div>
-              <div className="ml-2 px-3 py-1 bg-gray-800/80 text-white text-sm rounded-lg">
-                +{handCards.length - 4}
-              </div>
-            </div>
-          ) : (
-            <div className="flex justify-center gap-2">
-              {handCards.map((_, i) => (
-                <Card key={i} isBack={true} type={null} />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const MyArea = ({
-  penaltyCards = [],
-  handCards = [],
-  isMyTurn,
-  selectedCard,
-  handleCardClick,
-}) => {
-  const groupedPenaltyCards = penaltyCards.reduce((acc, card) => {
-    const baseType = card.type.replace("King", "");
-    if (!acc[baseType]) {
-      acc[baseType] = {
-        type: card.type,
-        count: 0,
-        royal: card.type.includes("King"),
-      };
-    }
-    acc[baseType].count += card.count;
-    return acc;
-  }, {});
-
-  const sortedPenaltyGroups = sortPenaltyGroups(groupedPenaltyCards);
-
-  return (
-    <div className="absolute bottom-4 left-0 right-0 px-8">
-      <div className="mb-6">
-        <div className="flex justify-center gap-4 flex-wrap">
-          {sortedPenaltyGroups.map((stack, i) => (
-            <PenaltyCardStack
-              key={i}
-              type={stack.type}
-              count={stack.count}
-              isRoyal={stack.royal}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className="flex justify-center gap-4 flex-wrap">
-        {sortCards(handCards).map((card, i) => (
-          <Card
-            key={i}
-            type={card.type}
-            isRoyal={card.royal}
-            onClick={isMyTurn ? handleCardClick : undefined}
-            selectedCard={selectedCard}
-          />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-const DeckArea = ({ openCard }) => {
-  return (
-    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-      <div className="relative">
-        {[4, 3, 2, 1, 0].map((index) => (
-          <div
-            key={index}
-            className="absolute"
-            style={{
-              top: `${-index * 1}px`,
-              left: `${-index * 1}px`,
-              zIndex: index,
-            }}
-          >
-            <Card isBack={true} />
-          </div>
-        ))}
-
-        {openCard && (
-          <div
-            className="absolute"
-            style={{
-              top: "-30px",
-              left: "20px",
-              zIndex: 10,
-              transform: "rotate(5deg)",
-            }}
-          >
-            <Card
-              type={openCard.type}
-              isBack={false}
-              isRoyal={openCard.royal}
-            />
-          </div>
-        )}
-      </div>
     </div>
   );
 };
@@ -770,7 +572,7 @@ const GameBoard = ({
                     penaltyCards={userTableCards[players[1]] || []}
                     handCards={playerCards[players[1]] || []}
                     playerName={players[1]}
-                    isMyTurn={false}
+                    isMyTurn={isMyTurn}
                     selectedCard={selectedCard}
                     handlePlayerClick={handlePlayerClick}
                     isPassing={isPassing}
@@ -785,7 +587,7 @@ const GameBoard = ({
                     penaltyCards={userTableCards[players[2]] || []}
                     handCards={playerCards[players[2]] || []}
                     playerName={players[2]}
-                    isMyTurn={false}
+                    isMyTurn={isMyTurn}
                     selectedCard={selectedCard}
                     handlePlayerClick={handlePlayerClick}
                     isPassing={isPassing}
@@ -800,7 +602,7 @@ const GameBoard = ({
                     penaltyCards={userTableCards[players[3]] || []}
                     handCards={playerCards[players[3]] || []}
                     playerName={players[3]}
-                    isMyTurn={false}
+                    isMyTurn={isMyTurn}
                     selectedCard={selectedCard}
                     handlePlayerClick={handlePlayerClick}
                     isPassing={isPassing}

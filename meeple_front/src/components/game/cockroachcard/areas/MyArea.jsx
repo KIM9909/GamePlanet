@@ -1,0 +1,58 @@
+import React from "react";
+import Card from "../Card";
+import { sortCards, sortPenaltyGroups } from "../utils/cardUtils";
+import PenaltyCardStack from "../PenaltyCardStack";
+
+const MyArea = ({
+  penaltyCards = [],
+  handCards = [],
+  isMyTurn,
+  selectedCard,
+  handleCardClick,
+}) => {
+  const groupedPenaltyCards = penaltyCards.reduce((acc, card) => {
+    const baseType = card.type.replace("King", "");
+    if (!acc[baseType]) {
+      acc[baseType] = {
+        type: card.type,
+        count: 0,
+        royal: card.type.includes("King"),
+      };
+    }
+    acc[baseType].count += card.count;
+    return acc;
+  }, {});
+
+  const sortedPenaltyGroups = sortPenaltyGroups(groupedPenaltyCards);
+
+  return (
+    <div className="absolute bottom-4 left-0 right-0 px-8">
+      <div className="mb-6">
+        <div className="flex justify-center gap-4 flex-wrap">
+          {sortedPenaltyGroups.map((stack, i) => (
+            <PenaltyCardStack
+              key={i}
+              type={stack.type}
+              count={stack.count}
+              isRoyal={stack.royal}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="flex justify-center gap-4 flex-wrap">
+        {sortCards(handCards).map((card, i) => (
+          <Card
+            key={i}
+            type={card.type}
+            isRoyal={card.royal}
+            onClick={isMyTurn ? () => handleCardClick(card) : undefined}
+            selectedCard={selectedCard}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default MyArea;

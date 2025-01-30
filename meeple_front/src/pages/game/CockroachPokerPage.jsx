@@ -63,25 +63,25 @@ const CockroachPokerPage = () => {
 
     // 테스트용 임시 데이터
     const mockGameData = {
-      players: ["user1", "user2", "user3", "user4"],
+      players: ["testUser", "user2", "user3", "user4"],
       gameData: {
         gameState: {
-          currentTurn: "user2",
-          currentPhase: "GUESS_OR_FORWARD",
-          currentCard: {
-            type: "Black",
-            royal: false,
-          },
-          cardSender: "user3",
-          cardReceiver: "user1",
-          claimedAnimal: "Stinkbug",
-          isKing: false,
-          isNegative: false,
-          passedPlayers: ["user2", "user3"], // PASS한 플레이어들
-          passCount: 2, // 현재까지 PASS 횟수
+          currentTurn: "testUser",
+          //   currentPhase: "GUESS_OR_FORWARD",
+          //   currentCard: {
+          //     type: "Black",
+          //     royal: false,
+          //   },
+          //   cardSender: "user3",
+          //   cardReceiver: "testUser",
+          //   claimedAnimal: "Stinkbug",
+          //   isKing: false,
+          //   isNegative: false,
+          //   passedPlayers: [], // PASS한 플레이어들
+          //   passCount: 0, // 현재까지 PASS 횟수
         },
         playerCards: {
-          user1: [
+          testUser: [
             { type: "Rat", royal: true },
             { type: "Bat", royal: false },
             { type: "Bat", royal: false },
@@ -102,7 +102,7 @@ const CockroachPokerPage = () => {
           { type: "Stinkbug", royal: false },
         ],
         userTableCards: {
-          user1: [
+          testUser: [
             { type: "Bat", count: 2 },
             { type: "Rat", count: 1, royal: true },
             { type: "Cockroach", count: 2 },
