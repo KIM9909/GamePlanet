@@ -20,6 +20,6 @@ public class MatchAlert {
 
     @ManyToOne
     @JoinColumn(name = "tournament_round_id")
-    private TournamentRound tournamentRound;
+    private TournamentMatch tournamentRound;
 
 }

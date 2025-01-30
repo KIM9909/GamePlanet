@@ -1,22 +1,32 @@
 package com.meeple.meeple_back.tournament.model.entity;
 
 import com.meeple.meeple_back.game.game.model.Game;
-import com.meeple.meeple_back.user.model.User;
+import com.meeple.meeple_back.tournament.model.MatchStatus;
 import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Table(name = "tbl_match")
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@Setter
+@Getter
 public class Match {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "match_id")
     private long matchId;
 
-    @Column(name = "match_result")
-    private long matchResult;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "match_result", nullable = false)
+    private MatchStatus matchStatus;
 
     @Column(name = "match_round")
     private int matchRound;
+
+    @Column(name = "room_id")
+    private int roomId;
 
     @ManyToOne
     @JoinColumn(name = "tournament_participant_id")
@@ -29,4 +39,8 @@ public class Match {
     @ManyToOne
     @JoinColumn(name = "game_id")
     private Game game;
+
+    @ManyToOne
+    @JoinColumn(name = "tournament_id")
+    private Tournament tournament;
 }

@@ -1,24 +1,18 @@
 package com.meeple.meeple_back.tournament.controller;
 
-import com.meeple.meeple_back.tournament.model.request.RequestCreateTournament;
-import com.meeple.meeple_back.tournament.model.request.RequestJoinTournament;
-import com.meeple.meeple_back.tournament.model.request.RequestUpdateTournament;
-import com.meeple.meeple_back.tournament.model.response.ResponseCreateTournament;
-import com.meeple.meeple_back.tournament.model.response.ResponseTournament;
-import com.meeple.meeple_back.tournament.model.response.ResponseTournamentList;
-import com.meeple.meeple_back.tournament.model.response.ResponseUpdateTournament;
+import com.meeple.meeple_back.tournament.model.request.*;
+import com.meeple.meeple_back.tournament.model.response.*;
 import com.meeple.meeple_back.tournament.service.TournamentService;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping(name = "/api/tournament")
+@RequestMapping(name = "/tournament")
 @AllArgsConstructor
 public class TournamentController {
 
@@ -54,7 +48,6 @@ public class TournamentController {
             @PathVariable long tournamentId,
             @RequestBody RequestUpdateTournament request
     ) {
-
         ResponseUpdateTournament response = tournamentService.updateTournament(tournamentId, request);
 
         return ResponseEntity.ok(response);
@@ -64,10 +57,27 @@ public class TournamentController {
     public ResponseEntity<String> joinTournament(
             @RequestBody RequestJoinTournament request
     ) {
-
         String response = tournamentService.joinTournament(request);
 
-        return ResponseEntity.ok("");
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/create-match")
+    private ResponseEntity<List<ResponseCreateMatch>> createMatch(
+            @RequestBody List<RequestCreateMatch> request
+    ) {
+        List<ResponseCreateMatch> response = tournamentService.createMatch(request);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/join-room")
+    public ResponseEntity<Map<String, Object>> joinRoom(
+            @RequestBody RequestJoinMatch request
+    ) {
+        Map<String, Object> response = tournamentService.joinMatch(request);
+
+        return ResponseEntity.ok(response);
     }
 
 

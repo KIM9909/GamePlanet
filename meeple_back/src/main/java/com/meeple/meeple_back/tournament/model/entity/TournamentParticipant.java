@@ -1,6 +1,6 @@
 package com.meeple.meeple_back.tournament.model.entity;
 
-import com.meeple.meeple_back.friend.model.FriendStatus;
+import com.meeple.meeple_back.tournament.model.ParticipantStatus;
 import com.meeple.meeple_back.user.model.User;
 import jakarta.persistence.*;
 import lombok.*;
