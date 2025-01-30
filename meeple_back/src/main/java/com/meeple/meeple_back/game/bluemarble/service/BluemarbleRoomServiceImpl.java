@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class BluemarbleRoomServiceImpl implements BluemarbleRoomService {
 
-	private static final String ROOM_KEY = "GAME_ROOMS";
+	private static final String ROOM_KEY = "BLUDMARBLE_ROOMS";
 
 	private final BluemarbleRoomRepository bluemarbleRoomRepository;
 	private final GameRepository gameRepository;
@@ -57,6 +57,12 @@ public class BluemarbleRoomServiceImpl implements BluemarbleRoomService {
 		room.getPlayers().add(new Player((int) userId));
 		roomRedisTemplate.opsForHash().put(ROOM_KEY, roomId, room);
 		return room;
+	}
+
+	@Override
+	public List<Room> getList() {
+		return roomRedisTemplate.opsForHash().values(ROOM_KEY).stream()
+				.map(Room.class::cast).filter(room -> !room.isPrivate()).toList();
 	}
 
 	public Room getRoom(int roomId) {
