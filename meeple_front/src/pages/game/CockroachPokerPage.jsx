@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import useSocket from "../../hooks/useSocket";
 import GameBoard from "../../components/game/cockroachcard/GameBoard";
 import GameSidebar from "../../components/sidebar/GameSidebar";
-import VideoChat from "../../components/videochat/VideoChat";
+import VideoChat from "../../components/game/cockroachcard/VideoChat";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 
@@ -203,7 +203,7 @@ const CockroachPokerPage = () => {
 
         {/* 화상 채팅 영역 */}
         <div className="h-48 bg-gray-800 border-t border-gray-700">
-          <VideoChat playerCount={playerCount} />
+          <VideoChat playerCount={playerCount} userId={currentUser} />
         </div>
       </div>
 
