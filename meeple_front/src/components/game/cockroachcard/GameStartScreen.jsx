@@ -9,7 +9,7 @@ import CockroachPokerLogo from "../../../assets/image/cockroachpoker/cockroachpo
 const GameStartScreen = ({
   playerCount,
   onStart,
-  roomTitle = "바퀴벌레 포커",
+  roomTitle,
   maxPeople,
 }) => {
   console.log("GameStartScreen roomTitle:", roomTitle); // 전달받은 값 확인

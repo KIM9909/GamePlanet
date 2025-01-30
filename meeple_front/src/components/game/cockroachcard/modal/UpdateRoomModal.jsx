@@ -18,7 +18,7 @@ const UpdateRoomModal = ({ isOpen, onClose, onUpdateRoom, initialData }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     await onUpdateRoom({
-      roomTitle,
+      roomName: roomTitle,
       isPrivate,
       password: isPrivate ? password : "",
       maxPeople,

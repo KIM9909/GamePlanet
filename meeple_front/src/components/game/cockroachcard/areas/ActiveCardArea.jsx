@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Card from "../Card"; // Card 컴포넌트도 분리하면 좋을 것 같네요
 
 const ActiveCardArea = ({
@@ -10,27 +10,62 @@ const ActiveCardArea = ({
   setShowGuessModal,
   gameData,
   isPassing,
+  selectedCard,
 }) => {
-  if (!currentCard) return null;
-
   const shouldShowFront = () => {
     if (cardSender === currentUser || isPassing) return true;
     return false;
   };
+  const [showSelectedCard, setShowSelectedCard] = useState(false);
+
+  // currentCard나 selectedCard가 변경될 때마다 카드 표시 상태 업데이트
+  useEffect(() => {
+    setShowSelectedCard(false); // 먼저 카드를 숨김
+
+    // 새로운 카드가 있을 때만 표시
+    if (currentCard || selectedCard) {
+      const timer = setTimeout(() => {
+        setShowSelectedCard(true);
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedCard, currentCard]);
+
+  // 턴이 변경되면 카드 영역 초기화
+  useEffect(() => {
+    if (gameData?.gameData?.gameState?.currentTurn) {
+      setShowSelectedCard(false);
+    }
+  }, [gameData?.gameData?.gameState?.currentTurn]);
 
   return (
     <div className="absolute top-[60%] right-4 w-72 active-card-area">
-      <div className="bg-gray-800/90 p-4 rounded-lg space-y-4">
-        <div className="text-sm text-gray-300 text-center">
-          {cardSender} → {cardReceiver}
+      <div className="bg-gray-800/90 p-4 rounded-lg space-y-4 min-h-[200px]">
+        <div
+          className="relative flex justify-center h-24"
+          data-active-card-slot
+        >
+          {showSelectedCard && (currentCard || selectedCard) ? (
+            <Card
+              type={
+                currentCard
+                  ? shouldShowFront()
+                    ? currentCard.type
+                    : null
+                  : selectedCard.type
+              }
+              isBack={currentCard ? !shouldShowFront() : false}
+              isRoyal={currentCard ? currentCard.royal : selectedCard?.isRoyal}
+              isActive={true}
+            />
+          ) : (
+            <div className="w-16 h-24 border-2 border-dashed border-gray-600 rounded-lg" />
+          )}
         </div>
-        <div className="relative flex justify-center">
-          <Card
-            type={shouldShowFront() ? currentCard.type : null}
-            isBack={!shouldShowFront()}
-            isRoyal={currentCard.royal}
-            isActive={true}
-          />
+
+        {/* 보내는 사람 -> 받는 사람 텍스트는 카드 아래에 표시 */}
+        <div className="text-sm text-gray-300 text-center">
+          {cardSender && cardReceiver ? `${cardSender} → ${cardReceiver}` : ""}
         </div>
 
         {cardReceiver === currentUser && (

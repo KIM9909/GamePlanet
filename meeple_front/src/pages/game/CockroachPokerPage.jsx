@@ -9,7 +9,7 @@ import { toast } from "react-hot-toast";
 
 const CockroachPokerPage = () => {
   const { roomId } = useParams();
-  const { connected, sendMessage, startGame } = useSocket(roomId);
+  const { sendMessage, startGame } = useSocket(roomId);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [gameData, setGameData] = useState(null);
   const currentUser = "testUser"; // creator와 같은 값으로 변경
@@ -21,11 +21,11 @@ const CockroachPokerPage = () => {
         // 임시로 mock 데이터 사용
         const mockRoomData = {
           roomId: roomId,
-          roomName: "테스트 방",
+          roomName: "테스트 방", // 이 값이 업데이트 될 수 있어야 함
           maxPeople: 4,
           currentPlayers: 4,
           players: ["user1", "user2", "user3", "testUser"],
-          creator: "testUser", // creator 명시적으로 추가
+          creator: "testUser",
           gameData: null,
         };
         setGameData(mockRoomData);
@@ -137,30 +137,6 @@ const CockroachPokerPage = () => {
 
   const playerCount = gameData?.players?.length || 0;
 
-  const handleJoinRoom = async (roomId) => {
-    try {
-      const response = await axios.get(`/api/room/${roomId}`);
-      const roomData = response.data;
-
-      if (roomData.currentPlayers >= roomData.maxPeople) {
-        toast.error("방이 가득 찼습니다.");
-        return;
-      }
-
-      const joinResponse = await axios.post(`/api/room/${roomId}/join`, {
-        userId: currentUser,
-      });
-
-      if (joinResponse.data.success) {
-        // 성공 메시지만 표시
-        toast.success("방에 입장했습니다.");
-      }
-    } catch (error) {
-      console.error("방 입장 실패:", error);
-      toast.error("방 입장에 실패했습니다.");
-    }
-  };
-
   return (
     <div className="h-screen w-screen flex bg-gray-900">
       {/* 사이드바 */}
@@ -196,6 +172,7 @@ const CockroachPokerPage = () => {
             playerCount={playerCount}
             onStartGame={handleStartGame}
             gameData={gameData}
+            setGameData={setGameData}
             currentUser={currentUser}
             sendMessage={sendMessage}
           />

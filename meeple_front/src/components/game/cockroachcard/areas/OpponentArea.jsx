@@ -15,6 +15,7 @@ const OpponentArea = ({
   passedPlayers,
   cardSender,
   remainingPlayers,
+  currentUser,
 }) => {
   const groupedPenaltyCards = penaltyCards.reduce((acc, card) => {
     const baseType = card.type.startsWith("King")
@@ -36,7 +37,7 @@ const OpponentArea = ({
         !passedPlayers.includes(playerName)
       );
     }
-    return isMyTurn && selectedCard !== null && playerName !== cardSender;
+    return isMyTurn && selectedCard && playerName !== currentUser;
   }, [
     isPassing,
     remainingPlayers,
@@ -44,7 +45,7 @@ const OpponentArea = ({
     passedPlayers,
     isMyTurn,
     selectedCard,
-    cardSender,
+    currentUser,
   ]);
 
   return (
@@ -57,6 +58,7 @@ const OpponentArea = ({
             : "cursor-not-allowed"
         }
       `}
+      data-player={playerName}
       onClick={() => {
         if (!isSelectable) return;
         handlePlayerClick(playerName);

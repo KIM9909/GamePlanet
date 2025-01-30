@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import GiveCardModal from "./modal/GiveCardModal";
 import GuessCardModal from "./modal/GuessCardModal";
 import PenaltyCardSelectModal from "./modal/PenaltyCardSelectModal";
@@ -95,6 +96,36 @@ const PenaltyCardStack = ({ type, count = 3, isRoyal }) => {
   );
 };
 
+const AnimatedCard = ({ card, sourcePosition, targetPosition, onComplete }) => {
+  return (
+    <motion.div
+      initial={{
+        x: sourcePosition.x,
+        y: sourcePosition.y,
+        scale: 1,
+        zIndex: 50,
+      }}
+      animate={{
+        x: targetPosition.x,
+        y: targetPosition.y,
+        scale: 1.1,
+        zIndex: 50,
+      }}
+      transition={{
+        duration: 0.4,
+        ease: [0.4, 0, 0.2, 1], // 더 자연스러운 이징
+        scale: {
+          duration: 0.2,
+        },
+      }}
+      onAnimationComplete={onComplete}
+      className="fixed pointer-events-none"
+    >
+      <Card type={card.type} isRoyal={card.isRoyal} isActive={true} />
+    </motion.div>
+  );
+};
+
 const GameBoard = ({
   playerCount = 4,
   onStartGame,
@@ -120,6 +151,20 @@ const GameBoard = ({
   const [isUpdateModalOpen, setUpdateModalOpen] = useState(false);
   const [showGameEndModal, setShowGameEndModal] = useState(false);
   const [gameEndInfo, setGameEndInfo] = useState({ loser: "", reason: "" });
+  const [animatingCard, setAnimatingCard] = useState(null);
+  const [sourcePosition, setSourcePosition] = useState(null);
+  const [targetPosition, setTargetPosition] = useState(null);
+  const activeCardRef = useRef(null);
+  const selectedCardRef = useRef(null);
+
+  // props 디버깅을 위한 로그 추가
+  useEffect(() => {
+    console.log("=== GameBoard Props Debug ===");
+    console.log("gameData:", gameData);
+    console.log("setGameData type:", typeof setGameData);
+    console.log("currentUser:", currentUser);
+    console.log("=========================");
+  }, [gameData, setGameData, currentUser]);
 
   // 남은 플레이어 계산
   const remainingPlayers = useMemo(() => {
@@ -160,9 +205,44 @@ const GameBoard = ({
     }
   };
 
-  const handleCardClick = (card) => {
+  const handleCardClick = (card, event) => {
     if (!isMyTurn) return;
-    setSelectedCard(card);
+
+    const cardElement = event.target.closest("[data-card-id]");
+    if (!cardElement) return;
+
+    const cardRect = cardElement.getBoundingClientRect();
+    const activeCardSlot = activeCardRef.current?.querySelector(
+      "[data-active-card-slot]"
+    );
+
+    if (activeCardSlot) {
+      const slotRect = activeCardSlot.getBoundingClientRect();
+      console.log("Active Card Slot Rectangle:", slotRect);
+
+      setSourcePosition({
+        x: cardRect.left,
+        y: cardRect.top,
+      });
+
+      setTargetPosition({
+        x: slotRect.left + (slotRect.width - cardRect.width) / 2, // 중앙 정렬
+        y: slotRect.top + (slotRect.height - cardRect.height) / 2, // 중앙 정렬
+      });
+
+      setAnimatingCard(card);
+      setSelectedCard(card);
+      selectedCardRef.current = cardElement;
+    }
+  };
+
+  const handleAnimationComplete = () => {
+    // 약간의 딜레이 후에 상태 업데이트
+    setTimeout(() => {
+      setAnimatingCard(null);
+      setSourcePosition(null);
+      setTargetPosition(null);
+    }); // 300ms 딜레이
   };
 
   const handlePlayerClick = (playerNickname) => {
@@ -172,8 +252,10 @@ const GameBoard = ({
     setSelectedPlayer(playerNickname);
     setShowGiveCardModal(true);
   };
-
   const handleGiveCard = (claimData) => {
+    console.log("=== handleGiveCard Debug ===");
+    console.log("Before update - gameState:", gameData?.gameData?.gameState);
+
     const giveCardData = {
       to: selectedPlayer,
       from: currentUser,
@@ -181,14 +263,46 @@ const GameBoard = ({
       animal: claimData.animal,
       isKing: claimData.isKing,
       isNagative: claimData.isNegative,
+      animation: {
+        fromPlayer: currentUser,
+        toPlayer: selectedPlayer,
+      },
+    };
+    console.log("giveCardData:", giveCardData);
+
+    // 클라이언트 상태 먼저 업데이트
+    const updatedGameState = {
+      ...gameData.gameData.gameState,
+      cardSender: currentUser,
+      cardReceiver: selectedPlayer,
+      currentCard: selectedCard,
+      claimedAnimal: claimData.animal,
+      isKing: claimData.isKing,
+    };
+    console.log("After update - updatedGameState:", updatedGameState);
+
+    const updatedGameData = {
+      ...gameData,
+      gameData: {
+        ...gameData.gameData,
+        gameState: updatedGameState,
+      },
     };
 
-    setSelectedCard(null);
-    setSelectedPlayer(null);
+    // 여기서 실제로 상태를 업데이트
+    setGameData(updatedGameData);
+    console.log("Updated game data:", updatedGameData);
+
+    // 서버로 메시지 전송
+    sendMessage({
+      type: "GIVE_CARD",
+      data: giveCardData,
+    });
+
+    // 모달 닫기
     setShowGiveCardModal(false);
     setIsPassing(false);
   };
-
   const handleModalClose = () => {
     setShowGiveCardModal(false);
     setSelectedPlayer(null);
@@ -429,6 +543,31 @@ const GameBoard = ({
       (message) => {
         const data = JSON.parse(message.body);
 
+        if (data.type === "GIVE_CARD") {
+          // 카드 애니메이션 시작
+          const fromArea = document.querySelector(
+            `[data-player="${data.animation.fromPlayer}"]`
+          );
+          const toArea = document.querySelector(
+            `[data-player="${data.animation.toPlayer}"]`
+          );
+
+          if (fromArea && toArea) {
+            const fromRect = fromArea.getBoundingClientRect();
+            const toRect = toArea.getBoundingClientRect();
+
+            setAnimatingCard(data.card);
+            setSourcePosition({
+              x: fromRect.left + fromRect.width / 2,
+              y: fromRect.top + fromRect.height / 2,
+            });
+            setTargetPosition({
+              x: toRect.left + toRect.width / 2,
+              y: toRect.top + toRect.height / 2,
+            });
+          }
+        }
+
         // 게임 종료 메시지 처리
         if (data.type === "HAND_CHECK" && data.isEnd) {
           let reason;
@@ -458,6 +597,17 @@ const GameBoard = ({
   }, [stompClient, roomId, setGameData, gameData]);
 
   const handleUpdateRoom = (updateData) => {
+    // 로컬 상태도 업데이트
+    const updatedGameData = {
+      ...gameData,
+      roomName: updateData.roomName,
+      maxPeople: updateData.maxPeople,
+      isPrivate: updateData.isPrivate,
+      password: updateData.password,
+    };
+    setGameData(updatedGameData);
+
+    // 서버로 메시지 전송
     sendMessage({
       type: "UPDATE_ROOM",
       data: updateData,
@@ -470,9 +620,7 @@ const GameBoard = ({
         <GameStartScreen
           playerCount={playerCount}
           onStart={handleStartGame}
-          roomTitle={
-            gameData?.roomName || gameData?.roomTitle || "바퀴벌레 포커"
-          }
+          roomTitle={gameData?.roomName || "바퀴벌레 포커"}
           maxPeople={gameData?.maxPeople || 4}
         />
         {currentUser === gameData?.creator && (
@@ -523,6 +671,7 @@ const GameBoard = ({
               passedPlayers={gameData?.gameData?.gameState?.passedPlayers || []}
               cardSender={gameData?.gameData?.gameState?.cardSender}
               remainingPlayers={remainingPlayers}
+              currentUser={currentUser}
             />
           </div>
         ) : (
@@ -544,6 +693,7 @@ const GameBoard = ({
                     }
                     cardSender={gameData?.gameData?.gameState?.cardSender}
                     remainingPlayers={remainingPlayers}
+                    currentUser={currentUser}
                   />
                 </div>
                 <div className="w-[calc(40%-1rem)]">
@@ -561,6 +711,7 @@ const GameBoard = ({
                     }
                     cardSender={gameData?.gameData?.gameState?.cardSender}
                     remainingPlayers={remainingPlayers}
+                    currentUser={currentUser}
                   />
                 </div>
               </div>
@@ -626,16 +777,31 @@ const GameBoard = ({
           handleCardClick={handleCardClick}
         />
 
-        <ActiveCardArea
-          currentCard={gameData?.gameData?.gameState?.currentCard}
-          cardSender={gameData?.gameData?.gameState?.cardSender}
-          cardReceiver={gameData?.gameData?.gameState?.cardReceiver}
-          currentUser={currentUser}
-          handlePass={handlePass}
-          setShowGuessModal={setShowGuessModal}
-          gameData={gameData}
-          isPassing={isPassing}
-        />
+        {/* 애니메이션되는 카드 */}
+        <AnimatePresence>
+          {animatingCard && sourcePosition && targetPosition && (
+            <AnimatedCard
+              card={animatingCard}
+              sourcePosition={sourcePosition}
+              targetPosition={targetPosition}
+              onComplete={handleAnimationComplete}
+            />
+          )}
+        </AnimatePresence>
+
+        <div ref={activeCardRef}>
+          <ActiveCardArea
+            currentCard={gameData?.gameData?.gameState?.currentCard}
+            cardSender={gameData?.gameData?.gameState?.cardSender}
+            cardReceiver={gameData?.gameData?.gameState?.cardReceiver}
+            currentUser={currentUser}
+            handlePass={handlePass}
+            setShowGuessModal={setShowGuessModal}
+            gameData={gameData}
+            isPassing={isPassing}
+            selectedCard={selectedCard}
+          />
+        </div>
       </div>
 
       <GiveCardModal

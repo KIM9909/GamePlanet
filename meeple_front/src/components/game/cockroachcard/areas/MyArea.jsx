@@ -9,6 +9,7 @@ const MyArea = ({
   isMyTurn,
   selectedCard,
   handleCardClick,
+  currentUser,
 }) => {
   const groupedPenaltyCards = penaltyCards.reduce((acc, card) => {
     const baseType = card.type.replace("King", "");
@@ -26,7 +27,10 @@ const MyArea = ({
   const sortedPenaltyGroups = sortPenaltyGroups(groupedPenaltyCards);
 
   return (
-    <div className="absolute bottom-4 left-0 right-0 px-8">
+    <div
+      className="absolute bottom-4 left-0 right-0 px-8"
+      data-player={currentUser}
+    >
       <div className="mb-6">
         <div className="flex justify-center gap-4 flex-wrap">
           {sortedPenaltyGroups.map((stack, i) => (
@@ -46,7 +50,7 @@ const MyArea = ({
             key={i}
             type={card.type}
             isRoyal={card.royal}
-            onClick={isMyTurn ? () => handleCardClick(card) : undefined}
+            onClick={(card, e) => handleCardClick(card, e)} // event 객체를 전달
             selectedCard={selectedCard}
           />
         ))}
