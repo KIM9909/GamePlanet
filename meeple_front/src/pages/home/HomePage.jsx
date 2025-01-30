@@ -3,14 +3,19 @@ import { useNavigate } from "react-router-dom";
 import CreateRoomModal from "../../components/game/CreateRoomModal";
 import { createPortal } from "react-dom";
 import BurumabulRoomCreateModal from "../../components/game/burumabul/BurumabulRoomCreateModal";
+import FriendModal from "../../components/friend/FriendModal";
+import { useSelector, useDispatch } from "react-redux";
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [isCreateRoomModalOpen, setCreateRoomModalOpen] = useState(false);
 
   // 부루마불
   const [isCreateBurumabulRoomModalOpen, setIsCreateBurumabulRoomModalOpen] =
     useState(false);
+
+  const userId = useSelector((state) => state.user.userId);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -102,6 +107,8 @@ const HomePage = () => {
           />,
           document.body
         )}
+
+      <FriendModal userId={userId} />
     </div>
   );
 };

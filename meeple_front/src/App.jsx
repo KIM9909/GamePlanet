@@ -16,57 +16,59 @@ import Introduce from "./pages/introduce/Introduce";
 import ScrollToTop from "./components/layout/ScrollToTop";
 import CatchMindPage from "./pages/game/CatchMindPage";
 import WaitingRoom from "./components/game/burumabul/WaitingRoom";
-
+import FriendModalLayout from "./components/layout/FriendModalLayout";
 function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
       <TopLayout>
         <SideLayout>
-          <Routes>
-            {/* Admin */}
-            <Route path="/admin" element={<AdminPage />} />
+          <FriendModalLayout>
+            <Routes>
+              {/* Admin */}
+              <Route path="/admin" element={<AdminPage />} />
 
-            {/* Board */}
-            <Route path="/board" element={<BoardPage />} />
-            <Route path="/board/:boardId" element={<BoardPage />} />
+              {/* Board */}
+              <Route path="/board" element={<BoardPage />} />
+              <Route path="/board/:boardId" element={<BoardPage />} />
 
-            {/* Game */}
-            <Route path="/game/burumabul/start" element={<BurumabulPage />} />
-            <Route
-              path="/game/burumabul/waitingroom"
-              element={<WaitingRoom />}
-            />
-            <Route
-              path="/game/cockroach/:roomId"
-              element={<CockroachPokerPage />}
-            />
-            <Route path="/catch-mind/:roomId" element={<CatchMindPage />} />
+              {/* Game */}
+              <Route path="/game/burumabul/start" element={<BurumabulPage />} />
+              <Route
+                path="/game/burumabul/waitingroom"
+                element={<WaitingRoom />}
+              />
+              <Route
+                path="/game/cockroach/:roomId"
+                element={<CockroachPokerPage />}
+              />
+              <Route path="/catch-mind/:roomId" element={<CatchMindPage />} />
 
-            {/* GameInfo */}
-            <Route path="/game/:gameId" element={<GameInfoPage />} />
+              {/* GameInfo */}
+              <Route path="/game/:gameId" element={<GameInfoPage />} />
 
-            {/* Home & Main */}
-            <Route path="/home" element={<HomePage />} />
-            <Route path="/" element={<MainPage />} />
+              {/* Home & Main */}
+              <Route path="/home" element={<HomePage />} />
+              <Route path="/" element={<MainPage />} />
 
-            {/* Profile */}
-            <Route path="/profile/:userId" element={<ProfilePage />} />
+              {/* Profile */}
+              <Route path="/profile/:userId" element={<ProfilePage />} />
 
-            {/* Proposal */}
-            <Route path="/proposal" element={<ProposalPage />} />
-            <Route path="/proposal/:proposalId" element={<ProposalPage />} />
+              {/* Proposal */}
+              <Route path="/proposal" element={<ProposalPage />} />
+              <Route path="/proposal/:proposalId" element={<ProposalPage />} />
 
-            {/* Tournament */}
-            <Route path="/tournament" element={<TournamentPage />} />
-            <Route
-              path="/tournament/:tournamentId"
-              element={<TournamentPage />}
-            />
+              {/* Tournament */}
+              <Route path="/tournament" element={<TournamentPage />} />
+              <Route
+                path="/tournament/:tournamentId"
+                element={<TournamentPage />}
+              />
 
-            {/* INTRODUCE */}
-            <Route path="/introduce" element={<Introduce />} />
-          </Routes>
+              {/* INTRODUCE */}
+              <Route path="/introduce" element={<Introduce />} />
+            </Routes>
+          </FriendModalLayout>
         </SideLayout>
       </TopLayout>
     </BrowserRouter>
