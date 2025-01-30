@@ -67,9 +67,11 @@ public class BluemarbleRoomServiceImpl implements BluemarbleRoomService {
 	}
 
 	@Override
-	public Room delete(int roomId) {
+	public Room delete(int roomId, long currentUserId) {
 		Room deletedRoom = getRoom(roomId);
-		roomRedisTemplate.opsForHash().delete(ROOM_KEY, roomId);
+		if (deletedRoom.isCreator((int) currentUserId)) {
+			roomRedisTemplate.opsForHash().delete(ROOM_KEY, roomId);
+		}
 		return deletedRoom;
 	}
 

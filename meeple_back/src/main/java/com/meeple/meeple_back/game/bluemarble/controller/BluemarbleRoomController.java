@@ -58,9 +58,11 @@ public class BluemarbleRoomController {
 
 	@DeleteMapping("/{roomId}")
 	@Operation(summary = "게임방 삭제", description = "게임방을 삭제합니다.")
-	public ResponseEntity<RoomResponse> delete(@PathVariable int roomId) {
+	public ResponseEntity<RoomResponse> delete(@PathVariable int roomId,
+			@RequestHeader("Authorization") String token) {
+		long userId = jwtUtil.getUserIdFromToken(token);
 		return ResponseEntity.status(HttpStatus.NO_CONTENT)
-				.body(RoomResponse.from(bluemarbleRoomService.delete(roomId)));
+				.body(RoomResponse.from(bluemarbleRoomService.delete(roomId, userId)));
 	}
 
 	@PutMapping("/{roomId}")
@@ -70,4 +72,6 @@ public class BluemarbleRoomController {
 		return ResponseEntity.ok(
 				RoomResponse.from(bluemarbleRoomService.update(roomId, roomUpdate)));
 	}
+
+
 }
