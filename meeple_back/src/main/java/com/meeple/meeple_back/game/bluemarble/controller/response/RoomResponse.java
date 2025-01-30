@@ -3,7 +3,7 @@ package com.meeple.meeple_back.game.bluemarble.controller.response;
 import com.meeple.meeple_back.game.bluemarble.domain.Player;
 import com.meeple.meeple_back.game.bluemarble.domain.Room;
 import java.time.LocalDateTime;
-import java.util.Map;
+import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -18,7 +18,7 @@ public class RoomResponse {
 	private boolean isGameStart;
 	private int creator;
 	private int maxPlayers;
-	private Map<Integer, Player> players;
+	private List<Player> players;
 
 	public static RoomResponse from(Room room) {
 		return RoomResponse.builder()

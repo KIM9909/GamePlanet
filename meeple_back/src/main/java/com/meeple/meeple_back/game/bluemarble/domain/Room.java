@@ -3,7 +3,7 @@ package com.meeple.meeple_back.game.bluemarble.domain;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
-import java.util.Map;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -38,6 +38,6 @@ public class Room {
 	@Min(value = 1, message = "Max players must be at least 1")
 	private int maxPlayers;
 
-	private Map<Integer, Player> players;
+	private List<Player> players;
 
 }
