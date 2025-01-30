@@ -2,6 +2,7 @@ package com.meeple.meeple_back.game.bluemarble.controller.port;
 
 import com.meeple.meeple_back.game.bluemarble.domain.Room;
 import com.meeple.meeple_back.game.bluemarble.domain.RoomCreate;
+import com.meeple.meeple_back.game.bluemarble.domain.RoomUpdate;
 import java.util.List;
 
 public interface BluemarbleRoomService {
@@ -13,4 +14,6 @@ public interface BluemarbleRoomService {
 	List<Room> getList();
 
 	Room delete(int roomId);
+
+	Room update(int roomId, RoomUpdate roomUpdate);
 }

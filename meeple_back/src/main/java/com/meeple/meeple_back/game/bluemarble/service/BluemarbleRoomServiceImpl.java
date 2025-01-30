@@ -5,6 +5,7 @@ import com.meeple.meeple_back.game.bluemarble.controller.port.BluemarbleRoomServ
 import com.meeple.meeple_back.game.bluemarble.domain.Player;
 import com.meeple.meeple_back.game.bluemarble.domain.Room;
 import com.meeple.meeple_back.game.bluemarble.domain.RoomCreate;
+import com.meeple.meeple_back.game.bluemarble.domain.RoomUpdate;
 import com.meeple.meeple_back.game.bluemarble.infrastructure.RoomEntity;
 import com.meeple.meeple_back.game.bluemarble.service.port.BluemarbleRoomRepository;
 import com.meeple.meeple_back.game.game.model.Game;
@@ -70,6 +71,14 @@ public class BluemarbleRoomServiceImpl implements BluemarbleRoomService {
 		Room deletedRoom = getRoom(roomId);
 		roomRedisTemplate.opsForHash().delete(ROOM_KEY, roomId);
 		return deletedRoom;
+	}
+
+	@Override
+	public Room update(int roomId, RoomUpdate roomUpdate) {
+		Room room = getRoom(roomId);
+		Room updatedRoom = room.update(roomUpdate);
+		roomRedisTemplate.opsForHash().put(ROOM_KEY, roomId, updatedRoom);
+		return updatedRoom;
 	}
 
 	public Room getRoom(int roomId) {

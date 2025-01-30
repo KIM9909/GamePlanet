@@ -40,4 +40,18 @@ public class Room {
 
 	private List<Player> players;
 
+	public Room update(RoomUpdate roomUpdate) {
+		return Room.builder()
+				.roomId(roomId)
+				.roomName(roomUpdate.getRoomName())
+				.createTime(createTime)
+				.isPrivate(roomUpdate.isPrivate())
+				.password(password)
+				.isGameStart(roomUpdate.isGameStart())
+				.creator(roomUpdate.getCreator())
+				.maxPlayers(roomUpdate.getMaxPlayers())
+				.players(players)
+				.build();
+	}
+
 }
