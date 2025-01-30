@@ -4,6 +4,7 @@ import com.meeple.meeple_back.game.catchmind.model.request.*;
 import com.meeple.meeple_back.game.catchmind.model.response.*;
 
 import java.util.List;
+import java.util.Map;
 
 public interface CatchMindService {
     ResponseCreateRoom createRoom(RequestCreateRoom request);
@@ -29,4 +30,6 @@ public interface CatchMindService {
     List<ResponseGameResult> gameResult(String roomId);
 
     ResponseUpdateRoom updateRoom(String roomId, RequestUpdateRoom request);
+
+    Map<String, Object> getRoomDetail(String roomId);
 }

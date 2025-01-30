@@ -17,6 +17,7 @@ import ScrollToTop from "./components/layout/ScrollToTop";
 import CatchMindPage from "./pages/game/CatchMindPage";
 import WaitingRoom from "./components/game/burumabul/WaitingRoom";
 import FriendModalLayout from "./components/layout/FriendModalLayout";
+import CatchMindListPage from "./components/game/catchMind/roomList/CatchMindListPage";
 function App() {
   return (
     <BrowserRouter>
@@ -43,6 +44,7 @@ function App() {
                 element={<CockroachPokerPage />}
               />
               <Route path="/catch-mind/:roomId" element={<CatchMindPage />} />
+              <Route path="/catch-mind" element={<CatchMindListPage />} />
 
               {/* GameInfo */}
               <Route path="/game/:gameId" element={<GameInfoPage />} />

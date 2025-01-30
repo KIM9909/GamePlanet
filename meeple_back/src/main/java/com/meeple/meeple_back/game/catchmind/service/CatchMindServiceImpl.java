@@ -77,6 +77,18 @@ public class CatchMindServiceImpl implements CatchMindService {
     }
 
     @Override
+    public Map<String, Object> getRoomDetail(String roomId) {
+        Map<String, Object> roomInfo =
+                (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+
+        if (roomInfo == null) {
+            throw new EntityNotFoundException("해당 방을 찾을 수 없습니다.");
+        }
+
+        return roomInfo;
+    }
+
+    @Override
     public ResponseJoinRoom joinRoom(RequestJoinRoom request) {
         Map<String, Object> roomInfo =
                 (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, request.getRoomId() + "");

@@ -18,6 +18,18 @@ const extractUserIdFromToken = (token) => {
   }
 };
 
+// 토큰 유효성 검사 함수 추가
+const isTokenValid = (token) => {
+  if (!token) return false;
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const expirationTime = payload.exp * 1000; // 밀리초 단위로 변환
+    return Date.now() < expirationTime;
+  } catch {
+    return false;
+  }
+};
+
 // 앱 초기화 시 로컬 스토리지에서 토큰을 가져와 초기 상태 설정
 const initialToken = localStorage.getItem("token");
 const initialUserId = extractUserIdFromToken(initialToken);
@@ -77,13 +89,13 @@ const UserSlice = createSlice({
     },
     // 토큰 설정 및 관련 상태 업데이트
     setToken: (state, action) => {
-      state.token = action.payload;
-      if (action.payload) {
-        // 토큰이 있으면 userId 추출 및 저장
-        state.userId = extractUserIdFromToken(action.payload);
-        localStorage.setItem("token", action.payload);
+      const token = action.payload;
+      if (token && isTokenValid(token)) {
+        state.token = token;
+        state.userId = extractUserIdFromToken(token);
+        localStorage.setItem("token", token);
       } else {
-        // 토큰이 없으면 상태 초기화
+        state.token = null;
         state.userId = null;
         localStorage.removeItem("token");
       }

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { OpenVidu } from "openvidu-browser";
-import { VideoAPI } from "../../../sources/api/CatchMindAPI";
+import { VideoAPI } from "../../../../sources/api/CatchMindAPI";
 import { Camera, CameraOff, Mic, MicOff } from "lucide-react";
 
 /**
