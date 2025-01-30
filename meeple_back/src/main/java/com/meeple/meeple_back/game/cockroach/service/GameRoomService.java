@@ -87,7 +87,7 @@ public class GameRoomService {
         }
     }
 
-    public void addPlayer(String roomId, String playerName) {
+    public Map<String, Object> addPlayer(String roomId, String playerName) {
         Map<String, Object> room = getRoom(roomId);
         System.out.println(roomId + "방 " + playerName + " 유저 참가 서비스");
         if (room != null) {
@@ -95,6 +95,8 @@ public class GameRoomService {
             players.add(playerName);
             redisTemplate.opsForHash().put(ROOM_KEY, roomId, room);
         }
+
+        return room;
     }
 
     public void deleteRoom(String roomId) {

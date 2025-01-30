@@ -33,11 +33,11 @@ public class CockroachController {
     }
 
     @PostMapping("/join-room")
-    public ResponseEntity<String> joinRoom(
+    public ResponseEntity<Map<String, Object>> joinRoom(
         @RequestParam String roomId,
         @RequestParam String playerName) {
-        gameRoomService.addPlayer(roomId, playerName);
-        return ResponseEntity.ok(playerName + "joined room: " + roomId);
+        Map<String, Object> response = gameRoomService.addPlayer(roomId, playerName);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/update-data")
