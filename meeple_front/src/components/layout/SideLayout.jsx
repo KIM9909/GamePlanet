@@ -1,5 +1,5 @@
 import { isAction } from "@reduxjs/toolkit";
-import React, { Children, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 
@@ -12,7 +12,7 @@ const SideLayout = ({ children }) => {
   const showSidebar =
     location.pathname !== "/" &&
     location.pathname !== `/profile/${userId}` &&
-    location.pathname !== "/game/burumabul" && // 메인과 프로필 페이지에서는 사이드바 안보임
+    !location.pathname.match(/^\/game\/burumabul\/[\w-]+$/) &&
     !location.pathname.match(/^\/catch-mind\/[\w-]+$/) &&
     !location.pathname.match(/^\/game\/cockroach\/[\w-]+$/);
   const [activeLink, setActiveLink] = useState(location.pathname);

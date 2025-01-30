@@ -74,7 +74,7 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
     // openVidu
-    implementation 'io.openvidu:openvidu-java-client:2.25.0'
+    implementation 'io.openvidu:openvidu-java-client:2.22.0'
 
     // mapper
     implementation 'org.modelmapper:modelmapper:3.1.0'

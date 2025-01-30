@@ -1,22 +1,17 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:8090/api",
-  timeout: 5000, // 타임아웃 설정
+  baseURL: "http://localhost:8090",
   headers: {
     "Content-Type": "application/json",
+    Accept: "application/json",
   },
   withCredentials: true,
 });
 
-// 요청 인터셉터
+// 요청 인터셉터 수정
 API.interceptors.request.use(
   (config) => {
-    // 토큰이 필요한 경우 헤더에 추가
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
     return config;
   },
   (error) => {
@@ -24,18 +19,51 @@ API.interceptors.request.use(
   }
 );
 
-// 응답 인터셉터
+// 응답 인터셉터 수정
 API.interceptors.response.use(
   (response) => {
-    return response;
+    return response.data;
   },
   (error) => {
-    // 401 에러 처리 (인증 실패)
-    if (error.response?.status === 401) {
-      // 로그인 페이지로 리다이렉트 등의 처리
-    }
-    return Promise.reject(error);
+    console.error("Response error:", {
+      url: error.config?.url,
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+    throw error.response?.data || new Error(error.message);
   }
 );
+
+export const VideoAPI = {
+  createSession: async () => {
+    try {
+      const response = await API.post("/api/video/create-session");
+      if (!response) {
+        throw new Error("No response received from createSession");
+      }
+      return response;
+    } catch (error) {
+      console.error("Failed to create session:", error);
+      throw error;
+    }
+  },
+
+  generateToken: async (sessionId) => {
+    try {
+      if (!sessionId) {
+        throw new Error("SessionId is required");
+      }
+      const response = await API.post(`/api/video/generate-token/${sessionId}`);
+      if (!response) {
+        throw new Error("No response received from generateToken");
+      }
+      return response;
+    } catch (error) {
+      console.error("Failed to generate token:", error);
+      throw error;
+    }
+  },
+};
 
 export default API;
