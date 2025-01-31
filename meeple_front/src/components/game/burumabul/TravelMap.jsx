@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, Suspense, useMemo } from "react";
 import { createPortal } from "react-dom";
 import {
   Canvas,
@@ -55,8 +55,10 @@ import floorTexture from "../../../assets/burumabul_images/floor.png";
 import timemachineStop from "../../../assets/burumabul_images/timemachinestop.png";
 import telepathyCard from "../../../assets/burumabul_images/telepathycard.png";
 import neuronsCard from "../../../assets/burumabul_images/neuronscard.png";
-import Spaceship from "./Spaceship";
+import BlueRobot from "./BlueRobot";
 import SpaceBase from "./SpaceBase";
+
+import LoadingSpinner from "./LoadingSpinner";
 
 const Cell = ({
   position,
@@ -128,9 +130,7 @@ const Cell = ({
   );
 };
 
-const TravelMap = ({ onRollDice }) => {
-  const floor = useLoader(TextureLoader, floorTexture);
-
+const TravelMap = ({ onRollDice, onBasesInfo }) => {
   // cities 배열
   const cities = [
     "지구 Start",
@@ -382,10 +382,35 @@ const TravelMap = ({ onRollDice }) => {
     { id: 3, position: 0, color: "#15F5BA" },
     { id: 4, position: 0, color: "#FFDC00" },
   ]);
+
   const [numPlayers, setNumPlayers] = useState(2); //기본 2명
   const [currentPlayer, setCurrentPlayer] = useState(0);
 
+  // 플레이어 우주 기지를 세운!
+  const [playerBases, setPlayerBases] = useState([[], [], [], []]);
+
+  useEffect(() => {
+    if (onBasesInfo) {
+      onBasesInfo(playerBases);
+    }
+  }, [playerBases, onBasesInfo]); // playerBase가 변경될 때마다 실행
+
   const [spaceBases, setSpaceBases] = useState([]);
+
+  // Preload textures
+  const floor = useMemo(() => useLoader(TextureLoader, floorTexture), []);
+  const timeMachineStopTexture = useMemo(
+    () => useLoader(TextureLoader, timemachineStop),
+    []
+  );
+  const telepathyCardTexture = useMemo(
+    () => useLoader(TextureLoader, telepathyCard),
+    []
+  );
+  const neuronsCardTexture = useMemo(
+    () => useLoader(TextureLoader, neuronsCard),
+    []
+  );
 
   // 주사위 굴린 후 플레이어 이동 처리
   const handleDiceComplete = (score) => {
@@ -409,12 +434,27 @@ const TravelMap = ({ onRollDice }) => {
         );
       } else {
         // 우주기지 생성 로직
+        const targetCity = cities[target];
         console.log("Building space base at:", positions[target]);
         setSpaceBases((prevBases) => {
           if (prevBases.some((base) => base.position === positions[target])) {
             console.log("⚠️ Space base already exists at this position!");
             return prevBases; // 기존 상태 유지 (새로 추가하지 않음)
           }
+
+          // 우주기지 생성 시 도시 이름도 배열에 추가
+          setPlayerBases((prev) => {
+            const newBases = [...prev];
+            return prev.map((bases, index) =>
+              index === currentPlayer && !bases.includes(targetCity)
+                ? [...bases, targetCity]
+                : bases
+            );
+          });
+
+          console.log(
+            `player ${currentPlayer + 1} built a base in ${targetCity}`
+          );
 
           const newBase = { position: positions[target], color: player.color };
           return [...prevBases, newBase];
@@ -426,15 +466,19 @@ const TravelMap = ({ onRollDice }) => {
 
     setShowModal(false);
   };
+  console.log(playerBases);
 
   // 플레이어 수 변경 핸들러
   const handlePlayerCountChange = (count) => {
+    const newCount = Number(count);
     setNumPlayers(count);
     setCurrentPlayer(0);
     // 모든 플레이어 위치 초기화
     setPlayers((prevPlayers) =>
       prevPlayers.map((player) => ({ ...player, position: 0 }))
     );
+    setSpaceBases([]);
+    setPlayerBases(Array.from({ length: newCount }, () => []));
   };
 
   // positions 배열에서 각 플레이어의 위치 좌표 계산
@@ -473,26 +517,27 @@ const TravelMap = ({ onRollDice }) => {
     }
   };
 
-  // Canvas 내부에 우주선 렌더링 추가
-  const renderSpaceships = () => {
-    return players
-      .slice(0, numPlayers)
-      .map((player, index) => (
-        <Spaceship
-          key={player.id}
-          position={getPlayerPosition(player.position, index)}
-          color={player.color}
-        />
-      ));
-  };
+  // // Canvas 내부에 우주선 렌더링 추가
+  // const renderSpaceships = () => {
+  //   return players
+  //     .slice(0, numPlayers)
+  //     .map((player, index) => (
+  //       <BlueRobot
+  //         key={player.id}
+  //         position={getPlayerPosition(player.position, index)
+  //           scale={0.2}
+  //         }
+  //       />
+  //     ));
+  // };
 
   // 우주 기지 렌더링 추가
-  const renderSpaceBases = () => {
+  const renderSpaceBases = useMemo(() => {
     console.log("render base");
     return spaceBases.map((base, index) => (
       <SpaceBase key={index} position={base.position} color={base.color} />
     ));
-  };
+  }, [spaceBases]);
 
   return (
     <div className="h-[100%] flex flex-col">
@@ -540,8 +585,8 @@ const TravelMap = ({ onRollDice }) => {
               scene.background = texture;
             }}
           >
-            <ambientLight intensity={5} />
-            <pointLight position={[10, 20, 10]} intensity={1.5} color="white" />
+            <ambientLight intensity={2} />
+            <pointLight position={[10, 20, 10]} intensity={0.8} color="white" />
 
             {/* 바닥 생성 */}
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.18, 0]}>
@@ -553,7 +598,7 @@ const TravelMap = ({ onRollDice }) => {
             <mesh position={[5, 0.01, -5]} rotation={[-Math.PI / 2, 0, 0]}>
               <planeGeometry args={[5, 5]} />
               <meshStandardMaterial
-                map={useLoader(TextureLoader, timemachineStop)} // 추가 이미지 텍스처
+                map={timeMachineStopTexture} // 추가 이미지 텍스처
                 transparent={true}
               />
             </mesh>
@@ -562,7 +607,7 @@ const TravelMap = ({ onRollDice }) => {
             <mesh position={[5, 0.01, 4.5]} rotation={[-Math.PI / 2, 0, 0]}>
               <planeGeometry args={[3, 5]} />
               <meshStandardMaterial
-                map={useLoader(TextureLoader, telepathyCard)} // 추가 이미지 텍스처
+                map={telepathyCardTexture} // 추가 이미지 텍스처
                 transparent={true}
               />
             </mesh>
@@ -571,7 +616,7 @@ const TravelMap = ({ onRollDice }) => {
             <mesh position={[-5, 0.01, -5]} rotation={[-Math.PI / 2, 0, 0]}>
               <planeGeometry args={[5, 5]} />
               <meshStandardMaterial
-                map={useLoader(TextureLoader, neuronsCard)} // 추가 이미지 텍스처
+                map={neuronsCardTexture} // 추가 이미지 텍스처
                 transparent={true}
               />
             </mesh>
@@ -593,13 +638,19 @@ const TravelMap = ({ onRollDice }) => {
               zoomToCursor={true}
               rotateSpeed={0.15}
             />
+
             {renderCells()}
-            {renderSpaceships()}
-            {renderSpaceBases()}
+            {players.slice(0, numPlayers).map((player, index) => (
+              <BlueRobot
+                key={player.id}
+                position={getPlayerPosition(player.position, index)}
+                scale={0.005}
+              />
+            ))}
+            {renderSpaceBases}
           </Canvas>
         </div>
       </div>
-
       {showModal &&
         createPortal(
           <div className="fixed inset-0 z-50 w-2/3 text-center flex items-center justify-center">

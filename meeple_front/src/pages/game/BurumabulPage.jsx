@@ -4,15 +4,22 @@ import GameSidebar from "../../components/sidebar/GameSidebar";
 import { ChevronLeft, ChevronRight, Menu, X } from "lucide-react";
 import DiceImage from "../../assets/burumabul_images/Dice.png";
 import PlayerVideo from "../../components/game/burumabul/PlayerVideo";
+import { div, p } from "framer-motion/client";
 
 const BurumabulPage = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   // const [playerCount, setPlayerCount] = useState()
   const [rollDice, setRollDice] = useState(null);
+  const [playerBases, setPlayerBases] = useState([]);
   const playerInfoList = [1, 2, 3, 4];
 
   const handleRollDiceRef = useCallback((rollDiceFn) => {
     setRollDice(() => rollDiceFn);
+  }, []);
+
+  const handlePlayerBasesRef = useCallback((getBases) => {
+    console.log("플레이어 베이스 정보 : ", getBases);
+    setPlayerBases(getBases);
   }, []);
 
   const toggleSidebar = () => {
@@ -60,7 +67,10 @@ const BurumabulPage = () => {
         <div className="h-screen w-full flex">
           {/* <div className="text-4xl font-bold text-center">BurumablePage</div> */}
           <div className="w-2/3">
-            <TravelMap onRollDice={handleRollDiceRef} />
+            <TravelMap
+              onRollDice={handleRollDiceRef}
+              onBasesInfo={handlePlayerBasesRef}
+            />
           </div>
 
           <div className="w-1/3 bg-gray-300 flex justify-center h-screen">
@@ -79,7 +89,10 @@ const BurumabulPage = () => {
                   <h2 className="text-center m-3">플레이어 순위</h2>
                   <div className="mb-3 mx-2">
                     {playerInfoList.map((player, index) => (
-                      <div key={index} className="flex justify-around">
+                      <div
+                        key={index}
+                        className="flex justify-around overflow-hidden text-ellipsis"
+                      >
                         {/* 순위 아이콘 */}
                         <p>순위</p>
                         <p>player {index + 1}. : 누구누구</p>
@@ -92,13 +105,47 @@ const BurumabulPage = () => {
 
               {/* 내 정보 칸 */}
               <div className="h-[40%] w-full border-2">
-                <div className="h-[78%]">내 정보</div>
-                <div className="text-center">
+                <div className="h-[78%] mt-3">
+                  <h1 className="text-center">플레이어 이름 정보</h1>
+                  <div>
+                    <p>
+                      내 기지 :{" "}
+                      {playerBases.map((playerBase, playerIndex) => (
+                        <div key={playerIndex}>
+                          <p>플레이어 {playerIndex + 1} : </p>
+                          {playerBases.length > 0 ? (
+                            playerBase.map((city, cityIndex) => (
+                              <p key={cityIndex} className="ml-4">
+                                {city}
+                              </p>
+                            ))
+                          ) : (
+                            <p className="ml-4 text-gray-500">
+                              기지가 없습니다.
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-row justify-center items-center">
                   <button
-                    className="w-16 h-16"
+                    className="flex flex-row justify-center items-center"
                     onClick={() => rollDice && rollDice()}
                   >
-                    <img src={DiceImage} alt="" />
+                    <div className="flex-shrink-0 border-2 border-white text-white rounded-lg p-2 w-44 h-12 bg-teal-400 flex items-center justify-between whitespace-nowrap min-w-0">
+                      <p
+                        className="flex-shrink-0 ml-2"
+                        style={{
+                          textShadow:
+                            "-1px 0px black, 0px 1px black, 1px 0px black, 0px -1px black",
+                        }}
+                      >
+                        주사위 굴리기
+                      </p>
+                      <img className="w-12 h-12" src={DiceImage} alt="Dice" />
+                    </div>
                   </button>
                 </div>
               </div>
