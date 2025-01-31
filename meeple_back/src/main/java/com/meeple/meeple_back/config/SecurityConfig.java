@@ -56,7 +56,8 @@ public class SecurityConfig {
 						session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-						.requestMatchers("/ws/**").permitAll()
+						.requestMatchers("/ws/**", "/ws").permitAll()
+						.requestMatchers("/topic/**", "/queue/**", "/app/**").permitAll()  // STOMP 엔드포인트 추가
 						.requestMatchers("/auth/login", "/user/register", "/user/checkEmail/**",
 								"/user/checkNickname/**").permitAll()
 						.requestMatchers(HttpMethod.GET, "/profile/{userId}").permitAll()
@@ -84,7 +85,10 @@ public class SecurityConfig {
 		configuration.setAllowedOrigins(Arrays.asList(
 				"http://localhost:5173",
 				"ws://localhost:5173",
-				"wss://localhost:5173"
+				"wss://localhost:5173",
+				"http://boardjjigae.duckdns.org",
+				"ws://boardjjigae.duckdns.org",
+				"wss://boardjjigae.duckdns.org"
 		));
 		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(Arrays.asList(

@@ -96,7 +96,8 @@ export const CatchMindAPI = {
 
       // 기본 config에 추가된 헤더 설정
       const config = {
-        baseURL: "http://localhost:8090",
+        baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
+        // baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -142,7 +143,8 @@ export const CatchMindAPI = {
       };
 
       const listResponse = await axios.get(
-        "http://localhost:8090/api/catch-mind",
+        `${import.meta.env.VITE_API_BASE_URL}/api/catch-mind`,
+        // `${import.meta.env.VITE_LOCAL_API_BASE_URL}/api/catch-mind`,
         config
       );
 
