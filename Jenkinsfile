@@ -85,6 +85,7 @@ pipeline {
                         // docker-compose 명령어를 Jenkins 워크스페이스 내에서 직접 실행
                         sh '''
                             docker-compose pull
+                            docker-compose down
                             docker-compose up -d --remove-orphans
                         '''
                     }
