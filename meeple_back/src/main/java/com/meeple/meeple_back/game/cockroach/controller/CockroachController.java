@@ -1,6 +1,7 @@
 package com.meeple.meeple_back.game.cockroach.controller;
 
 import com.meeple.meeple_back.game.cockroach.model.request.RequestCreateRoom;
+import com.meeple.meeple_back.game.cockroach.model.response.ResponseCockroachRoom;
 import com.meeple.meeple_back.game.cockroach.model.response.ResponseCreateRoom;
 import com.meeple.meeple_back.game.cockroach.service.CockroachService;
 import com.meeple.meeple_back.game.cockroach.service.GameRoomService;
@@ -16,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/game")
+@RequestMapping("/game")
 @Tag(name = "Cockroach Game", description = "바퀴벌레 게임 방 생성 및 관리 API")
 public class CockroachController {
 
@@ -48,10 +49,11 @@ public class CockroachController {
             @ApiResponse(responseCode = "404", description = "방을 찾을 수 없음")
     })
     @PostMapping("/join-room")
-    public ResponseEntity<Map<String, Object>> joinRoom(
+    public ResponseEntity<ResponseCockroachRoom> joinRoom(
         @RequestParam String roomId,
-        @RequestParam String playerName) {
-        Map<String, Object> response = gameRoomService.addPlayer(roomId, playerName);
+        @RequestParam String playerName,
+        @RequestParam String password) {
+        ResponseCockroachRoom response = gameRoomService.addPlayer(roomId, playerName, password);
         return ResponseEntity.ok(response);
     }
 

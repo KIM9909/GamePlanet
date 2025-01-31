@@ -2,6 +2,7 @@ package com.meeple.meeple_back.game.cockroach.service;
 
 import com.meeple.meeple_back.game.cockroach.model.entity.Room;
 import com.meeple.meeple_back.game.cockroach.model.request.RequestCreateRoom;
+import com.meeple.meeple_back.game.cockroach.model.response.ResponseCockroachRoom;
 import com.meeple.meeple_back.game.cockroach.model.response.ResponseCreateRoom;
 import com.meeple.meeple_back.game.cockroach.repository.RoomRepository;
 
@@ -87,16 +88,34 @@ public class GameRoomService {
         }
     }
 
-    public Map<String, Object> addPlayer(String roomId, String playerName) {
+    public ResponseCockroachRoom addPlayer(String roomId, String playerName, String password) {
         Map<String, Object> room = getRoom(roomId);
         System.out.println(roomId + "방 " + playerName + " 유저 참가 서비스");
+        boolean isPrivate = Boolean.parseBoolean(String.valueOf(room.get("isPrivate")));
+        if (isPrivate) {
+            if (!room.get("password").equals(password)) {
+                ResponseCockroachRoom response = ResponseCockroachRoom.builder()
+                        .code(400)
+                        .message("비밀번호 불일치")
+                        .build();
+                return response;
+            }
+        }
+
         if (room != null) {
             List<String> players = (List<String>) room.get("players");
             players.add(playerName);
+            room.put("players", players);
             redisTemplate.opsForHash().put(ROOM_KEY, roomId, room);
         }
 
-        return room;
+        ResponseCockroachRoom response =  ResponseCockroachRoom.builder()
+                .code(200)
+                .message("방 입장 성공")
+                .roomInfo(room)
+                .build();
+
+        return response;
     }
 
     public void deleteRoom(String roomId) {

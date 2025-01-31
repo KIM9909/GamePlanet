@@ -31,5 +31,4 @@ public interface CatchMindService {
 
     ResponseUpdateRoom updateRoom(String roomId, RequestUpdateRoom request);
 
-    Map<String, Object> getRoomDetail(String roomId);
 }

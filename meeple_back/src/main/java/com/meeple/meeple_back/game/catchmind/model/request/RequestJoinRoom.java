@@ -9,4 +9,6 @@ public class RequestJoinRoom {
     private int roomId;
     @Schema(description = "참가자 닉네임", example = "nick1", required = true)
     private String playerName;
+    @Schema(description = "방 비밀번호", example = "pass01")
+    private String password;
 }

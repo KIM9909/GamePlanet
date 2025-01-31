@@ -18,7 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/game-info")
+@RequestMapping("/game-info")
 @Tag(name = "GameInfo", description = "게임 저보 관련 API")
 public class GameInfoController {
     private final GameInfoService gameInfoService;
