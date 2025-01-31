@@ -59,26 +59,39 @@ const BurumabulPage = () => {
       >
         <div className="h-screen w-full flex">
           {/* <div className="text-4xl font-bold text-center">BurumablePage</div> */}
-          <div className="w-3/4">
+          <div className="w-2/3">
             <TravelMap onRollDice={handleRollDiceRef} />
           </div>
 
-          <div className="w-1/4 bg-gray-300 flex items-center justify-center h-screen">
+          <div className="w-1/3 bg-gray-300 flex justify-center h-screen">
             {/* 화상 칸 */}
-            <div className="flex flex-col items-center w-full h-full">
-              <div className="h-2/3 w-full border-2 overflow-y-auto thin-scrollbar max-h-[70vh]">
-                <h2 className="text-lg text-center my-2">현재 플레이어 순서</h2>
-                <div className="mx-2 mb-2">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-2">
+            <div className="flex flex-col items-center justify-center w-full h-full">
+              <div className="h-[60%] w-full border-2 overflow-y-auto thin-scrollbar max-h-[70vh]">
+                <h2 className="text-lg text-center my-2">현재 플레이어: </h2>
+                <div className="mx-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-3">
                     {playerInfoList.map((player, index) => (
                       <PlayerVideo key={index} playerInfo={player} />
+                    ))}
+                  </div>
+                </div>
+                <div className="border-2 m-3 rounded-lg">
+                  <h2 className="text-center m-3">플레이어 순위</h2>
+                  <div className="mb-3 mx-2">
+                    {playerInfoList.map((player, index) => (
+                      <div key={index} className="flex justify-around">
+                        {/* 순위 아이콘 */}
+                        <p>순위</p>
+                        <p>player {index + 1}. : 누구누구</p>
+                        <p>~~~~~ 만 마불</p>
+                      </div>
                     ))}
                   </div>
                 </div>
               </div>
 
               {/* 내 정보 칸 */}
-              <div className="h-1/3 w-full border-2">
+              <div className="h-[40%] w-full border-2">
                 <div className="h-[78%]">내 정보</div>
                 <div className="text-center">
                   <button

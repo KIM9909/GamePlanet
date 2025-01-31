@@ -375,38 +375,6 @@ const TravelMap = ({ onRollDice }) => {
     ));
   };
 
-  // 부모요소 참조
-
-  const parentRef = useRef();
-  const [parentBounds, setParentBounds] = useState({
-    top: 0,
-    left: 0,
-    width: 0,
-    height: 0,
-  });
-
-  const updateParentBounds = () => {
-    if (parentRef.current) {
-      const rect = parentRef.current.getBoundingClientRect();
-      setParentBounds({
-        top: rect.top,
-        left: rect.left,
-        width: rect.width,
-        height: rect.height,
-      });
-    }
-  };
-
-  useEffect(() => {
-    // 초기위치 계산
-    const handleResize = () => updateParentBounds();
-    updateParentBounds();
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
   // 플레이어 상태 관리
   const [players, setPlayers] = useState([
     { id: 1, position: 0, color: "#E82561" },
@@ -560,7 +528,7 @@ const TravelMap = ({ onRollDice }) => {
           </p>
         )}
       </div>
-      <div ref={parentRef} className="flex w-full h-full">
+      <div className="flex w-full h-full">
         <div className=" w-full h-full">
           <Canvas
             camera={{
@@ -634,16 +602,7 @@ const TravelMap = ({ onRollDice }) => {
 
       {showModal &&
         createPortal(
-          <div
-            className="absolute z-50 text-center flex items-center justify-center"
-            style={{
-              position: "absolute",
-              top: parentBounds.top,
-              left: parentBounds.left,
-              width: parentBounds.width,
-              height: parentBounds.height,
-            }}
-          >
+          <div className="fixed inset-0 z-50 w-2/3 text-center flex items-center justify-center">
             <Dice
               onComplete={handleDiceComplete}
               onClose={() => setShowModal(false)}

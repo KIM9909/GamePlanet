@@ -168,7 +168,6 @@ const Dice = ({ onComplete, onClose }) => {
   const createDiceMesh = () => {
     const boxMaterialOuter = new THREE.MeshStandardMaterial({
       color: 0xffffff,
-      shininess: 60,
       specular: 0x444444,
     });
     const boxMaterialInner = new THREE.MeshStandardMaterial({
@@ -382,12 +381,12 @@ const Dice = ({ onComplete, onClose }) => {
     state.scene = new THREE.Scene();
 
     state.camera = new THREE.PerspectiveCamera(
-      50,
+      45,
       canvasRef.current.clientWidth / canvasRef.current.clientHeight,
       0.1,
       1000
     );
-    state.camera.position.set(0, 10, 0).multiplyScalar(4);
+    state.camera.position.set(0, 8, 0).multiplyScalar(4);
     state.camera.lookAt(0, 0, 0);
     state.camera.up.set(0, 0, -1);
     state.camera.fov = 45;
