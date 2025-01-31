@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class ResponseVoteResult {
+public class ResponseCockroachVoteResult {
     private String target;
     private boolean isLeave;
 }

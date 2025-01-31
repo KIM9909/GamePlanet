@@ -30,19 +30,19 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-	private final JwtAuthenticationFilter jwtAuthenticationFilter;
-	private final JwtLogoutHandler jwtLogoutHandler;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtLogoutHandler jwtLogoutHandler;
 
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
-	@Bean
-	public AuthenticationManager authenticationManager(
-			AuthenticationConfiguration authenticationConfiguration) throws Exception {
-		return authenticationConfiguration.getAuthenticationManager();
-	}
+    @Bean
+    public AuthenticationManager authenticationManager(
+        AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -57,6 +57,7 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 						.requestMatchers("/ws/**", "/ws").permitAll()
+                        .requestMatchers("/**").permitAll()
 						.requestMatchers("/topic/**", "/queue/**", "/app/**").permitAll()  // STOMP 엔드포인트 추가
 						.requestMatchers("/auth/login", "/user/register", "/user/checkEmail/**",
 								"/user/checkNickname/**").permitAll()
@@ -71,13 +72,14 @@ public class SecurityConfig {
 						UsernamePasswordAuthenticationFilter.class)
 				.formLogin(Customizer.withDefaults());
 
-		http.logout(logout -> logout
-				.logoutUrl("/auth/logout")
-				.addLogoutHandler(jwtLogoutHandler)
-				.logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler()));
+        http.logout(logout -> logout
+            .logoutUrl("/auth/logout")
+            .addLogoutHandler(jwtLogoutHandler)
+            .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler()));
 
-		return http.build();
-	}
+        return http.build();
+    }
+
 
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
@@ -107,10 +109,9 @@ public class SecurityConfig {
 		configuration.setExposedHeaders(Arrays.asList("*"));
 		configuration.setAllowCredentials(true);
 		configuration.setMaxAge(3600L);
-
-		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-		source.registerCorsConfiguration("/**", configuration);
-		source.registerCorsConfiguration("/ws/**", configuration);
-		return source;
-	}
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/ws/**", configuration);
+        return source;
+    }
 }
