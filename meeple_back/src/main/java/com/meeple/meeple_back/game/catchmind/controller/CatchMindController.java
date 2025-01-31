@@ -75,8 +75,10 @@ public class CatchMindController {
                             schema = @Schema(implementation = List.class)))
     })
     @GetMapping
-    public ResponseEntity<List<String>> roomList() {
-        List<String> response = catchMindService.getList();
+    public ResponseEntity<List<Map<String, Object>>> roomList() {
+        List<Map<String, Object>> response = catchMindService.getList();
+
+        System.out.println(response);
 
         return ResponseEntity.ok(response);
     }

@@ -122,14 +122,14 @@ public class GameRoomService {
         redisTemplate.opsForHash().delete(ROOM_KEY, roomId);
     }
 
-    public List<String> getAllRooms() {
+    public List<Map<String, Object>> getAllRooms() {
         System.out.println("getAllRooms service 호출");
 
         // Redis에서 Object 타입 키를 가져와 String으로 변환
         return redisTemplate.opsForHash()
-                .keys(ROOM_KEY)
+                .values(ROOM_KEY)
                 .stream()
-                .map(Object::toString) // Object 타입을 String으로 변환
+                .map(obj -> (Map<String, Object>) obj) // Object 타입을 String으로 변환
                 .collect(Collectors.toList());
     }
 }

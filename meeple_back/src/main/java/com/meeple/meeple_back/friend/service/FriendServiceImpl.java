@@ -2,15 +2,22 @@ package com.meeple.meeple_back.friend.service;
 
 import com.meeple.meeple_back.friend.model.FriendStatus;
 import com.meeple.meeple_back.friend.model.entity.Friend;
+import com.meeple.meeple_back.friend.model.entity.FriendMessage;
 import com.meeple.meeple_back.friend.model.request.RequestFriend;
 import com.meeple.meeple_back.friend.model.request.RequestProcess;
+import com.meeple.meeple_back.friend.model.request.RequestSendFriendMessage;
 import com.meeple.meeple_back.friend.model.response.ResponseFriend;
 import com.meeple.meeple_back.friend.model.response.ResponseFriendList;
+import com.meeple.meeple_back.friend.model.response.ResponseFriendMessageList;
+import com.meeple.meeple_back.friend.model.response.ResponseSendFriendMessage;
+import com.meeple.meeple_back.friend.repository.FriendMessageRepository;
 import com.meeple.meeple_back.friend.repository.FriendRepository;
 import com.meeple.meeple_back.user.model.User;
 import com.meeple.meeple_back.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +29,9 @@ import java.util.stream.Collectors;
 public class FriendServiceImpl implements FriendService {
     private final FriendRepository friendRepository;
     private final UserRepository userRepository;
+    private final FriendMessageRepository friendMessageRepository;
     private final SimpMessageSendingOperations messagingTemplate;
+    private final ModelMapper mapper;
 
     @Override
     public List<ResponseFriendList> findFriendList(long userId) {
@@ -107,5 +116,40 @@ public class FriendServiceImpl implements FriendService {
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 pk입니다."));
 
         friendRepository.delete(friend);
+    }
+
+    @Override
+    public ResponseSendFriendMessage sendMessage(RequestSendFriendMessage request) {
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 회원"));
+
+        User sender = userRepository.findById(request.getSenderId())
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 발송자"));
+
+        FriendMessage friendMessage = FriendMessage.builder()
+                .content(request.getContent())
+                .sender(sender)
+                .user(user)
+                .build();
+
+        friendMessageRepository.save(friendMessage);
+
+        ResponseSendFriendMessage response = ResponseSendFriendMessage.builder()
+                .code(200)
+                .message("발송 성공")
+                .build();
+
+        return response;
+    }
+
+    @Override
+    public List<ResponseFriendMessageList> getMessageList(long userId) {
+        List<FriendMessage> messageList = friendMessageRepository.findByUser_UserId(userId);
+
+        mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+
+        return messageList.stream().map(message -> mapper
+                        .map(message, ResponseFriendMessageList.class))
+                .collect(Collectors.toList());
     }
 }

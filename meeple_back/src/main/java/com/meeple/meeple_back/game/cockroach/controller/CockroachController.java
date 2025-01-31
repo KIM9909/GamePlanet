@@ -98,7 +98,7 @@ public class CockroachController {
             @ApiResponse(responseCode = "200", description = "방 목록 조회 성공")
     })
     @GetMapping("/rooms")
-    public List<String> getAllRooms() {
+    public List<Map<String, Object>> getAllRooms() {
         return gameRoomService.getAllRooms();
     }
 }
