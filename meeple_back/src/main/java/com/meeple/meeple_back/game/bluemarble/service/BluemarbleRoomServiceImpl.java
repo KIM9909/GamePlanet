@@ -55,7 +55,7 @@ public class BluemarbleRoomServiceImpl implements BluemarbleRoomService {
 	@Override
 	public Room join(int roomId, long userId) {
 		Room room = getRoom(roomId);
-		room.addPlayer(new Player((int) userId));
+		room = room.addPlayer(new Player((int) userId));
 		roomRedisTemplate.opsForHash().put(ROOM_KEY, roomId, room);
 		return room;
 	}

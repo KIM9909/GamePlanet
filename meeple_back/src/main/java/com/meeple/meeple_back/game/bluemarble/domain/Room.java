@@ -42,6 +42,10 @@ public class Room {
 
 	private List<Player> players;
 
+	public boolean isCreator(int userId) {
+		return creator == userId;
+	}
+
 	public Room update(RoomUpdate roomUpdate) {
 		return Room.builder()
 				.roomId(roomId)

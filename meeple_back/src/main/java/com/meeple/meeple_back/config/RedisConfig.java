@@ -14,7 +14,6 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
@@ -26,22 +25,20 @@ public class RedisConfig {
 	@Value("${spring.data.redis.port}")
 	private int redisPort;
 
-	@Bean
-	public RedisTemplate<String, Room> roomRedisTemplate() {
+	@Bean(name = "roomRedisTemplate")
+	public RedisTemplate<String, Room> roomRedisTemplate(RedisConnectionFactory connectionFactory) {
 		RedisTemplate<String, Room> template = new RedisTemplate<>();
-		template.setConnectionFactory(redisConnectionFactory());
+		template.setConnectionFactory(connectionFactory);
 
+		// Key serializer
 		template.setKeySerializer(new StringRedisSerializer());
 
-		Jackson2JsonRedisSerializer<Room> serializer = new Jackson2JsonRedisSerializer<>(
-				Room.class);
-		template.setValueSerializer(serializer);
-
+		// Value serializer with custom ObjectMapper
+		template.setValueSerializer(new GenericJackson2JsonRedisSerializer(customObjectMapper()));
 		template.setHashKeySerializer(new StringRedisSerializer());
+		template.setHashValueSerializer(
+				new GenericJackson2JsonRedisSerializer(customObjectMapper()));
 
-		template.setHashValueSerializer(serializer);
-
-		template.afterPropertiesSet();
 		return template;
 	}
 
