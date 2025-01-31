@@ -14,14 +14,9 @@ const CatchMindListPage = () => {
 
   const fetchRooms = async () => {
     try {
-      const response = await CatchMindAPI.getRoomList();
-
-      // 방 상세 정보를 가져오는 로직 추가
-      const roomDetails = await Promise.all(
-        response.map((roomId) => CatchMindAPI.getRoomInfo(roomId))
-      );
-
-      setRooms(roomDetails || []);
+      // 한 번의 API 호출로 모든 방 정보를 가져옴
+      const roomDetails = await CatchMindAPI.getRoomList();
+      setRooms(roomDetails);
     } catch (error) {
       console.error("방 목록 가져오기 실패:", error);
       setRooms([]);
