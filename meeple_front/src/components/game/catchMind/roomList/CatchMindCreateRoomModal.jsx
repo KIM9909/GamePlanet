@@ -20,7 +20,7 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
   }, [userId, dispatch]);
 
   const [formData, setFormData] = useState({
-    roomName: "", // roomTitle이 아닌 roomName으로 통일
+    roomTitle: "", // roomTitle이 아닌 roomTitle으로 통일
     isPrivate: false,
     password: "",
     maxPeople: "2",
@@ -96,11 +96,11 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
             </label>
             <input
               type="text"
-              value={formData.roomName}
+              value={formData.roomTitle}
               onChange={(e) =>
                 setFormData((prev) => ({
                   ...prev,
-                  roomName: e.target.value,
+                  roomTitle: e.target.value,
                 }))
               }
               className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
