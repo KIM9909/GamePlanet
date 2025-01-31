@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    options {
+            buildDiscarder(logRotator(numToKeepStr: '10'))
+       }
     tools {
             nodejs 'nodejs-22'
      }
@@ -82,11 +85,10 @@ pipeline {
 
         stage('Deploy') {
                     steps {
-                        // docker-compose 명령어를 Jenkins 워크스페이스 내에서 직접 실행
                         sh '''
-                            docker-compose pull
-                            docker-compose down
-                            docker-compose up -d --remove-orphans
+                            docker-compose -p meeple_ci_cd pull
+                            docker-compose -p meeple_ci_cd down
+                            docker-compose -p meeple_ci_cd up -d --remove-orphans
                         '''
                     }
             }
