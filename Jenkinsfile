@@ -90,6 +90,14 @@ pipeline {
                         '''
                     }
             }
+        stage('Cleanup Docker Images') {
+            steps {
+                sh '''
+                    docker image prune -f
+                    docker image prune -a -f --filter "until=48h"
+                '''
+            }
+        }
     }
 
     post {
