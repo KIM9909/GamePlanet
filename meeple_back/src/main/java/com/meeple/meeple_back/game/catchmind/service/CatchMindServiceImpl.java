@@ -65,6 +65,7 @@ public class CatchMindServiceImpl implements CatchMindService {
         roomInfo.put("maxPeople", request.getMaxPeople());
         roomInfo.put("quizCount", request.getQuizCount());
         roomInfo.put("timeLimit", request.getTimeLimit());
+        roomInfo.put("roomTitle", request.getRoomTitle());
 
 
         redisTemplate.opsForHash().put(ROOM_KEY, savedRoom.getRoomId() + "", roomInfo);
@@ -77,21 +78,22 @@ public class CatchMindServiceImpl implements CatchMindService {
     }
 
     @Override
-    public Map<String, Object> getRoomDetail(String roomId) {
-        Map<String, Object> roomInfo =
-                (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
-
-        if (roomInfo == null) {
-            throw new EntityNotFoundException("해당 방을 찾을 수 없습니다.");
-        }
-
-        return roomInfo;
-    }
-
-    @Override
     public ResponseJoinRoom joinRoom(RequestJoinRoom request) {
         Map<String, Object> roomInfo =
                 (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, request.getRoomId() + "");
+
+        boolean isPrivate = Boolean.parseBoolean(String.valueOf(roomInfo.get("isPrivate")));
+
+        if (isPrivate) {
+            if (!roomInfo.get("password").equals(request.getPassword())) {
+                ResponseJoinRoom response = ResponseJoinRoom.builder()
+                        .code(400)
+                        .message("비밀번호 불일치")
+                        .build();
+
+                return response;
+            }
+        }
 
         if (roomInfo != null) {
             List<String> players = (List<String>) roomInfo.get("players");

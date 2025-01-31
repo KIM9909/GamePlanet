@@ -1,4 +1,4 @@
-package com.meeple.meeple_back.game.catchmind.model.response;
+package com.meeple.meeple_back.game.cockroach.model.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -8,7 +8,7 @@ import java.util.Map;
 
 @Data
 @Builder
-public class ResponseJoinRoom {
+public class ResponseCockroachRoom {
     @Schema(description = "상태코드", example = "200", required = true)
     private int code;
     @Schema(description = "처리 메세지", example = "메세지", required = true)
