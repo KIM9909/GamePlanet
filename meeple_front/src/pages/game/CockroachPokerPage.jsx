@@ -49,48 +49,27 @@ const CockroachPokerPage = () => {
   };
 
   const handleStartGame = async () => {
-    // 실제 서버 연동 코드 (현재는 주석처리)
-    /*
-    try {
-      const response = await startGame();
-      if (response && response.data) {
-        setGameData(response.data);
-      }
-    } catch (error) {
-      console.error("게임 시작 실패:", error);
-    }
-    */
-
-    // 테스트용 임시 데이터
     const mockGameData = {
       players: ["testUser", "user2", "user3", "user4"],
       gameData: {
         gameState: {
           currentTurn: "testUser",
-          //   currentPhase: "GUESS_OR_FORWARD",
-          //   currentCard: {
-          //     type: "Black",
-          //     royal: false,
-          //   },
-          //   cardSender: "user3",
-          //   cardReceiver: "testUser",
-          //   claimedAnimal: "Stinkbug",
-          //   isKing: false,
-          //   isNegative: false,
-          //   passedPlayers: [], // PASS한 플레이어들
-          //   passCount: 0, // 현재까지 PASS 횟수
+          currentCard: {
+            type: "Black",
+            royal: false,
+          },
+          cardSender: "user3",
+          cardReceiver: "testUser",
+          claimedAnimal: "Rat", 
+          isKing: false,
         },
         playerCards: {
           testUser: [
             { type: "Rat", royal: true },
             { type: "Bat", royal: false },
-            { type: "Bat", royal: false },
             { type: "Fly", royal: false },
             { type: "Black", royal: false },
             { type: "Cockroach", royal: true },
-            { type: "Scorpion", royal: false },
-            { type: "Toad", royal: false },
-            { type: "Joker", royal: false },
           ],
           user2: Array(8).fill(null),
           user3: Array(8).fill(null),
@@ -105,28 +84,18 @@ const CockroachPokerPage = () => {
           testUser: [
             { type: "Bat", count: 2 },
             { type: "Rat", count: 1, royal: true },
-            { type: "Cockroach", count: 2 },
-            { type: "Scorpion", count: 1 },
-            { type: "Toad", count: 1, royal: true },
           ],
           user2: [
             { type: "Bat", count: 2 },
             { type: "Rat", count: 1, royal: true },
-            { type: "Fly", count: 1 },
           ],
           user3: [
             { type: "Cockroach", count: 3 },
-            { type: "Scorpion", count: 1, royal: true },
             { type: "Scorpion", count: 1 },
-            { type: "Toad", count: 2 },
-            { type: "Stinkbug", count: 1 },
-            { type: "Rat", count: 2 },
           ],
           user4: [
             { type: "Bat", count: 1, royal: true },
             { type: "Rat", count: 2 },
-            { type: "Fly", count: 2 },
-            { type: "Cockroach", count: 1 },
           ],
         },
       },

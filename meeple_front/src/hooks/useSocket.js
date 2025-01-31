@@ -31,7 +31,6 @@ const useSocket = (roomId) => {
       client.subscribe(`/topic/messages/${roomId}`, (message) => {
         console.log("Received message:", message.body);
         const newMessage = JSON.parse(message.body);
-        console.log("Parsed message:", newMessage); // 디버깅용
         setMessages((prev) => [
           ...prev,
           {
@@ -60,15 +59,40 @@ const useSocket = (roomId) => {
 
   const sendMessage = useCallback(
     (messageData) => {
-      if (clientRef.current?.connected) {
+      if (!clientRef.current?.connected) {
+        console.error("WebSocket not connected");
+        return;
+      }
+
+      try {
         console.log("Sending message:", messageData);
+
+        // 채팅 메시지 처리
+        if (!messageData.type) {
+          // 채팅 메시지는 type이 없음
+          clientRef.current.publish({
+            destination: `/app/game/chat/${roomId}`,
+            body: JSON.stringify(messageData),
+          });
+          return;
+        }
+
+        // PASS_CARD 처리
+        if (messageData.type === "PASS_CARD") {
+          clientRef.current.publish({
+            destination: `/app/game/pass-card/${roomId}`,
+            body: JSON.stringify(messageData.data),
+          });
+          return;
+        }
+
+        // 다른 게임 메시지 처리
         clientRef.current.publish({
-          destination: `/app/game/chat/${roomId}`,
-          body: JSON.stringify({
-            message: messageData.message,
-            sender: messageData.sender,
-          }),
+          destination: `/app/game/${messageData.type.toLowerCase()}/${roomId}`,
+          body: JSON.stringify(messageData.data),
         });
+      } catch (error) {
+        console.error("Error sending message:", error);
       }
     },
     [roomId]

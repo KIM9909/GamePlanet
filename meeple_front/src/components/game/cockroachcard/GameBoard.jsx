@@ -253,9 +253,6 @@ const GameBoard = ({
     setShowGiveCardModal(true);
   };
   const handleGiveCard = (claimData) => {
-    console.log("=== handleGiveCard Debug ===");
-    console.log("Before update - gameState:", gameData?.gameData?.gameState);
-
     const giveCardData = {
       to: selectedPlayer,
       from: currentUser,
@@ -268,7 +265,6 @@ const GameBoard = ({
         toPlayer: selectedPlayer,
       },
     };
-    console.log("giveCardData:", giveCardData);
 
     // 클라이언트 상태 먼저 업데이트
     const updatedGameState = {
@@ -279,19 +275,31 @@ const GameBoard = ({
       claimedAnimal: claimData.animal,
       isKing: claimData.isKing,
     };
-    console.log("After update - updatedGameState:", updatedGameState);
+
+    // PASS가 아닐 때만 내 패에서 카드 제거
+    const updatedPlayerCards = isPassing
+      ? gameData.gameData.playerCards
+      : {
+          ...gameData.gameData.playerCards,
+          [currentUser]: gameData.gameData.playerCards[currentUser].filter(
+            (card) =>
+              !(
+                card.type === selectedCard.type &&
+                card.royal === selectedCard.isRoyal
+              )
+          ),
+        };
 
     const updatedGameData = {
       ...gameData,
       gameData: {
         ...gameData.gameData,
         gameState: updatedGameState,
+        playerCards: updatedPlayerCards,
       },
     };
 
-    // 여기서 실제로 상태를 업데이트
     setGameData(updatedGameData);
-    console.log("Updated game data:", updatedGameData);
 
     // 서버로 메시지 전송
     sendMessage({
@@ -299,9 +307,11 @@ const GameBoard = ({
       data: giveCardData,
     });
 
-    // 모달 닫기
+    // 상태 초기화
     setShowGiveCardModal(false);
     setIsPassing(false);
+    setSelectedCard(null);
+    setSelectedPlayer(null);
   };
   const handleModalClose = () => {
     setShowGiveCardModal(false);
@@ -324,6 +334,7 @@ const GameBoard = ({
     }
 
     setIsPassing(true);
+    // 현재 ActiveCardArea에 있는 카드 정보를 그대로 사용
     setSelectedCard({
       type: currentCard.currentCard.type,
       isRoyal: currentCard.currentCard.royal,
@@ -332,11 +343,15 @@ const GameBoard = ({
     setPassCount((prev) => prev + 1);
     setIsMyTurn(false);
 
-    console.log("PASS 후 상태:", {
-      isPassing: true,
-      selectedCard: currentCard.currentCard,
-      passedPlayers: newPassedPlayers,
-      remainingPlayers,
+    // 서버로 PASS 메시지 전송
+    sendMessage({
+      type: "PASS_CARD",
+      data: {
+        from: currentUser,
+        card: currentCard.currentCard,
+        passedPlayers: newPassedPlayers,
+        passCount: passCount + 1,
+      },
     });
   };
 
@@ -410,20 +425,23 @@ const GameBoard = ({
     const currentCard = gameData.gameData.gameState.currentCard;
     const loser = determineLoser(guess);
     const claimedAnimal = gameData.gameData.gameState.claimedAnimal;
+    const isClaimedKing = gameData.gameData.gameState.isKing;  // 선언된 카드가 킹인지 여부
     const loserTableCards = gameData.gameData.userTableCards[loser] || [];
 
     if (currentCard.type === "Black" || currentCard.type === "Joker") {
-      const loserHand = playerCards[loser] || [];
-      const validLoserHand = loserHand.filter((card) => card && card.type);
-      const hasClaimedCard = validLoserHand.some(
-        (card) => card.type === claimedAnimal
-      );
+        const loserHand = gameData.gameData.playerCards[loser] || [];
+        const validLoserHand = loserHand.filter((card) => card && card.type);
+        
+        // 선언한 카드와 정확히 일치하는 카드가 있는지 확인 (타입과 킹 여부 모두 체크)
+        const hasExactClaimedCard = validLoserHand.some(
+            (card) => card.type === claimedAnimal && card.royal === isClaimedKing
+        );
 
-      setCurrentLoser(loser);
-      setShowPenaltyCardModal(true);
-      setPenaltyCardCount(hasClaimedCard ? 1 : 2);
+        setCurrentLoser(loser);
+        setShowPenaltyCardModal(true);
+        setPenaltyCardCount(hasExactClaimedCard ? 1 : 2);
     } else {
-      await sendPenaltyCard(loser, currentCard);
+        await sendPenaltyCard(loser, currentCard);
     }
 
     setShowGuessModal(false);
@@ -534,67 +552,42 @@ const GameBoard = ({
     }
   }, [gameData?.gameData?.gameState?.currentCard]);
 
-  // WebSocket 메시지 처리
+  // WebSocket 메시지 처리 수정
   useEffect(() => {
-    if (!stompClient) return;
+    if (!stompClient || !gameData) return;
 
-    const subscription = stompClient.subscribe(
-      `/topic/game/${roomId}`,
-      (message) => {
+    const handleGameMessage = (message) => {
+      try {
         const data = JSON.parse(message.body);
+        console.log("Received game message:", data);
 
-        if (data.type === "GIVE_CARD") {
-          // 카드 애니메이션 시작
-          const fromArea = document.querySelector(
-            `[data-player="${data.animation.fromPlayer}"]`
-          );
-          const toArea = document.querySelector(
-            `[data-player="${data.animation.toPlayer}"]`
-          );
-
-          if (fromArea && toArea) {
-            const fromRect = fromArea.getBoundingClientRect();
-            const toRect = toArea.getBoundingClientRect();
-
-            setAnimatingCard(data.card);
-            setSourcePosition({
-              x: fromRect.left + fromRect.width / 2,
-              y: fromRect.top + fromRect.height / 2,
-            });
-            setTargetPosition({
-              x: toRect.left + toRect.width / 2,
-              y: toRect.top + toRect.height / 2,
-            });
-          }
+        switch (data.type) {
+          case "SINGLE_CARD_PENALTY":
+            // 패널티 카드 처리
+            break;
+          case "GIVE_CARD":
+            // 카드 주기 처리
+            break;
+          case "GUESS_RESULT":
+            // 추측 결과 처리
+            break;
+          case "HAND_CHECK":
+            // 핸드 체크 처리
+            break;
+          default:
+            console.log("Unknown message type:", data.type);
         }
-
-        // 게임 종료 메시지 처리
-        if (data.type === "HAND_CHECK" && data.isEnd) {
-          let reason;
-          // 현재 게임 상태에 따라 reason 설정
-          if (
-            gameData?.gameData?.gameState?.currentCard?.type === "Black" ||
-            gameData?.gameData?.gameState?.currentCard?.type === "Joker"
-          ) {
-            reason = "패널티 카드를 낼 수 없음";
-          } else {
-            reason = "낼 카드가 없음";
-          }
-
-          setGameEndInfo({
-            loser: data.loser,
-            reason: reason,
-          });
-          setShowGameEndModal(true);
-        } else {
-          // 모든 게임 데이터 업데이트
-          setGameData(data);
-        }
+      } catch (error) {
+        console.error("Error handling game message:", error);
       }
-    );
+    };
 
-    return () => subscription.unsubscribe();
-  }, [stompClient, roomId, setGameData, gameData]);
+    // 게임 메시지 구독은 useSocket에서 처리하므로 여기서는 제거
+    
+    return () => {
+      // cleanup 로직
+    };
+  }, [stompClient, gameData, currentUser]);
 
   const handleUpdateRoom = (updateData) => {
     // 로컬 상태도 업데이트
