@@ -21,7 +21,7 @@ pipeline {
 
         stage('Prepare Config') {
             steps {
-                withCredentials([file(credentialsId: 'app-config', variable: 'APP_CONFIG'), file(credentialsId: 'vite-config', variable: 'VITE_CONFIG')]) {
+                withCredentials([file(credentialsId: 'app-config', variable: 'APP_CONFIG'), file(credentialsId: 'vite-config', variable: 'VITE_CONFIG'), file(credentialsId: 'front-env', variable: 'FRONT_ENV')]) {
 
                     // 디렉토리 생성 및 파일 복사
                     sh 'mkdir -p meeple_back/src/main/resources'
@@ -29,6 +29,8 @@ pipeline {
 
                     // vite-config 파일 복사
                     sh 'cp $VITE_CONFIG meeple_front/vite.config.js'
+
+                    sh 'cp $FRONT_ENV meeple_front/.env'
                 }
             }
         }
