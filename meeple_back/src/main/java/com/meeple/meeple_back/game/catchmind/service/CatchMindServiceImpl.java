@@ -58,7 +58,7 @@ public class CatchMindServiceImpl implements CatchMindService {
         roomInfo.put("players", players);
         roomInfo.put("gameData", new HashMap<>());
         roomInfo.put("gameType", "캐치마인드");
-        roomInfo.put("isPrivate", request.isPrivate());
+        roomInfo.put("isPrivate",true);
         roomInfo.put("password", request.getPassword());
         roomInfo.put("isGameStart", false);
         roomInfo.put("creator", request.getCreator());
@@ -164,11 +164,11 @@ public class CatchMindServiceImpl implements CatchMindService {
     }
 
     @Override
-    public List<String> getList() {
+    public List<Map<String, Object>> getList() {
         return redisTemplate.opsForHash()
-                .keys(ROOM_KEY)
+                .values(ROOM_KEY)
                 .stream()
-                .map(Object::toString)
+                .map(obj -> (Map<String, Object>) obj)
                 .collect(Collectors.toList());
     }
 

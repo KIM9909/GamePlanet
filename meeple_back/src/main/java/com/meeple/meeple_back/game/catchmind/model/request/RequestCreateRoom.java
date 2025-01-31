@@ -15,7 +15,7 @@ public class RequestCreateRoom {
     private String creator;
 
     @Schema(description = "방의 공개 여부", example = "false", required = true)
-    private boolean isPrivate;
+    private String isPrivate;
 
     @Schema(description = "비공개 방의 비밀번호 (공개 방이면 null)", example = "1234")
     private String password;

@@ -11,7 +11,7 @@ public interface CatchMindService {
 
     ResponseJoinRoom joinRoom(RequestJoinRoom request);
 
-    List<String> getList();
+    List<Map<String, Object>> getList();
 
     void deleteRoom(String roomId);
 
