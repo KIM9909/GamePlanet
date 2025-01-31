@@ -16,4 +16,6 @@ public interface BluemarbleRoomService {
 	Room delete(int roomId, long userId);
 
 	Room update(int roomId, RoomUpdate roomUpdate);
+
+	Room startGame(int roomId);
 }

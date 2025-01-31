@@ -73,5 +73,10 @@ public class BluemarbleRoomController {
 				RoomResponse.from(bluemarbleRoomService.update(roomId, roomUpdate)));
 	}
 
+	@PostMapping("/start-game/{roomId}")
+	@Operation(summary = "게임 시작", description = "게임을 시작합니다.")
+	public ResponseEntity<RoomResponse> startGame(@PathVariable int roomId) {
+		return ResponseEntity.ok(RoomResponse.from(bluemarbleRoomService.startGame(roomId)));
+	}
 
 }

@@ -64,11 +64,19 @@ public class Room {
 		if (Objects.isNull(players)) {
 			throw new ResourceNotFoundException("Player", player.getPlayerId());
 		}
-		if (players.size() >= maxPlayers) {
+		if (isFull()) {
 			throw new ResourceNotFoundException("Room", roomId);
 		}
 		players.add(player);
 		return this;
+	}
+
+	public boolean isCreator(int userId) {
+		return creator == userId;
+	}
+
+	private boolean isFull() {
+		return players.size() >= maxPlayers;
 	}
 
 }
