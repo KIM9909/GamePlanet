@@ -136,7 +136,7 @@ const MainLayout = () => {
   useEffect(() => {
     const fetchRoomInfo = async () => {
       try {
-        const response = await API.get(`/api/catch-mind/rooms/${roomId}`);
+        const response = await API.get(`/catch-mind/rooms/${roomId}`);
         console.log("방 정보 response:", response); // 데이터 확인
         setRoomInfo(response);
       } catch (error) {
