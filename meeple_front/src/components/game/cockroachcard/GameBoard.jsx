@@ -252,107 +252,116 @@ const GameBoard = ({
     setSelectedPlayer(playerNickname);
     setShowGiveCardModal(true);
   };
+
+  const handlePass = () => {
+    if (remainingPlayers.length === 0) {
+        console.log("마지막 플레이어는 무조건 맞춰야 합니다!");
+        setShowGuessModal(true);
+        return;
+    }
+
+    const currentCard = gameData.gameData.gameState;
+    setIsPassing(true);
+    setSelectedCard({
+        type: currentCard.currentCard.type,
+        isRoyal: currentCard.currentCard.royal,
+    });
+    setPassedPlayers([
+        ...(gameData.gameData.gameState.passedPlayers || []),
+        currentUser,
+    ]);
+    setPassCount((prev) => prev + 1);
+  };
+
   const handleGiveCard = (claimData) => {
     const giveCardData = {
-      to: selectedPlayer,
-      from: currentUser,
-      card: selectedCard,
-      animal: claimData.animal,
-      isKing: claimData.isKing,
-      isNagative: claimData.isNegative,
-      animation: {
-        fromPlayer: currentUser,
-        toPlayer: selectedPlayer,
-      },
+        to: selectedPlayer,
+        from: currentUser,
+        card: selectedCard,
+        animal: claimData.animal,
+        isKing: claimData.isKing,
+        isNagative: claimData.isNegative,
+        animation: {
+            fromPlayer: currentUser,
+            toPlayer: selectedPlayer,
+        },
     };
 
-    // 클라이언트 상태 먼저 업데이트
+    // PASS인 경우와 일반 카드 주기를 구분
+    if (isPassing) {
+        // PASS 로직
+        const newPassedPlayers = [
+            ...(gameData.gameData.gameState.passedPlayers || []),
+            currentUser,
+        ];
+
+        sendMessage({
+            type: "PASS_CARD",
+            data: {
+                from: currentUser,
+                to: selectedPlayer,
+                card: selectedCard,
+                passedPlayers: newPassedPlayers,
+                passCount: passCount + 1,
+                // 블러핑 정보도 포함
+                animal: claimData.animal,
+                isKing: claimData.isKing,
+                isNagative: claimData.isNegative,
+            },
+        });
+    } else {
+        // 기존 GIVE_CARD 로직
+        sendMessage({
+            type: "GIVE_CARD",
+            data: giveCardData,
+        });
+    }
+
+    // 클라이언트 상태 업데이트 (공통)
     const updatedGameState = {
-      ...gameData.gameData.gameState,
-      cardSender: currentUser,
-      cardReceiver: selectedPlayer,
-      currentCard: selectedCard,
-      claimedAnimal: claimData.animal,
-      isKing: claimData.isKing,
+        ...gameData.gameData.gameState,
+        cardSender: currentUser,
+        cardReceiver: selectedPlayer,
+        currentCard: selectedCard,
+        claimedAnimal: claimData.animal,
+        isKing: claimData.isKing,
     };
 
-    // PASS가 아닐 때만 내 패에서 카드 제거
     const updatedPlayerCards = isPassing
-      ? gameData.gameData.playerCards
-      : {
-          ...gameData.gameData.playerCards,
-          [currentUser]: gameData.gameData.playerCards[currentUser].filter(
-            (card) =>
-              !(
-                card.type === selectedCard.type &&
-                card.royal === selectedCard.isRoyal
-              )
-          ),
+        ? gameData.gameData.playerCards
+        : {
+            ...gameData.gameData.playerCards,
+            [currentUser]: gameData.gameData.playerCards[currentUser].filter(
+                (card) =>
+                    !(
+                        card.type === selectedCard.type &&
+                        card.royal === selectedCard.isRoyal
+                    )
+            ),
         };
 
     const updatedGameData = {
-      ...gameData,
-      gameData: {
-        ...gameData.gameData,
-        gameState: updatedGameState,
-        playerCards: updatedPlayerCards,
-      },
+        ...gameData,
+        gameData: {
+            ...gameData.gameData,
+            gameState: updatedGameState,
+            playerCards: updatedPlayerCards,
+        },
     };
 
     setGameData(updatedGameData);
-
-    // 서버로 메시지 전송
-    sendMessage({
-      type: "GIVE_CARD",
-      data: giveCardData,
-    });
 
     // 상태 초기화
     setShowGiveCardModal(false);
     setIsPassing(false);
     setSelectedCard(null);
     setSelectedPlayer(null);
+    setIsMyTurn(false);
   };
+
   const handleModalClose = () => {
     setShowGiveCardModal(false);
     setSelectedPlayer(null);
-  };
-
-  const handlePass = () => {
-    const players = gameData.players;
-    const currentCard = gameData.gameData.gameState;
-
-    const newPassedPlayers = [
-      ...(gameData.gameData.gameState.passedPlayers || []),
-      currentUser,
-    ];
-
-    if (remainingPlayers.length === 0) {
-      console.log("마지막 플레이어는 무조건 맞춰야 합니다!");
-      setShowGuessModal(true);
-      return;
-    }
-
-    setIsPassing(true);
-    // 현재 ActiveCardArea에 있는 카드 정보를 그대로 사용
-    setSelectedCard({
-      type: currentCard.currentCard.type,
-      isRoyal: currentCard.currentCard.royal,
-    });
-    setPassedPlayers(newPassedPlayers);
-    setPassCount((prev) => prev + 1);
-    setIsMyTurn(false);
-
-    // 서버로 PASS 메시지 전송
-    sendMessage({
-      type: "PASS_CARD",
-      data: {
-        from: currentUser,
-        card: currentCard.currentCard,
-        passedPlayers: newPassedPlayers,
-        passCount: passCount + 1,
-      },
-    });
   };
 
   const handleGameEnd = useCallback(

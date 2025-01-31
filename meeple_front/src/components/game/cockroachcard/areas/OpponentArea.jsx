@@ -85,6 +85,7 @@ const OpponentArea = ({
                 type={stack.type}
                 count={stack.count}
                 isRoyal={stack.royal}
+                
               />
             ))}
           </div>
