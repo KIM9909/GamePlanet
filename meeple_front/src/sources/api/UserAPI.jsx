@@ -6,7 +6,8 @@ import axios from "axios";
  * withCredentials: 쿠키를 포함한 인증 요청 허용
  */
 const API = axios.create({
-  baseURL: "http://localhost:8090",
+  // baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
+  baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
   headers: {
     "Content-Type": "application/json",
   },
@@ -23,8 +24,6 @@ API.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    // 디버깅을 위한 요청 URL 로깅
-    console.log("Request URL:", `${config.baseURL}${config.url}`);
     return config;
   },
   (error) => {
