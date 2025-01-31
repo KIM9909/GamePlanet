@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/catch-mind")
+@RequestMapping("/catch-mind")
 @Tag(name = "CatchMind", description = "캐치마인드 게임 API")
 public class CatchMindController {
     private static final String ROOM_KEY = "CATCH_MIND_GAME_ROOMS";

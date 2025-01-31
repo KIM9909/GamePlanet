@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/game")
+@RequestMapping("/game")
 @Tag(name = "Cockroach Game", description = "바퀴벌레 게임 방 생성 및 관리 API")
 public class CockroachController {
 
