@@ -134,33 +134,10 @@ export const CatchMindAPI = {
   getRoomList: async () => {
     try {
       const response = await API.get("/catch-mind");
-      const roomIds = response || [];
+      console.log("방 목록 응답:", response);
 
-      // 방 정보를 병렬로 조회
-      const roomDetails = await Promise.all(
-        roomIds.map(async (roomId) => {
-          try {
-            const roomInfo = await API.get(`/catch-mind/rooms/${roomId}`);
-            return roomInfo;
-          } catch (error) {
-            console.error(`방 정보 조회 실패 (${roomId}):`, error);
-            // 기본 정보 반환
-            return {
-              roomId,
-              roomTitle: "접근 불가능한 방",
-              isPrivate: false,
-              players: [],
-              maxPeople: 4,
-              isGameStart: false,
-              creator: "알 수 없음",
-              timeLimit: 90,
-              quizCount: 5,
-            };
-          }
-        })
-      );
-
-      return roomDetails;
+      // response 자체가 방 목록 전체 정보를 포함하고 있을 것이므로 바로 반환
+      return response;
     } catch (error) {
       console.error("방 목록 조회 실패:", error);
       throw error;
@@ -169,8 +146,14 @@ export const CatchMindAPI = {
 
   getRoomInfo: async (roomId) => {
     try {
-      const response = await API.get(`/catch-mind/rooms/${roomId}`);
-      return response;
+      const roomList = await API.get("/catch-mind");
+      const roomInfo = roomList.find((room) => room.roomId === roomId);
+
+      if (!roomInfo) {
+        throw new Error(`Room with ID ${roomId} not found`);
+      }
+
+      return roomInfo;
     } catch (error) {
       console.error(`방 정보 조회 실패 (${roomId}):`, error);
       throw error;

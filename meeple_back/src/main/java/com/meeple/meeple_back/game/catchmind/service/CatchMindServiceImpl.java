@@ -58,7 +58,7 @@ public class CatchMindServiceImpl implements CatchMindService {
         roomInfo.put("players", players);
         roomInfo.put("gameData", new HashMap<>());
         roomInfo.put("gameType", "캐치마인드");
-        roomInfo.put("isPrivate",true);
+        roomInfo.put("isPrivate", request.isPrivate());
         roomInfo.put("password", request.getPassword());
         roomInfo.put("isGameStart", false);
         roomInfo.put("creator", request.getCreator());
