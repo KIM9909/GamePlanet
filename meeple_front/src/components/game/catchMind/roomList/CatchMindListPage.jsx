@@ -3,9 +3,12 @@ import { Lock, Plus, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { CatchMindAPI } from "../../../../sources/api/CatchMindAPI";
 import CatchMindCreateRoomModal from "./CatchMindCreateRoomModal";
+import CatchMindPasswordModal from "./CatchMindPasswordModal";
 
 const CatchMindListPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState(null);
   const [rooms, setRooms] = useState([]);
   const navigate = useNavigate();
 
@@ -29,7 +32,18 @@ const CatchMindListPage = () => {
     fetchRooms();
   }, []);
 
-  const handleEnterRoom = (roomId) => {
+  const handleEnterRoom = (room) => {
+    if (room.isPrivate) {
+      // 비밀방인 경우 비밀번호 모달 열기
+      setSelectedRoom(room);
+      setIsPasswordModalOpen(true);
+    } else {
+      // 공개방은 바로 입장
+      navigate(`/catch-mind/${room.roomId}`);
+    }
+  };
+
+  const handleSuccessfulEntry = (roomId) => {
     navigate(`/catch-mind/${roomId}`);
   };
 
@@ -60,7 +74,7 @@ const CatchMindListPage = () => {
 
               <div className="p-4">
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold text-lg">{room.roomName}</h3>
+                  <h3 className="font-semibold text-lg">{room.roomTitle}</h3>
                   {room.isPrivate && (
                     <Lock size={18} className="text-gray-600" />
                   )}
@@ -90,7 +104,7 @@ const CatchMindListPage = () => {
                     방장: {room.creator}
                   </span>
                   <button
-                    onClick={() => handleEnterRoom(room.roomId)}
+                    onClick={() => handleEnterRoom(room)}
                     className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
                   >
                     입장하기
@@ -108,6 +122,19 @@ const CatchMindListPage = () => {
           fetchRooms();
         }}
       />
+
+      {selectedRoom && (
+        <CatchMindPasswordModal
+          isOpen={isPasswordModalOpen}
+          onClose={() => {
+            setIsPasswordModalOpen(false);
+            setSelectedRoom(null);
+          }}
+          roomId={selectedRoom.roomId}
+          roomTitle={selectedRoom.roomTitle}
+          onSuccessfulEntry={handleSuccessfulEntry}
+        />
+      )}
     </div>
   );
 };

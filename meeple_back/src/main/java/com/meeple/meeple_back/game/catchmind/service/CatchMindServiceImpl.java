@@ -65,6 +65,7 @@ public class CatchMindServiceImpl implements CatchMindService {
         roomInfo.put("maxPeople", request.getMaxPeople());
         roomInfo.put("quizCount", request.getQuizCount());
         roomInfo.put("timeLimit", request.getTimeLimit());
+        roomInfo.put("roomTitle", request.getRoomTitle());
 
 
         redisTemplate.opsForHash().put(ROOM_KEY, savedRoom.getRoomId() + "", roomInfo);

@@ -175,13 +175,48 @@ export const CatchMindAPI = {
       // 에러 발생 시 기본 객체 반환
       return {
         roomId,
-        roomName: "알 수 없는 방",
+        roomTitle: "알 수 없는 방",
         isPrivate: false,
         players: [],
         maxPeople: 4,
         isGameStart: false,
         creator: "알 수 없음",
       };
+    }
+  },
+
+  // 방 비밀번호 확인
+  checkRoomPassword: async (roomId, password) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("로그인이 필요합니다");
+      }
+
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        withCredentials: true,
+      };
+
+      const response = await axios.post(
+        `${
+          import.meta.env.VITE_API_BASE_URL
+        }/api/catch-mind/rooms/${roomId}/check-password`,
+        { password },
+        // `${
+        //   import.meta.env.VITE_LOCAL_API_BASE_URL
+        // }/api/catch-mind/rooms/${roomId}/check-password`,
+        // { password },
+        config
+      );
+
+      return response;
+    } catch (error) {
+      console.error(`Failed to check room password for room ${roomId}:`, error);
+      throw error;
     }
   },
 };

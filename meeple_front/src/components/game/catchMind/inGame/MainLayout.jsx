@@ -18,11 +18,12 @@ import { useSelector, useDispatch } from "react-redux";
 import Canvas from "./Canvas";
 import ChatBox from "./ChatBox";
 import PlayerCard from "./PlayerCard";
-import { Timer, Pencil, Eraser, Trash2, Users } from "lucide-react";
+import { Timer, Pencil, Eraser, Trash2, Users, Lock } from "lucide-react";
 import { updatePlayerNickname } from "../../../../sources/store/slices/CatchMindSlice";
 import { fetchProfile } from "../../../../sources/store/slices/ProfileSlice";
 import { useParams } from "react-router-dom";
 import { useState } from "react";
+import API from "../../../../sources/api/CatchMindAPI";
 
 /**
  * 게임 정보를 표시하는 컴포넌트
@@ -33,7 +34,7 @@ const GameInfo = ({ round, timer, word, roomInfo }) => {
     <div className="flex items-center justify-between px-6 py-3 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-t-lg border-b border-gray-700">
       {/* 방 제목 추가 */}
       <div className="flex items-center gap-2">
-        <h2 className="text-xl font-bold">{roomInfo?.roomName}</h2>
+        <h2 className="text-xl font-bold">{roomInfo?.roomTitle}</h2>
         {roomInfo?.isPrivate && <Lock className="w-4 h-4 text-gray-400" />}
       </div>
 
@@ -136,6 +137,7 @@ const MainLayout = () => {
     const fetchRoomInfo = async () => {
       try {
         const response = await API.get(`/api/catch-mind/rooms/${roomId}`);
+        console.log("방 정보 response:", response); // 데이터 확인
         setRoomInfo(response);
       } catch (error) {
         console.error("방 정보 가져오기 실패:", error);
