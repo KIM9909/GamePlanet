@@ -52,7 +52,7 @@ public class Room {
 				.isPrivate(roomUpdate.isPrivate())
 				.password(password)
 				.isGameStart(roomUpdate.isGameStart())
-				.creator(roomUpdate.getCreator())
+				.creator(creator)
 				.maxPlayers(roomUpdate.getMaxPlayers())
 				.players(players)
 				.build();
