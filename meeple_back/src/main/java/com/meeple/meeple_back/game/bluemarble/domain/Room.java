@@ -65,6 +65,9 @@ public class Room {
 		if (isFull()) {
 			throw new ResourceNotFoundException("Room", roomId);
 		}
+		if (players.contains(player)) {
+			throw new IllegalArgumentException("Player already exists in the room");
+		}
 		players.add(player);
 		return this;
 	}
