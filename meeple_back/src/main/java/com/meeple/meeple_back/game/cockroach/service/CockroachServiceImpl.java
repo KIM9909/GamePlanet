@@ -35,7 +35,6 @@ import java.util.Set;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
@@ -457,7 +456,7 @@ public class CockroachServiceImpl implements CockroachService {
     }
 
     @Override
-    public ResponseVoteResult voteResult(String roomId, RequestVoteResult request) {
+    public ResponseCockroachVoteResult voteResult(String roomId, RequestVoteResult request) {
         if (request.isResult()) {
             Map<String, Object> roomInfo = (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
             List<String> players = (List<String>) roomInfo.get("players");
@@ -472,14 +471,14 @@ public class CockroachServiceImpl implements CockroachService {
             roomInfo.put("players", players);
             redisTemplate.opsForHash().put(ROOM_KEY, roomId, players);
 
-            ResponseVoteResult response = ResponseVoteResult.builder()
+            ResponseCockroachVoteResult response = ResponseCockroachVoteResult.builder()
                     .isLeave(true)
                     .target(request.getTarget())
                     .build();
 
             return response;
         } else {
-            ResponseVoteResult response = ResponseVoteResult.builder()
+            ResponseCockroachVoteResult response = ResponseCockroachVoteResult.builder()
                     .target(request.getTarget())
                     .isLeave(false)
                     .build();

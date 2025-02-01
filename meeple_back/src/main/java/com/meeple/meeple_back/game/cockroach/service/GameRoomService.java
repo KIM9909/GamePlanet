@@ -2,6 +2,7 @@ package com.meeple.meeple_back.game.cockroach.service;
 
 import com.meeple.meeple_back.game.cockroach.model.entity.Room;
 import com.meeple.meeple_back.game.cockroach.model.request.RequestCreateRoom;
+import com.meeple.meeple_back.game.cockroach.model.response.ResponseCockroachRoom;
 import com.meeple.meeple_back.game.cockroach.model.response.ResponseCreateRoom;
 import com.meeple.meeple_back.game.cockroach.repository.RoomRepository;
 
@@ -87,30 +88,48 @@ public class GameRoomService {
         }
     }
 
-    public Map<String, Object> addPlayer(String roomId, String playerName) {
+    public ResponseCockroachRoom addPlayer(String roomId, String playerName, String password) {
         Map<String, Object> room = getRoom(roomId);
         System.out.println(roomId + "방 " + playerName + " 유저 참가 서비스");
+        boolean isPrivate = Boolean.parseBoolean(String.valueOf(room.get("isPrivate")));
+        if (isPrivate) {
+            if (!room.get("password").equals(password)) {
+                ResponseCockroachRoom response = ResponseCockroachRoom.builder()
+                        .code(400)
+                        .message("비밀번호 불일치")
+                        .build();
+                return response;
+            }
+        }
+
         if (room != null) {
             List<String> players = (List<String>) room.get("players");
             players.add(playerName);
+            room.put("players", players);
             redisTemplate.opsForHash().put(ROOM_KEY, roomId, room);
         }
 
-        return room;
+        ResponseCockroachRoom response =  ResponseCockroachRoom.builder()
+                .code(200)
+                .message("방 입장 성공")
+                .roomInfo(room)
+                .build();
+
+        return response;
     }
 
     public void deleteRoom(String roomId) {
         redisTemplate.opsForHash().delete(ROOM_KEY, roomId);
     }
 
-    public List<String> getAllRooms() {
+    public List<Map<String, Object>> getAllRooms() {
         System.out.println("getAllRooms service 호출");
 
         // Redis에서 Object 타입 키를 가져와 String으로 변환
         return redisTemplate.opsForHash()
-                .keys(ROOM_KEY)
+                .values(ROOM_KEY)
                 .stream()
-                .map(Object::toString) // Object 타입을 String으로 변환
+                .map(obj -> (Map<String, Object>) obj) // Object 타입을 String으로 변환
                 .collect(Collectors.toList());
     }
 }

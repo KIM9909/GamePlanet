@@ -4,6 +4,13 @@ import com.meeple.meeple_back.game.catchmind.model.request.*;
 import com.meeple.meeple_back.game.catchmind.model.response.*;
 import com.meeple.meeple_back.game.catchmind.service.CatchMindService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,7 +24,8 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/catch-mind")
+@RequestMapping("/catch-mind")
+@Tag(name = "CatchMind", description = "캐치마인드 게임 API")
 public class CatchMindController {
     private static final String ROOM_KEY = "CATCH_MIND_GAME_ROOMS";
     private final CatchMindService catchMindService;
@@ -30,16 +38,7 @@ public class CatchMindController {
         this.messagingTemplate = messagingTemplate;
     }
 
-    @GetMapping("/rooms/{roomId}")
-    public ResponseEntity<Map<String, Object>> getRoomDetail(@PathVariable String roomId) {
-        try {
-            Map<String, Object> roomInfo = catchMindService.getRoomDetail(roomId);
-            return ResponseEntity.ok(roomInfo);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
+    @Operation(summary = "게임 방 생성", description = "새로운 캐치마인드 게임 방을 생성합니다.")
     @PostMapping("/create-room")
     public ResponseEntity<ResponseCreateRoom> createRoom(
             @RequestBody RequestCreateRoom request
@@ -49,6 +48,7 @@ public class CatchMindController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @Operation(summary = "게임 방 참가", description = "기존 캐치마인드 게임 방에 참가합니다.")
     @PostMapping("/join-room")
     public ResponseEntity<ResponseJoinRoom> joinRoom(
             @RequestBody RequestJoinRoom request
@@ -68,13 +68,29 @@ public class CatchMindController {
         messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
     }
 
-    @GetMapping()
-    public ResponseEntity<List<String>> roomList() {
-        List<String> response = catchMindService.getList();
+    @Operation(summary = "게임 방 목록 조회", description = "현재 존재하는 모든 게임 방의 목록을 반환합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "게임 방 목록 조회 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = List.class)))
+    })
+    @GetMapping
+    public ResponseEntity<List<Map<String, Object>>> roomList() {
+        List<Map<String, Object>> response = catchMindService.getList();
+
+        System.out.println(response);
 
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "게임 방 삭제", description = "특정 ID를 가진 게임 방을 삭제합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "게임 방 삭제 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(example = "Room deleted {roomId}"))),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터"),
+            @ApiResponse(responseCode = "404", description = "해당 ID의 방을 찾을 수 없음")
+    })
     @DeleteMapping("/delete-room")
     public ResponseEntity<String> deleteRoom(@RequestParam String roomId) {
         catchMindService.deleteRoom(roomId);
@@ -82,8 +98,17 @@ public class CatchMindController {
         return ResponseEntity.ok("Room deleted " + roomId);
     }
 
+    @Operation(summary = "게임 시작 요청", description = "게임 시작 WebSocket 요청을 확인합니다.")
+    @GetMapping("/ws/start-game/{roomId}")
+    public ResponseEntity<String> startGame(
+            @Parameter(description = "게임을 시작할 방 ID", required = true)
+            @PathVariable String roomId) {
+        return ResponseEntity
+                .ok("WebSocket 요청을 ws://localhost:8090/ws/game/start-game/" + roomId + " 로 보내세요.");
+    }
+
     @MessageMapping("/start-game/{roomId}")
-    public void startGame(
+    public void startGameSocket(
             @DestinationVariable String roomId
     ) {
         ResponseStartGame response = catchMindService.startGame(roomId);
@@ -91,16 +116,32 @@ public class CatchMindController {
         messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
     }
 
+    @Operation(summary = "그림 그리기", description = "그림 그리기 WebSocket 요청을 확인합니다.")
+    @GetMapping("/ws/drawing/{roomId}")
+    public ResponseEntity<String> drawing(
+            @Parameter(description = "그림을 그릴 방 ID", required = true)
+            @PathVariable String roomId) {
+        return ResponseEntity.ok("WebSocket 요청을 ws://localhost:8090/ws/game/drawing/" + roomId + " 로 보내세요.");
+    }
+
     @MessageMapping("/drawing/{roomId}")
-    public void drawing(
+    public void drawingSocket(
             @DestinationVariable String roomId,
             @RequestBody RequestDrawing request
     ) {
         messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, request);
     }
 
+    @Operation(summary = "퀴즈 요청", description = "퀴즈 요청 WebSocket을 확인합니다.")
+    @GetMapping("/ws/request-quiz/{roomId}")
+    public ResponseEntity<String> requestQuiz(
+            @Parameter(description = "퀴즈를 요청할 방 ID", required = true)
+            @PathVariable String roomId) {
+        return ResponseEntity
+                .ok("WebSocket 요청을 ws://localhost:8090/ws/game/request-quiz/" + roomId + " 로 보내세요.");
+    }
     @MessageMapping("/request-quiz/{roomId}")
-    public void requestQuiz(
+    public void requestQuizSocket(
             @DestinationVariable String roomId
     ) {
         ResponseQuiz response = catchMindService.requestQuiz(roomId);
@@ -116,8 +157,16 @@ public class CatchMindController {
         catchMindService.sendMessage(roomId, request);
     }
 
+    @Operation(summary = "게임 결과 요청", description = "게임 결과 WebSocket 요청을 확인합니다.")
+    @GetMapping("/ws/game-result/{roomId}")
+    public ResponseEntity<String> gameResult(
+            @Parameter(description = "게임 결과를 조회할 방 ID", required = true)
+            @PathVariable String roomId) {
+        return ResponseEntity
+                .ok("WebSocket 요청을 ws://localhost:8090/ws/game/game-result/" + roomId + " 로 보내세요.");
+    }
     @MessageMapping("/game-result/{roomId}")
-    public void gameResult(
+    public void gameResultSocket(
             @DestinationVariable String roomId
     ) {
         List<ResponseGameResult> response = catchMindService.gameResult(roomId);
@@ -125,6 +174,13 @@ public class CatchMindController {
         messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
     }
 
+    @Operation(summary = "투표 요청", description = "투표 WebSocket 요청을 확인합니다.")
+    @GetMapping("/ws/send-vote/{roomId}")
+    public ResponseEntity<String> sendVote(
+            @Parameter(description = "투표를 진행할 방 ID", required = true)
+            @PathVariable String roomId) {
+        return ResponseEntity.ok("WebSocket 요청을 ws://localhost:8090/ws/game/send-vote/" + roomId + " 로 보내세요.");
+    }
     @MessageMapping("/send-vote/{roomId}")
     private void sendVote(
             @DestinationVariable String roomId,
@@ -144,6 +200,14 @@ public class CatchMindController {
         messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
     }
 
+    @Operation(summary = "투표 결과 요청", description = "투표 결과 WebSocket 요청을 확인합니다.")
+    @GetMapping("/ws/vote-result/{roomId}")
+    public ResponseEntity<String> voteResult(
+            @Parameter(description = "투표 결과를 확인할 방 ID", required = true)
+            @PathVariable String roomId) {
+        return ResponseEntity
+                .ok("WebSocket 요청을 ws://localhost:8090/ws/game/vote-result/" + roomId + " 로 보내세요.");
+    }
     @MessageMapping("/vote-result/{roomId}")
     private void voteResult(
             @DestinationVariable String roomId,

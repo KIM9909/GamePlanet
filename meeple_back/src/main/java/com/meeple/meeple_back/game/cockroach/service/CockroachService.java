@@ -21,7 +21,7 @@ public interface CockroachService {
 
     ResponseVote vote(RequestVote request);
 
-    ResponseVoteResult voteResult(String roomId, RequestVoteResult request);
+    ResponseCockroachVoteResult voteResult(String roomId, RequestVoteResult request);
 
     ResponseHandCheck handCheck(String roomId, RequestHandCheck request);
 

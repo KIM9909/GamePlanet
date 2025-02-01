@@ -18,11 +18,12 @@ import { useSelector, useDispatch } from "react-redux";
 import Canvas from "./Canvas";
 import ChatBox from "./ChatBox";
 import PlayerCard from "./PlayerCard";
-import { Timer, Pencil, Eraser, Trash2, Users } from "lucide-react";
+import { Timer, Pencil, Eraser, Trash2, Users, Lock } from "lucide-react";
 import { updatePlayerNickname } from "../../../../sources/store/slices/CatchMindSlice";
 import { fetchProfile } from "../../../../sources/store/slices/ProfileSlice";
 import { useParams } from "react-router-dom";
 import { useState } from "react";
+import API from "../../../../sources/api/CatchMindAPI";
 
 /**
  * 게임 정보를 표시하는 컴포넌트
@@ -33,7 +34,7 @@ const GameInfo = ({ round, timer, word, roomInfo }) => {
     <div className="flex items-center justify-between px-6 py-3 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-t-lg border-b border-gray-700">
       {/* 방 제목 추가 */}
       <div className="flex items-center gap-2">
-        <h2 className="text-xl font-bold">{roomInfo?.roomName}</h2>
+        <h2 className="text-xl font-bold">{roomInfo?.roomTitle}</h2>
         {roomInfo?.isPrivate && <Lock className="w-4 h-4 text-gray-400" />}
       </div>
 
@@ -121,8 +122,6 @@ const DrawingTools = () => {
  */
 const MainLayout = () => {
   const dispatch = useDispatch();
-
-  // Redux 상태 가져오기
   const gameState = useSelector((state) => state.catchmind);
   const userId = useSelector((state) => state.user.userId);
   const profileData = useSelector((state) => state.profile.profileData);
@@ -131,12 +130,30 @@ const MainLayout = () => {
   const { roomId } = useParams();
   const [roomInfo, setRoomInfo] = useState(null);
 
+  // 프로필 정보 가져오기
+  useEffect(() => {
+    if (userId) {
+      dispatch(fetchProfile(userId));
+    }
+  }, [userId, dispatch]);
+
   // 방 정보 가져오기
   useEffect(() => {
     const fetchRoomInfo = async () => {
       try {
-        const response = await API.get(`/api/catch-mind/rooms/${roomId}`);
-        setRoomInfo(response);
+        // 1. 먼저 전체 방 목록을 가져옵니다
+        const response = await API.get("/catch-mind");
+        console.log("전체 방 목록:", response);
+
+        // 2. 현재 roomId와 일치하는 방을 찾습니다
+        const currentRoom = response.find(
+          (room) => room.roomId === parseInt(roomId)
+        );
+
+        if (currentRoom) {
+          console.log("현재 방 정보:", currentRoom);
+          setRoomInfo(currentRoom);
+        }
       } catch (error) {
         console.error("방 정보 가져오기 실패:", error);
       }
@@ -147,19 +164,12 @@ const MainLayout = () => {
     }
   }, [roomId]);
 
-  // 프로필 정보 가져오기
-  useEffect(() => {
-    if (userId) {
-      dispatch(fetchProfile(userId));
-    }
-  }, [userId, dispatch]);
-
   // 프로필 정보로 플레이어 닉네임 업데이트
   useEffect(() => {
     if (profileData?.userNickname) {
       dispatch(
         updatePlayerNickname({
-          playerId: 1, // 첫 번째 플레이어를 현재 유저로 설정
+          playerId: 1,
           nickname: profileData.userNickname,
         })
       );
