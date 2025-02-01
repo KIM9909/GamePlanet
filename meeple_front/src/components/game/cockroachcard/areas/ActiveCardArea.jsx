@@ -18,16 +18,12 @@ const ActiveCardArea = ({
   };
   const [showSelectedCard, setShowSelectedCard] = useState(false);
 
-  // currentCard나 selectedCard가 변경될 때마다 카드 표시 상태 업데이트
+  // 타이밍 조정을 위해 useEffect 수정
   useEffect(() => {
-    setShowSelectedCard(false); // 먼저 카드를 숨김
-
-    // 새로운 카드가 있을 때만 표시
     if (currentCard || selectedCard) {
-      const timer = setTimeout(() => {
-        setShowSelectedCard(true);
-      }, 400);
-      return () => clearTimeout(timer);
+      setShowSelectedCard(true);
+    } else {
+      setShowSelectedCard(false);
     }
   }, [selectedCard, currentCard]);
 
@@ -41,26 +37,35 @@ const ActiveCardArea = ({
   return (
     <div className="absolute top-[60%] right-4 w-72 active-card-area">
       <div className="bg-gray-800/90 p-4 rounded-lg space-y-4 min-h-[200px]">
+        {/* 영역 제목 추가 */}
+        <div className="text-center text-sm font-medium text-gray-400 mb-2">
+          Current Card
+        </div>
+
         <div
           className="relative flex justify-center h-24"
           data-active-card-slot
         >
-          {showSelectedCard && (currentCard || selectedCard) ? (
-            <Card
-              type={
-                currentCard
-                  ? shouldShowFront()
-                    ? currentCard.type
-                    : null
-                  : selectedCard.type
-              }
-              isBack={currentCard ? !shouldShowFront() : false}
-              isRoyal={currentCard ? currentCard.royal : selectedCard?.isRoyal}
-              isActive={true}
-            />
-          ) : (
-            <div className="w-16 h-24 border-2 border-dashed border-gray-600 rounded-lg" />
-          )}
+          <div className="transition-opacity duration-300 ease-in-out">
+            {showSelectedCard && (currentCard || selectedCard) ? (
+              <Card
+                type={
+                  currentCard
+                    ? shouldShowFront()
+                      ? currentCard.type
+                      : null
+                    : selectedCard.type
+                }
+                isBack={currentCard ? !shouldShowFront() : false}
+                isRoyal={
+                  currentCard ? currentCard.royal : selectedCard?.isRoyal
+                }
+                isActive={true}
+              />
+            ) : (
+              <div className="w-16 h-24 border-2 border-dashed border-gray-600 rounded-lg opacity-50" />
+            )}
+          </div>
         </div>
 
         {/* 보내는 사람 -> 받는 사람 텍스트는 카드 아래에 표시 */}

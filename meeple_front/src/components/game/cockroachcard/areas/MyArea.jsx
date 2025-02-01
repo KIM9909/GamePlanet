@@ -46,13 +46,22 @@ const MyArea = ({
 
       <div className="flex justify-center gap-4 flex-wrap">
         {sortCards(handCards).map((card, i) => (
-          <Card
+          <div
             key={i}
-            type={card.type}
-            isRoyal={card.royal}
-            onClick={(card, e) => handleCardClick(card, e)} // event 객체를 전달
-            selectedCard={selectedCard}
-          />
+            className="transition-all duration-300 ease-in-out"
+            style={{
+              opacity: selectedCard?.type === card.type ? 0 : 1,
+              transform:
+                selectedCard?.type === card.type ? "scale(0.9)" : "scale(1)",
+            }}
+          >
+            <Card
+              type={card.type}
+              isRoyal={card.royal}
+              onClick={(card, e) => handleCardClick(card, e)}
+              selectedCard={selectedCard}
+            />
+          </div>
         ))}
       </div>
     </div>

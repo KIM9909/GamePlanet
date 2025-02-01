@@ -96,36 +96,6 @@ const PenaltyCardStack = ({ type, count = 3, isRoyal }) => {
   );
 };
 
-const AnimatedCard = ({ card, sourcePosition, targetPosition, onComplete }) => {
-  return (
-    <motion.div
-      initial={{
-        x: sourcePosition.x,
-        y: sourcePosition.y,
-        scale: 1,
-        zIndex: 50,
-      }}
-      animate={{
-        x: targetPosition.x,
-        y: targetPosition.y,
-        scale: 1.1,
-        zIndex: 50,
-      }}
-      transition={{
-        duration: 0.4,
-        ease: [0.4, 0, 0.2, 1], // 더 자연스러운 이징
-        scale: {
-          duration: 0.2,
-        },
-      }}
-      onAnimationComplete={onComplete}
-      className="fixed pointer-events-none"
-    >
-      <Card type={card.type} isRoyal={card.isRoyal} isActive={true} />
-    </motion.div>
-  );
-};
-
 const GameBoard = ({
   playerCount = 4,
   onStartGame,
@@ -208,41 +178,8 @@ const GameBoard = ({
   const handleCardClick = (card, event) => {
     if (!isMyTurn) return;
 
-    const cardElement = event.target.closest("[data-card-id]");
-    if (!cardElement) return;
-
-    const cardRect = cardElement.getBoundingClientRect();
-    const activeCardSlot = activeCardRef.current?.querySelector(
-      "[data-active-card-slot]"
-    );
-
-    if (activeCardSlot) {
-      const slotRect = activeCardSlot.getBoundingClientRect();
-      console.log("Active Card Slot Rectangle:", slotRect);
-
-      setSourcePosition({
-        x: cardRect.left,
-        y: cardRect.top,
-      });
-
-      setTargetPosition({
-        x: slotRect.left + (slotRect.width - cardRect.width) / 2, // 중앙 정렬
-        y: slotRect.top + (slotRect.height - cardRect.height) / 2, // 중앙 정렬
-      });
-
-      setAnimatingCard(card);
-      setSelectedCard(card);
-      selectedCardRef.current = cardElement;
-    }
-  };
-
-  const handleAnimationComplete = () => {
-    // 약간의 딜레이 후에 상태 업데이트
-    setTimeout(() => {
-      setAnimatingCard(null);
-      setSourcePosition(null);
-      setTargetPosition(null);
-    }); // 300ms 딜레이
+    // 애니메이션 관련 코드 제거
+    setSelectedCard(card);
   };
 
   const handlePlayerClick = (playerNickname) => {
@@ -255,98 +192,98 @@ const GameBoard = ({
 
   const handlePass = () => {
     if (remainingPlayers.length === 0) {
-        console.log("마지막 플레이어는 무조건 맞춰야 합니다!");
-        setShowGuessModal(true);
-        return;
+      console.log("마지막 플레이어는 무조건 맞춰야 합니다!");
+      setShowGuessModal(true);
+      return;
     }
 
     const currentCard = gameData.gameData.gameState;
     setIsPassing(true);
     setSelectedCard({
-        type: currentCard.currentCard.type,
-        isRoyal: currentCard.currentCard.royal,
+      type: currentCard.currentCard.type,
+      isRoyal: currentCard.currentCard.royal,
     });
     setPassedPlayers([
-        ...(gameData.gameData.gameState.passedPlayers || []),
-        currentUser,
+      ...(gameData.gameData.gameState.passedPlayers || []),
+      currentUser,
     ]);
     setPassCount((prev) => prev + 1);
   };
 
   const handleGiveCard = (claimData) => {
     const giveCardData = {
-        to: selectedPlayer,
-        from: currentUser,
-        card: selectedCard,
-        animal: claimData.animal,
-        isKing: claimData.isKing,
-        isNagative: claimData.isNegative,
-        animation: {
-            fromPlayer: currentUser,
-            toPlayer: selectedPlayer,
-        },
+      to: selectedPlayer,
+      from: currentUser,
+      card: selectedCard,
+      animal: claimData.animal,
+      isKing: claimData.isKing,
+      isNagative: claimData.isNegative,
+      animation: {
+        fromPlayer: currentUser,
+        toPlayer: selectedPlayer,
+      },
     };
 
     // PASS인 경우와 일반 카드 주기를 구분
     if (isPassing) {
-        // PASS 로직
-        const newPassedPlayers = [
-            ...(gameData.gameData.gameState.passedPlayers || []),
-            currentUser,
-        ];
+      // PASS 로직
+      const newPassedPlayers = [
+        ...(gameData.gameData.gameState.passedPlayers || []),
+        currentUser,
+      ];
 
-        sendMessage({
-            type: "PASS_CARD",
-            data: {
-                from: currentUser,
-                to: selectedPlayer,
-                card: selectedCard,
-                passedPlayers: newPassedPlayers,
-                passCount: passCount + 1,
-                // 블러핑 정보도 포함
-                animal: claimData.animal,
-                isKing: claimData.isKing,
-                isNagative: claimData.isNegative,
-            },
-        });
+      sendMessage({
+        type: "PASS_CARD",
+        data: {
+          from: currentUser,
+          to: selectedPlayer,
+          card: selectedCard,
+          passedPlayers: newPassedPlayers,
+          passCount: passCount + 1,
+          // 블러핑 정보도 포함
+          animal: claimData.animal,
+          isKing: claimData.isKing,
+          isNagative: claimData.isNegative,
+        },
+      });
     } else {
-        // 기존 GIVE_CARD 로직
-        sendMessage({
-            type: "GIVE_CARD",
-            data: giveCardData,
-        });
+      // 기존 GIVE_CARD 로직
+      sendMessage({
+        type: "GIVE_CARD",
+        data: giveCardData,
+      });
     }
 
     // 클라이언트 상태 업데이트 (공통)
     const updatedGameState = {
-        ...gameData.gameData.gameState,
-        cardSender: currentUser,
-        cardReceiver: selectedPlayer,
-        currentCard: selectedCard,
-        claimedAnimal: claimData.animal,
-        isKing: claimData.isKing,
+      ...gameData.gameData.gameState,
+      cardSender: currentUser,
+      cardReceiver: selectedPlayer,
+      currentCard: selectedCard,
+      claimedAnimal: claimData.animal,
+      isKing: claimData.isKing,
     };
 
     const updatedPlayerCards = isPassing
-        ? gameData.gameData.playerCards
-        : {
-            ...gameData.gameData.playerCards,
-            [currentUser]: gameData.gameData.playerCards[currentUser].filter(
-                (card) =>
-                    !(
-                        card.type === selectedCard.type &&
-                        card.royal === selectedCard.isRoyal
-                    )
-            ),
+      ? gameData.gameData.playerCards
+      : {
+          ...gameData.gameData.playerCards,
+          [currentUser]: gameData.gameData.playerCards[currentUser].filter(
+            (card) =>
+              !(
+                card.type === selectedCard.type &&
+                card.royal === selectedCard.isRoyal
+              )
+          ),
         };
 
     const updatedGameData = {
-        ...gameData,
-        gameData: {
-            ...gameData.gameData,
-            gameState: updatedGameState,
-            playerCards: updatedPlayerCards,
-        },
+      ...gameData,
+      gameData: {
+        ...gameData.gameData,
+        gameState: updatedGameState,
+        playerCards: updatedPlayerCards,
+      },
     };
 
     setGameData(updatedGameData);
@@ -434,23 +371,23 @@ const GameBoard = ({
     const currentCard = gameData.gameData.gameState.currentCard;
     const loser = determineLoser(guess);
     const claimedAnimal = gameData.gameData.gameState.claimedAnimal;
-    const isClaimedKing = gameData.gameData.gameState.isKing;  // 선언된 카드가 킹인지 여부
+    const isClaimedKing = gameData.gameData.gameState.isKing; // 선언된 카드가 킹인지 여부
     const loserTableCards = gameData.gameData.userTableCards[loser] || [];
 
     if (currentCard.type === "Black" || currentCard.type === "Joker") {
-        const loserHand = gameData.gameData.playerCards[loser] || [];
-        const validLoserHand = loserHand.filter((card) => card && card.type);
-        
-        // 선언한 카드와 정확히 일치하는 카드가 있는지 확인 (타입과 킹 여부 모두 체크)
-        const hasExactClaimedCard = validLoserHand.some(
-            (card) => card.type === claimedAnimal && card.royal === isClaimedKing
-        );
+      const loserHand = gameData.gameData.playerCards[loser] || [];
+      const validLoserHand = loserHand.filter((card) => card && card.type);
 
-        setCurrentLoser(loser);
-        setShowPenaltyCardModal(true);
-        setPenaltyCardCount(hasExactClaimedCard ? 1 : 2);
+      // 선언한 카드와 정확히 일치하는 카드가 있는지 확인 (타입과 킹 여부 모두 체크)
+      const hasExactClaimedCard = validLoserHand.some(
+        (card) => card.type === claimedAnimal && card.royal === isClaimedKing
+      );
+
+      setCurrentLoser(loser);
+      setShowPenaltyCardModal(true);
+      setPenaltyCardCount(hasExactClaimedCard ? 1 : 2);
     } else {
-        await sendPenaltyCard(loser, currentCard);
+      await sendPenaltyCard(loser, currentCard);
     }
 
     setShowGuessModal(false);
@@ -592,7 +529,7 @@ const GameBoard = ({
     };
 
     // 게임 메시지 구독은 useSocket에서 처리하므로 여기서는 제거
-    
+
     return () => {
       // cleanup 로직
     };
@@ -778,18 +715,6 @@ const GameBoard = ({
           selectedCard={selectedCard}
           handleCardClick={handleCardClick}
         />
-
-        {/* 애니메이션되는 카드 */}
-        <AnimatePresence>
-          {animatingCard && sourcePosition && targetPosition && (
-            <AnimatedCard
-              card={animatingCard}
-              sourcePosition={sourcePosition}
-              targetPosition={targetPosition}
-              onComplete={handleAnimationComplete}
-            />
-          )}
-        </AnimatePresence>
 
         <div ref={activeCardRef}>
           <ActiveCardArea
