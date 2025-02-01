@@ -263,7 +263,7 @@ public class GameInfoServiceImpl implements GameInfoService {
             List<ResponseCommentList> responseComments = commentList.stream().map(comment -> {
                 ResponseCommentList commentDTO = new ResponseCommentList();
                 commentDTO.setGameCommunityCommentId(comment.getGameCommunityCommentId());
-                commentDTO.setGameCommunityCommentContent(comment.getGameCommunityContent());
+                commentDTO.setGameCommunityCommentContent(comment.getGameCommunityCommentContent());
                 commentDTO.setCreateAt(comment.getCreateAt());
 
                 // 댓글 작성자 정보 설정
@@ -291,7 +291,7 @@ public class GameInfoServiceImpl implements GameInfoService {
 
         GameCommunityComment comment = GameCommunityComment.builder()
                 .user(user)
-                .gameCommunityContent(request.getContent())
+                .gameCommunityCommentContent(request.getContent())
                 .gameCommunity(gameCommunity)
                 .createAt(Date.valueOf(LocalDate.now()))
                 .build();
