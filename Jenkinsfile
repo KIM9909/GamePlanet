@@ -12,6 +12,7 @@ pipeline {
             DOCKER_IMAGE_BACK = "kimgon/meeple_back"
             DOCKER_IMAGE_NGINX = "kimgon/nginx"
             REGISTRY = "registry.hub.docker.com"
+            MATTERMOST_WEBHOOK = credentials('mattermost-webhook')
         }
     stages {
         stage('Checkout') {
@@ -38,34 +39,61 @@ pipeline {
             }
         }
 
-        stage('Build Frontend') {
-             steps {
-                    dir('meeple_front') {
-                        sh 'npm install'
-                        sh 'npm run build'
-                    }
-             }
-        }
+        stages {
+                stage('Build') {
+                    steps {
+                        script {
+                            try {
+                                parallel (
+                                    'Build Frontend': {
+                                        dir('meeple_front') {
+                                            def installStatus = sh(script: 'npm install', returnStatus: true)
+                                            if (installStatus != 0) {
+                                                error "npm install 실패 (종료코드: ${installStatus})"
+                                            }
 
-        stage('Build Backend') {
-              steps {
-                  dir('meeple_back') {
-                      sh './gradlew build -x test' // Spring 프로젝트 빌드 명령어 (테스트 제외)
-                  }
-              }
-        }
+                                            def buildStatus = sh(script: 'npm run build', returnStatus: true)
+                                            if (buildStatus != 0) {
+                                                error "npm run build 실패 (종료코드: ${buildStatus})"
+                                            }
+                                        }
+                                    },
+                                    'Build Backend': {
+                                        dir('meeple_back') {
+                                            def gradleStatus = sh(script: './gradlew build -x test', returnStatus: true)
+                                            if (gradleStatus != 0) {
+                                                error "./gradlew build -x test 실패 (종료코드: ${gradleStatus})"
+                                            }
+                                        }
+                                    }
+                                )
+                            } catch (err) {
+                                echo "빌드 중 에러 발생: ${err}"
+                                def message = """
+                                빌드 실패 알림:
+                                - Job: ${env.JOB_NAME}
+                                - 빌드 번호: ${env.BUILD_NUMBER}
+                                - URL: ${env.BUILD_URL}
+                                - 에러 메시지: ${err}
+                                """
+                                sh """
+                                curl -X POST -H 'Content-Type: application/json' --data '{ "text": "${message}" }' ${MATTERMOST_WEBHOOK_URL}
+                                """
+                                error "빌드 실패: ${err}"
+                            }
+                        }
+                    }
+                }
+            }
 
 
         stage('Build Docker Images') {
                     steps {
                         script {
-                            // 프론트엔드 이미지 빌드
                             docker.build("${DOCKER_IMAGE_FRONT}", "./meeple_front")
 
-                            // 백엔드 이미지 빌드
                             docker.build("${DOCKER_IMAGE_BACK}", "./meeple_back")
 
-                            // Nginx 이미지 빌드
                             docker.build("${DOCKER_IMAGE_NGINX}", "./nginx")
                         }
                     }
@@ -103,8 +131,24 @@ pipeline {
     }
 
     post {
-            always {
-                cleanWs()
+            failure {
+                echo "빌드 실패! Mattermost에 알림 전송 중..."
+                script {
+                    // 알림 메시지 작성
+                    def message = """
+                    빌드 실패 알림:
+                    - Job: ${env.JOB_NAME}
+                    - 빌드 번호: ${env.BUILD_NUMBER}
+                    - URL: ${env.BUILD_URL}
+                    """
+                    // Mattermost로 알림 전송 (curl 명령어 사용)
+                    sh """
+                    curl -X POST -H 'Content-Type: application/json' --data '{ "text": "${message}" }' ${MATTERMOST_WEBHOOK_URL}
+                    """
+                }
             }
-    }
+        }
+        always {
+                        cleanWs()
+               }
 }
