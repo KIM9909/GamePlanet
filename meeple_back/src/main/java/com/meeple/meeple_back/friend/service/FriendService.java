@@ -5,6 +5,7 @@ import com.meeple.meeple_back.friend.model.request.RequestProcess;
 import com.meeple.meeple_back.friend.model.request.RequestSendFriendMessage;
 import com.meeple.meeple_back.friend.model.response.ResponseFriendList;
 import com.meeple.meeple_back.friend.model.response.ResponseFriendMessageList;
+import com.meeple.meeple_back.friend.model.response.ResponseSearchUser;
 import com.meeple.meeple_back.friend.model.response.ResponseSendFriendMessage;
 
 import java.util.List;
@@ -21,4 +22,6 @@ public interface FriendService {
     ResponseSendFriendMessage sendMessage(RequestSendFriendMessage request);
 
     List<ResponseFriendMessageList> getMessageList(long userId);
+
+    ResponseSearchUser searchUser(String userNickName);
 }
