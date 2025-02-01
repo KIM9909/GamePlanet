@@ -54,14 +54,14 @@ const CockroachPokerPage = () => {
       gameData: {
         gameState: {
           currentTurn: "testUser",
-          // currentCard: {
-          //   type: "Scorpion",
-          //   royal: false,
-          // },
-          // cardSender: "user3",
-          // cardReceiver: "testUser",
-          // claimedAnimal: "Rat", 
-          // isKing: false,
+          currentCard: {
+            type: "Scorpion",
+            royal: false,
+          },
+          cardSender: "user2",
+          cardReceiver: "testUser",
+          claimedAnimal: "Rat", 
+          isKing: false,
         },
         playerCards: {
           testUser: [

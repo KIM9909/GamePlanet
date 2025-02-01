@@ -1,16 +1,16 @@
-import React from "react";
+import React, { forwardRef } from "react";
 import Card from "../Card";
 import { sortCards, sortPenaltyGroups } from "../utils/cardUtils";
 import PenaltyCardStack from "../PenaltyCardStack";
 
-const MyArea = ({
+const MyArea = forwardRef(({
   penaltyCards = [],
   handCards = [],
   isMyTurn,
   selectedCard,
   handleCardClick,
   currentUser,
-}) => {
+}, ref) => {
   const groupedPenaltyCards = penaltyCards.reduce((acc, card) => {
     const baseType = card.type.replace("King", "");
     if (!acc[baseType]) {
@@ -28,6 +28,7 @@ const MyArea = ({
 
   return (
     <div
+      ref={ref}
       className="absolute bottom-4 left-0 right-0 px-8"
       data-player={currentUser}
     >
@@ -51,8 +52,7 @@ const MyArea = ({
             className="transition-all duration-300 ease-in-out"
             style={{
               opacity: selectedCard?.type === card.type ? 0 : 1,
-              transform:
-                selectedCard?.type === card.type ? "scale(0.9)" : "scale(1)",
+              transform: selectedCard?.type === card.type ? "scale(0.9)" : "scale(1)",
             }}
           >
             <Card
@@ -66,6 +66,8 @@ const MyArea = ({
       </div>
     </div>
   );
-};
+});
+
+MyArea.displayName = 'MyArea';
 
 export default MyArea;

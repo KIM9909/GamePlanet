@@ -1,9 +1,10 @@
-import React, { useMemo } from "react";
+// OpponentArea.jsx
+import React, { forwardRef, useMemo } from "react";
 import Card from "../Card";
 import { sortPenaltyGroups } from "../utils/cardUtils";
 import PenaltyCardStack from "../PenaltyCardStack";
 
-const OpponentArea = ({
+const OpponentArea = forwardRef(({
   playerNumber,
   penaltyCards = [],
   handCards = [],
@@ -16,11 +17,9 @@ const OpponentArea = ({
   cardSender,
   remainingPlayers,
   currentUser,
-}) => {
+}, ref) => {
   const groupedPenaltyCards = penaltyCards.reduce((acc, card) => {
-    const baseType = card.type.startsWith("King")
-      ? card.type.replace("King", "")
-      : card.type;
+    const baseType = card.type.replace("King", "");
     if (!acc[baseType]) {
       acc[baseType] = { type: card.type, count: 0 };
     }
@@ -32,31 +31,17 @@ const OpponentArea = ({
 
   const isSelectable = useMemo(() => {
     if (isPassing) {
-      return (
-        remainingPlayers.includes(playerName) &&
-        !passedPlayers.includes(playerName)
-      );
+      return remainingPlayers.includes(playerName) && !passedPlayers.includes(playerName);
     }
     return isMyTurn && selectedCard && playerName !== currentUser;
-  }, [
-    isPassing,
-    remainingPlayers,
-    playerName,
-    passedPlayers,
-    isMyTurn,
-    selectedCard,
-    currentUser,
-  ]);
+  }, [isPassing, remainingPlayers, playerName, passedPlayers, isMyTurn, selectedCard, currentUser]);
 
   return (
     <div
+      ref={ref}
       className={`w-64 space-y-4 
         ${!isSelectable ? "opacity-50" : ""} 
-        ${
-          isSelectable
-            ? "cursor-pointer hover:ring-2 hover:ring-blue-500 rounded-lg"
-            : "cursor-not-allowed"
-        }
+        ${isSelectable ? "cursor-pointer hover:ring-2 hover:ring-blue-500 rounded-lg" : "cursor-not-allowed"}
       `}
       data-player={playerName}
       onClick={() => {
@@ -70,14 +55,7 @@ const OpponentArea = ({
         </div>
       </div>
       <div className="space-y-4">
-        <div
-          className="h-40 overflow-y-auto"
-          style={{
-            scrollbarWidth: "thin",
-            scrollbarColor: "rgba(107, 114, 128, 0.5) rgba(31, 41, 55, 0.3)",
-            msOverflowStyle: "-ms-autohiding-scrollbar",
-          }}
-        >
+        <div className="h-40 overflow-y-auto">
           <div className="flex flex-wrap justify-center gap-2 p-2">
             {sortedPenaltyGroups.map((stack, i) => (
               <PenaltyCardStack
@@ -85,7 +63,6 @@ const OpponentArea = ({
                 type={stack.type}
                 count={stack.count}
                 isRoyal={stack.royal}
-                
               />
             ))}
           </div>
@@ -122,6 +99,8 @@ const OpponentArea = ({
       </div>
     </div>
   );
-};
+});
+
+OpponentArea.displayName = 'OpponentArea';
 
 export default OpponentArea;
