@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, Suspense, useMemo } from "react";
 import { createPortal } from "react-dom";
 import {
   Canvas,
@@ -55,8 +55,10 @@ import floorTexture from "../../../assets/burumabul_images/floor.png";
 import timemachineStop from "../../../assets/burumabul_images/timemachinestop.png";
 import telepathyCard from "../../../assets/burumabul_images/telepathycard.png";
 import neuronsCard from "../../../assets/burumabul_images/neuronscard.png";
-import Spaceship from "./Spaceship";
+import BlueRobot from "./BlueRobot";
 import SpaceBase from "./SpaceBase";
+
+import LoadingSpinner from "./LoadingSpinner";
 
 const Cell = ({
   position,
@@ -128,9 +130,7 @@ const Cell = ({
   );
 };
 
-const TravelMap = () => {
-  const floor = useLoader(TextureLoader, floorTexture);
-
+const TravelMap = ({ onRollDice, onBasesInfo }) => {
   // cities 배열
   const cities = [
     "지구 Start",
@@ -185,13 +185,15 @@ const TravelMap = () => {
   const [isFirstMove, setIsFirstMove] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
+  // 주사위 버튼을 눌렀는지 안 눌렀는지 추적
+  useEffect(() => {
+    if (onRollDice) {
+      onRollDice(() => setShowModal(true));
+    }
+  }, [onRollDice]);
+
   // 주사위 점수 저장
   const [totalScore, setTotalScore] = useState(0);
-
-  // const handleDiceComplete = (score) => {
-  //   setTotalScore(score); //점수 업데이트
-  //   setShowModal(false);
-  // };
 
   // 칸 스타일
   const cellClass =
@@ -373,42 +375,6 @@ const TravelMap = () => {
     ));
   };
 
-  const rollDice = () => {
-    setShowModal(true);
-  };
-
-  // 부모요소 참조
-
-  const parentRef = useRef();
-  const [parentBounds, setParentBounds] = useState({
-    top: 0,
-    left: 0,
-    width: 0,
-    height: 0,
-  });
-
-  const updateParentBounds = () => {
-    if (parentRef.current) {
-      const rect = parentRef.current.getBoundingClientRect();
-      setParentBounds({
-        top: rect.top,
-        left: rect.left,
-        width: rect.width,
-        height: rect.height,
-      });
-    }
-  };
-
-  useEffect(() => {
-    // 초기위치 계산
-    const handleResize = () => updateParentBounds();
-    updateParentBounds();
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
   // 플레이어 상태 관리
   const [players, setPlayers] = useState([
     { id: 1, position: 0, color: "#E82561" },
@@ -416,10 +382,35 @@ const TravelMap = () => {
     { id: 3, position: 0, color: "#15F5BA" },
     { id: 4, position: 0, color: "#FFDC00" },
   ]);
+
   const [numPlayers, setNumPlayers] = useState(2); //기본 2명
   const [currentPlayer, setCurrentPlayer] = useState(0);
 
+  // 플레이어 우주 기지를 세운!
+  const [playerBases, setPlayerBases] = useState([[], [], [], []]);
+
+  useEffect(() => {
+    if (onBasesInfo) {
+      onBasesInfo(playerBases);
+    }
+  }, [playerBases, onBasesInfo]); // playerBase가 변경될 때마다 실행
+
   const [spaceBases, setSpaceBases] = useState([]);
+
+  // Preload textures
+  const floor = useMemo(() => useLoader(TextureLoader, floorTexture), []);
+  const timeMachineStopTexture = useMemo(
+    () => useLoader(TextureLoader, timemachineStop),
+    []
+  );
+  const telepathyCardTexture = useMemo(
+    () => useLoader(TextureLoader, telepathyCard),
+    []
+  );
+  const neuronsCardTexture = useMemo(
+    () => useLoader(TextureLoader, neuronsCard),
+    []
+  );
 
   // 주사위 굴린 후 플레이어 이동 처리
   const handleDiceComplete = (score) => {
@@ -443,12 +434,27 @@ const TravelMap = () => {
         );
       } else {
         // 우주기지 생성 로직
+        const targetCity = cities[target];
         console.log("Building space base at:", positions[target]);
         setSpaceBases((prevBases) => {
           if (prevBases.some((base) => base.position === positions[target])) {
             console.log("⚠️ Space base already exists at this position!");
             return prevBases; // 기존 상태 유지 (새로 추가하지 않음)
           }
+
+          // 우주기지 생성 시 도시 이름도 배열에 추가
+          setPlayerBases((prev) => {
+            const newBases = [...prev];
+            return prev.map((bases, index) =>
+              index === currentPlayer && !bases.includes(targetCity)
+                ? [...bases, targetCity]
+                : bases
+            );
+          });
+
+          console.log(
+            `player ${currentPlayer + 1} built a base in ${targetCity}`
+          );
 
           const newBase = { position: positions[target], color: player.color };
           return [...prevBases, newBase];
@@ -460,15 +466,19 @@ const TravelMap = () => {
 
     setShowModal(false);
   };
+  console.log(playerBases);
 
   // 플레이어 수 변경 핸들러
   const handlePlayerCountChange = (count) => {
+    const newCount = Number(count);
     setNumPlayers(count);
     setCurrentPlayer(0);
     // 모든 플레이어 위치 초기화
     setPlayers((prevPlayers) =>
       prevPlayers.map((player) => ({ ...player, position: 0 }))
     );
+    setSpaceBases([]);
+    setPlayerBases(Array.from({ length: newCount }, () => []));
   };
 
   // positions 배열에서 각 플레이어의 위치 좌표 계산
@@ -507,26 +517,27 @@ const TravelMap = () => {
     }
   };
 
-  // Canvas 내부에 우주선 렌더링 추가
-  const renderSpaceships = () => {
-    return players
-      .slice(0, numPlayers)
-      .map((player, index) => (
-        <Spaceship
-          key={player.id}
-          position={getPlayerPosition(player.position, index)}
-          color={player.color}
-        />
-      ));
-  };
+  // // Canvas 내부에 우주선 렌더링 추가
+  // const renderSpaceships = () => {
+  //   return players
+  //     .slice(0, numPlayers)
+  //     .map((player, index) => (
+  //       <BlueRobot
+  //         key={player.id}
+  //         position={getPlayerPosition(player.position, index)
+  //           scale={0.2}
+  //         }
+  //       />
+  //     ));
+  // };
 
   // 우주 기지 렌더링 추가
-  const renderSpaceBases = () => {
+  const renderSpaceBases = useMemo(() => {
     console.log("render base");
     return spaceBases.map((base, index) => (
       <SpaceBase key={index} position={base.position} color={base.color} />
     ));
-  };
+  }, [spaceBases]);
 
   return (
     <div className="h-[100%] flex flex-col">
@@ -538,12 +549,7 @@ const TravelMap = () => {
         >
           Move Token
         </button>
-        <button
-          onClick={rollDice}
-          className="mt-5 mx-3 px-4 py-2 bg-red-300 text-white rounded hover:bg-blue-600"
-        >
-          Roll the Dice
-        </button>
+
         <button
           onClick={resetCamera}
           className="mt-5 mx-3 px-4 py-2 bg-yellow-300 text-white rounded hover:bg-blue-600"
@@ -567,23 +573,9 @@ const TravelMap = () => {
           </p>
         )}
       </div>
-      <div ref={parentRef} className="flex w-[100%] h-[100%]">
-        {/* 좌측 영역 */}
-        <div className="flex flex-col h-[100%] w-1/5 bg-gray-100 border-2 box-border border-black gap-4 text-center hidden xl:block">
-          <div className="h-[48%] border-2 m-2 mb-2 box-border border-black ">
-            <div className="h-full overflow-y-auto min-h-0">user1</div>
-          </div>
-          <div className="h-[48%] border-2 m-2 mb-2 box-border border-black">
-            <div className="h-full overflow-y-auto min-h-0">user2</div>
-          </div>
-        </div>
-
-        <div className="sm:block sm:mx-auto w-3/5">
+      <div className="flex w-full h-full">
+        <div className=" w-full h-full">
           <Canvas
-            style={{
-              height: "100%",
-              width: "100%",
-            }}
             camera={{
               position: initialCameraPosition, // 카메라 초기 위치
               fov: 75, // 시야각 조절
@@ -593,8 +585,8 @@ const TravelMap = () => {
               scene.background = texture;
             }}
           >
-            <ambientLight intensity={5} />
-            <pointLight position={[10, 20, 10]} intensity={1.5} color="white" />
+            <ambientLight intensity={2} />
+            <pointLight position={[10, 20, 10]} intensity={0.8} color="white" />
 
             {/* 바닥 생성 */}
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.18, 0]}>
@@ -606,7 +598,7 @@ const TravelMap = () => {
             <mesh position={[5, 0.01, -5]} rotation={[-Math.PI / 2, 0, 0]}>
               <planeGeometry args={[5, 5]} />
               <meshStandardMaterial
-                map={useLoader(TextureLoader, timemachineStop)} // 추가 이미지 텍스처
+                map={timeMachineStopTexture} // 추가 이미지 텍스처
                 transparent={true}
               />
             </mesh>
@@ -615,7 +607,7 @@ const TravelMap = () => {
             <mesh position={[5, 0.01, 4.5]} rotation={[-Math.PI / 2, 0, 0]}>
               <planeGeometry args={[3, 5]} />
               <meshStandardMaterial
-                map={useLoader(TextureLoader, telepathyCard)} // 추가 이미지 텍스처
+                map={telepathyCardTexture} // 추가 이미지 텍스처
                 transparent={true}
               />
             </mesh>
@@ -624,7 +616,7 @@ const TravelMap = () => {
             <mesh position={[-5, 0.01, -5]} rotation={[-Math.PI / 2, 0, 0]}>
               <planeGeometry args={[5, 5]} />
               <meshStandardMaterial
-                map={useLoader(TextureLoader, neuronsCard)} // 추가 이미지 텍스처
+                map={neuronsCardTexture} // 추가 이미지 텍스처
                 transparent={true}
               />
             </mesh>
@@ -646,35 +638,22 @@ const TravelMap = () => {
               zoomToCursor={true}
               rotateSpeed={0.15}
             />
+
             {renderCells()}
-            {renderSpaceships()}
-            {renderSpaceBases()}
+            {players.slice(0, numPlayers).map((player, index) => (
+              <BlueRobot
+                key={player.id}
+                position={getPlayerPosition(player.position, index)}
+                scale={0.005}
+              />
+            ))}
+            {renderSpaceBases}
           </Canvas>
         </div>
-
-        {/* 우측 영역 */}
-        <div className="flex flex-col h-full w-1/5 bg-gray-100 border-2 box-border border-black gap-4 text-center hidden xl:block">
-          <div className="h-[48%] border-2 m-2 mb-2 box-border border-black ">
-            <div className="h-full overflow-y-auto min-h-0">user3</div>
-          </div>
-          <div className="h-[48%] border-2 m-2 mb-2 box-border border-black">
-            <div className="h-full overflow-y-auto min-h-0">user4</div>
-          </div>
-        </div>
       </div>
-
       {showModal &&
         createPortal(
-          <div
-            className="absolute z-50 text-center flex items-center justify-center"
-            style={{
-              position: "absolute",
-              top: parentBounds.top,
-              left: parentBounds.left,
-              width: parentBounds.width,
-              height: parentBounds.height,
-            }}
-          >
+          <div className="fixed inset-0 z-50 w-2/3 text-center flex items-center justify-center">
             <Dice
               onComplete={handleDiceComplete}
               onClose={() => setShowModal(false)}
