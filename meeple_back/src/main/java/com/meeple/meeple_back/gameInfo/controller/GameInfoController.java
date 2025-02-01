@@ -1,12 +1,14 @@
 package com.meeple.meeple_back.gameInfo.controller;
 
+import com.meeple.meeple_back.gameInfo.model.request.commnity.RequestCreateComment;
 import com.meeple.meeple_back.gameInfo.model.request.commnity.RequestCreateCommunity;
+import com.meeple.meeple_back.gameInfo.model.request.commnity.RequestUpdateComment;
+import com.meeple.meeple_back.gameInfo.model.request.commnity.RequestUpdateCommunity;
 import com.meeple.meeple_back.gameInfo.model.request.gameInfo.RequestCreateGameInfo;
 import com.meeple.meeple_back.gameInfo.model.request.gameReview.RequestCreateReview;
 import com.meeple.meeple_back.gameInfo.model.request.gameInfo.RequestUpdateGameInfo;
 import com.meeple.meeple_back.gameInfo.model.request.gameReview.RequestUpdateReview;
-import com.meeple.meeple_back.gameInfo.model.response.community.ResponseCommunityList;
-import com.meeple.meeple_back.gameInfo.model.response.community.ResponseCreateCommunity;
+import com.meeple.meeple_back.gameInfo.model.response.community.*;
 import com.meeple.meeple_back.gameInfo.model.response.gameInfo.*;
 import com.meeple.meeple_back.gameInfo.model.response.gameReview.ResponseCreateReview;
 import com.meeple.meeple_back.gameInfo.model.response.gameReview.ResponseReviewList;
@@ -165,6 +167,59 @@ public class GameInfoController {
         List<ResponseCommunityList> response = gameInfoService.getCommunityList(gameInfoId);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @Operation(summary = "커뮤니티 게시글 수정", description = "게시글을 수정합니다.")
+    @PutMapping("/community/{gameCommunityId}")
+    public ResponseEntity<ResponseUpdateCommunity> updateCommunity(
+            @PathVariable int gameCommunityId,
+            @RequestBody RequestUpdateCommunity request
+    ) {
+        ResponseUpdateCommunity response = gameInfoService.updateCommunity(gameCommunityId, request);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "커뮤니티 게시글 삭제", description = "게시글을 삭제합니다.")
+    @DeleteMapping("/community/{gameCommunityId}")
+    public ResponseEntity<ResponseDeleteCommunity> deleteCommunity(
+            @PathVariable int gameCommunityId
+    ) {
+        ResponseDeleteCommunity response = gameInfoService.deleteCommunity(gameCommunityId);
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    @Operation(summary = "커뮤니티 게시글 댓글 등록", description = "게시글 댓글을 등록합니다")
+    @PostMapping("/comment")
+    public ResponseEntity<ResponseCreateComment> createComment(
+            @RequestBody RequestCreateComment request
+    ) {
+        ResponseCreateComment response = gameInfoService.createComment(request);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @Operation(summary = "커뮤니티 게시글 댓글 수정", description = "게시글 댓글을 수정합니다.")
+    @PutMapping("/comment/{gameCommunityCommentId}")
+    public ResponseEntity<ResponseUpdateComment> updateComment(
+            @PathVariable int gameCommunityCommentId,
+            @RequestBody RequestUpdateComment request
+    ) {
+        ResponseUpdateComment response = gameInfoService.updateComment(gameCommunityCommentId, request);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "커뮤니티 게시글 삭제", description = "게시글을 삭제합니다.")
+    @DeleteMapping("/community/{gameCommunityCommentId}")
+    public ResponseEntity<ResponseDeleteComment> deleteComment(
+            @PathVariable int gameCommunityCommentId
+    ) {
+        ResponseDeleteComment response = gameInfoService.deleteComment(gameCommunityCommentId);
+
+        return ResponseEntity.ok(response);
     }
 }
 

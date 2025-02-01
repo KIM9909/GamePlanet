@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface GameCommunityRepository extends JpaRepository<GameCommunity, Integer> {
-    List<GameCommunity> findByGameInfo_GameInfoId(int gameInfoId);
+    List<GameCommunity> findByGameInfo_GameInfoIdAndDeletedAtIsNull(int gameInfoId);
 }

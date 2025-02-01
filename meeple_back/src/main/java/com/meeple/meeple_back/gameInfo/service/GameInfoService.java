@@ -1,9 +1,11 @@
 package com.meeple.meeple_back.gameInfo.service;
 
+import com.meeple.meeple_back.gameInfo.model.request.commnity.RequestCreateComment;
 import com.meeple.meeple_back.gameInfo.model.request.commnity.RequestCreateCommunity;
+import com.meeple.meeple_back.gameInfo.model.request.commnity.RequestUpdateComment;
+import com.meeple.meeple_back.gameInfo.model.request.commnity.RequestUpdateCommunity;
 import com.meeple.meeple_back.gameInfo.model.request.gameReview.RequestUpdateReview;
-import com.meeple.meeple_back.gameInfo.model.response.community.ResponseCommunityList;
-import com.meeple.meeple_back.gameInfo.model.response.community.ResponseCreateCommunity;
+import com.meeple.meeple_back.gameInfo.model.response.community.*;
 import com.meeple.meeple_back.gameInfo.model.response.gameReview.ResponseCreateReview;
 import com.meeple.meeple_back.gameInfo.model.request.gameInfo.RequestCreateGameInfo;
 import com.meeple.meeple_back.gameInfo.model.request.gameReview.RequestCreateReview;
@@ -36,4 +38,14 @@ public interface GameInfoService {
  ResponseCreateCommunity createCommunity(RequestCreateCommunity request);
 
  List<ResponseCommunityList> getCommunityList(int gameInfoId);
+
+ ResponseCreateComment createComment(RequestCreateComment request);
+
+ ResponseUpdateCommunity updateCommunity(int gameCommunityId, RequestUpdateCommunity request);
+
+ ResponseDeleteCommunity deleteCommunity(int gameCommunityId);
+
+ ResponseUpdateComment updateComment(int gameCommunityCommentId, RequestUpdateComment request);
+
+ ResponseDeleteComment deleteComment(int gameCommunityCommentId);
 }

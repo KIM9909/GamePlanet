@@ -7,11 +7,12 @@ import com.meeple.meeple_back.gameInfo.model.entity.GameCommunity;
 import com.meeple.meeple_back.gameInfo.model.entity.GameCommunityComment;
 import com.meeple.meeple_back.gameInfo.model.entity.GameInfo;
 import com.meeple.meeple_back.gameInfo.model.entity.GameReview;
+import com.meeple.meeple_back.gameInfo.model.request.commnity.RequestCreateComment;
 import com.meeple.meeple_back.gameInfo.model.request.commnity.RequestCreateCommunity;
+import com.meeple.meeple_back.gameInfo.model.request.commnity.RequestUpdateComment;
+import com.meeple.meeple_back.gameInfo.model.request.commnity.RequestUpdateCommunity;
 import com.meeple.meeple_back.gameInfo.model.request.gameReview.RequestUpdateReview;
-import com.meeple.meeple_back.gameInfo.model.response.community.ResponseCommentList;
-import com.meeple.meeple_back.gameInfo.model.response.community.ResponseCommunityList;
-import com.meeple.meeple_back.gameInfo.model.response.community.ResponseCreateCommunity;
+import com.meeple.meeple_back.gameInfo.model.response.community.*;
 import com.meeple.meeple_back.gameInfo.model.response.gameReview.ResponseCreateReview;
 import com.meeple.meeple_back.gameInfo.model.request.gameInfo.RequestCreateGameInfo;
 import com.meeple.meeple_back.gameInfo.model.request.gameReview.RequestCreateReview;
@@ -39,7 +40,7 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
-public class GameInfoServiceImpl implements GameInfoService{
+public class GameInfoServiceImpl implements GameInfoService {
 
     private final GameCommunityRepository gameCommunityRepository;
     private final GameInfoRepository gameInfoRepository;
@@ -48,7 +49,6 @@ public class GameInfoServiceImpl implements GameInfoService{
     private final GameRepository gameRepository;
     private final UserRepository userRepository;
     private final ModelMapper mapper;
-
 
 
     @Override
@@ -219,7 +219,7 @@ public class GameInfoServiceImpl implements GameInfoService{
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 회원"));
 
         GameInfo gameInfo = gameInfoRepository.findById(request.getGameInfoId())
-                        .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게임 정보"));
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게임 정보"));
 
         gameCommunity.setUser(user);
         gameCommunity.setGameInfo(gameInfo);
@@ -240,7 +240,8 @@ public class GameInfoServiceImpl implements GameInfoService{
 
     @Override
     public List<ResponseCommunityList> getCommunityList(int gameInfoId) {
-        List<GameCommunity> gameCommunityList = gameCommunityRepository.findByGameInfo_GameInfoId(gameInfoId);
+        List<GameCommunity> gameCommunityList = gameCommunityRepository
+                .findByGameInfo_GameInfoIdAndDeletedAtIsNull(gameInfoId);
         mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
 
 
@@ -256,7 +257,7 @@ public class GameInfoServiceImpl implements GameInfoService{
 
             // 해당 게시글의 댓글 리스트 조회
             List<GameCommunityComment> commentList = gameCommunityCommentRepository
-                    .findByGameCommunity_GameCommunityId(gameCommunity.getGameCommunityId());
+                    .findByGameCommunity_GameCommunityIdAndDeletedAtIsNull(gameCommunity.getGameCommunityId());
 
             // 댓글 DTO 변환
             List<ResponseCommentList> responseComments = commentList.stream().map(comment -> {
@@ -279,5 +280,104 @@ public class GameInfoServiceImpl implements GameInfoService{
 
             return response;
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    public ResponseCreateComment createComment(RequestCreateComment request) {
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 회원"));
+        GameCommunity gameCommunity = gameCommunityRepository.findById(request.getGameCommunityId())
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게시글"));
+
+        GameCommunityComment comment = GameCommunityComment.builder()
+                .user(user)
+                .gameCommunityContent(request.getContent())
+                .gameCommunity(gameCommunity)
+                .createAt(Date.valueOf(LocalDate.now()))
+                .build();
+
+        GameCommunityComment savedComment = gameCommunityCommentRepository.save(comment);
+
+        ResponseCreateComment response = ResponseCreateComment.builder()
+                .gameCommunityCommentId(savedComment.getGameCommunityCommentId())
+                .createdAt(savedComment.getCreateAt())
+                .userName(user.getUserNickname())
+                .build();
+
+        return response;
+    }
+
+    @Override
+    public ResponseUpdateCommunity updateCommunity(int gameCommunityId, RequestUpdateCommunity request) {
+        GameCommunity gameCommunity = gameCommunityRepository.findById(gameCommunityId)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게시글입니다."));
+
+        if (!request.getGameCommunityContent().equals(gameCommunity.getGameCommunityContent())) {
+            gameCommunity.setGameCommunityContent(request.getGameCommunityContent());
+        }
+
+        gameCommunityRepository.save(gameCommunity);
+
+        ResponseUpdateCommunity response = ResponseUpdateCommunity.builder()
+                .code(200)
+                .message("성공적으로 업데이트 됨")
+                .build();
+
+        return response;
+    }
+
+    @Override
+    public ResponseDeleteCommunity deleteCommunity(int gameCommunityId) {
+        GameCommunity gameCommunity = gameCommunityRepository.findById(gameCommunityId)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게시글입니다."));
+
+        gameCommunity.setDeletedAt(Date.valueOf(LocalDate.now()));
+
+        GameCommunity deletedCommunity = gameCommunityRepository.save(gameCommunity);
+
+        ResponseDeleteCommunity response = ResponseDeleteCommunity.builder()
+                .code(200)
+                .message("성공적으로 삭제 됨")
+                .deletedDate(deletedCommunity.getDeletedAt())
+                .build();
+
+        return response;
+    }
+
+    @Override
+    public ResponseUpdateComment updateComment(int gameCommunityCommentId, RequestUpdateComment request) {
+        GameCommunityComment comment = gameCommunityCommentRepository.findById(gameCommunityCommentId)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 댓글입니다."));
+
+        if (!request.getContent().equals(comment.getGameCommunityCommentContent())) {
+            comment.setGameCommunityCommentContent(request.getContent());
+        }
+
+        gameCommunityCommentRepository.save(comment);
+
+        ResponseUpdateComment response = ResponseUpdateComment.builder()
+                .code(200)
+                .message("성공적으로 업데이트 됨")
+                .build();
+
+        return response;
+    }
+
+    @Override
+    public ResponseDeleteComment deleteComment(int gameCommunityCommentId) {
+        GameCommunityComment comment = gameCommunityCommentRepository.findById(gameCommunityCommentId)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 댓글입니다."));
+
+        comment.setDeletedAt(Date.valueOf(LocalDate.now()));
+
+        GameCommunityComment deleteComment = gameCommunityCommentRepository.save(comment);
+
+        ResponseDeleteComment response = ResponseDeleteComment.builder()
+                .code(200)
+                .message("성공적으로 업데이트 됨")
+                .deletedDate(deleteComment.getDeletedAt())
+                .build();
+
+        return response;
     }
 }
