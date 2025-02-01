@@ -46,10 +46,10 @@ public class FriendController {
             @RequestBody RequestFriend request
     ) {
         // Swagger에서 문서화되도록 REST API 형태로 추가 (실제 WebSocket 처리와는 별개)
-        return ResponseEntity.ok("WebSocket 요청을 ws://localhost:8090/ws/friend 로 보내세요.");
+        return ResponseEntity.ok("WebSocket 요청을 ws://localhost:8090/ws/request-friend 로 보내세요.");
     }
 
-    @MessageMapping("/friend/request-friend/{userId}")
+    @MessageMapping("/request-friend/{userId}")
     public void requestFriendSocket(
             @DestinationVariable long userId,
             @RequestBody RequestFriend request
@@ -58,16 +58,16 @@ public class FriendController {
     }
 
     @Operation(summary = "친구 요청 처리 (WebSocket)", description = "사용자가 WebSocket을 통해 친구 요청을 승인 또는 거절합니다.")
-    @PostMapping("process-request/{friendId}")  // REST API 엔드포인트 추가 (Swagger 문서화용)
+    @PostMapping("/process-request/{friendId}")  // REST API 엔드포인트 추가 (Swagger 문서화용)
     public ResponseEntity<String> processRequest(
             @Parameter(description = "처리할 친구 요청의 ID", required = true)
             @PathVariable int friendId,
             @RequestBody RequestProcess request
     ) {
-        return ResponseEntity.ok("WebSocket 요청을 ws://localhost:8090/ws/friend/process-request 로 보내세요.");
+        return ResponseEntity.ok("WebSocket 요청을 ws://localhost:8090/ws/process-request 로 보내세요.");
     }
 
-    @MessageMapping("/friend/process-request/{friendId}")
+    @MessageMapping("/process-request/{friendId}")
     public void processRequestSocket(
             @Parameter(description = "처리할 친구 요청의 ID", required = true)
             @DestinationVariable int friendId,
