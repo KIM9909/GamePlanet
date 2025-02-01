@@ -83,6 +83,11 @@ public class BluemarbleRoomServiceImpl implements BluemarbleRoomService {
 		return updatedRoom;
 	}
 
+	@Override
+	public Room startGame(int roomId) {
+		return null;
+	}
+
 	public Room getRoom(int roomId) {
 		Room room = (Room) roomRedisTemplate.opsForHash().get(ROOM_KEY, roomId);
 		if (Objects.isNull(room)) {
