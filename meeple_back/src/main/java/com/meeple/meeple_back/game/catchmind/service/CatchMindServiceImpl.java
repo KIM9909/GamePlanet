@@ -6,6 +6,7 @@ import com.meeple.meeple_back.game.catchmind.model.response.*;
 import com.meeple.meeple_back.game.catchmind.repository.QuizRepository;
 import com.meeple.meeple_back.game.cockroach.model.entity.ChatMessage;
 import com.meeple.meeple_back.game.cockroach.model.entity.Room;
+import com.meeple.meeple_back.game.cockroach.model.response.ResponseExitRoom;
 import com.meeple.meeple_back.game.cockroach.repository.ChatMessageRespository;
 import com.meeple.meeple_back.game.cockroach.repository.RoomRepository;
 import com.meeple.meeple_back.game.game.model.Game;
@@ -389,6 +390,55 @@ public class CatchMindServiceImpl implements CatchMindService {
             ResponseVoteResult response = ResponseVoteResult.builder()
                     .target(request.getTarget())
                     .isLeave(false)
+                    .build();
+
+            return response;
+        }
+    }
+
+    @Override
+    public ResponseExitCatchmindRoom exitRoom(String roomId, String userName) {
+        Map<String, Object> roomInfo =
+                (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+
+        List<String> userList = (List<String>) roomInfo.get("players");
+
+        if (!userName.equals(roomInfo.get("creator"))) {
+            for (int i = 0; i < userList.size(); i++) {
+                String user = userList.get(i);
+                if (user.equals(userName)) {
+                    userList.remove(i);
+                    break;
+                }
+            }
+        } else {
+            for (int i = 0; i < userList.size(); i++) {
+                if (!userList.get(i).equals(roomInfo.get("creator"))) {
+                    roomInfo.put("creator", userList.get(i));
+                    break;
+                }
+            }
+
+            for (int i = 0; i < userList.size(); i++) {
+                if (userList.get(i).equals(userName)) {
+                    roomInfo.remove(i);
+                    break;
+                }
+            }
+        }
+
+        roomInfo.put("player", userList);
+        if (userList.size() > 0) {
+            redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
+            ResponseExitCatchmindRoom response = ResponseExitCatchmindRoom.builder()
+                .players(userList)
+                .build();
+
+            return response;
+        } else {
+            redisTemplate.opsForHash().delete(ROOM_KEY, roomId);
+            ResponseExitCatchmindRoom response = ResponseExitCatchmindRoom.builder()
+                    .players(userList)
                     .build();
 
             return response;

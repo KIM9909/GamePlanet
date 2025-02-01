@@ -171,7 +171,7 @@ public class WebSocketController {
     @MessageMapping("/game/exit-room/{roomId}")
     public void exitRoomSocket(
             @DestinationVariable String roomId,
-            @PathVariable String userNickname
+            @RequestParam String userNickname
     ) {
         ResponseExitRoom response = cockroachService.exitRoom(roomId, userNickname);
         messagingTemplate.convertAndSend("/topic/game/" + roomId, response);
