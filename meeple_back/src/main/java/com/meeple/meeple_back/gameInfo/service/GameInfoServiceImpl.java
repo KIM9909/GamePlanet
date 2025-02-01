@@ -2,9 +2,13 @@ package com.meeple.meeple_back.gameInfo.service;
 
 import com.meeple.meeple_back.game.game.model.Game;
 import com.meeple.meeple_back.game.repo.GameRepository;
+import com.meeple.meeple_back.gameInfo.model.entity.GameCommunity;
 import com.meeple.meeple_back.gameInfo.model.entity.GameInfo;
 import com.meeple.meeple_back.gameInfo.model.entity.GameReview;
+import com.meeple.meeple_back.gameInfo.model.request.commnity.RequestCreateCommunity;
 import com.meeple.meeple_back.gameInfo.model.request.gameReview.RequestUpdateReview;
+import com.meeple.meeple_back.gameInfo.model.response.community.ResponseCommunityList;
+import com.meeple.meeple_back.gameInfo.model.response.community.ResponseCreateCommunity;
 import com.meeple.meeple_back.gameInfo.model.response.gameReview.ResponseCreateReview;
 import com.meeple.meeple_back.gameInfo.model.request.gameInfo.RequestCreateGameInfo;
 import com.meeple.meeple_back.gameInfo.model.request.gameReview.RequestCreateReview;
@@ -25,7 +29,10 @@ import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.stereotype.Service;
 
+import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -199,5 +206,44 @@ public class GameInfoServiceImpl implements GameInfoService{
         mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
 
         return mapper.map(savedGameReview, ResponseUpdateReview.class);
+    }
+
+    @Override
+    public ResponseCreateCommunity createCommunity(RequestCreateCommunity request) {
+        GameCommunity gameCommunity = new GameCommunity();
+
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 회원"));
+
+        GameInfo gameInfo = gameInfoRepository.findById(request.getGameInfoId())
+                        .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게임 정보"));
+
+        gameCommunity.setUser(user);
+        gameCommunity.setGameInfo(gameInfo);
+        gameCommunity.setCreateAt(Date.valueOf(LocalDate.now()));
+        gameCommunity.setGameCommunityContent(request.getGameCommunityContent());
+
+        GameCommunity savedCommunity = gameCommunityRepository.save(gameCommunity);
+
+        ResponseCreateCommunity response = ResponseCreateCommunity.builder()
+                .gameCommunityId(savedCommunity.getGameCommunityId())
+                .createAt(savedCommunity.getCreateAt())
+                .user(savedCommunity.getUser())
+                .gameInfo(savedCommunity.getGameInfo())
+                .build();
+
+        return response;
+    }
+
+    @Override
+    public List<ResponseCommunityList> getCommunityList(int gameInfoId) {
+        List<GameCommunity> gameCommunityList = gameCommunityRepository.findByGameInfo_GameInfoId(gameInfoId);
+
+
+        mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+
+        return gameCommunityList.stream().map(gameCommunity -> mapper
+                .map(gameCommunity, ResponseCommunityList.class))
+                .collect(Collectors.toList());
     }
 }

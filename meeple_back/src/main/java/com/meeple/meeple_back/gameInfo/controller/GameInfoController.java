@@ -1,9 +1,12 @@
 package com.meeple.meeple_back.gameInfo.controller;
 
+import com.meeple.meeple_back.gameInfo.model.request.commnity.RequestCreateCommunity;
 import com.meeple.meeple_back.gameInfo.model.request.gameInfo.RequestCreateGameInfo;
 import com.meeple.meeple_back.gameInfo.model.request.gameReview.RequestCreateReview;
 import com.meeple.meeple_back.gameInfo.model.request.gameInfo.RequestUpdateGameInfo;
 import com.meeple.meeple_back.gameInfo.model.request.gameReview.RequestUpdateReview;
+import com.meeple.meeple_back.gameInfo.model.response.community.ResponseCommunityList;
+import com.meeple.meeple_back.gameInfo.model.response.community.ResponseCreateCommunity;
 import com.meeple.meeple_back.gameInfo.model.response.gameInfo.*;
 import com.meeple.meeple_back.gameInfo.model.response.gameReview.ResponseCreateReview;
 import com.meeple.meeple_back.gameInfo.model.response.gameReview.ResponseReviewList;
@@ -18,9 +21,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/game-info")
-@Tag(name = "GameInfo", description = "게임 저보 관련 API")
+@Tag(name = "GameInfo", description = "게임 정보 관련 API")
 public class GameInfoController {
     private final GameInfoService gameInfoService;
 
@@ -140,6 +145,26 @@ public class GameInfoController {
         ResponseUpdateReview response = gameInfoService.updateReview(reviewId, request);
 
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "커뮤니티 게시글 등록", description = "게시글을 등록합니다.")
+    @PostMapping("/community")
+    public ResponseEntity<ResponseCreateCommunity> createCommunity(
+            @RequestBody RequestCreateCommunity request
+    ) {
+        ResponseCreateCommunity response = gameInfoService.createCommunity(request);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @Operation(summary = "커뮤니티 게시글 조회", description = "해당 게임 정보의 커뮤니티 게시글 목록을 조회합니다.")
+    @GetMapping("/community")
+    public ResponseEntity<List<ResponseCommunityList>> getCommunityList(
+            @RequestParam int gameInfoId
+    ) {
+        List<ResponseCommunityList> response = gameInfoService.getCommunityList(gameInfoId);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
 
