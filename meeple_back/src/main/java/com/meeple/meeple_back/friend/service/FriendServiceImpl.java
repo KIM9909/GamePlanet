@@ -49,10 +49,10 @@ public class FriendServiceImpl implements FriendService {
 
     @Override
     public void requestFriend(long userId, RequestFriend request) {
-        User to = userRepository.findById(userId)
+        User from = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 회원입니다."));
 
-        User from = userRepository.findById(request.getFriendId())
+        User to = userRepository.findById(request.getFriendId())
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 친구입니다."));
 
         boolean exists = friendRepository.existsByUserAndFriend(to, from);
@@ -63,8 +63,8 @@ public class FriendServiceImpl implements FriendService {
         }
 
         Friend friend = Friend.builder()
-                .user(to)
-                .friend(from)
+                .user(from)
+                .friend(to)
                 .friendStatus(FriendStatus.PENDING)
                 .build();
         Friend savedFriendRequest = friendRepository.save(friend);
@@ -72,7 +72,7 @@ public class FriendServiceImpl implements FriendService {
         ResponseFriend response = ResponseFriend.builder()
                 .friendId(savedFriendRequest.getFriendId())
                 .senderId(userId)
-                .senderName(to.getUserNickname())
+                .senderName(from.getUserNickname())
                 .message(from.getUserNickname() + "님이 친구 요청을 보냈습니다.")
                 .build();
 
