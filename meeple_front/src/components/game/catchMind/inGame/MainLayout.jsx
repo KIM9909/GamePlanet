@@ -1,38 +1,21 @@
-/*
-1. 전체 게임 화면 레이아웃 구성
-2. WebSocket 연결 관리
-3. 게임 상태 관리 (시작, 종료, 라운드 변경 등)
-4. Socket.io 이벤트 핸들러
-5. 참가자 상태 관리
-6. 현재 라운드 표시
-7. 제한 시간 타이머
-8. 제시어 표시 (출제자에게만)
-*/
-
-/**
- * 캐치마인드 게임의 메인 레이아웃 컴포넌트
- * 게임 화면, 플레이어 비디오, 채팅 등을 포함한 전체 UI 구성
- */
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { useParams } from "react-router-dom";
+import { Timer, Pencil, Eraser, Trash2, Users, Lock } from "lucide-react";
 import Canvas from "./Canvas";
 import ChatBox from "./ChatBox";
 import PlayerCard from "./PlayerCard";
-import { Timer, Pencil, Eraser, Trash2, Users, Lock } from "lucide-react";
-import { updatePlayerNickname } from "../../../../sources/store/slices/CatchMindSlice";
+import { updatePlayers } from "../../../../sources/store/slices/CatchMindSlice";
 import { fetchProfile } from "../../../../sources/store/slices/ProfileSlice";
-import { useParams } from "react-router-dom";
-import { useState } from "react";
-import API from "../../../../sources/api/CatchMindAPI";
+import { CatchMindAPI } from "../../../../sources/api/CatchMindAPI";
 
 /**
  * 게임 정보를 표시하는 컴포넌트
- * 현재 라운드, 남은 시간, 제시어 정보를 표시
  */
-const GameInfo = ({ round, timer, word, roomInfo }) => {
+const GameInfo = ({ round, word, roomInfo }) => {
   return (
     <div className="flex items-center justify-between px-6 py-3 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-t-lg border-b border-gray-700">
-      {/* 방 제목 추가 */}
+      {/* 방 제목 */}
       <div className="flex items-center gap-2">
         <h2 className="text-xl font-bold">{roomInfo?.roomTitle}</h2>
         {roomInfo?.isPrivate && <Lock className="w-4 h-4 text-gray-400" />}
@@ -52,7 +35,7 @@ const GameInfo = ({ round, timer, word, roomInfo }) => {
         <div className="flex items-center gap-2">
           <Timer className="w-5 h-5 text-blue-400" />
           <span className="text-2xl font-bold text-gray-100">
-            {timer || roomInfo?.timeLimit}초
+            {roomInfo?.timeLimit}초
           </span>
         </div>
 
@@ -66,7 +49,7 @@ const GameInfo = ({ round, timer, word, roomInfo }) => {
         )}
       </div>
 
-      {/* 현재 참가자 수 표시 */}
+      {/* 현재 참가자 수 */}
       <div className="flex items-center gap-2 text-gray-300">
         <Users className="w-4 h-4" />
         <span>
@@ -79,12 +62,11 @@ const GameInfo = ({ round, timer, word, roomInfo }) => {
 
 /**
  * 그리기 도구 컴포넌트
- * 색상 선택, 선 굵기 조절, 지우개, 전체 지우기 기능 제공
  */
 const DrawingTools = () => {
   return (
     <div className="flex items-center justify-center gap-6 py-3 px-6 bg-gray-800 border-t border-gray-700 rounded-b-lg">
-      {/* 펜 도구 (색상 선택 & 선 굵기) */}
+      {/* 펜 도구 */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <Pencil className="w-4 h-4 text-blue-400" />
@@ -117,18 +99,27 @@ const DrawingTools = () => {
 };
 
 /**
- * 캐치마인드 게임의 메인 레이아웃 컴포넌트
- * 게임 화면, 플레이어 비디오, 채팅 등을 포함한 전체 UI 구성
+ * 메인 레이아웃 컴포넌트
  */
 const MainLayout = () => {
   const dispatch = useDispatch();
   const gameState = useSelector((state) => state.catchmind);
   const userId = useSelector((state) => state.user.userId);
   const profileData = useSelector((state) => state.profile.profileData);
-  const currentPlayer = gameState.players.find((p) => p.isTurn);
-
   const { roomId } = useParams();
   const [roomInfo, setRoomInfo] = useState(null);
+  const [isInitialJoin, setIsInitialJoin] = useState(true);
+
+  // 현재 턴인 플레이어 찾기
+  const currentPlayer = gameState?.players?.find((p) => p.isTurn);
+
+  // 현재 사용자의 닉네임을 가져오는 함수
+  const getCurrentUserNickname = useCallback(() => {
+    if (profileData?.userNickname) {
+      return profileData.userNickname;
+    }
+    return "Player 1";
+  }, [profileData?.userNickname]);
 
   // 프로필 정보 가져오기
   useEffect(() => {
@@ -137,57 +128,90 @@ const MainLayout = () => {
     }
   }, [userId, dispatch]);
 
-  // 방 정보 가져오기
+  // 방 정보 가져오기 및 플레이어 업데이트
   useEffect(() => {
     const fetchRoomInfo = async () => {
       try {
-        // 1. 먼저 전체 방 목록을 가져옵니다
-        const response = await API.get("/catch-mind");
-        console.log("전체 방 목록:", response);
-
-        // 2. 현재 roomId와 일치하는 방을 찾습니다
+        const response = await CatchMindAPI.getRoomList();
         const currentRoom = response.find(
           (room) => room.roomId === parseInt(roomId)
         );
 
         if (currentRoom) {
-          console.log("현재 방 정보:", currentRoom);
-          setRoomInfo(currentRoom);
+          const cleanedRoom = {
+            ...currentRoom,
+            players: Array.isArray(currentRoom.players)
+              ? [...new Set(currentRoom.players.filter(Boolean))]
+              : [],
+          };
+
+          setRoomInfo(cleanedRoom);
+
+          const currentUserNickname = getCurrentUserNickname();
+          const players = cleanedRoom.players.map((player, index) => ({
+            id: index + 1,
+            nickname: player,
+            score: 0,
+            isTurn: index === 0,
+            isCurrentUser: player === currentUserNickname,
+          }));
+
+          dispatch(updatePlayers({ players }));
         }
       } catch (error) {
         console.error("방 정보 가져오기 실패:", error);
       }
     };
 
-    if (roomId) {
+    // 초기 방 정보 가져오기
+    if (roomId && profileData?.userNickname) {
       fetchRoomInfo();
-    }
-  }, [roomId]);
 
-  // 프로필 정보로 플레이어 닉네임 업데이트
-  useEffect(() => {
-    if (profileData?.userNickname) {
-      dispatch(
-        updatePlayerNickname({
-          playerId: 1,
-          nickname: profileData.userNickname,
-        })
-      );
+      // 2초마다 방 정보 업데이트
+      const intervalId = setInterval(fetchRoomInfo, 2000);
+
+      // 컴포넌트 언마운트 시 interval 제거
+      return () => clearInterval(intervalId);
     }
-  }, [profileData, dispatch]);
+  }, [roomId, profileData?.userNickname]);
+
+  // 최초 방 입장 처리
+  useEffect(() => {
+    const handleInitialJoin = async () => {
+      if (!isInitialJoin || !profileData?.userNickname || !roomId) return;
+
+      try {
+        const response = await CatchMindAPI.joinRoom(
+          roomId,
+          profileData.userNickname,
+          roomInfo?.password || ""
+        );
+
+        if (response.success) {
+          setIsInitialJoin(false);
+        }
+      } catch (error) {
+        console.error("방 입장 처리 실패:", error);
+      }
+    };
+
+    handleInitialJoin();
+  }, [roomId, profileData?.userNickname, roomInfo?.password, isInitialJoin]);
+
+  // 제시어를 가져오는 함수
+  const getCurrentWord = useCallback(() => {
+    const isCurrentUsersTurn =
+      currentPlayer?.nickname === getCurrentUserNickname();
+    return isCurrentUsersTurn ? gameState?.currentWord : "???";
+  }, [currentPlayer?.nickname, getCurrentUserNickname, gameState?.currentWord]);
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-900 to-gray-800">
       <div className="flex-1 p-4">
         <div className="h-full flex flex-col bg-gray-800 rounded-lg border border-gray-700 shadow-lg">
           <GameInfo
-            round={gameState.currentRound}
-            timer={gameState.timeLimit}
-            word={
-              currentPlayer?.nickname === gameState.players[0].nickname
-                ? gameState.currentWord
-                : "???"
-            }
+            round={gameState?.currentRound || 1}
+            word={getCurrentWord()}
             roomInfo={roomInfo}
           />
           {/* 캔버스 영역 */}
@@ -204,11 +228,11 @@ const MainLayout = () => {
       <div className="w-1/3 flex flex-col gap-4 p-4 border-l border-gray-700">
         {/* 플레이어 카드 그리드 */}
         <div className="grid grid-cols-2 gap-3">
-          {gameState.players.map((player) => (
+          {gameState?.players?.map((player) => (
             <PlayerCard
               key={player.id}
               userId={player.id}
-              userNickname={player.nickname || `Player ${player.id}`}
+              userNickname={player.nickname}
               isCurrentTurn={player.isTurn}
               score={player.score}
             />
@@ -218,13 +242,9 @@ const MainLayout = () => {
         {/* 채팅 영역 */}
         <div className="flex-1 bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
           <ChatBox
-            roomId={gameState.roomId}
-            currentUser={
-              gameState.players[0].nickname ||
-              profileData?.userNickname ||
-              "Player 1"
-            }
-            correctAnswer={gameState.currentWord}
+            roomId={roomId}
+            currentUser={getCurrentUserNickname()}
+            correctAnswer={gameState?.currentWord || ""}
           />
         </div>
       </div>

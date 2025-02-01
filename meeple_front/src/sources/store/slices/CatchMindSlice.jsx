@@ -19,38 +19,13 @@ export const fetchUserInfo = createAsyncThunk(
 );
 
 const initialState = {
-  roomId: "1",
+  roomId: null,
   currentWord: "사과",
   currentRound: 1,
   totalRounds: 5,
   timeLimit: 90,
-  players: [
-    // 첫 번째 플레이어는 현재 유저
-    { id: 1, nickname: "", score: 0, isTurn: true, isCurrentUser: true },
-    // 나머지는 다른 플레이어들
-    {
-      id: 2,
-      nickname: "player2",
-      score: 0,
-      isTurn: false,
-      isCurrentUser: false,
-    },
-    {
-      id: 3,
-      nickname: "player3",
-      score: 0,
-      isTurn: false,
-      isCurrentUser: false,
-    },
-    {
-      id: 4,
-      nickname: "player4",
-      score: 0,
-      isTurn: false,
-      isCurrentUser: false,
-    },
-  ],
-  isGameStarted: true,
+  players: [], // 빈 배열로 시작
+  isGameStarted: false,
   userStatus: {
     isLoading: false,
     error: null,
@@ -79,6 +54,43 @@ const CatchMindSlice = createSlice({
     },
 
     /**
+     * 플레이어 목록을 초기화하거나 업데이트하는 리듀서
+     */
+    updatePlayers: (state, action) => {
+      const { players } = action.payload;
+      if (Array.isArray(players)) {
+        // 중복 방지를 위해 닉네임을 키로 사용
+        const uniquePlayers = [
+          ...new Map(
+            players.map((player) => [
+              player.nickname,
+              {
+                id: player.id || Math.random().toString(36).substr(2, 9),
+                nickname: player.nickname,
+                score: player.score || 0,
+                isTurn: player.isTurn || false,
+                isCurrentUser: player.isCurrentUser || false,
+              },
+            ])
+          ).values(),
+        ];
+
+        state.players = uniquePlayers;
+      }
+    },
+
+    /**
+     * 플레이어의 점수를 업데이트하는 리듀서
+     */
+    updatePlayerScore: (state, action) => {
+      const { nickname, score } = action.payload;
+      const player = state.players.find((p) => p.nickname === nickname);
+      if (player) {
+        player.score = score;
+      }
+    },
+
+    /**
      * 현재 제시어를 설정하는 리듀서
      */
     setCurrentWord: (state, action) => {
@@ -91,6 +103,13 @@ const CatchMindSlice = createSlice({
     updateGameState: (state, action) => {
       return { ...state, ...action.payload };
     },
+
+    /**
+     * 방 ID를 설정하는 리듀서
+     */
+    setRoomId: (state, action) => {
+      state.roomId = action.payload;
+    },
   },
 
   /**
@@ -98,21 +117,25 @@ const CatchMindSlice = createSlice({
    */
   extraReducers: (builder) => {
     builder
-      // fetchUserInfo 액션이 시작될 때
       .addCase(fetchUserInfo.pending, (state) => {
         state.userStatus.isLoading = true;
         state.userStatus.error = null;
       })
-      // fetchUserInfo 액션이 성공했을 때
       .addCase(fetchUserInfo.fulfilled, (state, action) => {
         state.userStatus.isLoading = false;
-        // 현재 유저(첫 번째 플레이어)의 닉네임 설정
-        const currentPlayer = state.players[0];
-        if (currentPlayer && action.payload) {
-          currentPlayer.nickname = action.payload.nickname;
+        // 현재 유저의 닉네임 업데이트
+        if (action.payload && state.players.length === 0) {
+          state.players = [
+            {
+              id: 1,
+              nickname: action.payload.nickname,
+              score: 0,
+              isTurn: true,
+              isCurrentUser: true,
+            },
+          ];
         }
       })
-      // fetchUserInfo 액션이 실패했을 때
       .addCase(fetchUserInfo.rejected, (state, action) => {
         state.userStatus.isLoading = false;
         state.userStatus.error = action.payload;
@@ -122,9 +145,11 @@ const CatchMindSlice = createSlice({
 
 // 액션 생성자들을 export
 export const {
-  updateScore,
+  updatePlayers,
+  updatePlayerScore,
   setCurrentWord,
   updateGameState,
+  setRoomId,
   updatePlayerNickname,
 } = CatchMindSlice.actions;
 

@@ -94,9 +94,6 @@ export const CatchMindAPI = {
         throw new Error("로그인이 필요합니다");
       }
 
-      // 요청 데이터 로깅
-      console.log("Request Data:", JSON.stringify(roomData, null, 2));
-
       const config = {
         baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
         // baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
@@ -115,10 +112,8 @@ export const CatchMindAPI = {
           roomData,
           config
         );
-        console.log("Response:", response.data);
         return response.data;
       } catch (error) {
-        console.log("Server Error Response:", error.response?.data);
         throw error;
       }
     } catch (error) {
@@ -134,7 +129,6 @@ export const CatchMindAPI = {
   getRoomList: async () => {
     try {
       const response = await API.get("/catch-mind");
-      console.log("방 목록 응답:", response);
 
       // response 자체가 방 목록 전체 정보를 포함하고 있을 것이므로 바로 반환
       return response;
@@ -175,7 +169,44 @@ export const CatchMindAPI = {
       // response.code가 200이면 비밀번호 일치, 400이면 불일치
       return { isCorrect: response.code === 200 };
     } catch (error) {
-      return { isCorrect: true };
+      return { isCorrect: false };
+    }
+  },
+
+  // 방 입장 API
+  joinRoom: async (roomId, playerName, password = "") => {
+    try {
+      const joinRequest = {
+        roomId: String(roomId),
+        playerName: playerName,
+        password: password || "",
+      };
+
+      const response = await API.post("/catch-mind/join-room", joinRequest);
+
+      // 기존 로직 유지
+      if (response?.code === 200) {
+        const roomInfo = response.roomInfo || {};
+        return {
+          success: true,
+          roomInfo: {
+            ...roomInfo,
+            roomId: String(roomInfo.roomId),
+          },
+        };
+      } else {
+        console.error("방 입장 실패:", response);
+        return {
+          success: false,
+          message: response?.message || "방 입장에 실패했습니다.",
+        };
+      }
+    } catch (error) {
+      console.error("방 입장 요청 실패:", error);
+      return {
+        success: false,
+        message: "서버 오류가 발생했습니다.",
+      };
     }
   },
 };
