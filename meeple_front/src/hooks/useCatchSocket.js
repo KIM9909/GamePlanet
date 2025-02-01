@@ -37,6 +37,8 @@ const useCatchSocket = (roomId) => {
           transports: ["websocket", "xhr-streaming", "xhr-polling"],
         }
       );
+
+      // STOMP 클라이언트 생성
       const client = new Client({
         webSocketFactory: () => socket,
         debug: function (str) {
@@ -55,24 +57,32 @@ const useCatchSocket = (roomId) => {
        * 연결 성공 시 핸들러
        */
       client.onConnect = () => {
-        console.log("Connected to WebSocket");
         setConnectionStatus("connected");
 
-        // 채팅 메시지 구독
+        // roomId가 유효한지 확인
+        if (!roomId) {
+          console.error("Invalid roomId for subscription:", roomId);
+          return;
+        }
+
+        // 채팅 메시지 구독 - roomId별로 구독
         client.subscribe(`/topic/catch-mind-messages/${roomId}`, (message) => {
           try {
             const chatMessage = JSON.parse(message.body);
             console.log("수신된 채팅 메시지:", chatMessage);
-            setMessages((prev) => [
-              ...prev,
-              {
-                sender: chatMessage.sender,
-                content: chatMessage.content,
-                timestamp: chatMessage.timestamp,
-                isCorrect: chatMessage.isCorrect,
-                score: chatMessage.score,
-              },
-            ]);
+            // 현재 방의 메시지만 추가
+            if (chatMessage.roomId === roomId) {
+              setMessages((prev) => [
+                ...prev,
+                {
+                  sender: chatMessage.sender,
+                  content: chatMessage.content,
+                  timestamp: chatMessage.timestamp,
+                  isCorrect: chatMessage.isCorrect,
+                  score: chatMessage.score,
+                },
+              ]);
+            }
           } catch (error) {
             console.error("Error parsing chat message:", error);
           }
@@ -82,7 +92,6 @@ const useCatchSocket = (roomId) => {
         client.subscribe(`/topic/catch-mind/${roomId}`, (message) => {
           try {
             const data = JSON.parse(message.body);
-            console.log("Game state update:", data);
           } catch (error) {
             console.error("Error parsing game state:", error);
           }
@@ -103,7 +112,6 @@ const useCatchSocket = (roomId) => {
       };
 
       client.onDisconnect = () => {
-        console.log("Disconnected from WebSocket");
         setConnectionStatus("disconnected");
         handleReconnect();
       };
@@ -127,7 +135,6 @@ const useCatchSocket = (roomId) => {
     }
 
     reconnectTimeoutRef.current = setTimeout(() => {
-      console.log("Attempting to reconnect...");
       connect();
     }, 5000);
   }, [connect]);
@@ -145,6 +152,8 @@ const useCatchSocket = (roomId) => {
         clientRef.current.deactivate();
         clientRef.current = null;
         setConnectionStatus("disconnected");
+        // 방을 나갈 때 메시지 초기화
+        setMessages([]);
       } catch (error) {
         console.error("Error disconnecting:", error);
       }
@@ -157,6 +166,11 @@ const useCatchSocket = (roomId) => {
    */
   const sendMessage = useCallback(
     (messageData) => {
+      if (!roomId) {
+        console.error("Invalid roomId for message sending:", roomId);
+        return;
+      }
+
       if (!clientRef.current?.connected) {
         console.warn("Cannot send message: WebSocket not connected");
         connect();

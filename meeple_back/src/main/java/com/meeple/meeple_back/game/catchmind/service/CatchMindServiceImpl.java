@@ -80,45 +80,43 @@ public class CatchMindServiceImpl implements CatchMindService {
 
     @Override
     public ResponseJoinRoom joinRoom(RequestJoinRoom request) {
+        // 명시적 문자열 변환
+        String roomIdStr = String.valueOf(request.getRoomId());
+
         Map<String, Object> roomInfo =
-                (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, request.getRoomId() + "");
+                (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomIdStr);
+
+        if (roomInfo == null) {
+            return ResponseJoinRoom.builder()
+                    .code(404)
+                    .message("방을 찾을 수 없습니다.")
+                    .build();
+        }
 
         boolean isPrivate = Boolean.parseBoolean(String.valueOf(roomInfo.get("isPrivate")));
 
         if (isPrivate) {
             if (!roomInfo.get("password").equals(request.getPassword())) {
-                ResponseJoinRoom response = ResponseJoinRoom.builder()
+                return ResponseJoinRoom.builder()
                         .code(400)
                         .message("비밀번호 불일치")
                         .build();
-
-                return response;
             }
         }
 
-        if (roomInfo != null) {
-            List<String> players = (List<String>) roomInfo.get("players");
-            players.add(request.getPlayerName());
+        List<String> players = (List<String>) roomInfo.get("players");
+        players.add(request.getPlayerName());
 
-            roomInfo.put("players", players);
+        roomInfo.put("players", players);
 
-            redisTemplate.opsForHash().put(ROOM_KEY, request.getRoomId(), roomInfo);
+        // 명시적 문자열 변환된 roomIdStr 사용
+        redisTemplate.opsForHash().put(ROOM_KEY, roomIdStr, roomInfo);
 
-            ResponseJoinRoom response = ResponseJoinRoom.builder()
-                    .code(200)
-                    .message(request.getPlayerName() + " " + request.getRoomId() + "번 방 입장 성공")
-                    .roomInfo(roomInfo)
-                    .build();
-
-            return response;
-        } else {
-            ResponseJoinRoom response = ResponseJoinRoom.builder()
-                    .code(500)
-                    .message(request.getPlayerName() + " " + request.getRoomId() + "번 방 입장 실패")
-                    .build();
-
-            return response;
-        }
+        return ResponseJoinRoom.builder()
+                .code(200)
+                .message(request.getPlayerName() + " " + roomIdStr + "번 방 입장 성공")
+                .roomInfo(roomInfo)
+                .build();
     }
 
     @Override
