@@ -31,4 +31,5 @@ public interface CatchMindService {
 
     ResponseUpdateRoom updateRoom(String roomId, RequestUpdateRoom request);
 
+    ResponseExitCatchmindRoom exitRoom(String roomId, String userName);
 }

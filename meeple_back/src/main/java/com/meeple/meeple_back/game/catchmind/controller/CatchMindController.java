@@ -216,4 +216,24 @@ public class CatchMindController {
         ResponseVoteResult response = catchMindService.voteResult(roomId, request);
         messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
     }
+
+    @Operation(summary = "게임 방 나가기 (WebSocket)", description = "플레이어가 게임 방을 나갑니다.")
+    @PostMapping("/exit-room/{roomId}")
+    public ResponseEntity<String> exitRoom(
+            @Parameter(description = "나갈 방 ID", required = true)
+            @PathVariable String roomId,
+            @RequestBody String userNickname
+    ) {
+        return ResponseEntity.ok("WebSocket 요청을 ws://localhost:8090/ws/game/exit-room/{roomId} 로 보내세요.");
+    }
+
+    @MessageMapping("/exit-room/{roomId}")
+    public void exitRoomSocket(
+            @DestinationVariable String roomId,
+            @RequestParam String userName
+    ) {
+        ResponseExitCatchmindRoom response = catchMindService.exitRoom(roomId, userName);
+
+        messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
+    }
 }
