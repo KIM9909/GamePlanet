@@ -6,10 +6,7 @@ import com.meeple.meeple_back.friend.model.entity.FriendMessage;
 import com.meeple.meeple_back.friend.model.request.RequestFriend;
 import com.meeple.meeple_back.friend.model.request.RequestProcess;
 import com.meeple.meeple_back.friend.model.request.RequestSendFriendMessage;
-import com.meeple.meeple_back.friend.model.response.ResponseFriend;
-import com.meeple.meeple_back.friend.model.response.ResponseFriendList;
-import com.meeple.meeple_back.friend.model.response.ResponseFriendMessageList;
-import com.meeple.meeple_back.friend.model.response.ResponseSendFriendMessage;
+import com.meeple.meeple_back.friend.model.response.*;
 import com.meeple.meeple_back.friend.repository.FriendMessageRepository;
 import com.meeple.meeple_back.friend.repository.FriendRepository;
 import com.meeple.meeple_back.user.model.User;
@@ -151,5 +148,30 @@ public class FriendServiceImpl implements FriendService {
         return messageList.stream().map(message -> mapper
                         .map(message, ResponseFriendMessageList.class))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public ResponseSearchUser searchUser(String userNickName) {
+        try {
+            User user = userRepository.findByUserNickname(userNickName);
+            ResponseSearchUser response = ResponseSearchUser.builder()
+                    .userId(user.getUserId())
+                    .code(200)
+                    .message("조회 성공")
+                    .build();
+
+            return response;
+        } catch (Exception e) {
+            ResponseSearchUser response = ResponseSearchUser.builder()
+                    .code(400)
+                    .message("존재하지 않는 닉네임입니다.")
+                    .build();
+        }
+        ResponseSearchUser response = ResponseSearchUser.builder()
+                .code(500)
+                .message("조회 실패")
+                .build();
+
+        return response;
     }
 }
