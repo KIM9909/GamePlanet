@@ -2,11 +2,13 @@ package com.meeple.meeple_back.gameInfo.model.entity;
 
 import com.meeple.meeple_back.user.model.User;
 import jakarta.persistence.*;
+import lombok.Getter;
 
 import java.sql.Date;
 
 @Entity
 @Table(name = "tbl_game_community_comment")
+@Getter
 public class GameCommunityComment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,4 +27,8 @@ public class GameCommunityComment {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "game_community_id")
+    private GameCommunity gameCommunity;
 }

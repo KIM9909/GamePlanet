@@ -2,11 +2,14 @@ package com.meeple.meeple_back.gameInfo.service;
 
 import com.meeple.meeple_back.game.game.model.Game;
 import com.meeple.meeple_back.game.repo.GameRepository;
+import com.meeple.meeple_back.gameInfo.dto.SimpleUserDTO;
 import com.meeple.meeple_back.gameInfo.model.entity.GameCommunity;
+import com.meeple.meeple_back.gameInfo.model.entity.GameCommunityComment;
 import com.meeple.meeple_back.gameInfo.model.entity.GameInfo;
 import com.meeple.meeple_back.gameInfo.model.entity.GameReview;
 import com.meeple.meeple_back.gameInfo.model.request.commnity.RequestCreateCommunity;
 import com.meeple.meeple_back.gameInfo.model.request.gameReview.RequestUpdateReview;
+import com.meeple.meeple_back.gameInfo.model.response.community.ResponseCommentList;
 import com.meeple.meeple_back.gameInfo.model.response.community.ResponseCommunityList;
 import com.meeple.meeple_back.gameInfo.model.response.community.ResponseCreateCommunity;
 import com.meeple.meeple_back.gameInfo.model.response.gameReview.ResponseCreateReview;
@@ -238,12 +241,43 @@ public class GameInfoServiceImpl implements GameInfoService{
     @Override
     public List<ResponseCommunityList> getCommunityList(int gameInfoId) {
         List<GameCommunity> gameCommunityList = gameCommunityRepository.findByGameInfo_GameInfoId(gameInfoId);
-
-
         mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
 
-        return gameCommunityList.stream().map(gameCommunity -> mapper
-                .map(gameCommunity, ResponseCommunityList.class))
-                .collect(Collectors.toList());
+
+        return gameCommunityList.stream().map(gameCommunity -> {
+            // 게시글 DTO 변환
+            ResponseCommunityList response = mapper.map(gameCommunity, ResponseCommunityList.class);
+
+            // 작성자 정보 변환
+            SimpleUserDTO simpleUserDTO = new SimpleUserDTO();
+            simpleUserDTO.setUserId(gameCommunity.getUser().getUserId());
+            simpleUserDTO.setNickname(gameCommunity.getUser().getUserNickname());
+            response.setUser(simpleUserDTO);
+
+            // 해당 게시글의 댓글 리스트 조회
+            List<GameCommunityComment> commentList = gameCommunityCommentRepository
+                    .findByGameCommunity_GameCommunityId(gameCommunity.getGameCommunityId());
+
+            // 댓글 DTO 변환
+            List<ResponseCommentList> responseComments = commentList.stream().map(comment -> {
+                ResponseCommentList commentDTO = new ResponseCommentList();
+                commentDTO.setGameCommunityCommentId(comment.getGameCommunityCommentId());
+                commentDTO.setGameCommunityCommentContent(comment.getGameCommunityContent());
+                commentDTO.setCreateAt(comment.getCreateAt());
+
+                // 댓글 작성자 정보 설정
+                SimpleUserDTO commentUser = new SimpleUserDTO();
+                commentUser.setUserId(comment.getUser().getUserId());
+                commentUser.setNickname(comment.getUser().getUserNickname());
+                commentDTO.setUser(commentUser);
+
+                return commentDTO;
+            }).collect(Collectors.toList());
+
+            // 댓글 리스트 설정
+            response.setCommentList(responseComments);
+
+            return response;
+        }).collect(Collectors.toList());
     }
 }
