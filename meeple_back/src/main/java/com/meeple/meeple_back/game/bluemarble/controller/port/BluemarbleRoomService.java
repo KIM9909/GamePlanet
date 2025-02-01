@@ -18,4 +18,6 @@ public interface BluemarbleRoomService {
 	Room update(int roomId, RoomUpdate roomUpdate);
 
 	Room startGame(int roomId);
+
+	Room findById(int roomId);
 }

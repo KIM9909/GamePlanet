@@ -18,14 +18,14 @@ public class RoomUpdate {
 	private final boolean isGameStart;
 
 	@NotBlank(message = "방장은 필수입니다.")
-	private final int creator;
+	private final Player creator;
 
 	@Min(value = 1, message = "플레이어는 최소 1명 이상이 필요합니다.")
 	private final int maxPlayers;
 
 	@Builder
 	public RoomUpdate(int gameId, String roomName, boolean isPrivate, boolean isGameStart,
-			int creator,
+			Player creator,
 			int maxPlayers) {
 		this.gameId = gameId;
 		this.roomName = roomName;

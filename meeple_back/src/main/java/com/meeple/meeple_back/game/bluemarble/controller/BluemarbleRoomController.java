@@ -56,6 +56,12 @@ public class BluemarbleRoomController {
 				bluemarbleRoomService.getList().stream().map(RoomResponse::from).toList());
 	}
 
+	@GetMapping("/{roomId}")
+	@Operation(summary = "게임방 조회", description = "게임방을 조회합니다.")
+	public ResponseEntity<RoomResponse> getRoom(@PathVariable int roomId) {
+		return ResponseEntity.ok(RoomResponse.from(bluemarbleRoomService.findById(roomId)));
+	}
+
 	@DeleteMapping("/{roomId}")
 	@Operation(summary = "게임방 삭제", description = "게임방을 삭제합니다.")
 	public ResponseEntity<RoomResponse> delete(@PathVariable int roomId,

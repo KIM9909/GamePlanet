@@ -2,7 +2,6 @@ package com.meeple.meeple_back.game.bluemarble.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Getter;
@@ -24,7 +23,6 @@ public class RoomCreate {
 
 	private int creator;
 
-	@Min(value = 1, message = "플레이어는 최소 1명 이상이 필요합니다.")
 	private int maxPlayers;
 
 	@JsonCreator
