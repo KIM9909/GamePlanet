@@ -3,25 +3,32 @@ package com.meeple.meeple_back.gameInfo.service;
 import com.meeple.meeple_back.game.game.model.Game;
 import com.meeple.meeple_back.game.repo.GameRepository;
 import com.meeple.meeple_back.gameInfo.model.entity.GameInfo;
-import com.meeple.meeple_back.gameInfo.model.request.RequestCreateGameInfo;
-import com.meeple.meeple_back.gameInfo.model.request.RequestUpdateGameInfo;
-import com.meeple.meeple_back.gameInfo.model.response.ResponseCreateGameInfo;
-import com.meeple.meeple_back.gameInfo.model.response.ResponseGameInfo;
-import com.meeple.meeple_back.gameInfo.model.response.ResponseGameInfoList;
-import com.meeple.meeple_back.gameInfo.model.response.ResponseUpdateGameInfo;
+import com.meeple.meeple_back.gameInfo.model.entity.GameReview;
+import com.meeple.meeple_back.gameInfo.model.request.gameReview.RequestUpdateReview;
+import com.meeple.meeple_back.gameInfo.model.response.gameReview.ResponseCreateReview;
+import com.meeple.meeple_back.gameInfo.model.request.gameInfo.RequestCreateGameInfo;
+import com.meeple.meeple_back.gameInfo.model.request.gameReview.RequestCreateReview;
+import com.meeple.meeple_back.gameInfo.model.request.gameInfo.RequestUpdateGameInfo;
+import com.meeple.meeple_back.gameInfo.model.response.gameInfo.*;
+import com.meeple.meeple_back.gameInfo.model.response.gameReview.ResponseReviewList;
+import com.meeple.meeple_back.gameInfo.model.response.gameReview.ResponseUpdateReview;
 import com.meeple.meeple_back.gameInfo.repository.GameCommunityCommentRepository;
 import com.meeple.meeple_back.gameInfo.repository.GameCommunityRepository;
 import com.meeple.meeple_back.gameInfo.repository.GameInfoRepository;
 import com.meeple.meeple_back.gameInfo.repository.GameReviewRepository;
+import com.meeple.meeple_back.user.model.User;
+import com.meeple.meeple_back.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import lombok.AllArgsConstructor;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@AllArgsConstructor
 public class GameInfoServiceImpl implements GameInfoService{
 
     private final GameCommunityRepository gameCommunityRepository;
@@ -29,20 +36,10 @@ public class GameInfoServiceImpl implements GameInfoService{
     private final GameReviewRepository gameReviewRepository;
     private final GameCommunityCommentRepository gameCommunityCommentRepository;
     private final GameRepository gameRepository;
+    private final UserRepository userRepository;
+    private final ModelMapper mapper;
 
-    @Autowired
-    public GameInfoServiceImpl(GameCommunityRepository gameCommunityRepository,
-                               GameInfoRepository gameInfoRepository,
-                               GameReviewRepository gameReviewRepository,
-                               GameCommunityCommentRepository gameCommunityCommentRepository,
-                               GameRepository gameRepository
-    ) {
-        this.gameCommunityRepository = gameCommunityRepository;
-        this.gameInfoRepository = gameInfoRepository;
-        this.gameReviewRepository = gameReviewRepository;
-        this.gameCommunityCommentRepository = gameCommunityCommentRepository;
-        this.gameRepository = gameRepository;
-    }
+
 
     @Override
     public ResponseGameInfoList getGameInfoList() {
@@ -130,5 +127,77 @@ public class GameInfoServiceImpl implements GameInfoService{
                     .build();
             return response;
         }
+    }
+
+    @Override
+    public ResponseCreateReview createReview(RequestCreateReview request) {
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 유저입니다."));
+
+        GameInfo gameInfo = gameInfoRepository.findById(request.getGameInfoId())
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게임 정보입니다."));
+
+        GameReview gameReview = GameReview.builder()
+                .gameReviewContent(request.getGameReviewContent())
+                .gameReviewStar(request.getGameReviewStar())
+                .gameInfo(gameInfo)
+                .user(user)
+                .build();
+
+        GameReview savedReview = gameReviewRepository.save(gameReview);
+
+        ResponseCreateReview response = ResponseCreateReview.builder()
+                .reviewId(savedReview.getGameReviewId())
+                .user(user)
+                .gameInfo(gameInfo)
+                .build();
+
+        return response;
+    }
+
+    @Override
+    public ResponseReviewList getReviewList(int gameInfoId) {
+        List<GameReview> gameReviews = gameReviewRepository.findByGameInfo_GameInfoId(gameInfoId);
+
+        double averageStar = gameReviews.stream()
+                .mapToInt(GameReview::getGameReviewStar)
+                .average()
+                .orElse(0.0);
+
+
+        ResponseReviewList response = ResponseReviewList.builder()
+                .reviewList(gameReviews)
+                .starAvg(averageStar)
+                .build();
+
+        return response;
+    }
+
+    @Override
+    public void deleteReview(int reviewId) {
+        GameReview gameReview = gameReviewRepository.findById(reviewId)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 리뷰입니다"));
+
+        gameReviewRepository.delete(gameReview);
+    }
+
+    @Override
+    public ResponseUpdateReview updateReview(int reviewId, RequestUpdateReview request) {
+        GameReview gameReview = gameReviewRepository.findById(reviewId)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 리뷰입니다"));
+
+        if (!request.getGameReviewContent().equals(gameReview.getGameReviewContent())) {
+            gameReview.setGameReviewContent(request.getGameReviewContent());
+        }
+
+        if (request.getGameReviewStar() != gameReview.getGameReviewStar()) {
+            gameReview.setGameReviewStar(request.getGameReviewStar());
+        }
+
+        GameReview savedGameReview = gameReviewRepository.save(gameReview);
+
+        mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+
+        return mapper.map(savedGameReview, ResponseUpdateReview.class);
     }
 }

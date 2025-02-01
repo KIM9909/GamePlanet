@@ -1,4 +1,4 @@
-package com.meeple.meeple_back.gameInfo.model.response;
+package com.meeple.meeple_back.gameInfo.model.response.gameInfo;
 
 import com.meeple.meeple_back.game.game.model.Game;
 import io.swagger.v3.oas.annotations.media.Schema;

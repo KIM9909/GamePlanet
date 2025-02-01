@@ -1,13 +1,14 @@
 package com.meeple.meeple_back.gameInfo.controller;
 
-import com.meeple.meeple_back.gameInfo.model.request.RequestCreateGameInfo;
-import com.meeple.meeple_back.gameInfo.model.request.RequestUpdateGameInfo;
-import com.meeple.meeple_back.gameInfo.model.response.ResponseCreateGameInfo;
-import com.meeple.meeple_back.gameInfo.model.response.ResponseGameInfo;
-import com.meeple.meeple_back.gameInfo.model.response.ResponseGameInfoList;
-import com.meeple.meeple_back.gameInfo.model.response.ResponseUpdateGameInfo;
+import com.meeple.meeple_back.gameInfo.model.request.gameInfo.RequestCreateGameInfo;
+import com.meeple.meeple_back.gameInfo.model.request.gameReview.RequestCreateReview;
+import com.meeple.meeple_back.gameInfo.model.request.gameInfo.RequestUpdateGameInfo;
+import com.meeple.meeple_back.gameInfo.model.request.gameReview.RequestUpdateReview;
+import com.meeple.meeple_back.gameInfo.model.response.gameInfo.*;
+import com.meeple.meeple_back.gameInfo.model.response.gameReview.ResponseCreateReview;
+import com.meeple.meeple_back.gameInfo.model.response.gameReview.ResponseReviewList;
+import com.meeple.meeple_back.gameInfo.model.response.gameReview.ResponseUpdateReview;
 import com.meeple.meeple_back.gameInfo.service.GameInfoService;
-import com.meeple.meeple_back.gameInfo.service.ResponseDeleteGameInfo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -49,7 +50,7 @@ public class GameInfoController {
     @PostMapping
     public ResponseEntity<ResponseCreateGameInfo> createGameInfo(
             @RequestBody RequestCreateGameInfo request
-            ) {
+    ) {
 
         ResponseCreateGameInfo response = gameInfoService.createGameInfo(request);
 
@@ -80,7 +81,7 @@ public class GameInfoController {
     public ResponseEntity<String> updateGameInfo(
             @PathVariable int gameInfoId,
             @RequestBody RequestUpdateGameInfo request
-            ) {
+    ) {
         ResponseUpdateGameInfo response = gameInfoService.updateGameInfo(gameInfoId, request);
 
         return ResponseEntity.status(response.getCode()).body(response.getMessage());
@@ -100,6 +101,45 @@ public class GameInfoController {
         return ResponseEntity.status(deleteGameInfo.getCode()).body(deleteGameInfo.getMessage());
     }
 
+    @Operation(summary = "게임 리뷰 등록", description = "리뷰를 등록합니다.")
+    @PostMapping("/review")
+    public ResponseEntity<ResponseCreateReview> craeteGameReivew(
+            @RequestBody RequestCreateReview request
+    ) {
+        ResponseCreateReview response = gameInfoService.createReview(request);
 
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @Operation(summary = "게임 리뷰 목록 조회", description = "해당 게임의 리뷰를 전부 조회합니다.")
+    @GetMapping("/review")
+    public ResponseEntity<ResponseReviewList> getReviewList(
+            @RequestParam int gameInfoId
+    ) {
+        ResponseReviewList response = gameInfoService.getReviewList(gameInfoId);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "게임 리뷰 삭제", description = "리뷰를 삭제합니다.")
+    @DeleteMapping("/review/{reviewId}")
+    public ResponseEntity<String> deleteReview(
+            @PathVariable int reviewId
+    ) {
+        gameInfoService.deleteReview(reviewId);
+
+        return ResponseEntity.ok("삭제 성공");
+    }
+
+    @Operation(summary = "게임 리뷰 수정", description = "리뷰를 수정합니다.")
+    @PutMapping("/review/{reviewId}")
+    public ResponseEntity<ResponseUpdateReview> updateReview(
+            @PathVariable int reviewId,
+            @RequestBody RequestUpdateReview request
+    ) {
+        ResponseUpdateReview response = gameInfoService.updateReview(reviewId, request);
+
+        return ResponseEntity.ok(response);
+    }
 }
 

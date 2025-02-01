@@ -1,4 +1,4 @@
-package com.meeple.meeple_back.gameInfo.service;
+package com.meeple.meeple_back.gameInfo.model.response.gameInfo;
 
 import lombok.Builder;
 import lombok.Data;
