@@ -1,4 +1,4 @@
-package com.meeple.meeple_back.gameInfo.model.response;
+package com.meeple.meeple_back.gameInfo.model.response.gameInfo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
