@@ -7,9 +7,6 @@ pipeline {
         nodejs 'nodejs-22'
     }
     environment {
-        DOMAIN = "boardjjigae.duckdns.org"
-        EMAIL = "aruesin2@gmail.com"
-        // 필요한 환경 변수 설정
         DOCKER_IMAGE_FRONT  = "kimgon/meeple_front"
         DOCKER_IMAGE_BACK   = "kimgon/meeple_back"
         DOCKER_IMAGE_NGINX  = "kimgon/nginx"
@@ -85,22 +82,6 @@ pipeline {
                 }
             }
         }
-        stage('Obtain SSL Certificate with Certbot') {
-                    steps {
-                        script {
-                            sh 'mkdir -p $WORKSPACE/certbot/conf'
-                            sh 'mkdir -p $WORKSPACE/certbot/www'
-
-                            sh """
-                                docker run --rm -p 80:80 \\
-                                  -v \$WORKSPACE/certbot/conf:/etc/letsencrypt \\
-                                  -v \$WORKSPACE/certbot/www:/var/lib/letsencrypt \\
-                                  certbot/certbot certonly --standalone \\
-                                  --agree-tos --no-eff-email --email \$EMAIL -d \$DOMAIN
-                            """
-                        }
-                    }
-                }
         stage('Build Docker Images') {
             steps {
                 script {
