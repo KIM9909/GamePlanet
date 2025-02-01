@@ -68,7 +68,7 @@ public class BluemarbleRoomServiceImpl implements BluemarbleRoomService {
 				.orElseThrow(() -> new ResourceNotFoundException("Room", roomId));
 		Player removed = room.removePlayer((int) currentUserId)
 				.orElseThrow(() -> new ResourceNotFoundException("Player", currentUserId));
-		if (!room.isPlayerExists()) {
+		if (room.isPlayerNotExists()) {
 			bluemarbleRoomRepository.delete(room);
 			return room;
 		}

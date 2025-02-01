@@ -82,9 +82,6 @@ public class Room {
 
 
 	public Optional<Player> removePlayer(int playerId) {
-		if (players.isEmpty()) {
-			return Optional.empty();
-		}
 		Iterator<Player> iterator = players.iterator();
 		while (iterator.hasNext()) {
 			Player player = iterator.next();
@@ -104,7 +101,8 @@ public class Room {
 		creator = players.get(0);
 	}
 
-	public boolean isPlayerExists() {
+
+	public boolean isPlayerNotExists() {
 		return players.isEmpty();
 	}
 }
