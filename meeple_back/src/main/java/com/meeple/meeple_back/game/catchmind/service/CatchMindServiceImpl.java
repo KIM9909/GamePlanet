@@ -104,12 +104,28 @@ public class CatchMindServiceImpl implements CatchMindService {
             }
         }
 
-        List<String> players = (List<String>) roomInfo.get("players");
-        players.add(request.getPlayerName());
+        // 기존 players 리스트를 새로운 리스트로 교체
+        List<String> currentPlayers = (List<String>) roomInfo.get("players");
+        List<String> updatedPlayers;
 
-        roomInfo.put("players", players);
+        if (currentPlayers == null || currentPlayers.isEmpty()) {
+            updatedPlayers = new ArrayList<>();
+            updatedPlayers.add(request.getPlayerName());
+        } else {
+            // 기존 플레이어 목록에서 null 제거, 중복 제거하고 현재 플레이어 추가
+            updatedPlayers = currentPlayers.stream()
+                    .filter(Objects::nonNull)  // null 제거
+                    .distinct()                // 중복 제거
+                    .collect(Collectors.toList());
 
-        // 명시적 문자열 변환된 roomIdStr 사용
+            // 현재 플레이어가 목록에 없을 경우에만 추가
+            if (!updatedPlayers.contains(request.getPlayerName())) {
+                updatedPlayers.add(request.getPlayerName());
+            }
+        }
+
+        // 정제된 플레이어 리스트로 업데이트
+        roomInfo.put("players", updatedPlayers);
         redisTemplate.opsForHash().put(ROOM_KEY, roomIdStr, roomInfo);
 
         return ResponseJoinRoom.builder()
@@ -419,27 +435,21 @@ public class CatchMindServiceImpl implements CatchMindService {
 
             for (int i = 0; i < userList.size(); i++) {
                 if (userList.get(i).equals(userName)) {
-                    roomInfo.remove(i);
+                    userList.remove(i);
                     break;
                 }
             }
         }
 
-        roomInfo.put("player", userList);
-        if (userList.size() > 0) {
+        roomInfo.put("players", userList);
+        if (userList.size() == 0) {
+            redisTemplate.opsForHash().delete(ROOM_KEY, roomId);
+        } else {
             redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
-            ResponseExitCatchmindRoom response = ResponseExitCatchmindRoom.builder()
+        }
+
+        return ResponseExitCatchmindRoom.builder()
                 .players(userList)
                 .build();
-
-            return response;
-        } else {
-            redisTemplate.opsForHash().delete(ROOM_KEY, roomId);
-            ResponseExitCatchmindRoom response = ResponseExitCatchmindRoom.builder()
-                    .players(userList)
-                    .build();
-
-            return response;
-        }
     }
 }

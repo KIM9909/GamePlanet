@@ -1,6 +1,8 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
+import { useDispatch } from "react-redux";
+import { updatePlayers } from "../sources/store/slices/CatchMindSlice";
 
 /**
  * WebSocket을 통한 실시간 채팅 기능을 제공하는 Custom Hook
@@ -10,6 +12,7 @@ import { Client } from "@stomp/stompjs";
  * @returns {Object} WebSocket 관련 상태와 메서드들
  */
 const useCatchSocket = (roomId) => {
+  const dispatch = useDispatch();
   // STOMP 클라이언트 참조
   const clientRef = useRef(null);
 
@@ -92,6 +95,72 @@ const useCatchSocket = (roomId) => {
         client.subscribe(`/topic/catch-mind/${roomId}`, (message) => {
           try {
             const data = JSON.parse(message.body);
+            console.log("Received game state update:", data);
+
+            // ResponseExitCatchmindRoom 처리
+            if (data.players !== undefined) {
+              console.log("Received exit room response:", data);
+              console.log("Current players count:", data.players.length);
+
+              // players 배열이 비어있는지 확인
+              if (data.players.length === 0) {
+                console.log(
+                  "Room is empty, cleaning up and redirecting to lobby..."
+                );
+
+                // 연결 해제
+                if (clientRef.current) {
+                  try {
+                    // 방 삭제 API 호출
+                    fetch(
+                      `${
+                        import.meta.env.VITE_API_BASE_URL
+                      }/catch-mind/delete-room?roomId=${roomId}`,
+                      // `${
+                      //   import.meta.env.VITE_LOCAL_API_BASE_URL
+                      // }/catch-mind/delete-room?roomId=${roomId}`,
+                      {
+                        method: "DELETE",
+                      }
+                    )
+                      .then(() => {
+                        console.log("Room deletion request sent");
+                      })
+                      .catch((error) => {
+                        console.error("Error deleting room:", error);
+                      });
+
+                    clientRef.current.deactivate();
+                    clientRef.current = null;
+                  } catch (error) {
+                    console.error("Error during cleanup:", error);
+                  }
+                }
+
+                // 상태 초기화
+                setConnectionStatus("disconnected");
+                setMessages([]);
+                dispatch(updatePlayers({ players: [] }));
+
+                // 로비로 리다이렉트
+                setTimeout(() => {
+                  window.location.href = "/catch-mind";
+                }, 500);
+
+                return;
+              }
+
+              // players 배열을 Redux store에 업데이트
+              const updatedPlayers = data.players.map((playerName, index) => ({
+                id: index + 1,
+                nickname: playerName,
+                score: 0,
+                isTurn: index === 0,
+              }));
+
+              console.log("Updating players in Redux store:", updatedPlayers);
+              dispatch(updatePlayers({ players: updatedPlayers }));
+            }
           } catch (error) {
             console.error("Error parsing game state:", error);
           }
@@ -124,7 +193,7 @@ const useCatchSocket = (roomId) => {
       setConnectionStatus("error");
       handleReconnect();
     }
-  }, [roomId]);
+  }, [roomId, dispatch]);
 
   /**
    * 연결 재시도 핸들러
@@ -180,11 +249,7 @@ const useCatchSocket = (roomId) => {
       try {
         clientRef.current.publish({
           destination: `/app/chat/${roomId}`,
-          body: JSON.stringify({
-            message: messageData.message,
-            sender: messageData.sender,
-            correctAnswer: messageData.correctAnswer,
-          }),
+          body: JSON.stringify(messageData),
           headers: { "content-type": "application/json" },
         });
       } catch (error) {
@@ -209,6 +274,7 @@ const useCatchSocket = (roomId) => {
     connectionStatus,
     sendMessage,
     messages,
+    client: clientRef.current,
   };
 };
 
