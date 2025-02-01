@@ -28,7 +28,7 @@ services:
     image: kimgon/nginx:latest  # Docker Hub 이미지 이름
     restart: always
     volumes:
-      - $WORKSPACE/certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
     ports:
       - "80:80"
