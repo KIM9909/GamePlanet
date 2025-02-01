@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.meeple.meeple_back.game.bluemarble.domain.Room;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,6 +24,23 @@ public class RedisConfig {
 	private String redisHost;
 	@Value("${spring.data.redis.port}")
 	private int redisPort;
+
+	@Bean(name = "roomRedisTemplate")
+	public RedisTemplate<String, Room> roomRedisTemplate(RedisConnectionFactory connectionFactory) {
+		RedisTemplate<String, Room> template = new RedisTemplate<>();
+		template.setConnectionFactory(connectionFactory);
+
+		// Key serializer
+		template.setKeySerializer(new StringRedisSerializer());
+
+		// Value serializer with custom ObjectMapper
+		template.setValueSerializer(new GenericJackson2JsonRedisSerializer(customObjectMapper()));
+		template.setHashKeySerializer(new StringRedisSerializer());
+		template.setHashValueSerializer(
+				new GenericJackson2JsonRedisSerializer(customObjectMapper()));
+
+		return template;
+	}
 
 	@Bean
 	@Primary

@@ -8,11 +8,10 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.persistence.EntityNotFoundException;
 import java.security.Key;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
-
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -36,9 +35,7 @@ public class JwtUtil {
 	}
 
 	/**
-	 * [JWT 생성 메서드]
-	 * - userEmail로 사용자를 찾아 userId를 subject로 설정
-	 * - 토큰 유효시간 4시간으로 설정
+	 * [JWT 생성 메서드] - userEmail로 사용자를 찾아 userId를 subject로 설정 - 토큰 유효시간 4시간으로 설정
 	 */
 	public String generateToken(String userEmail) {
 		long now = System.currentTimeMillis();
@@ -74,9 +71,7 @@ public class JwtUtil {
 	}
 
 	/**
-	 * [사용자명 추출]
-	 * - 토큰의 subject에서 userId를 추출
-	 * - userId로 사용자를 찾아 email 반환
+	 * [사용자명 추출] - 토큰의 subject에서 userId를 추출 - userId로 사용자를 찾아 email 반환
 	 */
 	public String getUsernameFromToken(String token) {
 		Claims claims = Jwts.parserBuilder()
@@ -90,6 +85,15 @@ public class JwtUtil {
 		return userRepository.findById(userId)
 				.orElseThrow(() -> new EntityNotFoundException("User not found"))
 				.getUserEmail();
+	}
+
+	public Long getUserIdFromToken(String token) {
+		Claims claims = Jwts.parserBuilder()
+				.setSigningKey(getSigningKey())
+				.build()
+				.parseClaimsJws(token)
+				.getBody();
+		return Long.parseLong(claims.getSubject());
 	}
 
 	/**

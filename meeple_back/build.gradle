@@ -28,7 +28,6 @@ dependencies {
 
     // 테스트용 h2 데이터베이스
     implementation 'com.h2database:h2:2.1.214'
-    
     // 잭슨 데이터타입
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2'
 
