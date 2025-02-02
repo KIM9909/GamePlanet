@@ -15,7 +15,7 @@ import SideLayout from "./components/layout/SideLayout";
 import Introduce from "./pages/introduce/Introduce";
 import ScrollToTop from "./components/layout/ScrollToTop";
 import CatchMindPage from "./pages/game/CatchMindPage";
-import WaitingRoom from "./components/game/burumabul/WaitingRoom";
+import WaitingRoom from "./components/game/burumabul/waiting/WaitingRoom";
 import FriendModalLayout from "./components/layout/FriendModalLayout";
 import CatchMindListPage from "./components/game/catchMind/roomList/CatchMindListPage";
 function App() {
@@ -39,7 +39,7 @@ function App() {
                 element={<BurumabulPage />}
               />
               <Route
-                path="/game/burumabul/waitingroom/:roomId"
+                path="/game/burumabul/waitingroom/"
                 element={<WaitingRoom />}
               />
               <Route

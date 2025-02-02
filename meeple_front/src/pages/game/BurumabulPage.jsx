@@ -1,9 +1,9 @@
 import React, { useCallback, useState } from "react";
-import TravelMap from "../../components/game/burumabul/TravelMap";
+import TravelMap from "../../components/game/burumabul/play/TravelMap";
 import GameSidebar from "../../components/sidebar/GameSidebar";
 import { ChevronLeft, ChevronRight, Menu, X } from "lucide-react";
 import DiceImage from "../../assets/burumabul_images/Dice.png";
-import PlayerVideo from "../../components/game/burumabul/PlayerVideo";
+import PlayerVideo from "../../components/game/burumabul/play/PlayerVideo";
 import { div, p } from "framer-motion/client";
 
 const BurumabulPage = () => {
