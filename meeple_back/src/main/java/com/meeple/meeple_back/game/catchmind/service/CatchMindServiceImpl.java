@@ -268,9 +268,28 @@ public class CatchMindServiceImpl implements CatchMindService {
             throw new IllegalArgumentException("빈 메세지는 전송할 수 없습니다.");
         }
 
+        // 시스템 메시지인 경우 즉시 전송하고 리턴
+        if ("SYSTEM".equals(request.getSender())) {
+            ResponseSendMessage systemMessage = ResponseSendMessage.builder()
+                    .roomId(roomId)
+                    .sender("SYSTEM")
+                    .content(request.getMessage())
+                    .timestamp(LocalDateTime.now())
+                    .isNotice(true)
+                    .score(0)
+                    .build();
+            messagingTemplate.convertAndSend("/topic/catch-mind-messages/" + roomId, systemMessage);
+            return;
+        }
+
+        // 일반 사용자 메시지 처리
+        User sender = userRepository.findByUserNickname(request.getSender());
+        if (sender == null) {
+            throw new IllegalArgumentException("존재하지 않는 사용자입니다: " + request.getSender());
+        }
+
         Room room = roomRepository.findById(Integer.parseInt(roomId))
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게임방"));
-        User sender = userRepository.findByUserNickname(request.getSender());
 
         ChatMessage chatMessage = ChatMessage.builder()
                 .roomId(room)
@@ -281,48 +300,83 @@ public class CatchMindServiceImpl implements CatchMindService {
 
         chatMessageRespository.save(chatMessage);
 
-        if (request.getCorrectAnswer().equals(request.getMessage())) {
-            ResponseSendMessage responseMessage = ResponseSendMessage.builder()
-                    .roomId(roomId)
-                    .sender(sender.getUserNickname())
-                    .timestamp(LocalDateTime.now())
-                    .content(request.getMessage())
-                    .isCorrect(true)
-                    .score(10)
-                    .build();
+        // 정답 체크
+        if (request.getCorrectAnswer() != null &&
+                request.getMessage().trim().equalsIgnoreCase(request.getCorrectAnswer().trim())) {
 
-            Map<String, Object> roomInfo =
-                    (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+            Map<String, Object> roomInfo = (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+            if (roomInfo != null) {
+                // 1. gameInfo 가져오기 또는 초기화
+                Map<String, Object> gameInfo = (Map<String, Object>) roomInfo.get("gameInfo");
+                if (gameInfo == null) {
+                    gameInfo = new HashMap<>();
+                    roomInfo.put("gameInfo", gameInfo);
+                }
 
-            Map<String, Object> gameInfo = (Map<String, Object>) roomInfo.get("gameInfo");
-            Map<String, Integer> playerScore = (Map<String, Integer>) gameInfo.get("playerScore");
+                // 2. 플레이어 점수 업데이트
+                Map<String, Integer> playerScore = (Map<String, Integer>) gameInfo.get("playerScore");
+                if (playerScore == null) {
+                    playerScore = new HashMap<>();
+                    gameInfo.put("playerScore", playerScore);
+                }
+                int currentScore = playerScore.getOrDefault(request.getSender(), 0);
+                playerScore.put(request.getSender(), currentScore + 10);
 
+                // 3. 다음 출제자로 턴 변경
+                List<String> players = (List<String>) roomInfo.get("players");
+                if (players != null && !players.isEmpty()) {
+                    String currentTurn = (String) gameInfo.get("currentTurn");
+                    int currentIndex = currentTurn != null ? players.indexOf(currentTurn) : 0;
+                    int nextIndex = (currentIndex + 1) % players.size();
+                    String nextTurn = players.get(nextIndex);
 
-            int score = playerScore.get(request.getSender());
-            score += 10;
+                    // 다음 출제자를 gameInfo에 저장
+                    gameInfo.put("currentTurn", nextTurn);
 
-            playerScore.put(request.getSender(), score);
+                    System.out.println("Turn changed: " + currentTurn + " -> " + nextTurn);
+                }
 
-            gameInfo.put("playerScore", playerScore);
-            roomInfo.put("gameInfo", gameInfo);
+                // 4. Redis에 업데이트된 정보 저장
+                roomInfo.put("gameInfo", gameInfo);
+                redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
 
-            redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
+                // 5. 게임 상태 변경 알림
+                messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, roomInfo);
 
-            messagingTemplate
-                    .convertAndSend("/topic/catch-mind-messages/" + roomId, responseMessage);
+                // 6. 정답 메시지 전송
+                ResponseSendMessage correctMessage = ResponseSendMessage.builder()
+                        .roomId(roomId)
+                        .sender(sender.getUserNickname())
+                        .content(request.getMessage())
+                        .timestamp(LocalDateTime.now())
+                        .isCorrect(true)
+                        .score(10)
+                        .build();
+                messagingTemplate.convertAndSend("/topic/catch-mind-messages/" + roomId, correctMessage);
 
+                // 7. 시스템 알림 메시지 전송
+                ResponseSendMessage noticeMessage = ResponseSendMessage.builder()
+                        .roomId(roomId)
+                        .sender("SYSTEM")
+                        .content(String.format("%s님이 정답을 맞추셨습니다! (정답: %s)",
+                                sender.getUserNickname(), request.getCorrectAnswer()))
+                        .timestamp(LocalDateTime.now())
+                        .isNotice(true)
+                        .build();
+                messagingTemplate.convertAndSend("/topic/catch-mind-messages/" + roomId, noticeMessage);
+            }
         } else {
+            // 일반 메시지 전송
             ResponseSendMessage responseMessage = ResponseSendMessage.builder()
                     .roomId(roomId)
                     .sender(sender.getUserNickname())
                     .timestamp(LocalDateTime.now())
                     .content(request.getMessage())
                     .isCorrect(false)
-                    .score(-1)
+                    .score(0)
                     .build();
 
-            messagingTemplate
-                    .convertAndSend("/topic/catch-mind-messages/" + roomId, responseMessage);
+            messagingTemplate.convertAndSend("/topic/catch-mind-messages/" + roomId, responseMessage);
         }
     }
 

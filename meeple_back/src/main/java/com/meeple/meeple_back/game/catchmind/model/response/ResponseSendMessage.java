@@ -26,4 +26,7 @@ public class ResponseSendMessage {
 
     @Schema(description = "정답 여부", example = "true")
     private boolean isCorrect;
+
+    @Schema(description = "알림 메시지 여부", example = "true")
+    private boolean isNotice;
 }

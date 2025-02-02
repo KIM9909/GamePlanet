@@ -2,7 +2,10 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
 import { useDispatch } from "react-redux";
-import { updatePlayers } from "../sources/store/slices/CatchMindSlice";
+import {
+  updatePlayers,
+  updatePlayerScore,
+} from "../sources/store/slices/CatchMindSlice";
 
 /**
  * WebSocket을 통한 실시간 채팅 기능을 제공하는 Custom Hook
@@ -73,6 +76,7 @@ const useCatchSocket = (roomId) => {
           try {
             const chatMessage = JSON.parse(message.body);
             console.log("수신된 채팅 메시지:", chatMessage);
+
             // 현재 방의 메시지만 추가
             if (chatMessage.roomId === roomId) {
               setMessages((prev) => [
@@ -82,9 +86,24 @@ const useCatchSocket = (roomId) => {
                   content: chatMessage.content,
                   timestamp: chatMessage.timestamp,
                   isCorrect: chatMessage.isCorrect,
+                  isNotice: chatMessage.isNotice,
                   score: chatMessage.score,
                 },
               ]);
+
+              // 정답인 경우 플레이어 점수 업데이트
+              if (chatMessage.isCorrect) {
+                console.log("Dispatching score update:", {
+                  nickname: chatMessage.sender,
+                  score: chatMessage.score,
+                });
+                dispatch(
+                  updatePlayerScore({
+                    nickname: chatMessage.sender,
+                    score: chatMessage.score,
+                  })
+                );
+              }
             }
           } catch (error) {
             console.error("Error parsing chat message:", error);
@@ -97,16 +116,48 @@ const useCatchSocket = (roomId) => {
             const data = JSON.parse(message.body);
             console.log("Received game state update:", data);
 
-            // ResponseExitCatchmindRoom 처리
-            if (data.players !== undefined) {
-              console.log("Received exit room response:", data);
-              console.log("Current players count:", data.players.length);
+            // gameInfo와 players가 있는지 확인
+            if (data.players && data.gameInfo) {
+              console.log("Current game info:", data.gameInfo);
+              console.log("Current turn:", data.gameInfo.currentTurn);
+
+              // 현재 턴 플레이어가 있는 경우에만 업데이트 진행
+              if (
+                data.gameInfo.currentTurn &&
+                data.players.includes(data.gameInfo.currentTurn)
+              ) {
+                // 기존 플레이어 정보와 새로운 턴 정보를 결합하여 업데이트
+                const updatedPlayers = data.players.map((playerName) => {
+                  const playerScore =
+                    data.gameInfo.playerScore?.[playerName] || 0;
+                  const isCurrentTurn =
+                    data.gameInfo.currentTurn === playerName;
+                  console.log(
+                    `Player ${playerName} turn status:`,
+                    isCurrentTurn
+                  );
+
+                  return {
+                    id: Math.random().toString(36).substr(2, 9),
+                    nickname: playerName,
+                    score: playerScore,
+                    isTurn: isCurrentTurn,
+                    isCurrentUser: false,
+                  };
+                });
+
+                console.log("Updating players with new state:", updatedPlayers);
+                dispatch(updatePlayers({ players: updatedPlayers }));
+              } else {
+                console.log("Skipping update: Invalid turn state", {
+                  currentTurn: data.gameInfo.currentTurn,
+                  players: data.players,
+                });
+              }
 
               // players 배열이 비어있는지 확인
               if (data.players.length === 0) {
-                console.log(
-                  "Room is empty, cleaning up and redirecting to lobby..."
-                );
+                console.log("Room is empty, cleaning up...");
 
                 // 연결 해제
                 if (clientRef.current) {
@@ -146,20 +197,7 @@ const useCatchSocket = (roomId) => {
                 setTimeout(() => {
                   window.location.href = "/catch-mind";
                 }, 500);
-
-                return;
               }
-
-              // players 배열을 Redux store에 업데이트
-              const updatedPlayers = data.players.map((playerName, index) => ({
-                id: index + 1,
-                nickname: playerName,
-                score: 0,
-                isTurn: index === 0,
-              }));
-
-              console.log("Updating players in Redux store:", updatedPlayers);
-              dispatch(updatePlayers({ players: updatedPlayers }));
             }
           } catch (error) {
             console.error("Error parsing game state:", error);
@@ -221,7 +259,6 @@ const useCatchSocket = (roomId) => {
         clientRef.current.deactivate();
         clientRef.current = null;
         setConnectionStatus("disconnected");
-        // 방을 나갈 때 메시지 초기화
         setMessages([]);
       } catch (error) {
         console.error("Error disconnecting:", error);

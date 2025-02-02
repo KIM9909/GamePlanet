@@ -56,9 +56,9 @@ API.interceptors.response.use(
 );
 
 export const VideoAPI = {
-  createSession: async () => {
+  createSession: async (options = {}) => {
     try {
-      const response = await API.post("api/video/create-session");
+      const response = await API.post("api/video/create-session", options);
       if (!response) {
         throw new Error("No response received from createSession");
       }
