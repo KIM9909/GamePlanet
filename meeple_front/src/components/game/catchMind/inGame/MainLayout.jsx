@@ -72,39 +72,6 @@ const GameInfo = ({ round, word, roomInfo, handleExitRoom }) => {
   );
 };
 
-const DrawingTools = () => {
-  return (
-    <div className="flex items-center justify-center gap-6 py-3 px-6 bg-gray-800 border-t border-gray-700 rounded-b-lg">
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Pencil className="w-4 h-4 text-blue-400" />
-          <input
-            type="color"
-            className="w-8 h-8 rounded cursor-pointer bg-gray-700 border border-gray-600"
-          />
-        </div>
-        <select className="px-3 py-1.5 border border-gray-600 rounded-lg bg-gray-700 text-gray-200">
-          <option>1px</option>
-          <option>2px</option>
-          <option>4px</option>
-          <option>8px</option>
-        </select>
-      </div>
-      <div className="h-6 w-px bg-gray-600" />
-      <div className="flex items-center gap-3">
-        <button className="flex items-center gap-2 px-4 py-1.5 bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600 transition-colors border border-gray-600">
-          <Eraser className="w-4 h-4" />
-          지우개
-        </button>
-        <button className="flex items-center gap-2 px-4 py-1.5 bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600 transition-colors border border-gray-600">
-          <Trash2 className="w-4 h-4" />
-          전체 지우기
-        </button>
-      </div>
-    </div>
-  );
-};
-
 const MainLayout = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -118,6 +85,12 @@ const MainLayout = () => {
 
   // useCatchSocket hook 사용
   const { sendMessage, client } = useCatchSocket(roomId);
+
+  // 드로잉 도구 상태 관리
+  const [selectedColor, setSelectedColor] = useState("#000000");
+  const [selectedWidth, setSelectedWidth] = useState(2);
+  const [isEraser, setIsEraser] = useState(false);
+  const [clearCanvas, setClearCanvas] = useState(null);
 
   // 현재 턴인 플레이어 찾기
   const currentPlayer = useSelector((state) =>
@@ -306,12 +279,30 @@ const MainLayout = () => {
     handleInitialJoin();
   }, [roomId, profileData?.userNickname, roomInfo?.password, isInitialJoin]);
 
+  // 드로잉 도구 핸들러
+  const handleColorChange = (color) => {
+    setSelectedColor(color);
+    setIsEraser(false);
+  };
+
+  const handleWidthChange = (width) => {
+    setSelectedWidth(width);
+  };
+
+  const handleEraserToggle = (eraserMode) => {
+    setIsEraser(eraserMode);
+  };
+
   // 제시어 가져오기
   const getCurrentWord = useCallback(() => {
     const isCurrentUsersTurn =
       currentPlayer?.nickname === getCurrentUserNickname();
     return isCurrentUsersTurn ? gameState?.currentWord : "???";
   }, [currentPlayer?.nickname, getCurrentUserNickname, gameState?.currentWord]);
+
+  const isCurrentUsersTurn = useCallback(() => {
+    return currentPlayer?.nickname === getCurrentUserNickname();
+  }, [currentPlayer?.nickname, getCurrentUserNickname]);
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-900 to-gray-800">
@@ -328,7 +319,6 @@ const MainLayout = () => {
               <Canvas />
             </div>
           </div>
-          <DrawingTools />
         </div>
       </div>
 
