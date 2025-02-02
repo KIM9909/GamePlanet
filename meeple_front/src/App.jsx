@@ -34,9 +34,12 @@ function App() {
               <Route path="/board/:boardId" element={<BoardPage />} />
 
               {/* Game */}
-              <Route path="/game/burumabul/start" element={<BurumabulPage />} />
               <Route
-                path="/game/burumabul/waitingroom"
+                path="/game/burumabul/start:roomId"
+                element={<BurumabulPage />}
+              />
+              <Route
+                path="/game/burumabul/waitingroom/:roomId"
                 element={<WaitingRoom />}
               />
               <Route
