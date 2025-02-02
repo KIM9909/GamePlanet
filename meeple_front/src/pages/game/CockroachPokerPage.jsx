@@ -92,8 +92,8 @@ const CockroachPokerPage = () => {
         },
         publicDeck: [
           { type: "Scorpion", royal: false },
-          { type: "Toad", royal: true },
           { type: "Stinkbug", royal: false },
+          { type: "Toad", royal: true },
         ],
         userTableCards: {
           testUser: [

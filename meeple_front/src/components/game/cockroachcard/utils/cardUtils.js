@@ -53,13 +53,26 @@ export const getKoreanName = (type) => {
 };
 
 // 카드 정보를 일관되게 가져오는 함수 추가
-export const getCardInfo = (card, shouldShowFront = true) => {
+export const getCardInfo = (card, showFront = false) => {
   if (!card) return null;
-  
+
+  // card가 이미 처리된 형식인지 확인
+  if (typeof card === 'object' && 'type' in card) {
+    return {
+      type: card.type,
+      isBack: !showFront,
+      isRoyal: card.royal
+    };
+  }
+
+  // 문자열인 경우 (예: "KingToad")
+  const isKingCard = card.startsWith('King');
+  const baseType = isKingCard ? card.replace('King', '') : card;
+
   return {
-    type: shouldShowFront ? card.type : null,
-    isRoyal: card.royal || card.isRoyal, // 두 속성 모두 확인
-    isBack: !shouldShowFront
+    type: baseType,  // "Toad"와 같은 기본 타입
+    isBack: !showFront,
+    isRoyal: isKingCard  // King 접두사가 있으면 true
   };
 };
 

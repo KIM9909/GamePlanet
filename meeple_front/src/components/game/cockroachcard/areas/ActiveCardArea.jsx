@@ -32,12 +32,8 @@ const ActiveCardArea = ({
     setShowGuessModal(true);
   };
 
-  // utils의 getCardInfo 함수 사용
-  const cardInfo = currentCard 
-    ? getCardInfo(currentCard, shouldShowFront())
-    : selectedCard 
-      ? getCardInfo(selectedCard, true)
-      : null;
+
+  const cardInfo = getCardInfo(currentCard || selectedCard, shouldShowFront());
 
   return (
     <div className="absolute top-[60%] right-4 w-72 active-card-area">
