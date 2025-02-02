@@ -16,6 +16,7 @@ const HomePage = () => {
     useState(false);
 
   const userId = useSelector((state) => state.user.userId);
+  console.log(userId);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -126,8 +127,6 @@ const HomePage = () => {
           />,
           document.body
         )}
-
-      <FriendModal userId={userId} />
     </div>
   );
 };
