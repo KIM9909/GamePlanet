@@ -1,7 +1,7 @@
 package com.meeple.meeple_back.game.bluemarble.domain;
 
-import java.util.Map;
-import java.util.Set;
+import jakarta.validation.constraints.NotNull;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,8 +13,16 @@ import lombok.NoArgsConstructor;
 @Builder
 public class GameState {
 
-	private int currentPlayerId;
-	private Map<Integer, Player> players;
-	private Set<SeedCertificateCard> seedCertificateCards;
+	private int currentPlayerIndex;
+	private List<Player> players;
 	private String gameStatus;
+
+	public static GameState init(@NotNull List<Player> players) {
+		return GameState.builder()
+				.currentPlayerIndex(0)
+				.players(players)
+				.gameStatus(GameStatus.IN_PROGRESS.getStatus())
+				.build();
+	}
+
 }

@@ -1,14 +1,17 @@
 package com.meeple.meeple_back.user.service;
 
 
-import com.meeple.meeple_back.user.model.*;
+import com.meeple.meeple_back.user.model.PasswordUpdateRequest;
+import com.meeple.meeple_back.user.model.User;
+import com.meeple.meeple_back.user.model.UserProfileResponse;
+import com.meeple.meeple_back.user.model.UserRegistDto;
+import com.meeple.meeple_back.user.model.UserUpdateRequest;
 import com.meeple.meeple_back.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import java.time.LocalDateTime;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
 
 @Service
 public class UserService {
@@ -46,7 +49,8 @@ public class UserService {
 	@Transactional(readOnly = true)
 	public UserProfileResponse getUserProfile(Long userId) {
 		User user = userRepository.findById(userId)
-				.orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
+				.orElseThrow(
+						() -> new EntityNotFoundException("User not found with ID: " + userId));
 
 		return UserProfileResponse.builder()
 				.userName(user.getUserName())
@@ -133,5 +137,10 @@ public class UserService {
 		user.setUserDeletedAt(LocalDateTime.now());
 		user.setUserUpdatedAt(LocalDateTime.now());
 		userRepository.save(user);
+	}
+
+	public User findById(long creator) {
+		return userRepository.findById(creator)
+				.orElseThrow(() -> new EntityNotFoundException("User not found"));
 	}
 }

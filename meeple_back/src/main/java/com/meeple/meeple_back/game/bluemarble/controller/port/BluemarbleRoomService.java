@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface BluemarbleRoomService {
 
-	Room create(RoomCreate roomCreate);
+	Room create(long userId, RoomCreate roomCreate);
 
 	Room join(int roomId, long userId);
 
@@ -17,5 +17,5 @@ public interface BluemarbleRoomService {
 
 	Room update(int roomId, RoomUpdate roomUpdate);
 
-	Room startGame(int roomId);
+	Room findById(int roomId);
 }

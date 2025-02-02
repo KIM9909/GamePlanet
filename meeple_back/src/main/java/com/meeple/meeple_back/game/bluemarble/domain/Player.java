@@ -1,5 +1,6 @@
 package com.meeple.meeple_back.game.bluemarble.domain;
 
+import com.meeple.meeple_back.user.model.User;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.AllArgsConstructor;
@@ -12,16 +13,18 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class Player {
-
+	
 	private int playerId;
+	private String playerName;
 	private int position;
 	private int balance;
 	private Set<String> seedCertificateCardOwned;
 
-	public Player(int userId) {
+	public Player(User user) {
 		final int INITIAL_BALANCE = 0;
 		final int INITIAL_POSITION = 0;
-		this.playerId = userId;
+		this.playerId = Math.toIntExact(user.getUserId());
+		this.playerName = user.getUserName();
 		this.position = INITIAL_POSITION;
 		this.balance = INITIAL_BALANCE;
 		this.seedCertificateCardOwned = new HashSet<>();

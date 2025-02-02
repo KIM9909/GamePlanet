@@ -16,7 +16,7 @@ public class RoomResponse {
 	private LocalDateTime createTime;
 	private boolean isPrivate;
 	private boolean isGameStart;
-	private int creator;
+	private Player creator;
 	private int maxPlayers;
 	private List<Player> players;
 

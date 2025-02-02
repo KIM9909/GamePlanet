@@ -9,34 +9,35 @@ import com.meeple.meeple_back.game.bluemarble.domain.RoomUpdate;
 import com.meeple.meeple_back.game.bluemarble.infrastructure.RoomEntity;
 import com.meeple.meeple_back.game.bluemarble.service.port.BluemarbleRoomRepository;
 import com.meeple.meeple_back.game.game.model.Game;
+import com.meeple.meeple_back.game.game.model.GameEnum;
 import com.meeple.meeple_back.game.repo.GameRepository;
+import com.meeple.meeple_back.user.service.UserService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class BluemarbleRoomServiceImpl implements BluemarbleRoomService {
 
-	private static final String ROOM_KEY = "BLUDMARBLE_ROOMS";
-
 	private final BluemarbleRoomRepository bluemarbleRoomRepository;
 	private final GameRepository gameRepository;
-	private final RedisTemplate<String, Room> roomRedisTemplate;
+	private final UserService userService;
+
 
 	@Override
-	public Room create(RoomCreate roomCreate) {
-		Game bluemarble = gameRepository.getReferenceById(roomCreate.getGameId());
+	@Transactional
+	public Room create(long userId, RoomCreate roomCreate) {
+		Game bluemarble = gameRepository.getReferenceById(GameEnum.BLUEMARBLE.getGameId());
 		RoomEntity roomEntity = RoomEntity.builder().roomName(roomCreate.getRoomName()).createTime(
 						LocalDateTime.now()).game(bluemarble)
 				.build();
 		bluemarbleRoomRepository.save(roomEntity);
 
-		Player newPlayer = new Player(roomCreate.getCreator());
+		Player newPlayer = new Player(userService.findById(userId));
 		// 초기 유저
 		List<Player> players = new ArrayList<>();
 		players.add(newPlayer);
@@ -44,56 +45,62 @@ public class BluemarbleRoomServiceImpl implements BluemarbleRoomService {
 		Room room = Room.builder().roomId(roomEntity.getRoomId()).roomName(roomEntity.getRoomName())
 				.createTime(roomEntity.getCreateTime()).isPrivate(roomCreate.isPrivate())
 				.password(roomCreate.getPassword()).isGameStart(false)
-				.creator(roomCreate.getCreator())
+				.creator(new Player(userService.findById(userId)))
 				.maxPlayers(roomCreate.getMaxPlayers()).players(players).build();
-
-		roomRedisTemplate.opsForHash().put(ROOM_KEY, room.getRoomId(), room);
+		bluemarbleRoomRepository.save(room);
 		return room;
 	}
 
 
 	@Override
+	@Transactional
 	public Room join(int roomId, long userId) {
-		Room room = getRoom(roomId);
-		room = room.addPlayer(new Player((int) userId));
-		roomRedisTemplate.opsForHash().put(ROOM_KEY, roomId, room);
+		Room room = bluemarbleRoomRepository.findById(roomId)
+				.orElseThrow(() -> new ResourceNotFoundException("Room", roomId));
+		room = room.addPlayer(new Player(userService.findById(userId)));
+		bluemarbleRoomRepository.save(room);
 		return room;
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public List<Room> getList() {
-		return roomRedisTemplate.opsForHash().values(ROOM_KEY).stream()
-				.map(Room.class::cast).filter(room -> !room.isPrivate()).toList();
+		return bluemarbleRoomRepository.findAll();
 	}
 
 	@Override
 	public Room delete(int roomId, long currentUserId) {
-		Room deletedRoom = getRoom(roomId);
-		if (deletedRoom.isCreator((int) currentUserId)) {
-			roomRedisTemplate.opsForHash().delete(ROOM_KEY, roomId);
+		Room room = bluemarbleRoomRepository.findById(roomId)
+				.orElseThrow(() -> new ResourceNotFoundException("Room", roomId));
+		Player removed = room.removePlayer((int) currentUserId)
+				.orElseThrow(() -> new ResourceNotFoundException("Player", currentUserId));
+		if (room.isPlayerNotExists()) {
+			bluemarbleRoomRepository.delete(room);
+			return room;
 		}
-		return deletedRoom;
+
+		if (room.isCreator(removed.getPlayerId())) {
+			room.changeCreator();
+		}
+		return bluemarbleRoomRepository.save(room);
 	}
 
 	@Override
+	@Transactional
 	public Room update(int roomId, RoomUpdate roomUpdate) {
-		Room room = getRoom(roomId);
+		Room room = bluemarbleRoomRepository.findById(roomId)
+				.orElseThrow(() -> new ResourceNotFoundException("Room", roomId));
 		Room updatedRoom = room.update(roomUpdate);
-		roomRedisTemplate.opsForHash().put(ROOM_KEY, roomId, updatedRoom);
+		bluemarbleRoomRepository.save(updatedRoom);
 		return updatedRoom;
 	}
 
 	@Override
-	public Room startGame(int roomId) {
-		return null;
+	@Transactional(readOnly = true)
+	public Room findById(int roomId) {
+		return bluemarbleRoomRepository.findById(roomId)
+				.orElseThrow(() -> new ResourceNotFoundException("Room", roomId));
 	}
 
-	public Room getRoom(int roomId) {
-		Room room = (Room) roomRedisTemplate.opsForHash().get(ROOM_KEY, roomId);
-		if (Objects.isNull(room)) {
-			throw new ResourceNotFoundException("Room", roomId);
-		}
-		return room;
-	}
 
 }
