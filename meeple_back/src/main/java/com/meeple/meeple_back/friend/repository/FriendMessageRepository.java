@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface FriendMessageRepository extends JpaRepository<FriendMessage, Integer> {
     List<FriendMessage> findByUser_UserId(long userId);
+
+    List<FriendMessage> findByUser_UserIdAndDeletedAtIsNull(long userId);
 }
