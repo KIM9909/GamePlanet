@@ -79,7 +79,7 @@ const HomePage = () => {
                 </button>
               </div> */}
               
-              <GameCard imgUrl={CockroachPokerRoyalMainImg} />
+              <GameCard imgUrl={CockroachPokerRoyalMainImg} title={"바퀴벌레포커"} description={"블러핑과 심리전이 핵심인 카드게임입니다."}/>
 
               {/* 부루마불 */}
               {/* <div className="bg-gray-50 p-6 rounded-lg shadow">
@@ -95,7 +95,7 @@ const HomePage = () => {
                 </button>
               </div> */}
 
-              <GameCard imgUrl={BurumabulMainImg} />
+              <GameCard imgUrl={BurumabulMainImg} title={"부루마블"} description={"친구들과 함께 떠나는 미플만의 우주여행!"}/>
 
               {/* 캐치마인드 */}
               {/* <div className="bg-gray-50 p-6 rounded-lg shadow">
@@ -116,7 +116,7 @@ const HomePage = () => {
                 </div>
               </div> */}
 
-              <GameCard imgUrl={CatchMindMainImg} />
+              <GameCard imgUrl={CatchMindMainImg} title={"캐치마인드"} description={"폭풍을 부르는 그림 그림 대소동 퀴즈 작전!"}/>
 
             </div>
           </div>
