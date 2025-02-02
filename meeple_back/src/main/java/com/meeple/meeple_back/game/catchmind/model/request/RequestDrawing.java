@@ -22,6 +22,12 @@ public class RequestDrawing {
     @Schema(description = "Y 좌표", example = "200", required = true)
     private int y;
 
+    @Schema(description = "이전 X 좌표", example = "140")
+    private int lastX;
+
+    @Schema(description = "이전 Y 좌표", example = "190")
+    private int lastY;
+
     @Schema(description = "선 색상", example = "#FF5733", required = true)
     private String color;
 
