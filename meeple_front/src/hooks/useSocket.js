@@ -1,7 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
-import axios from "axios";
 
 // global 객체가 없을 경우를 대비한 폴리필
 if (typeof global === "undefined") {
@@ -65,34 +64,52 @@ const useSocket = (roomId) => {
       }
 
       try {
-        console.log("Sending message:", messageData);
-
         // 채팅 메시지 처리
         if (!messageData.type) {
-          // 채팅 메시지는 type이 없음
           clientRef.current.publish({
             destination: `/app/game/chat/${roomId}`,
-            body: JSON.stringify(messageData),
+            body: JSON.stringify({
+              message: messageData.message,
+              sender: messageData.sender,
+            }),
           });
           return;
         }
 
-        // PASS_CARD 처리
-        if (messageData.type === "PASS_CARD") {
-          clientRef.current.publish({
-            destination: `/app/game/pass-card/${roomId}`,
-            body: JSON.stringify(messageData.data),
-          });
-          return;
+        let destination;
+        let body = messageData.data;
+
+        switch (messageData.type) {
+          case "GUESS_CARD":
+            destination = `/app/game/single-card/${roomId}`;
+            break;
+          case "GIVE_CARD":
+          case "PASS_CARD":
+            destination = `/app/game/give-card/${roomId}`;
+            break;
+          case "MULTI_CARD":
+            destination = `/app/game/multi-card/${roomId}`;
+            break;
+          case "HAND_CHECK":
+            destination = `/app/game/hand-check/${roomId}`;
+            break;
+          case "GAME_END":
+            destination = `/app/game/game-end/${roomId}`;
+            break;
+          case "UPDATE_ROOM":
+            destination = `/app/game/update-room/${roomId}`;
+            break;
+          default:
+            destination = `/app/game/${messageData.type.toLowerCase()}/${roomId}`;
         }
 
-        // 다른 게임 메시지 처리
         clientRef.current.publish({
-          destination: `/app/game/${messageData.type.toLowerCase()}/${roomId}`,
-          body: JSON.stringify(messageData.data),
+          destination,
+          body: JSON.stringify(body),
         });
       } catch (error) {
         console.error("Error sending message:", error);
+        throw error; // 에러를 상위로 전파하여 처리할 수 있게 함
       }
     },
     [roomId]

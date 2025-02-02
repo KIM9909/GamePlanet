@@ -53,25 +53,40 @@ const CockroachPokerPage = () => {
       players: ["testUser", "user2", "user3", "user4"],
       gameData: {
         gameState: {
+          userTableCards: {
+            testUser: [], // 빈 배열로 시작
+            user2: [],
+            user3: [],
+            user4: []
+          },
           currentTurn: "testUser",
           currentCard: {
-            type: "Scorpion",
-            royal: false,
+            type: "Toad",
+            royal: true,
           },
-          cardSender: "user2",
+          cardSender: "user3",
           cardReceiver: "testUser",
           claimedAnimal: "Rat", 
-          isKing: false,
+          isKing: true,
         },
         playerCards: {
           testUser: [
             { type: "Rat", royal: true },
             { type: "Bat", royal: false },
             { type: "Fly", royal: false },
-            { type: "Black", royal: false },
+            // { type: "Black", royal: false },
             { type: "Cockroach", royal: true },
           ],
-          user2: Array(8).fill(null),
+          user2: [
+                    { type: "Rat", royal: true },
+                    { type: "Bat", royal: false },
+                    { type: "Fly", royal: true },
+                    { type: "Cockroach", royal: false },
+                    { type: "Scorpion", royal: true },
+                    { type: "Toad", royal: false },
+                    { type: "Stinkbug", royal: false },
+                    { type: "Joker", royal: false }
+                  ],
           user3: Array(8).fill(null),
           user4: Array(8).fill(null),
         },
@@ -83,7 +98,7 @@ const CockroachPokerPage = () => {
         userTableCards: {
           testUser: [
             { type: "Bat", count: 2 },
-            { type: "Rat", count: 1, royal: true },
+            { type: "Cockroach", count: 1, royal: true },
           ],
           user2: [
             { type: "Bat", count: 2 },
@@ -92,14 +107,88 @@ const CockroachPokerPage = () => {
           user3: [
             { type: "Cockroach", count: 3 },
             { type: "Scorpion", count: 1 },
+            {type: "Stinkbug", count: 3 },
           ],
           user4: [
             { type: "Bat", count: 1, royal: true },
-            { type: "Rat", count: 2 },
+            { type: "Rat", count: 1 },
+            { type: "Scorpion", count: 1 },
+            { type: "Stinkbug", count: 1 },
+            { type: "Toad", count: 1 },
+            { type: "Fly", count: 1 },
           ],
         },
       },
     };
+    // const mockGameData = {
+    //   players: [ "testUser","user1", "user2", "user3",],
+    //   gameData: {
+    //     userTableCards: {
+    //       testUser: [],
+    //       user1: [],
+    //       user2: [],
+    //       user3: []
+    //     },
+    //     playerCards: {
+    //       testUser: [
+    //         { type: "Rat", royal: false },
+    //         { type: "Bat", royal: true },
+    //         { type: "Fly", royal: false },
+    //         { type: "Cockroach", royal: true },
+    //         { type: "Scorpion", royal: false },
+    //         { type: "Toad", royal: false },
+    //         { type: "Stinkbug", royal: true },
+    //         { type: "Black", royal: false }
+    //       ],
+    //       user1: [
+    //         { type: "Rat", royal: true },
+    //         { type: "Bat", royal: false },
+    //         { type: "Fly", royal: true },
+    //         { type: "Cockroach", royal: false },
+    //         { type: "Scorpion", royal: true },
+    //         { type: "Toad", royal: false },
+    //         { type: "Stinkbug", royal: false },
+    //         { type: "Joker", royal: false }
+    //       ],
+    //       user2: [
+    //         { type: "Rat", royal: false },
+    //         { type: "Bat", royal: true },
+    //         { type: "Fly", royal: false },
+    //         { type: "Cockroach", royal: true },
+    //         { type: "Scorpion", royal: false },
+    //         { type: "Toad", royal: true },
+    //         { type: "Stinkbug", royal: false },
+    //         { type: "Black", royal: false }
+    //       ],
+    //       user3: [
+    //         { type: "Rat", royal: true },
+    //         { type: "Bat", royal: false },
+    //         { type: "Fly", royal: true },
+    //         { type: "Cockroach", royal: false },
+    //         { type: "Scorpion", royal: false },
+    //         { type: "Toad", royal: true },
+    //         { type: "Stinkbug", royal: true },
+    //         { type: "Joker", royal: false }
+    //       ]
+    //     },
+    //     publicDeck: [
+    //       { type: "Rat", royal: false },
+    //       { type: "Bat", royal: true },
+    //       { type: "Fly", royal: false }
+    //     ],
+    //     gameState: {
+    //       currentTurn: "testUser",
+    //       currentPhase: "CHOOSE_PLAYER",
+    //       currentCard: null,
+    //       claimedAnimal: null,
+    //       isKing: false,
+    //       cardSender: null,
+    //       cardReceiver: null,
+    //       passCount: 0
+    //     },
+    //     isGameStart: true
+    //   }
+    // };
 
     setGameData(mockGameData);
   };

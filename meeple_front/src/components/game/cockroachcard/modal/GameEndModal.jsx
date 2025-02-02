@@ -1,17 +1,17 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-const GameEndModal = ({ isOpen, onClose, loser, reason }) => {
+const GameEndModal = ({ isOpen, onClose, loser, reason, roomId }) => {
   const navigate = useNavigate();
 
   if (!isOpen) return null;
 
   const handleGoToHome = () => {
-    navigate("/");
+    navigate("/home");
   };
 
   const handleGoToGameList = () => {
-    navigate("/game");
+    window.location.href = `/game/cockroach/${roomId}`;
   };
 
   return (
@@ -30,7 +30,7 @@ const GameEndModal = ({ isOpen, onClose, loser, reason }) => {
             onClick={handleGoToGameList}
             className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
           >
-            게임 목록으로
+            대기방으로
           </button>
           <button
             onClick={handleGoToHome}

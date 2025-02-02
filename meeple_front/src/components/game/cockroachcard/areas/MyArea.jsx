@@ -14,11 +14,7 @@ const MyArea = forwardRef(({
   const groupedPenaltyCards = penaltyCards.reduce((acc, card) => {
     const baseType = card.type.replace("King", "");
     if (!acc[baseType]) {
-      acc[baseType] = {
-        type: card.type,
-        count: 0,
-        royal: card.type.includes("King"),
-      };
+      acc[baseType] = { type: card.type, count: 0 };
     }
     acc[baseType].count += card.count;
     return acc;

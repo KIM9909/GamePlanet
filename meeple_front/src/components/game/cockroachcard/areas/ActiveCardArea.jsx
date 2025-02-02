@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import Card from "../Card"; // Card 컴포넌트도 분리하면 좋을 것 같네요
+import Card from "../Card";
+import { getCardInfo } from '../utils/cardUtils';
 
 const ActiveCardArea = ({
   currentCard,
@@ -14,7 +15,6 @@ const ActiveCardArea = ({
 }) => {
   const [cardVisible, setCardVisible] = useState(true);
 
-  // shouldShowFront 함수 추가
   const shouldShowFront = () => {
     if (cardSender === currentUser || isPassing) return true;
     return false;
@@ -32,6 +32,13 @@ const ActiveCardArea = ({
     setShowGuessModal(true);
   };
 
+  // utils의 getCardInfo 함수 사용
+  const cardInfo = currentCard 
+    ? getCardInfo(currentCard, shouldShowFront())
+    : selectedCard 
+      ? getCardInfo(selectedCard, true)
+      : null;
+
   return (
     <div className="absolute top-[60%] right-4 w-72 active-card-area">
       <div className="bg-gray-800/90 p-4 rounded-lg space-y-4 min-h-[200px]">
@@ -47,11 +54,11 @@ const ActiveCardArea = ({
             transition-all duration-300 ease-in-out
             ${cardVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}
           `}>
-            {(currentCard || selectedCard) && cardVisible ? (
+            {cardInfo && cardVisible ? (
               <Card
-                type={currentCard ? shouldShowFront() ? currentCard.type : null : selectedCard.type}
-                isBack={currentCard ? !shouldShowFront() : false}
-                isRoyal={currentCard ? currentCard.royal : selectedCard?.isRoyal}
+                type={cardInfo.type}
+                isBack={cardInfo.isBack}
+                isRoyal={cardInfo.isRoyal}
                 isActive={true}
               />
             ) : (

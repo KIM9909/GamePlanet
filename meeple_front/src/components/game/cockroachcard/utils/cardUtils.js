@@ -1,4 +1,4 @@
-export const ANIMAL_ORDER = [
+const ANIMAL_ORDER = [
   "Bat",
   "Rat",
   "Fly",
@@ -51,3 +51,27 @@ export const getKoreanName = (type) => {
 
   return nameMap[type] || type;
 };
+
+// 카드 정보를 일관되게 가져오는 함수 추가
+export const getCardInfo = (card, shouldShowFront = true) => {
+  if (!card) return null;
+  
+  return {
+    type: shouldShowFront ? card.type : null,
+    isRoyal: card.royal || card.isRoyal, // 두 속성 모두 확인
+    isBack: !shouldShowFront
+  };
+};
+
+// 카드 데이터 정규화 함수 추가
+export const normalizeCardData = (card) => {
+  if (!card) return null;
+  
+  return {
+    type: card.type,
+    royal: card.royal || card.isRoyal, // 항상 royal로 통일
+    isRoyal: card.royal || card.isRoyal // 백워드 호환성을 위해 유지
+  };
+};
+
+export default ANIMAL_ORDER;
