@@ -22,13 +22,13 @@ CREATE TABLE IF NOT EXISTS tbl_user
     user_deleted_at          TIMESTAMP
 );
 
-
--- 더미 데이터 삽입
-INSERT INTO tbl_user (user_name, user_email, user_password, user_birthday, user_nickname,
-                      user_profile_picture_url, user_tier, user_level)
-VALUES ('John Doe', 'john.doe@example.com',
-        '$2a$10$7EqJtq98hPqEX7fNZaFWoOe5F1h1u1h1u1h1u1h1u1h1u1h1u1h1u', '1990-01-01', 'johndoe',
-        'http://example.com/profile/johndoe.jpg', 'Gold', 10),
-       ('Jane Smith', 'jane.smith@example.com',
-        '$2a$10$7EqJtq98hPqEX7fNZaFWoOe5F1h1u1h1u1h1u1h1u1h1u1h1u1h1u', '1992-02-02', 'janesmith',
-        'http://example.com/profile/janesmith.jpg', 'Silver', 5);
+#
+# -- 더미 데이터 삽입
+# INSERT INTO tbl_user (user_name, user_email, user_password, user_birthday, user_nickname,
+#                       user_profile_picture_url, user_tier, user_level)
+# VALUES ('John Doe', 'john.doe@example.com',
+#         '$2a$10$7EqJtq98hPqEX7fNZaFWoOe5F1h1u1h1u1h1u1h1u1h1u1h1u1h1u', '1990-01-01', 'johndoe',
+#         'http://example.com/profile/johndoe.jpg', 'Gold', 10),
+#        ('Jane Smith', 'jane.smith@example.com',
+#         '$2a$10$7EqJtq98hPqEX7fNZaFWoOe5F1h1u1h1u1h1u1h1u1h1u1h1u1h1u', '1992-02-02', 'janesmith',
+#         'http://example.com/profile/janesmith.jpg', 'Silver', 5);

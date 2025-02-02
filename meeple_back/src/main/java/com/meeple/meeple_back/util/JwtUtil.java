@@ -13,6 +13,7 @@ import java.security.Key;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -29,7 +30,8 @@ public class JwtUtil {
 	private final RedisTemplate<String, String> redisTemplate;
 
 	@Autowired
-	public JwtUtil(RedisTemplate<String, String> redisTemplate, UserRepository userRepository) {
+	public JwtUtil(@Qualifier("userRedisTemplate") RedisTemplate<String, String> redisTemplate,
+			UserRepository userRepository) {
 		this.redisTemplate = redisTemplate;
 		this.userRepository = userRepository;
 	}
@@ -49,6 +51,18 @@ public class JwtUtil {
 				.setIssuedAt(new Date(now))
 				.setExpiration(new Date(now + validity))
 				.signWith(key, SignatureAlgorithm.HS256)
+				.compact();
+	}
+
+	public static String generateToken(Long userId, String username) {
+		long now = System.currentTimeMillis();
+		Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+		return Jwts.builder()
+				.setSubject(String.valueOf(userId))
+				.claim("username", username)
+				.setIssuedAt(new Date(now))
+				.setExpiration(new Date(now + 1000 * 60 * 60 * 4))
+				.signWith(key)
 				.compact();
 	}
 

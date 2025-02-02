@@ -22,7 +22,7 @@ public class RoomCreate {
 
 	@JsonCreator
 	public RoomCreate(@JsonProperty("roomName") String roomName,
-			@JsonProperty("isPrivate") boolean isPrivate,
+			@JsonProperty("private") boolean isPrivate,
 			@JsonProperty("password") String password,
 			@JsonProperty("maxPlayers") int maxPlayers) {
 		this.roomName = roomName;

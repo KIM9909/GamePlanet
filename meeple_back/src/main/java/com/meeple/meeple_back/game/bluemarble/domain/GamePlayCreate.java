@@ -14,13 +14,13 @@ public class GamePlayCreate {
 
 	private int gamePlayId;
 	@NotNull
-	private List<Player> players;
+	private List<Integer> playerIds;
 
 	@JsonCreator
 	@Builder
 	public GamePlayCreate(@JsonProperty("gamePlayId") int gamePlayId,
-			@JsonProperty("players") List<Player> players) {
+			@JsonProperty("players") List<Integer> playerIds) {
 		this.gamePlayId = gamePlayId;
-		this.players = players;
+		this.playerIds = playerIds;
 	}
 }
