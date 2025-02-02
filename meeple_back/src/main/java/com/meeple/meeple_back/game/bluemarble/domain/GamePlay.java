@@ -1,29 +1,26 @@
 package com.meeple.meeple_back.game.bluemarble.domain;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.redis.core.RedisHash;
+import lombok.Getter;
 
-@RedisHash("GamePlay")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter
 @Builder
 public class GamePlay {
 
-	@Id
-	private String gamePlayId;
+	private final int gamePlayId;
 
-	private int roomId;
-
-	private GameState gameState;
+	private final GameState gameState;
 
 	public GamePlay(int roomId, GameState gameState) {
-		this.gamePlayId = java.util.UUID.randomUUID().toString();
-		this.roomId = roomId;
+		this.gamePlayId = roomId;
 		this.gameState = gameState;
+	}
+
+	@Builder
+	public static GamePlay from(GamePlayCreate gamePlayCreate) {
+		return GamePlay.builder()
+				.gamePlayId(gamePlayCreate.getGamePlayId())
+				.gameState(GameState.init(gamePlayCreate.getPlayers()))
+				.build();
 	}
 }

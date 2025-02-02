@@ -2,7 +2,6 @@ package com.meeple.meeple_back.game.bluemarble.controller;
 
 import com.meeple.meeple_back.game.bluemarble.controller.port.BluemarbleRoomService;
 import com.meeple.meeple_back.game.bluemarble.controller.response.RoomResponse;
-import com.meeple.meeple_back.game.bluemarble.domain.RoomCreate;
 import com.meeple.meeple_back.game.bluemarble.domain.RoomUpdate;
 import com.meeple.meeple_back.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,15 +33,8 @@ public class BluemarbleRoomController {
 
 	private final JwtUtil jwtUtil;
 
-	@PostMapping
-	@Operation(summary = "게임방 생성", description = "새로운 블루마블 게임방을 생성합니다.")
-	public ResponseEntity<RoomResponse> create(@Valid @RequestBody RoomCreate roomCreate) {
-		return ResponseEntity.status(HttpStatus.CREATED)
-				.body(RoomResponse.from(bluemarbleRoomService.create(roomCreate)));
-	}
-
 	@PostMapping("/{roomId}")
-	@Operation(summary = "게임방 참가", description = "게임방에 참가합��다.")
+	@Operation(summary = "게임방 참가", description = "게임방에 참가합니다.")
 	public ResponseEntity<RoomResponse> join(@PathVariable int roomId,
 			@RequestHeader("Authorization") String token) {
 		long userId = jwtUtil.getUserIdFromToken(token);
@@ -77,12 +69,6 @@ public class BluemarbleRoomController {
 			@Valid @RequestBody RoomUpdate roomUpdate) {
 		return ResponseEntity.ok(
 				RoomResponse.from(bluemarbleRoomService.update(roomId, roomUpdate)));
-	}
-
-	@PostMapping("/start-game/{roomId}")
-	@Operation(summary = "게임 시작", description = "게임을 시작합니다.")
-	public ResponseEntity<RoomResponse> startGame(@PathVariable int roomId) {
-		return ResponseEntity.ok(RoomResponse.from(bluemarbleRoomService.startGame(roomId)));
 	}
 
 }
