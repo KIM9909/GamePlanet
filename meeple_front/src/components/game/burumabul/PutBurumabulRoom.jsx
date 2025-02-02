@@ -2,9 +2,8 @@ import React, { useState } from "react";
 import { FaRegEye } from "react-icons/fa";
 import { FaRegEyeSlash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { createBurumabulRoom } from "../../../sources/api/BurumabulRoomAPI";
 
-const BurumabulRoomCreateModal = ({ onClose }) => {
+const PutBurumabulRoom = ({ onClose }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const initialRoomData = {
@@ -21,16 +20,16 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    try {
-      console.log(roomData);
-      const response = await createBurumabulRoom(roomData);
-      const roomId = response.roomId;
-      navigate(`/game/burumabul/waitingroom/${roomId}`, {
-        state: { roomInfo: response },
-      });
-    } catch (error) {
-      console.error("방 생성 중 오류 발생 : ", error);
-    }
+    // try {
+    //   console.log(roomData);
+    //   const response = await createBurumabulRoom(roomData);
+    //   const roomId = response.roomId;
+    //   navigate(`/game/burumabul/waitingroom/${roomId}`, {
+    //     state: { roomInfo: response },
+    //   });
+    // } catch (error) {
+    //   console.error("방 생성 중 오류 발생 : ", error);
+    // }
   };
 
   const handlePassword = (e) => {
@@ -50,7 +49,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
   return (
     <div className="fixed inset-0 bg-blue-200 bg-opacity-50 flex justify-center items-center z-50">
       <div className="w-96 p-6 bg-slate-900 bg-opacity-80 rounded-lg flex flex-col justify-center items-center">
-        <h1 className="text-3xl text-white ">부루마불 방 만들기</h1>
+        <h1 className="text-3xl text-white ">방 수정</h1>
         <hr className="w-80 border-t-2 border-white my-2" />
         <div className="bg-white w-full py-3 my-3 rounded-lg">
           <form onSubmit={handleSubmit} className="text-center">
@@ -226,4 +225,4 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
   );
 };
 
-export default BurumabulRoomCreateModal;
+export default PutBurumabulRoom;

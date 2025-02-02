@@ -1,7 +1,7 @@
 import React from "react";
 import axios from "axios";
 
-// const BURUMABUL_API_BASE_URL =  `${import.meta.env.VITE_API_BASE_URL}` // 배포 API
+// const BURUMABUL_API_BASE_URL =  `${import.meta.env.VITE_API_BASE_URL}/game/blue-marble/rooms` // 배포 API
 const BURUMABUL_API_BASE_URL = `${
   import.meta.env.VITE_LOCAL_API_BASE_URL
 }/game/blue-marble/rooms`; // 로컬 API
@@ -9,8 +9,9 @@ const BURUMABUL_API_BASE_URL = `${
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
   if (!token) throw new Error("인증 토큰이 없습니다.");
+  console.log("Token from localStorage:", token);
   return {
-    Authorization: `Bearer ${token}`,
+    Authorization: `${token}`,
     "Content-Type": "application/json",
   };
 };
