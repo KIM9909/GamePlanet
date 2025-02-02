@@ -1,50 +1,24 @@
 import { createSlice, createAsyncThunk, isAction } from "@reduxjs/toolkit";
 import axios from "axios";
-import {
-  fetchFriendList,
-  requestFriend,
-  processRequest,
-  deleteFriend,
-} from "../../api/FriendApi";
+import { fetchFriendList, deleteFriend } from "../../api/FriendApi";
 import { act } from "react";
 
 // 비동기 액션 (친구 목록 가져오기)
 export const fetchFriends = createAsyncThunk(
   "friend/fetchFriends",
   async (userId, { rejectWithValue }) => {
+    console.log(
+      "📡 [프론트] API 요청: 친구 목록 가져오기 (userId:",
+      userId,
+      ")"
+    );
     try {
-      return await fetchFriendList(userId);
+      const response = await fetchFriendList(userId);
+      console.log("✅ [프론트] API 응답 데이터:", response);
+      return response;
     } catch (error) {
       return rejectWithValue(
         error.response?.data || "친구 목록을 가져오지 못했습니다."
-      );
-    }
-  }
-);
-
-// 친구 요청 보내기 (WebSocket)
-export const sendFriendRequest = createAsyncThunk(
-  "friend/sendFriendRequest",
-  async ({ userId, requestData }, { rejectWithValue }) => {
-    try {
-      return await requestFriend(userId, requestData);
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data || "친구 요청을 보내지 못했습니다."
-      );
-    }
-  }
-);
-
-// 친구 요청 승인 / 거절 (WebSocket)
-export const handleFriendRequest = createAsyncThunk(
-  "friend/handleFriendRequest",
-  async ({ friendId, requestData }, { rejectWithValue }) => {
-    try {
-      return await processRequest(friendId, requestData);
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data || "요청을 처리할 수 없습니다."
       );
     }
   }
@@ -66,6 +40,7 @@ export const removeFriend = createAsyncThunk(
 
 const initialState = {
   friends: [],
+  friendRequests: [],
   status: "idle",
   error: null,
 };
@@ -75,10 +50,27 @@ const friendSlice = createSlice({
   name: "friend",
   initialState,
   reducers: {
-    clearFriends: (state) => {
-      state.friends = [];
-      state.status = "idle";
-      state.error = null;
+    setFriends: (state, action) => {
+      state.friends = action.payload;
+    },
+    addFriend: (state, action) => {
+      state.friends.push(action.payload);
+    },
+    removeFriend: (state, action) => {
+      state.friends = state.friends.filter(
+        (friend) => friend.friendId !== action.payload
+      );
+    },
+    addFriendRequest: (state, action) => {
+      state.friendRequests.push(action.payload);
+    },
+    removeFriendRequest: (state, action) => {
+      state.friendRequests = state.friendRequests.filter(
+        (request) => request.friendId !== action.payload
+      ); // ✅ 친구 요청 삭제
+    },
+    clearFriendRequests: (state) => {
+      state.friendRequests = [];
     },
   },
   extraReducers: (builder) => {
@@ -88,16 +80,11 @@ const friendSlice = createSlice({
       })
       .addCase(fetchFriends.fulfilled, (state, action) => {
         state.status = "succeeded";
+        console.log("✅ 친구 목록 업데이트 완료:", action.payload);
         state.friends = action.payload;
       })
       .addCase(fetchFriends.rejected, (state, action) => {
         state.status = "failed";
-        state.error = action.payload;
-      })
-      .addCase(sendFriendRequest.rejected, (state, action) => {
-        state.error = action.payload;
-      })
-      .addCase(handleFriendRequest.rejected, (state, action) => {
         state.error = action.payload;
       })
       .addCase(removeFriend.fulfilled, (state, action) => {
@@ -109,5 +96,10 @@ const friendSlice = createSlice({
 });
 
 // 액션 & 리듀서 내보내기
-export const { clearFriends } = friendSlice.actions;
+export const {
+  setFriends,
+  addFriendRequest,
+  removeFriendRequest,
+  clearFriendRequests,
+} = friendSlice.actions;
 export default friendSlice.reducer;

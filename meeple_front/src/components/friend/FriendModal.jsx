@@ -2,13 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
   fetchFriends,
-  sendFriendRequest,
-  handleFriendRequest,
   removeFriend,
 } from "../../sources/store/slices/FriendSlice";
 import { AiFillMessage } from "react-icons/ai";
 import FriendList from "./FriendList";
-import ReceivedRequest from "./ReceivedRequest";
+import ReceivedFriendRequest from "./ReceivedFriendRequest";
 import RequestFriend from "./RequestFriend";
 
 const FriendModal = ({ userId }) => {
@@ -20,13 +18,13 @@ const FriendModal = ({ userId }) => {
   const renderContent = () => {
     switch (activeTab) {
       case "friendList":
-        return <FriendList userId={userId} />;
+        return <FriendList />;
       case "receivedRequest":
-        return <ReceivedRequest userId={userId} />;
+        return <ReceivedFriendRequest />;
       case "sentRequest":
-        return <RequestFriend userId={userId} />;
+        return <RequestFriend />;
       default:
-        return <FriendList userId={userId} />;
+        return <FriendList />;
     }
   };
 
