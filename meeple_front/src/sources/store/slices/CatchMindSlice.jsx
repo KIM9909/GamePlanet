@@ -1,11 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { UserAPI } from "../../api/UserAPI";
 
-/**
- * 유저 프로필 정보를 가져오는 비동기 액션 생성자
- * @param userId - 유저 ID
- * @returns {Promise} - 프로필 정보를 담은 Promise 객체
- */
 export const fetchUserInfo = createAsyncThunk(
   "catchmind/fetchUserInfo",
   async (userId, { rejectWithValue }) => {
@@ -24,27 +19,20 @@ const initialState = {
   currentRound: 1,
   totalRounds: 5,
   timeLimit: 90,
-  players: [], // 빈 배열로 시작
+  players: [],
   isGameStarted: false,
+  currentTurnIndex: 0, // 추가: 현재 턴 인덱스
   userStatus: {
     isLoading: false,
     error: null,
   },
 };
 
-/**
- * 캐치마인드 Redux Slice
- * 게임 상태 관리를 위한 리듀서와 액션 생성자 포함
- */
 const CatchMindSlice = createSlice({
   name: "catchmind",
   initialState,
   reducers: {
-    /**
-     * 플레이어의 닉네임을 업데이트하는 리듀서
-     * @param {Object} state - 현재 상태
-     * @param {Object} action - playerId와 nickname을 포함한 액션 객체
-     */
+    // 기존 리듀서들은 그대로 유지...
     updatePlayerNickname: (state, action) => {
       const { playerId, nickname } = action.payload;
       const player = state.players.find((p) => p.id === playerId);
@@ -53,13 +41,9 @@ const CatchMindSlice = createSlice({
       }
     },
 
-    /**
-     * 플레이어 목록을 초기화하거나 업데이트하는 리듀서
-     */
     updatePlayers: (state, action) => {
       const { players } = action.payload;
       if (Array.isArray(players)) {
-        // 중복 방지를 위해 닉네임을 키로 사용
         const uniquePlayers = [
           ...new Map(
             players.map((player) => [
@@ -74,48 +58,67 @@ const CatchMindSlice = createSlice({
             ])
           ).values(),
         ];
-
         state.players = uniquePlayers;
       }
     },
 
-    /**
-     * 플레이어의 점수를 업데이트하는 리듀서
-     */
+    // 수정: 점수 업데이트 로직 개선
     updatePlayerScore: (state, action) => {
+      console.log("Updating player score - Action Payload:", action.payload);
+
       const { nickname, score } = action.payload;
-      const player = state.players.find((p) => p.nickname === nickname);
-      if (player) {
-        player.score = score;
-      }
+
+      // players 배열을 map으로 순회하며 불변성 유지
+      state.players = state.players.map((player) => {
+        if (player.nickname === nickname) {
+          console.log("Player found:", player);
+          console.log("Current score:", player.score);
+          console.log("Score to add:", score);
+
+          const newScore = (player.score || 0) + score;
+          console.log("New score:", newScore);
+
+          return {
+            ...player,
+            score: newScore,
+          };
+        }
+        return player;
+      });
+
+      console.log("Updated players:", state.players);
     },
 
-    /**
-     * 현재 제시어를 설정하는 리듀서
-     */
+    // 추가: 턴 변경 리듀서
+    nextTurn: (state) => {
+      // 현재 턴인 플레이어의 턴을 끝내고 다음 플레이어로 넘김
+      const currentTurnPlayer = state.players.find((p) => p.isTurn);
+      if (currentTurnPlayer) {
+        currentTurnPlayer.isTurn = false;
+      }
+
+      // 다음 플레이어 인덱스 계산
+      state.currentTurnIndex =
+        (state.currentTurnIndex + 1) % state.players.length;
+
+      // 다음 플레이어의 턴으로 설정
+      state.players[state.currentTurnIndex].isTurn = true;
+    },
+
     setCurrentWord: (state, action) => {
       state.currentWord = action.payload;
     },
 
-    /**
-     * 게임 전체 상태를 업데이트하는 리듀서
-     */
     updateGameState: (state, action) => {
       return { ...state, ...action.payload };
     },
 
-    /**
-     * 방 ID를 설정하는 리듀서
-     */
     setRoomId: (state, action) => {
       state.roomId = action.payload;
     },
   },
-
-  /**
-   * 비동기 액션에 대한 리듀서들
-   */
   extraReducers: (builder) => {
+    // 기존 extraReducers 유지...
     builder
       .addCase(fetchUserInfo.pending, (state) => {
         state.userStatus.isLoading = true;
@@ -123,7 +126,6 @@ const CatchMindSlice = createSlice({
       })
       .addCase(fetchUserInfo.fulfilled, (state, action) => {
         state.userStatus.isLoading = false;
-        // 현재 유저의 닉네임 업데이트
         if (action.payload && state.players.length === 0) {
           state.players = [
             {
@@ -143,15 +145,14 @@ const CatchMindSlice = createSlice({
   },
 });
 
-// 액션 생성자들을 export
 export const {
   updatePlayers,
   updatePlayerScore,
+  nextTurn,
   setCurrentWord,
   updateGameState,
   setRoomId,
   updatePlayerNickname,
 } = CatchMindSlice.actions;
 
-// 리듀서를 export
 export default CatchMindSlice.reducer;

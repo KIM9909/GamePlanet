@@ -237,10 +237,13 @@ const MainLayout = () => {
           const players = cleanedRoom.players.map((player, index) => ({
             id: index + 1,
             nickname: player,
-            score: 0,
+            // 게임 정보에서 점수 가져오기
+            score: currentRoom.gameInfo?.playerScore?.[player] || 0,
             isTurn: index === 0,
             isCurrentUser: player === currentUserNickname,
           }));
+
+          console.log("Fetched players with scores:", players);
 
           dispatch(updatePlayers({ players }));
         }
@@ -279,20 +282,6 @@ const MainLayout = () => {
     handleInitialJoin();
   }, [roomId, profileData?.userNickname, roomInfo?.password, isInitialJoin]);
 
-  // 드로잉 도구 핸들러
-  const handleColorChange = (color) => {
-    setSelectedColor(color);
-    setIsEraser(false);
-  };
-
-  const handleWidthChange = (width) => {
-    setSelectedWidth(width);
-  };
-
-  const handleEraserToggle = (eraserMode) => {
-    setIsEraser(eraserMode);
-  };
-
   // 제시어 가져오기
   const getCurrentWord = useCallback(() => {
     const isCurrentUsersTurn =
@@ -324,15 +313,18 @@ const MainLayout = () => {
 
       <div className="w-1/3 flex flex-col gap-4 p-4 border-l border-gray-700">
         <div className="grid grid-cols-2 gap-3">
-          {gameState?.players?.map((player) => (
-            <PlayerCard
-              key={player.id}
-              userId={player.id}
-              userNickname={player.nickname}
-              isCurrentTurn={player.isTurn}
-              score={player.score}
-            />
-          ))}
+          {gameState?.players?.map((player) => {
+            console.log("Rendering PlayerCard:", player);
+            return (
+              <PlayerCard
+                key={player.id}
+                userId={player.id}
+                userNickname={player.nickname}
+                isCurrentTurn={player.isTurn}
+                score={player.score}
+              />
+            );
+          })}
         </div>
 
         <div className="flex-1 bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
