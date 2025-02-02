@@ -1,5 +1,6 @@
 package com.meeple.meeple_back.game.bluemarble.domain;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -17,10 +18,10 @@ public class GamePlay {
 	}
 
 	@Builder
-	public static GamePlay from(GamePlayCreate gamePlayCreate) {
+	public static GamePlay from(GamePlayCreate gamePlayCreate, List<Player> players) {
 		return GamePlay.builder()
 				.gamePlayId(gamePlayCreate.getGamePlayId())
-				.gameState(GameState.init(gamePlayCreate.getPlayers()))
+				.gameState(GameState.init(players))
 				.build();
 	}
 }

@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class Player {
-	
+
 	private int playerId;
 	private String playerName;
 	private int position;
@@ -28,5 +28,15 @@ public class Player {
 		this.position = INITIAL_POSITION;
 		this.balance = INITIAL_BALANCE;
 		this.seedCertificateCardOwned = new HashSet<>();
+	}
+
+	public static Player init(User user) {
+		return Player.builder()
+				.playerId(Math.toIntExact(user.getUserId()))
+				.playerName(user.getUserName())
+				.position(0)
+				.balance(0)
+				.seedCertificateCardOwned(new HashSet<>())
+				.build();
 	}
 }
