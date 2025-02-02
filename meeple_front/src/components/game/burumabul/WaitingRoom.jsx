@@ -1,11 +1,13 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import background from "../../../assets/burumabul_images/waitingroom.jpg";
 import PlayerCard from "./PlayerCard";
 // 백엔드 연결 필요
-const WaitingRoom = ({ playerInfo = [1, 2, 3, 4], roomId }) => {
-  const playerLength = useState(2);
+const WaitingRoom = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const roomInfo = location.state?.roomInfo;
+  const playersInfo = roomInfo.players;
 
   return (
     <>
@@ -25,7 +27,7 @@ const WaitingRoom = ({ playerInfo = [1, 2, 3, 4], roomId }) => {
             신나는 우주여행! 미플에서 함께 떠나요!
           </h1>
           <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-auto gap-6 my-4 overflow-y-auto thin-scrollbar">
-            {playerInfo.map((player, index) => (
+            {playersInfo.map((player, index) => (
               <PlayerCard key={index} playerInfo={player} />
             ))}
           </div>
