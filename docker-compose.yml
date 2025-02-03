@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   openvidu-server:
-    image: openvidu/openvidu-server-kms:22.09.0
+    image: openvidu/openvidu-server-kms:2.22.0
     ports:
       - "4443:4443"
     environment:
