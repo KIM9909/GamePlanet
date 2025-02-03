@@ -113,12 +113,13 @@ public class BluemarbleRoomServiceImpl implements BluemarbleRoomService {
 
 	@Override
 	@Transactional
-	public void changePassword(int roomId, RoomUpdatePassword roomUpdatePassword) {
-		bluemarbleRoomRepository.findById(roomId).ifPresent(room -> {
-			room.changePassword(passwordEncoder.encode(roomUpdatePassword.getPassword()));
-			bluemarbleRoomRepository.save(room);
-		});
+	public Room changePassword(int roomId, RoomUpdatePassword roomUpdatePassword) {
+		Room room = bluemarbleRoomRepository.findById(roomId)
+				.orElseThrow(() -> new ResourceNotFoundException("Room", roomId));
 
+		room.changePassword(passwordEncoder.encode(roomUpdatePassword.getPassword()));
+		bluemarbleRoomRepository.save(room);
+		return room;
 	}
 
 	@Override

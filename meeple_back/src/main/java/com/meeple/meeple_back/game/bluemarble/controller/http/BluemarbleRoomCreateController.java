@@ -1,9 +1,8 @@
-package com.meeple.meeple_back.game.bluemarble.controller;
+package com.meeple.meeple_back.game.bluemarble.controller.http;
 
 import com.meeple.meeple_back.game.bluemarble.controller.port.BluemarbleRoomService;
 import com.meeple.meeple_back.game.bluemarble.controller.response.RoomResponse;
 import com.meeple.meeple_back.game.bluemarble.domain.RoomCreate;
-import com.meeple.meeple_back.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -25,7 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class BluemarbleRoomCreateController {
 
 	private final BluemarbleRoomService bluemarbleRoomService;
-	private final JwtUtil jwtUtil;
 
 	@PostMapping("/{userId}")
 	@Operation(summary = "게임방 생성", description = "새로운 블루마블 게임방을 생성합니다.")
