@@ -7,7 +7,12 @@ import {
   updatePlayerScore,
   updateGameState,
   setCurrentWord,
+  setGameStarted,
+  resetGameState,
+  incrementRound,
+  // currentRound,
 } from "../sources/store/slices/CatchMindSlice";
+import store from "../sources/store/Store";
 
 /**
  * WebSocket을 통한 실시간 채팅 기능을 제공하는 Custom Hook
@@ -75,7 +80,13 @@ const useCatchSocket = (roomId) => {
           return;
         }
 
-        // 채팅 메시지 구독 - roomId별로 구독
+        /**
+         * 채팅 메시지 구독 설정
+         * /topic/catch-mind-messages/{roomId} 채널을 구독하여 채팅 메시지를 수신
+         * 정답을 맞출 경우 점수 업데이트 및 턴 변경 처리
+         */
+        // useCatchSocket.js 수정부분
+
         client.subscribe(`/topic/catch-mind-messages/${roomId}`, (message) => {
           try {
             const chatMessage = JSON.parse(message.body);
@@ -95,9 +106,7 @@ const useCatchSocket = (roomId) => {
               ]);
 
               // 정답을 맞췄을 때의 처리
-              if (chatMessage.isCorrect) {
-                console.log("정답 맞춤! 턴 변경 요청 전송");
-
+              if (chatMessage.correct) {
                 // 점수 업데이트
                 dispatch(
                   updatePlayerScore({
@@ -105,6 +114,37 @@ const useCatchSocket = (roomId) => {
                     score: chatMessage.score,
                   })
                 );
+
+                // 현재 퀴즈 데이터가 있는지 확인
+                if (window.quizData) {
+                  const nextIndex = window.quizData.currentIndex + 1;
+
+                  // 다음 퀴즈가 있는 경우
+                  if (nextIndex < window.quizData.quizList.length) {
+                    const nextQuiz = window.quizData.quizList[nextIndex];
+                    console.log("다음 퀴즈 설정 시도:", nextQuiz);
+
+                    // 게임 상태 업데이트 - 라운드 증가는 여기서만 처리
+                    dispatch(
+                      updateGameState({
+                        currentWord: nextQuiz.quiz,
+                        currentRound: currentGameState.currentRound + 1, // 라운드 증가
+                        quizCategory: nextQuiz.quizCategory,
+                        remainQuizCount:
+                          window.quizData.quizList.length - nextIndex - 1,
+                      })
+                    );
+
+                    // 현재 인덱스 업데이트
+                    window.quizData.currentIndex = nextIndex;
+
+                    console.log("제시어 변경 완료. 새 제시어:", nextQuiz.quiz);
+                  } else {
+                    // 모든 퀴즈가 끝난 경우
+                    console.log("게임 종료!");
+                    dispatch(setGameStarted(false));
+                  }
+                }
               }
             }
           } catch (error) {
@@ -112,7 +152,11 @@ const useCatchSocket = (roomId) => {
           }
         });
 
-        // 게임 상태 구독
+        /**
+         * 게임 상태 구독 설정
+         * /topic/catch-mind/{roomId} 채널을 구독하여 게임 상태 변경을 수신
+         * 플레이어 정보, 턴 변경, 게임 진행 상태 등을 처리
+         */
         client.subscribe(`/topic/catch-mind/${roomId}`, (message) => {
           try {
             const data = JSON.parse(message.body);
@@ -123,72 +167,72 @@ const useCatchSocket = (roomId) => {
               return;
             }
 
+            if (data.gameInfo && data.gameInfo.currentWord) {
+              console.log("새로운 제시어 수신:", data.gameInfo.currentWord);
+              dispatch(setCurrentWord(data.gameInfo.currentWord));
+            }
+
+            // 게임 시작 응답 처리
+            if (data.quizList && data.sequence) {
+              console.log("게임 시작! 라운드 초기화");
+              dispatch(resetGameState());
+              dispatch(setGameStarted(true));
+
+              // 첫 번째 퀴즈로 게임 상태 초기화
+              const firstQuiz = data.quizList[0];
+              dispatch(
+                updateGameState({
+                  currentWord: firstQuiz.quiz,
+                  currentRound: 1,
+                  quizCategory: firstQuiz.quizCategory,
+                  remainQuizCount: data.quizList.length - 1,
+                })
+              );
+
+              // 턴 순서 데이터 저장
+              window.quizData = {
+                quizList: data.quizList,
+                sequence: data.sequence,
+                currentIndex: 0,
+              };
+
+              // 순서대로 첫 번째 플레이어에게 턴 부여
+              if (data.sequence.length > 0) {
+                const firstPlayer = data.sequence[0];
+                const updatedPlayers = currentGameState.players.map(
+                  (player) => ({
+                    ...player,
+                    isTurn: player.nickname === firstPlayer,
+                  })
+                );
+                dispatch(updatePlayers({ players: updatedPlayers }));
+              }
+
+              return;
+            }
+
             if (data.players && data.gameInfo) {
-              console.log("플레이어 목록:", data.players);
-              console.log("게임 정보:", data.gameInfo);
-
-              // 현재 턴과 이전 턴 비교 (gameInfo에서 직접 가져오기)
               const newTurn = data.gameInfo.currentTurn;
-              const allPlayers = currentGameState.players || [];
-              const currentTurnPlayer = allPlayers.find((p) => p.isTurn);
-              const previousTurn = currentTurnPlayer
-                ? currentTurnPlayer.nickname
-                : null;
+              const previousTurn = currentGameState.players.find(
+                (p) => p.isTurn
+              )?.nickname;
 
-              // 실제 턴 변경이 있을 때만 로그 출력
+              // 턴 변경 시에는 게임 상태 업데이트를 하지 않음
               if (previousTurn !== newTurn && previousTurn !== null) {
                 console.log("턴 변경 감지:", previousTurn, "->", newTurn);
-              }
 
-              // 조건 체크 출력
-              console.log("조건 체크:", {
-                hasCurrentTurn: !!data.gameInfo.currentTurn,
-                isPlayerInList: data.players.includes(
-                  data.gameInfo.currentTurn
-                ),
-                currentTurn: data.gameInfo.currentTurn,
-              });
-
-              // 현재 턴 플레이어가 있는 경우에만 업데이트 진행
-              if (
-                data.gameInfo.currentTurn &&
-                data.players.includes(data.gameInfo.currentTurn)
-              ) {
-                const updatedPlayers = data.players.map((playerName) => {
-                  const playerScore =
-                    data.gameInfo.playerScore?.[playerName] || 0;
-                  const isCurrentTurn =
-                    data.gameInfo.currentTurn === playerName;
-                  console.log(
-                    `Player ${playerName} turn status:`,
-                    isCurrentTurn
-                  );
-
-                  // 이전 상태 유지
-                  const previousPlayer = allPlayers.find(
+                // 플레이어 정보만 업데이트
+                const updatedPlayers = data.players.map((playerName) => ({
+                  ...currentGameState.players.find(
                     (p) => p.nickname === playerName
-                  );
+                  ),
+                  isTurn: playerName === newTurn,
+                }));
 
-                  return {
-                    id:
-                      previousPlayer?.id ||
-                      Math.random().toString(36).substr(2, 9),
-                    nickname: playerName,
-                    score: playerScore,
-                    isTurn: isCurrentTurn,
-                    isCurrentUser: previousPlayer?.isCurrentUser || false,
-                  };
-                });
-
-                console.log("Updating players with new state:", updatedPlayers);
                 dispatch(updatePlayers({ players: updatedPlayers }));
-              } else {
-                console.log("상태 업데이트가 스킵된 이유:", {
-                  currentTurn: data.gameInfo.currentTurn,
-                  players: data.players,
-                });
               }
 
+              // 방이 비어있을 때 처리
               if (data.players.length === 0) {
                 console.log("Room is empty, cleaning up...");
 
@@ -201,16 +245,12 @@ const useCatchSocket = (roomId) => {
                       // `${
                       //   import.meta.env.VITE_LOCAL_API_BASE_URL
                       // }/catch-mind/delete-room?roomId=${roomId}`,
-                      {
-                        method: "DELETE",
-                      }
+                      { method: "DELETE" }
                     )
-                      .then(() => {
-                        console.log("Room deletion request sent");
-                      })
-                      .catch((error) => {
-                        console.error("Error deleting room:", error);
-                      });
+                      .then(() => console.log("Room deletion request sent"))
+                      .catch((error) =>
+                        console.error("Error deleting room:", error)
+                      );
 
                     clientRef.current.deactivate();
                     clientRef.current = null;

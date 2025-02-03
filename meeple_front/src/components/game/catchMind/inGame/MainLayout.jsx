@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from "react";
+import React, { useEffect, useCallback, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
@@ -15,12 +15,22 @@ import {
 import Canvas from "./Canvas";
 import ChatBox from "./ChatBox";
 import PlayerCard from "./PlayerCard";
-import { updatePlayers } from "../../../../sources/store/slices/CatchMindSlice";
+import {
+  updatePlayers,
+  resetGameState,
+} from "../../../../sources/store/slices/CatchMindSlice";
 import { fetchProfile } from "../../../../sources/store/slices/ProfileSlice";
 import { CatchMindAPI } from "../../../../sources/api/CatchMindAPI";
 import useCatchSocket from "../../../../hooks/useCatchSocket";
 
-const GameInfo = ({ round, word, roomInfo, handleExitRoom }) => {
+const GameInfo = ({
+  round,
+  word,
+  roomInfo,
+  handleExitRoom,
+  handleStartGame,
+  isCreator,
+}) => {
   return (
     <div className="flex items-center justify-between px-8 py-4 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-t-lg border-b border-gray-700">
       {/* 왼쪽: 방 제목과 잠금 아이콘 */}
@@ -33,6 +43,16 @@ const GameInfo = ({ round, word, roomInfo, handleExitRoom }) => {
 
       {/* 중앙: 게임 상태 정보 */}
       <div className="flex items-center justify-center space-x-6 flex-1 mx-4">
+        {/* 방장이고 게임이 시작되지 않았을 때만 시작하기 버튼 표시 */}
+        {isCreator && !roomInfo?.isGameStarted && (
+          <button
+            onClick={handleStartGame}
+            className="px-6 py-2 bg-green-600 hover:bg-green-700 rounded-full transition-colors flex items-center space-x-2"
+          >
+            <span>게임 시작</span>
+          </button>
+        )}
+
         <div className="flex items-center space-x-2 bg-gray-700/50 px-4 py-2 rounded-full">
           <Flag className="w-4 h-4 text-blue-400" />
           <span className="font-medium">
@@ -109,15 +129,15 @@ const MainLayout = () => {
       setIsExiting(true);
       console.log("[ExitRoom] Starting exit process");
 
-      // 방장인지 확인하고 방장이면 업데이트 먼저 수행
+      // 방 나가기 전에 게임 상태 초기화
+      dispatch(resetGameState());
+
       if (roomInfo?.creator === profileData.userNickname) {
-        // 다른 플레이어 중 첫 번째 플레이어에게 방장 권한 넘기기
         const nextCreator = roomInfo.players.find(
           (player) => player !== profileData.userNickname
         );
         if (nextCreator) {
           try {
-            // 방 정보 업데이트 (새로운 방장 설정)
             await client.publish({
               destination: `/app/update-room/${roomId}`,
               body: JSON.stringify({
@@ -133,7 +153,6 @@ const MainLayout = () => {
               headers: { "content-type": "application/json" },
             });
 
-            // 업데이트가 적용될 시간을 주기 위해 잠시 대기
             await new Promise((resolve) => setTimeout(resolve, 100));
           } catch (error) {
             console.error("[ExitRoom] Error updating room creator:", error);
@@ -141,16 +160,12 @@ const MainLayout = () => {
         }
       }
 
-      // 이후 방 나가기 메시지 전송
       client.publish({
         destination: `/app/exit-room/${roomId}`,
-        body: profileData.userNickname, // userName만 문자열로 전송
+        body: profileData.userNickname,
         headers: { "content-type": "text/plain" },
       });
 
-      console.log("[ExitRoom] Exit message sent to server");
-
-      // 상태 초기화 및 로비로 이동
       setTimeout(() => {
         setIsExiting(false);
         console.log("[ExitRoom] Navigating to lobby");
@@ -167,6 +182,7 @@ const MainLayout = () => {
     navigate,
     isExiting,
     roomInfo,
+    dispatch,
   ]);
 
   // WebSocket을 통한 방 업데이트 구독
@@ -279,6 +295,9 @@ const MainLayout = () => {
       if (!isInitialJoin || !profileData?.userNickname || !roomId) return;
 
       try {
+        // 방 입장 전에 게임 상태 초기화
+        dispatch(resetGameState());
+
         const response = await CatchMindAPI.joinRoom(
           roomId,
           profileData.userNickname,
@@ -294,18 +313,88 @@ const MainLayout = () => {
     };
 
     handleInitialJoin();
-  }, [roomId, profileData?.userNickname, roomInfo?.password, isInitialJoin]);
+
+    // 컴포넌트 언마운트 시 게임 상태 초기화
+    return () => {
+      dispatch(resetGameState());
+    };
+  }, [
+    roomId,
+    profileData?.userNickname,
+    roomInfo?.password,
+    isInitialJoin,
+    dispatch,
+  ]);
 
   // 제시어 가져오기
-  const getCurrentWord = useCallback(() => {
-    const isCurrentUsersTurn =
-      currentPlayer?.nickname === getCurrentUserNickname();
-    return isCurrentUsersTurn ? gameState?.currentWord : "???";
-  }, [currentPlayer?.nickname, getCurrentUserNickname, gameState?.currentWord]);
+  const currentWord = useMemo(() => {
+    console.log("게임 상태 체크:", {
+      isGameStarted: gameState.isGameStarted,
+      currentWord: gameState.currentWord,
+      currentPlayerNick: currentPlayer?.nickname,
+      profileNick: profileData?.userNickname,
+      allPlayers: gameState.players,
+    });
+
+    if (!gameState.isGameStarted) {
+      console.log("게임이 시작되지 않음");
+      return "";
+    }
+
+    const isDrawer = currentPlayer?.nickname === profileData?.userNickname;
+
+    console.log("제시어 체크:", {
+      isDrawer,
+      currentWord: gameState.currentWord,
+      willReturn: isDrawer ? gameState.currentWord || "준비중..." : "???",
+    });
+
+    return isDrawer ? gameState.currentWord || "준비중..." : "???";
+  }, [
+    gameState.isGameStarted,
+    gameState.currentWord,
+    currentPlayer?.nickname,
+    profileData?.userNickname,
+  ]);
+
+  // 상태 변경 감지
+  useEffect(() => {
+    console.log("상태 변경 감지:", {
+      gameStarted: gameState.isGameStarted,
+      currentWord: gameState.currentWord,
+      players: gameState.players,
+      currentPlayer: currentPlayer,
+      profileData: profileData,
+    });
+  }, [
+    gameState.isGameStarted,
+    gameState.currentWord,
+    gameState.players,
+    currentPlayer,
+    profileData,
+  ]);
 
   const isCurrentUsersTurn = useCallback(() => {
     return currentPlayer?.nickname === getCurrentUserNickname();
   }, [currentPlayer?.nickname, getCurrentUserNickname]);
+
+  // 현재 사용자가 방장인지 확인
+  const isCreator = roomInfo?.creator === profileData?.userNickname;
+
+  // 게임 시작 처리 함수
+  const handleStartGame = useCallback(async () => {
+    if (!roomId || !client) return;
+
+    try {
+      console.log("게임 시작 요청 전송");
+      client.publish({
+        destination: `/app/start-game/${roomId}`,
+        headers: { "content-type": "application/json" },
+      });
+    } catch (error) {
+      console.error("게임 시작 요청 실패:", error);
+    }
+  }, [roomId, client]);
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-900 to-gray-800">
@@ -313,9 +402,11 @@ const MainLayout = () => {
         <div className="h-full flex flex-col bg-gray-800 rounded-lg border border-gray-700 shadow-lg">
           <GameInfo
             round={gameState?.currentRound || 1}
-            word={getCurrentWord()}
+            word={currentWord}
             roomInfo={roomInfo}
             handleExitRoom={handleExitRoom}
+            handleStartGame={handleStartGame}
+            isCreator={isCreator}
           />
           <div className="flex-1 p-6">
             <div className="h-full bg-white rounded-xl border border-gray-200">

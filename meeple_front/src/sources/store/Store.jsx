@@ -23,3 +23,5 @@ export const Store = configureStore({
   },
   // 기본적으로 Redux DevTools와 Redux Thunk가 포함됨
 });
+
+export default Store;

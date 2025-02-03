@@ -67,48 +67,90 @@ const VideoChat = ({ nickname }) => {
 
   const cleanupSession = async () => {
     try {
-      subscribers.forEach((subscriber) => {
-        if (subscriber.stream) {
-          try {
-            subscriber.stream.disposeWebRtcPeer();
-            subscriber.stream.disposeMediaStream();
-          } catch (err) {
-            console.warn("구독자 정리 중 오류:", err);
+      console.log("세션 정리 시작...");
+
+      if (subscribers.length > 0) {
+        console.log("구독자 정리 중...");
+        subscribers.forEach((subscriber) => {
+          if (subscriber.stream) {
+            try {
+              subscriber.stream.disposeWebRtcPeer();
+              subscriber.stream.disposeMediaStream();
+            } catch (err) {
+              console.warn("구독자 정리 중 무시할 수 있는 오류:", err);
+            }
           }
-        }
-      });
+        });
+      }
 
       if (publisherObjRef.current) {
         try {
-          if (sessionRef.current) {
-            await sessionRef.current.unpublish(publisherObjRef.current);
+          console.log("퍼블리셔 정리 중...");
+
+          // 먼저 스트림 상태 확인
+          const isStreaming =
+            publisherObjRef.current.stream &&
+            publisherObjRef.current.stream.getMediaStream() &&
+            publisherObjRef.current.stream.getMediaStream().active;
+
+          // 스트림이 활성 상태일 때만 트랙 중지
+          if (isStreaming) {
+            publisherObjRef.current.stream
+              .getMediaStream()
+              .getTracks()
+              .forEach((track) => {
+                track.stop();
+              });
           }
+
+          // 이벤트 리스너 제거
           publisherObjRef.current.off("videoElementCreated");
           publisherObjRef.current.off("streamPropertyChanged");
+
+          // 세션이 존재하고 스트림이 활성 상태일 때만 unpublish 시도
+          if (sessionRef.current && isStreaming) {
+            try {
+              await sessionRef.current.unpublish(publisherObjRef.current);
+            } catch (unpublishError) {
+              if (unpublishError.code !== 105) {
+                // 105가 아닌 에러만 로깅
+                console.warn("퍼블리셔 언퍼블리시 중 오류:", unpublishError);
+              }
+            }
+          }
+
+          // 스트림 정리 (isStreaming 체크 없이 수행)
           if (publisherObjRef.current.stream) {
-            publisherObjRef.current.stream.disposeWebRtcPeer();
-            publisherObjRef.current.stream.disposeMediaStream();
+            try {
+              publisherObjRef.current.stream.disposeWebRtcPeer();
+              publisherObjRef.current.stream.disposeMediaStream();
+            } catch (streamError) {
+              console.warn("스트림 정리 중 무시할 수 있는 오류:", streamError);
+            }
           }
         } catch (err) {
-          console.error("퍼블리셔 정리 중 오류:", err);
+          console.warn("퍼블리셔 정리 중 무시할 수 있는 오류:", err);
         }
       }
 
       if (sessionRef.current) {
         try {
+          console.log("세션 연결 해제 중...");
           await sessionRef.current.disconnect();
-          sessionRef.current = null;
         } catch (err) {
-          console.warn("세션 연결 해제 중 오류:", err);
+          console.warn("세션 연결 해제 중 무시할 수 있는 오류:", err);
         }
+        sessionRef.current = null;
       }
 
       setSubscribers([]);
       setPublisher(null);
       setSession(null);
       setIsInitializing(false);
+
+      console.log("세션 정리 완료");
     } catch (error) {
-      console.error("정리 중 오류:", error);
+      console.error("세션 정리 중 오류:", error);
     }
   };
 
