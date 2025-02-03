@@ -12,5 +12,5 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/game/blue-marble/game-plays")
 public class BluemarbleGameController {
-
+	
 }
