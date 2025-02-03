@@ -1,5 +1,7 @@
 package com.meeple.meeple_back.game.bluemarble.domain;
 
+import com.meeple.meeple_back.game.bluemarble.controller.request.DiceRollRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.response.DiceRollResponse;
 import com.meeple.meeple_back.user.model.User;
 import java.util.HashSet;
 import java.util.Set;
@@ -38,5 +40,16 @@ public class Player {
 				.balance(0)
 				.seedCertificateCardOwned(new HashSet<>())
 				.build();
+	}
+
+	public DiceRollResponse rollDices(DiceRollRequest diceRollRequest) {
+		int sum = diceRollRequest.getFirstDice() + diceRollRequest.getSecondDice();
+		int prevPosition = this.position;
+		int nextPosition = (this.position + sum) % 40;
+		if (this.position + sum >= 40) {
+			this.balance += 200;
+		}
+		this.position = nextPosition;
+		return new DiceRollResponse(prevPosition, nextPosition);
 	}
 }
