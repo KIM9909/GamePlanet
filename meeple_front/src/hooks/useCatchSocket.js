@@ -1,10 +1,12 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   updatePlayers,
   updatePlayerScore,
+  updateGameState,
+  setCurrentWord,
 } from "../sources/store/slices/CatchMindSlice";
 
 /**
@@ -16,6 +18,8 @@ import {
  */
 const useCatchSocket = (roomId) => {
   const dispatch = useDispatch();
+  // Redux store에서 현재 게임 상태 가져오기
+  const currentGameState = useSelector((state) => state.catchmind);
   // STOMP 클라이언트 참조
   const clientRef = useRef(null);
 
@@ -77,7 +81,6 @@ const useCatchSocket = (roomId) => {
             const chatMessage = JSON.parse(message.body);
             console.log("수신된 채팅 메시지:", chatMessage);
 
-            // 현재 방의 메시지만 추가
             if (chatMessage.roomId === roomId) {
               setMessages((prev) => [
                 ...prev,
@@ -91,12 +94,11 @@ const useCatchSocket = (roomId) => {
                 },
               ]);
 
-              // 정답인 경우 플레이어 점수 업데이트
+              // 정답을 맞췄을 때의 처리
               if (chatMessage.isCorrect) {
-                console.log("Dispatching score update:", {
-                  nickname: chatMessage.sender,
-                  score: chatMessage.score,
-                });
+                console.log("정답 맞춤! 턴 변경 요청 전송");
+
+                // 점수 업데이트
                 dispatch(
                   updatePlayerScore({
                     nickname: chatMessage.sender,
@@ -106,7 +108,7 @@ const useCatchSocket = (roomId) => {
               }
             }
           } catch (error) {
-            console.error("Error parsing chat message:", error);
+            console.error("채팅 메시지 처리 중 오류:", error);
           }
         });
 
@@ -114,19 +116,44 @@ const useCatchSocket = (roomId) => {
         client.subscribe(`/topic/catch-mind/${roomId}`, (message) => {
           try {
             const data = JSON.parse(message.body);
-            console.log("Received game state update:", data);
+            console.log("전체 게임 상태 데이터:", data);
 
-            // gameInfo와 players가 있는지 확인
+            // drawing 관련 메시지는 무시
+            if (data.type === "clear" || data.type === "draw") {
+              return;
+            }
+
             if (data.players && data.gameInfo) {
-              console.log("Current game info:", data.gameInfo);
-              console.log("Current turn:", data.gameInfo.currentTurn);
+              console.log("플레이어 목록:", data.players);
+              console.log("게임 정보:", data.gameInfo);
+
+              // 현재 턴과 이전 턴 비교 (gameInfo에서 직접 가져오기)
+              const newTurn = data.gameInfo.currentTurn;
+              const allPlayers = currentGameState.players || [];
+              const currentTurnPlayer = allPlayers.find((p) => p.isTurn);
+              const previousTurn = currentTurnPlayer
+                ? currentTurnPlayer.nickname
+                : null;
+
+              // 실제 턴 변경이 있을 때만 로그 출력
+              if (previousTurn !== newTurn && previousTurn !== null) {
+                console.log("턴 변경 감지:", previousTurn, "->", newTurn);
+              }
+
+              // 조건 체크 출력
+              console.log("조건 체크:", {
+                hasCurrentTurn: !!data.gameInfo.currentTurn,
+                isPlayerInList: data.players.includes(
+                  data.gameInfo.currentTurn
+                ),
+                currentTurn: data.gameInfo.currentTurn,
+              });
 
               // 현재 턴 플레이어가 있는 경우에만 업데이트 진행
               if (
                 data.gameInfo.currentTurn &&
                 data.players.includes(data.gameInfo.currentTurn)
               ) {
-                // 기존 플레이어 정보와 새로운 턴 정보를 결합하여 업데이트
                 const updatedPlayers = data.players.map((playerName) => {
                   const playerScore =
                     data.gameInfo.playerScore?.[playerName] || 0;
@@ -137,32 +164,36 @@ const useCatchSocket = (roomId) => {
                     isCurrentTurn
                   );
 
+                  // 이전 상태 유지
+                  const previousPlayer = allPlayers.find(
+                    (p) => p.nickname === playerName
+                  );
+
                   return {
-                    id: Math.random().toString(36).substr(2, 9),
+                    id:
+                      previousPlayer?.id ||
+                      Math.random().toString(36).substr(2, 9),
                     nickname: playerName,
                     score: playerScore,
                     isTurn: isCurrentTurn,
-                    isCurrentUser: false,
+                    isCurrentUser: previousPlayer?.isCurrentUser || false,
                   };
                 });
 
                 console.log("Updating players with new state:", updatedPlayers);
                 dispatch(updatePlayers({ players: updatedPlayers }));
               } else {
-                console.log("Skipping update: Invalid turn state", {
+                console.log("상태 업데이트가 스킵된 이유:", {
                   currentTurn: data.gameInfo.currentTurn,
                   players: data.players,
                 });
               }
 
-              // players 배열이 비어있는지 확인
               if (data.players.length === 0) {
                 console.log("Room is empty, cleaning up...");
 
-                // 연결 해제
                 if (clientRef.current) {
                   try {
-                    // 방 삭제 API 호출
                     fetch(
                       `${
                         import.meta.env.VITE_API_BASE_URL
@@ -188,19 +219,17 @@ const useCatchSocket = (roomId) => {
                   }
                 }
 
-                // 상태 초기화
                 setConnectionStatus("disconnected");
                 setMessages([]);
                 dispatch(updatePlayers({ players: [] }));
 
-                // 로비로 리다이렉트
                 setTimeout(() => {
                   window.location.href = "/catch-mind";
                 }, 500);
               }
             }
           } catch (error) {
-            console.error("Error parsing game state:", error);
+            console.error("게임 상태 파싱 에러:", error);
           }
         });
       };

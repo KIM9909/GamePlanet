@@ -11,18 +11,18 @@ const VideoChat = ({ nickname }) => {
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCameraOn, setIsCameraOn] = useState(true);
   const [error, setError] = useState(null);
+  const [isInitializing, setIsInitializing] = useState(false);
 
   const currentUser = useSelector((state) => state.profile.profileData);
   const isCurrentUser = currentUser?.userNickname === nickname;
 
   const videoContainerRef = useRef(null);
   const publisherRef = useRef(null);
-
-  // OpenVidu 세션 저장용 ref
   const sessionRef = useRef(null);
   const publisherObjRef = useRef(null);
+  const retryCountRef = useRef(0);
+  const retryTimeoutRef = useRef(null);
 
-  // 마이크 토글
   const toggleMic = () => {
     if (publisher && isCurrentUser) {
       const newMicState = !isMicOn;
@@ -31,30 +31,25 @@ const VideoChat = ({ nickname }) => {
     }
   };
 
-  // 카메라 토글
   const toggleCamera = async () => {
     if (!publisher || !isCurrentUser || !session) return;
 
     const newCameraState = !isCameraOn;
 
     try {
-      // 1. 로컬 비디오 상태 변경
       publisher.publishVideo(newCameraState);
 
-      // 2. 시그널 전송을 위한 데이터 준비
       const signalData = {
         nickname: nickname,
         enabled: newCameraState,
         connectionId: session.connection.connectionId,
       };
 
-      // 3. 시그널 전송
       await session.signal({
         type: "camera-state-change",
         data: JSON.stringify(signalData),
       });
 
-      // 4. 로컬 UI 업데이트
       if (publisherRef.current) {
         const videoElements =
           publisherRef.current.getElementsByTagName("video");
@@ -70,13 +65,63 @@ const VideoChat = ({ nickname }) => {
     }
   };
 
-  // 세션 초기화 및 연결 관리
+  const cleanupSession = async () => {
+    try {
+      subscribers.forEach((subscriber) => {
+        if (subscriber.stream) {
+          try {
+            subscriber.stream.disposeWebRtcPeer();
+            subscriber.stream.disposeMediaStream();
+          } catch (err) {
+            console.warn("구독자 정리 중 오류:", err);
+          }
+        }
+      });
+
+      if (publisherObjRef.current) {
+        try {
+          if (sessionRef.current) {
+            await sessionRef.current.unpublish(publisherObjRef.current);
+          }
+          publisherObjRef.current.off("videoElementCreated");
+          publisherObjRef.current.off("streamPropertyChanged");
+          if (publisherObjRef.current.stream) {
+            publisherObjRef.current.stream.disposeWebRtcPeer();
+            publisherObjRef.current.stream.disposeMediaStream();
+          }
+        } catch (err) {
+          console.error("퍼블리셔 정리 중 오류:", err);
+        }
+      }
+
+      if (sessionRef.current) {
+        try {
+          await sessionRef.current.disconnect();
+          sessionRef.current = null;
+        } catch (err) {
+          console.warn("세션 연결 해제 중 오류:", err);
+        }
+      }
+
+      setSubscribers([]);
+      setPublisher(null);
+      setSession(null);
+      setIsInitializing(false);
+    } catch (error) {
+      console.error("정리 중 오류:", error);
+    }
+  };
+
   useEffect(() => {
     let isComponentMounted = true;
 
     const initializeSession = async () => {
+      if (isInitializing || retryCountRef.current >= 3) return;
+
       try {
-        // 이전 세션 정리
+        setIsInitializing(true);
+        setError(null);
+
         if (sessionRef.current) {
           await cleanupSession();
         }
@@ -89,7 +134,6 @@ const VideoChat = ({ nickname }) => {
         if (!isComponentMounted) return;
         setSession(session);
 
-        // 이벤트 핸들러 설정
         session.on("streamCreated", (event) => {
           if (!isComponentMounted) return;
 
@@ -101,25 +145,7 @@ const VideoChat = ({ nickname }) => {
             e.element.classList.add("w-full", "h-full", "object-cover");
           });
 
-          try {
-            const streamData = JSON.parse(event.stream.connection.data);
-            const subscriberNickname = streamData.clientData;
-
-            subscriber.on("videoElementCreated", (e) => {
-              e.element.style.width = "100%";
-              e.element.style.height = "100%";
-              e.element.style.objectFit = "cover";
-              if (!event.stream.videoActive) {
-                e.element.style.display = "none";
-              }
-            });
-          } catch (error) {
-            console.error("구독자 비디오 초기화 중 오류:", error);
-          }
-
-          if (isComponentMounted) {
-            setSubscribers((prev) => [...prev, subscriber]);
-          }
+          setSubscribers((prev) => [...prev, subscriber]);
         });
 
         session.on("streamDestroyed", (event) => {
@@ -136,13 +162,11 @@ const VideoChat = ({ nickname }) => {
           console.warn("세션 예외 발생:", error);
         });
 
-        // 토큰 생성 및 세션 연결
         const tokenResponse = await VideoAPI.generateToken(
           sessionResponse.sessionId
         );
         await session.connect(tokenResponse.token, { clientData: nickname });
 
-        // 퍼블리셔 초기화
         const publisher = OV.initPublisher(publisherRef.current, {
           audioSource: undefined,
           videoSource: undefined,
@@ -175,71 +199,40 @@ const VideoChat = ({ nickname }) => {
         await session.publish(publisher);
         if (isComponentMounted) {
           setPublisher(publisher);
+          retryCountRef.current = 0; // 성공하면 재시도 카운트 리셋
         }
       } catch (error) {
         console.error("비디오 초기화 중 오류:", error);
         if (isComponentMounted) {
           setError("비디오 연결에 실패했습니다.");
+          retryCountRef.current += 1;
+
+          if (retryCountRef.current < 3) {
+            retryTimeoutRef.current = setTimeout(() => {
+              setIsInitializing(false);
+              initializeSession();
+            }, 2000);
+          }
+        }
+      } finally {
+        if (isComponentMounted) {
+          setIsInitializing(false);
         }
       }
     };
 
-    const cleanupSession = async () => {
-      try {
-        // 구독자 정리
-        subscribers.forEach((subscriber) => {
-          if (subscriber.stream) {
-            try {
-              subscriber.stream.disposeWebRtcPeer();
-              subscriber.stream.disposeMediaStream();
-            } catch (err) {
-              console.warn("구독자 정리 중 오류:", err);
-            }
-          }
-        });
-
-        // 퍼블리셔 정리
-        if (publisherObjRef.current) {
-          try {
-            if (sessionRef.current) {
-              await sessionRef.current.unpublish(publisherObjRef.current);
-            }
-            publisherObjRef.current.off("videoElementCreated");
-            publisherObjRef.current.off("streamPropertyChanged");
-            if (publisherObjRef.current.stream) {
-              publisherObjRef.current.stream.disposeWebRtcPeer();
-              publisherObjRef.current.stream.disposeMediaStream();
-            }
-          } catch (err) {
-            console.warn("퍼블리셔 정리 중 오류:", err);
-          }
-        }
-
-        // 세션 정리
-        if (sessionRef.current) {
-          try {
-            await sessionRef.current.disconnect();
-            sessionRef.current = null;
-          } catch (err) {
-            console.warn("세션 연결 해제 중 오류:", err);
-          }
-        }
-
-        setSubscribers([]);
-        setPublisher(null);
-        setSession(null);
-      } catch (error) {
-        console.error("정리 중 오류:", error);
-      }
-    };
-
-    initializeSession();
+    if (nickname) {
+      initializeSession();
+    }
 
     return () => {
       isComponentMounted = false;
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
       cleanupSession();
     };
-  }, [nickname, subscribers]);
+  }, [nickname]);
 
   return (
     <div className="relative w-full h-full bg-gray-900">
