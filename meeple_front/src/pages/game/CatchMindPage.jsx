@@ -1,4 +1,4 @@
-import MainLayout from "../../components/game/catchMind/MainLayout";
+import MainLayout from "../../components/game/catchMind/inGame/MainLayout";
 
 const CatchMindPage = () => {
   return (

@@ -2,9 +2,15 @@ package com.meeple.meeple_back.gameInfo.model.entity;
 
 import com.meeple.meeple_back.user.model.User;
 import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Table(name = "tbl_game_review")
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
 public class GameReview {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

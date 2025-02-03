@@ -14,6 +14,12 @@ import com.meeple.meeple_back.game.game.model.Game;
 import com.meeple.meeple_back.game.game.model.GameResult;
 import com.meeple.meeple_back.game.repo.GameRepository;
 import com.meeple.meeple_back.game.repo.GameResultRepository;
+//import com.meeple.meeple_back.tournament.model.MatchStatus;
+//import com.meeple.meeple_back.tournament.model.ParticipantStatus;
+//import com.meeple.meeple_back.tournament.model.entity.Match;
+//import com.meeple.meeple_back.tournament.model.entity.TournamentParticipant;
+//import com.meeple.meeple_back.tournament.repository.MatchRepository;
+//import com.meeple.meeple_back.tournament.repository.TournamentParticipantRepository;
 import com.meeple.meeple_back.user.model.User;
 import com.meeple.meeple_back.user.repository.UserRepository;
 
@@ -28,13 +34,14 @@ import java.util.Optional;
 import java.util.Set;
 
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@AllArgsConstructor
 public class CockroachServiceImpl implements CockroachService {
 
     private static final String ROOM_KEY = "GAME_ROOMS";
@@ -48,20 +55,9 @@ public class CockroachServiceImpl implements CockroachService {
     private final UserRepository userRepository;
     private final GameRepository gameRepository;
     private final GameResultRepository gameResultRepository;
+//    private final MatchRepository matchRepository;
+//    private final TournamentParticipantRepository tournamentParticipantRepository;
 
-    @Autowired
-    public CockroachServiceImpl(RedisTemplate<String, Object> redisTemplate,
-                                SimpMessageSendingOperations messagingTemplate, RoomRepository roomRepository,
-                                ChatMessageRespository chatMessageRespository, UserRepository userRepository,
-                                GameRepository gameRepository, GameResultRepository gameResultRepository) {
-        this.redisTemplate = redisTemplate;
-        this.messagingTemplate = messagingTemplate;
-        this.roomRepository = roomRepository;
-        this.chatMessageRespository = chatMessageRespository;
-        this.userRepository = userRepository;
-        this.gameRepository = gameRepository;
-        this.gameResultRepository = gameResultRepository;
-    }
 
     @Override
     @Transactional
@@ -203,7 +199,7 @@ public class CockroachServiceImpl implements CockroachService {
 
     @Override
     public ResponseGiveCard giveCard(String roomId, RequestGiveCard request) {
-        Map<String, Object> roomInfo = 
+        Map<String, Object> roomInfo =
                 (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
         Map<String, Object> gameData = (Map<String, Object>) roomInfo.get("gameData");
         GameState gameState = (GameState) gameData.get("gameState");
@@ -216,7 +212,7 @@ public class CockroachServiceImpl implements CockroachService {
         // 카드 이동 처리
         Map<String, List<Card>> playerCards = (Map<String, List<Card>>) gameData.get("playerCards");
         List<Card> fromCards = playerCards.get(request.getFrom());
-        
+
         // 카드 찾아서 제거
         boolean cardFound = false;
         for (int i = 0; i < fromCards.size(); i++) {
@@ -460,7 +456,7 @@ public class CockroachServiceImpl implements CockroachService {
     }
 
     @Override
-    public ResponseVoteResult voteResult(String roomId, RequestVoteResult request) {
+    public ResponseCockroachVoteResult voteResult(String roomId, RequestVoteResult request) {
         if (request.isResult()) {
             Map<String, Object> roomInfo = (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
             List<String> players = (List<String>) roomInfo.get("players");
@@ -475,14 +471,14 @@ public class CockroachServiceImpl implements CockroachService {
             roomInfo.put("players", players);
             redisTemplate.opsForHash().put(ROOM_KEY, roomId, players);
 
-            ResponseVoteResult response = ResponseVoteResult.builder()
+            ResponseCockroachVoteResult response = ResponseCockroachVoteResult.builder()
                     .isLeave(true)
                     .target(request.getTarget())
                     .build();
 
             return response;
         } else {
-            ResponseVoteResult response = ResponseVoteResult.builder()
+            ResponseCockroachVoteResult response = ResponseCockroachVoteResult.builder()
                     .target(request.getTarget())
                     .isLeave(false)
                     .build();
@@ -529,7 +525,7 @@ public class CockroachServiceImpl implements CockroachService {
 
     @Override
     public ResponseGuessCard guessCard(String roomId, RequestGuessCard request) {
-        Map<String, Object> roomInfo = 
+        Map<String, Object> roomInfo =
                 (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
         Map<String, Object> gameData = (Map<String, Object>) roomInfo.get("gameData");
         GameState gameState = (GameState) gameData.get("gameState");
@@ -546,23 +542,23 @@ public class CockroachServiceImpl implements CockroachService {
             }
             gameState.getPassedPlayers().add(request.getFrom());
             gameState.setPassCount(gameState.getPassCount() + 1);
-            
+
             // 다음 플레이어 찾기 (패스하지 않은 플레이어 중에서)
             List<String> players = (List<String>) roomInfo.get("players");
             int currentIndex = players.indexOf(request.getFrom());
             String nextPlayer = null;
-            
+
             // 패스하지 않은 다음 플레이어 찾기
             for (int i = 1; i <= players.size(); i++) {
                 int nextIndex = (currentIndex + i) % players.size();
                 String candidate = players.get(nextIndex);
-                if (!gameState.getPassedPlayers().contains(candidate) && 
-                    !candidate.equals(gameState.getCardSender())) {
+                if (!gameState.getPassedPlayers().contains(candidate) &&
+                        !candidate.equals(gameState.getCardSender())) {
                     nextPlayer = candidate;
                     break;
                 }
             }
-            
+
             // 다음 플레이어가 없거나 카드를 준 사람이면 무조건 맞춰야 함
             if (nextPlayer == null || nextPlayer.equals(gameState.getCardSender())) {
                 gameState.setCurrentPhase("GUESS_ONLY");  // 이제 무조건 맞춰야 함
@@ -581,9 +577,9 @@ public class CockroachServiceImpl implements CockroachService {
         } else {
             // 참/거짓 판단
             boolean actualTruth = checkCardTruth(
-                gameState.getCurrentCard(), 
-                gameState.getClaimedAnimal(), 
-                gameState.isKing()
+                    gameState.getCurrentCard(),
+                    gameState.getClaimedAnimal(),
+                    gameState.isKing()
             );
 
             boolean guessedCorrectly = (actualTruth == request.getIsTrue());
@@ -712,6 +708,42 @@ public class CockroachServiceImpl implements CockroachService {
                 }
             }
 
+//            if (roomInfo.getOrDefault("isTournament", "").equals("Y")) {
+//                long matchId = Long.parseLong(String.valueOf(roomInfo.get("matchId")));
+//                Match match = matchRepository.findById(matchId)
+//                        .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 매치"));
+//                match.setMatchStatus(MatchStatus.END);
+//                matchRepository.save(match);
+//                if (roomInfo.get("isFinal").equals("Y")) {
+//                    if (match.getTournamentParticipant().getUser().getUserNickname().equals(userName)) {
+//                        TournamentParticipant tournamentParticipant = match.getTournamentParticipant();
+//                        tournamentParticipant.setParticipantStatus(ParticipantStatus.LOSE);
+//                        TournamentParticipant tournamentParticipant2 = match.getTournamentParticipant2();
+//                        tournamentParticipant.setParticipantStatus(ParticipantStatus.WIN);
+//                        tournamentParticipantRepository.save(tournamentParticipant);
+//                        tournamentParticipantRepository.save(tournamentParticipant2);
+//                    } else {
+//                        TournamentParticipant tournamentParticipant = match.getTournamentParticipant();
+//                        tournamentParticipant.setParticipantStatus(ParticipantStatus.WIN);
+//                        TournamentParticipant tournamentParticipant2 = match.getTournamentParticipant2();
+//                        tournamentParticipant2.setParticipantStatus(ParticipantStatus.LOSE);
+//                        tournamentParticipantRepository.save(tournamentParticipant);
+//                        tournamentParticipantRepository.save(tournamentParticipant2);
+//                    }
+//                } else {
+//                    if (match.getTournamentParticipant().getUser().getUserNickname().equals(userName)) {
+//                        TournamentParticipant tournamentParticipant = match.getTournamentParticipant();
+//                        tournamentParticipant.setParticipantStatus(ParticipantStatus.LOSE);
+//                        tournamentParticipantRepository.save(tournamentParticipant);
+//
+//                    } else {
+//                        TournamentParticipant tournamentParticipant2 = match.getTournamentParticipant2();
+//                        tournamentParticipant2.setParticipantStatus(ParticipantStatus.LOSE);
+//                        tournamentParticipantRepository.save(tournamentParticipant2);
+//                    }
+//                }
+//            }
+
             return userName;
         } else {
             return "";
@@ -723,7 +755,7 @@ public class CockroachServiceImpl implements CockroachService {
         if (card.getType().equals("Black")) {
             return claimedAnimal.equals("Black");
         }
-        
+
         // 조커 카드의 경우
         if (card.getType().equals("Joker")) {
             // 왕으로 선언했다면 무조건 거짓
@@ -733,7 +765,7 @@ public class CockroachServiceImpl implements CockroachService {
             // 일반 동물로 선언했다면 참 (조커는 어떤 동물이든 될 수 있음)
             return true;
         }
-        
+
         // 일반/왕 카드의 경우
         String baseType = card.getType().replace("King", "");
         return baseType.equals(claimedAnimal) && card.isRoyal() == isKing;

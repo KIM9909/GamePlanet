@@ -3,7 +3,6 @@ version: '3.8'
 services:
   redis:
     image: redis:latest
-    container_name: redis
     ports:
       - "6379:6379"
     networks:
@@ -11,7 +10,6 @@ services:
 
   meeple_front:
     image: kimgon/meeple_front:latest  # Docker Hub 이미지 이름
-    container_name: meeple_front
     restart: always
     ports:
       - "3000:80" # 호스트의 3000 포트를 컨테이너의 80 포트에 매핑
@@ -20,7 +18,6 @@ services:
 
   meeple_back:
     image: kimgon/meeple_back:latest  # Docker Hub 이미지 이름
-    container_name: meeple_back
     restart: always
     ports:
       - "8090:8090"
@@ -29,17 +26,44 @@ services:
 
   nginx:
     image: kimgon/nginx:latest  # Docker Hub 이미지 이름
-    container_name: nginx
     restart: always
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./webroot:/var/www/certbot
     ports:
       - "80:80"
       - "443:443"  # HTTPS 포트 (옵션)
     depends_on:
       - meeple_front
       - meeple_back
+      - certbot
+    networks:
+      - meeple_network
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - cert-data:/etc/letsencrypt
+      - ./webroot:/var/www/certbot
+    entrypoint: "/bin/sh -c 'if [ ! -f /etc/letsencrypt/live/boardjjigae.duckdns.org/fullchain.pem ]; then certbot certonly --webroot --webroot-path=/var/www/certbot -d boardjjigae.duckdns.org -d www.boardjjigae.duckdns.org --email aruesin2@example.com --agree-tos --non-interactive; fi'"
+    networks:
+      - meeple_network
+
+  certbot-renew:
+    image: certbot/certbot
+    container_name: certbot-renew
+    volumes:
+      - cert-data:/etc/letsencrypt
+      - ./webroot:/var/www/certbot
+    entrypoint: "/bin/sh -c 'while true; do certbot renew --webroot --webroot-path=/var/www/certbot && docker exec nginx nginx -s reload && sleep 12h; done'"
     networks:
       - meeple_network
 
 networks:
   meeple_network:
     driver: bridge
+
+volumes:
+  cert-data:
