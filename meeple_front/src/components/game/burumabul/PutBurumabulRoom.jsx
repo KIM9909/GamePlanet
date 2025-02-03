@@ -8,7 +8,7 @@ const PutBurumabulRoom = ({ onClose, originRoomData }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   console.log(originRoomData);
-  const originData = originRoomData[0];
+  const originData = originRoomData;
   const currentPlayers = Number(originData.players.length);
   const [roomData, setRoomData] = useState(originData);
 

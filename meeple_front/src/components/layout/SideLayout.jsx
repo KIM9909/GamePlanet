@@ -12,7 +12,7 @@ const SideLayout = ({ children }) => {
   const showSidebar =
     location.pathname !== "/" &&
     location.pathname !== `/profile/${userId}` &&
-    !location.pathname.match(/^\/game\/burumabul\/[\w-]+\/?$/) &&
+    !location.pathname.match(/^\/game\/burumabul\/[\w-]+(\/\d+)?$/) &&
     !location.pathname.match(/^\/catch-mind\/[\w-]+$/) &&
     !location.pathname.match(/^\/game\/cockroach\/[\w-]+$/);
   const [activeLink, setActiveLink] = useState(location.pathname);

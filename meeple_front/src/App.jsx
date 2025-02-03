@@ -35,11 +35,13 @@ function App() {
 
               {/* Game */}
               <Route
-                path="/game/burumabul/start:roomId"
+                // path="/game/burumabul/start"
+                path="/game/burumabul/start/:roomId"
                 element={<BurumabulPage />}
               />
               <Route
-                path="/game/burumabul/waitingroom/"
+                // path="/game/burumabul/waitingroom/"
+                path="/game/burumabul/waitingroom/:roomId"
                 element={<WaitingRoom />}
               />
               <Route

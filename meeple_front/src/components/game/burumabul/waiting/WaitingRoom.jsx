@@ -14,65 +14,66 @@ import { createPortal } from "react-dom";
 const WaitingRoom = () => {
   const userId = Number(useSelector((state) => state.user.userId));
   console.log(userId);
+
   const navigate = useNavigate();
   const location = useLocation();
-  // const roomInfo = location.state?.roomInfo;
-  // const playersInfo = roomInfo.players;
-  const roomInfo = [
-    {
-      roomId: 1,
-      roomName: "시작해볼까! 덕진이랑 은수",
-      createTime: "2025-02-02T18:14:34.803Z",
-      creator: {
-        playerId: 1,
-        playerName: "은수",
-        position: 0,
-        balance: 0,
-        seedCertificateCardOwned: ["string"],
-      },
-      maxPlayers: 4,
-      players: [
-        {
-          playerId: 1,
-          playerName: "은수",
-          position: 0,
-          balance: 0,
-          seedCertificateCardOwned: ["string"],
-        },
-        {
-          playerId: 2,
-          playerName: "덕진",
-          position: 0,
-          balance: 0,
-          seedCertificateCardOwned: ["string"],
-        },
-        {
-          playerId: 3,
-          playerName: "은수2",
-          position: 0,
-          balance: 0,
-          seedCertificateCardOwned: ["string"],
-        },
-        // {
-        //   playerId: 4,
-        //   playerName: "덕진2",
-        //   position: 0,
-        //   balance: 0,
-        //   seedCertificateCardOwned: ["string"],
-        // },
-      ],
-      gameStart: false,
-      private: true,
-    },
-  ];
-  const roomName = roomInfo[0].roomName;
-  const creatorId = Number(roomInfo[0].creator.playerId);
+  const roomInfo = location.state?.roomInfo;
+  console.log(roomInfo);
+  const playersInfo = roomInfo.players;
+  // const roomInfo = [
+  //   {
+  //     roomId: 1,
+  //     roomName: "시작해볼까! 덕진이랑 은수",
+  //     createTime: "2025-02-02T18:14:34.803Z",
+  //     creator: {
+  //       playerId: 1,
+  //       playerName: "은수",
+  //       position: 0,
+  //       balance: 0,
+  //       seedCertificateCardOwned: ["string"],
+  //     },
+  //     maxPlayers: 4,
+  //     players: [
+  //       {
+  //         playerId: 1,
+  //         playerName: "은수",
+  //         position: 0,
+  //         balance: 0,
+  //         seedCertificateCardOwned: ["string"],
+  //       },
+  //       {
+  //         playerId: 2,
+  //         playerName: "덕진",
+  //         position: 0,
+  //         balance: 0,
+  //         seedCertificateCardOwned: ["string"],
+  //       },
+  //       {
+  //         playerId: 3,
+  //         playerName: "은수2",
+  //         position: 0,
+  //         balance: 0,
+  //         seedCertificateCardOwned: ["string"],
+  //       },
+  //       // {
+  //       //   playerId: 4,
+  //       //   playerName: "덕진2",
+  //       //   position: 0,
+  //       //   balance: 0,
+  //       //   seedCertificateCardOwned: ["string"],
+  //       // },
+  //     ],
+  //     gameStart: false,
+  //     private: true,
+  //   },
+  // ];
+  const roomName = roomInfo.roomName;
+  const creatorId = Number(roomInfo.creator.playerId);
   console.log("creatorId", creatorId);
-  const creatorName = roomInfo[0].creator.playerName;
-  const playersInfo = roomInfo[0].players;
-  const isPrivate = roomInfo[0].private;
-  const maxPlayers = roomInfo[0].maxPlayers;
-  const playerLen = roomInfo[0].players.length;
+  const creatorName = roomInfo.creator.playerName;
+  const isPrivate = roomInfo.private;
+  const maxPlayers = roomInfo.maxPlayers;
+  const playerLen = roomInfo.players.length;
 
   console.log(playersInfo);
 
