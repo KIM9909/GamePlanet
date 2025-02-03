@@ -39,6 +39,15 @@ services:
     networks:
       - meeple_network
 
+  certbot-renew:
+    image: certbot/certbot
+    volumes:
+      - cert-data:/etc/letsencrypt
+      - ./webroot:/var/www/certbot
+    entrypoint: "/bin/sh -c 'while true; do certbot renew --webroot --webroot-path=/var/www/certbot && sleep 12h; done'"
+
+
+
 networks:
   meeple_network:
     driver: bridge
