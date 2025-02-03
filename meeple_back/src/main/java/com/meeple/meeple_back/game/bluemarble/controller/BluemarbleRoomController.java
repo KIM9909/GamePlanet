@@ -12,40 +12,44 @@ import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "게임방(블루마블)")
-@RestController
+@Tag(name = "게임방(블루마블) 소켓 통신")
+@Controller
 @RequestMapping("/game/blue-marble/rooms")
 @Builder
 @RequiredArgsConstructor
 public class BluemarbleRoomController {
 
 	private final BluemarbleRoomService bluemarbleRoomService;
+	private final SimpMessagingTemplate messagingTemplate;
+
 
 	private final JwtUtil jwtUtil;
 
-	@PostMapping("/{roomId}")
+	@MessageMapping("/{roomId}/user/{userId}")
 	@Operation(summary = "게임방 참가", description = "게임방에 참가합니다.")
-	public ResponseEntity<RoomResponse> join(@PathVariable int roomId,
-			@RequestHeader("Authorization") String token) {
-		long userId = jwtUtil.getUserIdFromToken(token);
-		return ResponseEntity.ok(RoomResponse.from(bluemarbleRoomService.join(roomId, userId)));
+	public void join(@DestinationVariable("roomId") int roomId,
+			@DestinationVariable("userId") long userId) {
+		RoomResponse roomResponse = RoomResponse.from(bluemarbleRoomService.join(roomId, userId));
+		messagingTemplate.convertAndSend("/topic/rooms/" + roomId,
+				roomResponse);
 	}
 
 	@GetMapping
 	@Operation(summary = "게임방 목록 조회", description = "생성된 게임방 목록을 조회합니다.")
 	public ResponseEntity<List<RoomResponse>> getRooms() {
-		return ResponseEntity.ok(
-				bluemarbleRoomService.getList().stream().map(RoomResponse::from).toList());
+		return ResponseEntity.status(HttpStatus.OK).body(bluemarbleRoomService.getList().stream()
+				.map(RoomResponse::from).toList());
 	}
 
 	@GetMapping("/{roomId}")
@@ -54,11 +58,10 @@ public class BluemarbleRoomController {
 		return ResponseEntity.ok(RoomResponse.from(bluemarbleRoomService.findById(roomId)));
 	}
 
-	@DeleteMapping("/{roomId}")
+	@DeleteMapping("/{roomId}/user/{userId}")
 	@Operation(summary = "게임방 삭제", description = "게임방을 삭제합니다.")
 	public ResponseEntity<RoomResponse> delete(@PathVariable int roomId,
-			@RequestHeader("Authorization") String token) {
-		long userId = jwtUtil.getUserIdFromToken(token);
+			@PathVariable("userId") Long userId) {
 		return ResponseEntity.status(HttpStatus.NO_CONTENT)
 				.body(RoomResponse.from(bluemarbleRoomService.delete(roomId, userId)));
 	}
