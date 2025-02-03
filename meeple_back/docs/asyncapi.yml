@@ -1,0 +1,168 @@
+asyncapi: '2.0.0'
+info:
+  title: Blue Marble Game API
+  version: '1.0.0'
+  description: |
+    이 API는 블루마블 게임환경 생성과 주사위 굴리기 기능을 제공합니다.
+    클라이언트는 게임 생성 요청 메시지(GamePlayCreate) 및 주사위 굴리기 요청 메시지(DiceRollRequest)를 전송하고,
+    서버는 생성된 게임환경 정보(GamePlay)와 주사위 굴리기 결과(DiceRollResponse)를 각각 브로드캐스트합니다.
+channels:
+  /game/blue-marble/game-plays/create:
+    description: 게임 생성 요청 채널 (클라이언트 → 서버)
+    publish:
+      operationId: createGamePlay
+      summary: 게임환경 생성 요청 전송
+      message:
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/GamePlayCreate'
+  /topic/game-plays/{gamePlayId}:
+    description: 생성된 게임환경 정보를 브로드캐스트하는 채널 (서버 → 클라이언트)
+    parameters:
+      gamePlayId:
+        description: 생성된 게임플레이 식별자
+        schema:
+          type: integer
+    subscribe:
+      operationId: gamePlayCreated
+      summary: 생성된 게임환경 정보 수신
+      message:
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/GamePlay'
+  /game/blue-marble/game-plays/{roomId}/roll-dice:
+    description: 주사위 굴리기 요청 채널 (클라이언트 → 서버)
+    parameters:
+      roomId:
+        description: 게임룸 식별자
+        schema:
+          type: integer
+    publish:
+      operationId: rollDiceRequest
+      summary: 주사위 굴리기 요청 전송
+      message:
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/DiceRollRequest'
+  /topic/game-plays/{roomId}:
+    description: 주사위 굴리기 결과 브로드캐스트 채널 (서버 → 클라이언트)
+    parameters:
+      roomId:
+        description: 게임룸 식별자
+        schema:
+          type: integer
+    subscribe:
+      operationId: rollDiceResponse
+      summary: 주사위 굴리기 결과 수신
+      message:
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/DiceRollResponse'
+components:
+  schemas:
+    GamePlayCreate:
+      type: object
+      description: 게임 생성 요청 데이터
+      properties:
+        gamePlayId:
+          type: integer
+          description: 게임플레이 식별자(방번호)
+          example: 2
+        playerIds:
+          type: array
+          description: 참가 플레이어 ID 목록
+          items:
+            type: integer
+          example: [ 1, 2, 3 ]
+      required:
+        - gamePlayId
+        - playerIds
+    GamePlay:
+      type: object
+      description: 생성된 게임환경 데이터
+      properties:
+        gamePlayId:
+          type: integer
+          description: 게임플레이 식별자(방번호)
+          example: 2
+        currentPlayerIndex:
+          type: integer
+          description: 현재 플레이어 인덱스
+          example: 0
+        players:
+          type: array
+          description: 플레이어 목록
+          items:
+            $ref: '#/components/schemas/Player'
+        gameStatus:
+          type: string
+          description: 게임 상태
+          example: "IN_PROGRESS"
+        round:
+          type: integer
+          description: 현재 라운드 번호
+          example: 1
+        board:
+          type: array
+          description: 게임 보드의 타일 목록
+          items:
+            $ref: '#/components/schemas/Tile'
+      required:
+        - gamePlayId
+        - currentPlayerIndex
+        - players
+        - gameStatus
+        - round
+        - board
+    DiceRollRequest:
+      type: object
+      description: 주사위 굴리기 요청 데이터
+      properties:
+        firstDice:
+          type: integer
+          description: 첫번째 주사위 값
+          example: 3
+        secondDice:
+          type: integer
+          description: 두번째 주사위 값
+          example: 4
+      required:
+        - firstDice
+        - secondDice
+    DiceRollResponse:
+      type: object
+      description: 주사위 굴리기 결과 데이터
+      properties:
+        prevPosition:
+          type: integer
+          description: 주사위를 굴리기 전 플레이어의 위치
+          example: 10
+        nextPosition:
+          type: integer
+          description: 주사위를 굴린 후 도달한 위치
+          example: 15
+      required:
+        - prevPosition
+        - nextPosition
+    Player:
+      type: object
+      description: 게임 플레이어 정보
+      properties:
+        playerId:
+          type: integer
+          description: 플레이어 식별자
+          example: 1
+        # 필요에 따라 추가 속성을 정의합니다.
+      required:
+        - playerId
+    Tile:
+      type: object
+      description: 게임 보드의 타일 정보
+      properties:
+        id:
+          type: integer
+          description: 타일 식별자
+          example: 1
+        # 필요에 따라 추가 속성을 정의합니다.
+      required:
+        - id
