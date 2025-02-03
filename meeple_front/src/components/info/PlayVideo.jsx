@@ -1,7 +1,8 @@
 const PlayVideo = () =>{
   return (
     <div>
-      PlayVideo
+      {/* 영상 표시 */}
+      <section>Video</section>
     </div>
   )
 };

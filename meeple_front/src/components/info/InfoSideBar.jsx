@@ -5,7 +5,7 @@ const InfoSideBar = ({ onMenuSelect }) => {
       <button onClick={() => onMenuSelect("gamerule")}>gamerule</button>
 
       <button onClick={() => onMenuSelect("gamecommunity")}>gamecommunity</button>
-      <button onClick={() => onMenuSelect("review")}>review</button>
+      <button onClick={() => onMenuSelect("gamereview")}>review</button>
       <button onClick={() => onMenuSelect("playvideo")}>playvideo</button>
     </div>
   )

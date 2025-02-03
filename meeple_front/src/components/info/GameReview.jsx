@@ -1,7 +1,12 @@
+import ReviewList from "./ReviewList";
+
 const GameReview = () =>{
   return (
     <div>
-      GameReview
+      {/* 리뷰목록 */}
+      <section>
+        <ReviewList></ReviewList>
+      </section>
     </div>
   )
 };
