@@ -1,7 +1,9 @@
+import ArticleList from "./ArticleList";
+
 const GameCommunity = () => {
   return (
     <div>
-      GameCommunity
+      <ArticleList />
     </div>
   )
 };
