@@ -21,7 +21,7 @@ const initialState = {
   timeLimit: 90,
   players: [],
   isGameStarted: false,
-  currentTurnIndex: 0, // 추가: 현재 턴 인덱스
+  currentTurnIndex: 0,
   userStatus: {
     isLoading: false,
     error: null,
@@ -32,7 +32,6 @@ const CatchMindSlice = createSlice({
   name: "catchmind",
   initialState,
   reducers: {
-    // 기존 리듀서들은 그대로 유지...
     updatePlayerNickname: (state, action) => {
       const { playerId, nickname } = action.payload;
       const player = state.players.find((p) => p.id === playerId);
@@ -44,65 +43,33 @@ const CatchMindSlice = createSlice({
     updatePlayers: (state, action) => {
       const { players } = action.payload;
       if (Array.isArray(players)) {
-        const uniquePlayers = [
-          ...new Map(
-            players.map((player) => [
-              player.nickname,
-              {
-                id: player.id || Math.random().toString(36).substr(2, 9),
-                nickname: player.nickname,
-                score: player.score || 0,
-                isTurn: player.isTurn || false,
-                isCurrentUser: player.isCurrentUser || false,
-              },
-            ])
-          ).values(),
-        ];
-        state.players = uniquePlayers;
+        state.players = players.map((player) => ({
+          id: player.id || Math.random().toString(36).substr(2, 9),
+          nickname: player.nickname,
+          score: player.score || 0,
+          isTurn: player.isTurn || false,
+          isCurrentUser: player.isCurrentUser || false,
+        }));
       }
     },
 
-    // 수정: 점수 업데이트 로직 개선
     updatePlayerScore: (state, action) => {
-      console.log("Updating player score - Action Payload:", action.payload);
-
       const { nickname, score } = action.payload;
+      const player = state.players.find((p) => p.nickname === nickname);
+      if (player) {
+        player.score = (player.score || 0) + score;
+      }
+    },
 
-      // players 배열을 map으로 순회하며 불변성 유지
-      state.players = state.players.map((player) => {
-        if (player.nickname === nickname) {
-          console.log("Player found:", player);
-          console.log("Current score:", player.score);
-          console.log("Score to add:", score);
+    nextTurn: (state) => {
+      const currentIndex = state.players.findIndex((p) => p.isTurn);
+      const nextIndex = (currentIndex + 1) % state.players.length;
 
-          const newScore = (player.score || 0) + score;
-          console.log("New score:", newScore);
-
-          return {
-            ...player,
-            score: newScore,
-          };
-        }
-        return player;
+      state.players.forEach((player, index) => {
+        player.isTurn = index === nextIndex;
       });
 
-      console.log("Updated players:", state.players);
-    },
-
-    // 추가: 턴 변경 리듀서
-    nextTurn: (state) => {
-      // 현재 턴인 플레이어의 턴을 끝내고 다음 플레이어로 넘김
-      const currentTurnPlayer = state.players.find((p) => p.isTurn);
-      if (currentTurnPlayer) {
-        currentTurnPlayer.isTurn = false;
-      }
-
-      // 다음 플레이어 인덱스 계산
-      state.currentTurnIndex =
-        (state.currentTurnIndex + 1) % state.players.length;
-
-      // 다음 플레이어의 턴으로 설정
-      state.players[state.currentTurnIndex].isTurn = true;
+      state.currentTurnIndex = nextIndex;
     },
 
     setCurrentWord: (state, action) => {
@@ -110,7 +77,18 @@ const CatchMindSlice = createSlice({
     },
 
     updateGameState: (state, action) => {
-      return { ...state, ...action.payload };
+      const { currentWord, currentRound, currentTurn } = action.payload;
+
+      // 상태 업데이트
+      state.currentWord = currentWord || state.currentWord;
+      state.currentRound = currentRound || state.currentRound;
+
+      // 턴 업데이트
+      if (currentTurn) {
+        state.players.forEach((player) => {
+          player.isTurn = player.nickname === currentTurn;
+        });
+      }
     },
 
     setRoomId: (state, action) => {
@@ -118,7 +96,6 @@ const CatchMindSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // 기존 extraReducers 유지...
     builder
       .addCase(fetchUserInfo.pending, (state) => {
         state.userStatus.isLoading = true;

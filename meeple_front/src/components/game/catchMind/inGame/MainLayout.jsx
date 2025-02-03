@@ -231,33 +231,47 @@ const MainLayout = () => {
               : [],
           };
 
-          setRoomInfo(cleanedRoom);
+          // roomInfo가 실제로 변경되었을 때만 상태 업데이트
+          setRoomInfo((prev) => {
+            if (JSON.stringify(prev) !== JSON.stringify(cleanedRoom)) {
+              return cleanedRoom;
+            }
+            return prev;
+          });
 
           const currentUserNickname = getCurrentUserNickname();
           const players = cleanedRoom.players.map((player, index) => ({
             id: index + 1,
             nickname: player,
-            // 게임 정보에서 점수 가져오기
             score: currentRoom.gameInfo?.playerScore?.[player] || 0,
-            isTurn: index === 0,
+            isTurn: currentRoom.gameInfo?.currentTurn // currentTurn이 있으면 그 값을 사용
+              ? player === currentRoom.gameInfo.currentTurn
+              : index === 0, // 없으면 첫 번째 플레이어가 턴
             isCurrentUser: player === currentUserNickname,
           }));
 
-          console.log("Fetched players with scores:", players);
-
-          dispatch(updatePlayers({ players }));
+          // players 정보가 실제로 변경되었을 때만 dispatch
+          if (JSON.stringify(gameState.players) !== JSON.stringify(players)) {
+            dispatch(updatePlayers({ players }));
+          }
         }
       } catch (error) {
         console.error("방 정보 가져오기 실패:", error);
       }
     };
 
-    if (roomId && profileData?.userNickname) {
+    if (roomId && profileData?.userNickname && !isExiting) {
       fetchRoomInfo();
       const intervalId = setInterval(fetchRoomInfo, 2000);
       return () => clearInterval(intervalId);
     }
-  }, [roomId, profileData?.userNickname, dispatch, getCurrentUserNickname]);
+  }, [
+    roomId,
+    profileData?.userNickname,
+    isExiting,
+    dispatch,
+    getCurrentUserNickname,
+  ]);
 
   // 최초 방 입장 처리
   useEffect(() => {
