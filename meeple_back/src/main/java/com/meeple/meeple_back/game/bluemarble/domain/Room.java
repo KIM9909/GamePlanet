@@ -105,4 +105,10 @@ public class Room {
 	public boolean isPlayerNotExists() {
 		return players.isEmpty();
 	}
+
+	public void changePassword(String newPassword) {
+		this.password = newPassword;
+	}
+
+
 }

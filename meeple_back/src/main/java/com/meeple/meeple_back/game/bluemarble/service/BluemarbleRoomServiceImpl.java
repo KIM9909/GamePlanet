@@ -2,6 +2,8 @@ package com.meeple.meeple_back.game.bluemarble.service;
 
 import com.meeple.meeple_back.common.domain.exception.ResourceNotFoundException;
 import com.meeple.meeple_back.game.bluemarble.controller.port.BluemarbleRoomService;
+import com.meeple.meeple_back.game.bluemarble.controller.request.RoomJoinWithPassword;
+import com.meeple.meeple_back.game.bluemarble.controller.request.RoomUpdatePassword;
 import com.meeple.meeple_back.game.bluemarble.domain.Player;
 import com.meeple.meeple_back.game.bluemarble.domain.Room;
 import com.meeple.meeple_back.game.bluemarble.domain.RoomCreate;
@@ -16,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +29,7 @@ public class BluemarbleRoomServiceImpl implements BluemarbleRoomService {
 	private final BluemarbleRoomRepository bluemarbleRoomRepository;
 	private final GameRepository gameRepository;
 	private final UserService userService;
+	private final PasswordEncoder passwordEncoder;
 
 
 	@Override
@@ -38,13 +42,12 @@ public class BluemarbleRoomServiceImpl implements BluemarbleRoomService {
 		bluemarbleRoomRepository.save(roomEntity);
 
 		Player newPlayer = new Player(userService.findById(userId));
-		// 초기 유저
 		List<Player> players = new ArrayList<>();
 		players.add(newPlayer);
 
 		Room room = Room.builder().roomId(roomEntity.getRoomId()).roomName(roomEntity.getRoomName())
 				.createTime(roomEntity.getCreateTime()).isPrivate(roomCreate.isPrivate())
-				.password(roomCreate.getPassword()).isGameStart(false)
+				.password(passwordEncoder.encode(roomCreate.getPassword())).isGameStart(false)
 				.creator(new Player(userService.findById(userId)))
 				.maxPlayers(roomCreate.getMaxPlayers()).players(players).build();
 		bluemarbleRoomRepository.save(room);
@@ -100,6 +103,38 @@ public class BluemarbleRoomServiceImpl implements BluemarbleRoomService {
 	public Room findById(int roomId) {
 		return bluemarbleRoomRepository.findById(roomId)
 				.orElseThrow(() -> new ResourceNotFoundException("Room", roomId));
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<Room> search(String searchName) {
+		return bluemarbleRoomRepository.findByRoomName(searchName);
+	}
+
+	@Override
+	@Transactional
+	public void changePassword(int roomId, RoomUpdatePassword roomUpdatePassword) {
+		bluemarbleRoomRepository.findById(roomId).ifPresent(room -> {
+			room.changePassword(passwordEncoder.encode(roomUpdatePassword.getPassword()));
+			bluemarbleRoomRepository.save(room);
+		});
+
+	}
+
+	@Override
+	@Transactional
+	public Room joinWithPassword(int roomId, RoomJoinWithPassword roomJoinWithPassword) {
+		Room room = bluemarbleRoomRepository.findById(roomId)
+				.orElseThrow(() -> new ResourceNotFoundException("Room", roomId));
+		boolean isCorrectPassword = passwordEncoder.matches(roomJoinWithPassword.getPassword(),
+				room.getPassword());
+		if (!isCorrectPassword) {
+			throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+		}
+		room = room.addPlayer(
+				new Player(userService.findById(roomJoinWithPassword.getUserId())));
+		bluemarbleRoomRepository.save(room);
+		return room;
 	}
 
 
