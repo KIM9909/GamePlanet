@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import BurumabulRoomCreateModal from "../../components/game/burumabul/BurumabulRoomCreateModal";
 import FriendModal from "../../components/friend/FriendModal";
 import { useSelector, useDispatch } from "react-redux";
+import RoomList from "../../components/game/cockroachcard/RoomList";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ const HomePage = () => {
     console.log("roomData:", roomData);
     try {
       const response = await fetch(
-        `http://localhost:8090/api/game/create-room`,
+        `http://localhost:8090/game/create-room`,
         {
           method: "POST",
           headers: {
@@ -71,6 +72,7 @@ const HomePage = () => {
                   방 만들기
                 </button>
               </div>
+              <RoomList/>
 
               {/* 부루마불 */}
               <div className="bg-gray-50 p-6 rounded-lg shadow">

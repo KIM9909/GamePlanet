@@ -6,13 +6,14 @@ if (typeof global === "undefined") {
   window.global = window;
 }
 
-const useSocket = (roomId, isGameStarted) => {
+const useSocket = (roomId) => {
   const clientRef = useRef(null);
   const [messages, setMessages] = useState([]);
   const [connected, setConnected] = useState(false);
   const [stompClient, setStompClient] = useState(null);
   const isConnecting = useRef(false);
   const subscriptionsRef = useRef(new Map());
+  const isGameStartedRef = useRef(false);
 
   const connect = useCallback(() => {
     if (isConnecting.current) return;
@@ -38,9 +39,10 @@ const useSocket = (roomId, isGameStarted) => {
           (message) => {
             console.log("Game message received:", message.body);
             const response = JSON.parse(message.body);
-            // 게임 시작 메시지 특별 처리
+            // 게임 시작 메시지 처리
             if (response.gameData?.isGameStart) {
               console.log("Game start message received");
+              isGameStartedRef.current = true;
             }
           }
         );
@@ -54,14 +56,7 @@ const useSocket = (roomId, isGameStarted) => {
           (message) => {
             console.log("Chat message received:", message.body);
             const newMessage = JSON.parse(message.body);
-            setMessages((prev) => [
-              ...prev,
-              {
-                content: newMessage.content,
-                sender: newMessage.sender,
-                timestamp: newMessage.timestamp,
-              },
-            ]);
+            setMessages((prev) => [...prev, newMessage]);
           }
         );
         subscriptionsRef.current.set("chat", chatSubscription);
@@ -70,20 +65,14 @@ const useSocket = (roomId, isGameStarted) => {
 
     client.onDisconnect = () => {
       console.log("WebSocket disconnected");
+      if (isGameStartedRef.current) {
+        console.log("Game is in progress - attempting to reconnect");
+        setTimeout(() => connect(), 1000);
+        return;
+      }
       setConnected(false);
       setStompClient(null);
       isConnecting.current = false;
-    };
-
-    client.onWebSocketClose = () => {
-      console.log("WebSocket closed");
-      // 자동 재연결 시도
-      if (!client.deactivated) {
-        setTimeout(() => {
-          console.log("Attempting to reconnect...");
-          connect();
-        }, 5000);
-      }
     };
 
     clientRef.current = client;
@@ -91,8 +80,8 @@ const useSocket = (roomId, isGameStarted) => {
   }, [roomId]);
 
   const disconnect = useCallback(() => {
-    if (isGameStarted) {
-      console.log("게임 진행 중 - 연결 유지");
+    if (isGameStartedRef.current) {
+      console.log("Game is in progress - maintaining connection");
       return;
     }
 
@@ -106,10 +95,9 @@ const useSocket = (roomId, isGameStarted) => {
     subscriptionsRef.current.clear();
 
     if (clientRef.current) {
-      clientRef.current.deactivated = true;
       clientRef.current.deactivate();
     }
-  }, [isGameStarted]);
+  }, []);
 
   const startGame = useCallback(() => {
     return new Promise((resolve, reject) => {

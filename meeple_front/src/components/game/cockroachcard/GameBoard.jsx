@@ -58,6 +58,8 @@ const GameBoard = ({
   sendMessage,
   stompClient,
   roomId,
+  roomData,
+  onGameEnd,
 }) => {
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
@@ -728,12 +730,14 @@ const handleGameEnd = useCallback(
   if (!isGameStarted) {
     return (
       <>
-        <GameStartScreen
-          playerCount={playerCount}
-          onStart={handleStartGame}
-          roomTitle={gameData?.roomName || "바퀴벌레 포커"}
-          maxPeople={gameData?.maxPeople || 4}
-        />
+
+      
+      <GameStartScreen
+        playerCount={playerCount}
+        onStart={handleStartGame}
+        roomTitle={gameData?.roomName || roomData?.roomName || "바퀴벌레 포커"}  // roomData도 체크
+        maxPeople={gameData?.maxPeople || roomData?.maxPeople || 4}
+      />
         {currentUser === gameData?.creator && (
           <button
             onClick={() => setUpdateModalOpen(true)}
