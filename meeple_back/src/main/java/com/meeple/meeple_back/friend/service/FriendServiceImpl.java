@@ -94,7 +94,7 @@ public class FriendServiceImpl implements FriendService {
         User sender = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 회원입니다.(발송자)"));
 
-        User target = userRepository.findById(request.getUserId())
+        User target = userRepository.findById(request.getFriendId())
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 회원입니다.(대상)"));
 
         boolean exists = friendRepository.existsByUserAndFriend(sender, target);
