@@ -2,34 +2,31 @@ import React, { useState } from "react";
 import { FaRegEye } from "react-icons/fa";
 import { FaRegEyeSlash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { putBurumabulRoom } from "../../../sources/api/BurumabulRoomAPI";
 
-const PutBurumabulRoom = ({ onClose }) => {
+const PutBurumabulRoom = ({ onClose, originRoomData }) => {
   const [showPassword, setShowPassword] = useState(false);
 
-  const initialRoomData = {
-    roomName: "",
-    private: false,
-    password: "",
-    maxPlayers: 2,
-    // private: false,
-  };
-  const [roomData, setRoomData] = useState(initialRoomData);
+  console.log(originRoomData);
+  const originData = originRoomData[0];
+  const currentPlayers = Number(originData.players.length);
+  const [roomData, setRoomData] = useState(originData);
 
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // try {
-    //   console.log(roomData);
-    //   const response = await createBurumabulRoom(roomData);
-    //   const roomId = response.roomId;
-    //   navigate(`/game/burumabul/waitingroom/${roomId}`, {
-    //     state: { roomInfo: response },
-    //   });
-    // } catch (error) {
-    //   console.error("방 생성 중 오류 발생 : ", error);
-    // }
+    try {
+      console.log(roomData);
+      const response = await putBurumabulRoom(roomData);
+      const roomId = response.roomId;
+      navigate(`/game/burumabul/waitingroom/${roomId}`, {
+        state: { roomInfo: response },
+      });
+    } catch (error) {
+      console.error("방 생성 중 오류 발생 : ", error);
+    }
   };
 
   const handlePassword = (e) => {
@@ -42,7 +39,7 @@ const PutBurumabulRoom = ({ onClose }) => {
   };
 
   const handleCancel = () => {
-    setRoomData(initialRoomData); // roomData 초기화
+    setRoomData(originData); // roomData 초기화
     onClose();
   };
 
@@ -154,51 +151,58 @@ const PutBurumabulRoom = ({ onClose }) => {
               <h2 className="text-lg">플레이어 수 선택</h2>
               <hr className="w-80 border-t-2 border-gray-400 my-2" />
               <div className="my-1">
-                <button
-                  className={`bg-blue-200 text-gray-500 w-14 rounded mx-2 ${
-                    roomData.maxPlayers === 2 ? "bg-blue-400" : "bg-blue-200"
-                  }`}
-                  value={roomData.maxPlayers}
-                  onClick={() =>
-                    setRoomData((prevData) => ({
-                      ...prevData,
-                      maxPlayers: Number(2),
-                    }))
-                  }
-                  type="button"
-                >
-                  2인
-                </button>
-                <button
-                  className={`bg-blue-200 text-gray-500 w-14 rounded mx-2 ${
-                    roomData.maxPlayers === 3 ? "bg-blue-400" : "bg-blue-200"
-                  }`}
-                  value={roomData.maxPlayers}
-                  onClick={() =>
-                    setRoomData((prevData) => ({
-                      ...prevData,
-                      maxPlayers: Number(3),
-                    }))
-                  }
-                  type="button"
-                >
-                  3인
-                </button>
-                <button
-                  className={`bg-blue-200 text-gray-500 w-14 rounded mx-2 ${
-                    roomData.maxPlayers === 4 ? "bg-blue-400" : "bg-blue-200"
-                  }`}
-                  value={roomData.maxPlayers}
-                  onClick={() =>
-                    setRoomData((prevData) => ({
-                      ...prevData,
-                      maxPlayers: Number(4),
-                    }))
-                  }
-                  type="button"
-                >
-                  4인
-                </button>
+                {currentPlayers <= 2 && (
+                  <button
+                    className={`bg-blue-200 text-gray-500 w-14 rounded mx-2 ${
+                      roomData.maxPlayers === 2 ? "bg-blue-400" : "bg-blue-200"
+                    }`}
+                    value={roomData.maxPlayers}
+                    onClick={() =>
+                      setRoomData((prevData) => ({
+                        ...prevData,
+                        maxPlayers: Number(2),
+                      }))
+                    }
+                    type="button"
+                  >
+                    2인
+                  </button>
+                )}
+
+                {currentPlayers <= 3 && (
+                  <button
+                    className={`bg-blue-200 text-gray-500 w-14 rounded mx-2 ${
+                      roomData.maxPlayers === 3 ? "bg-blue-400" : "bg-blue-200"
+                    }`}
+                    value={roomData.maxPlayers}
+                    onClick={() =>
+                      setRoomData((prevData) => ({
+                        ...prevData,
+                        maxPlayers: Number(3),
+                      }))
+                    }
+                    type="button"
+                  >
+                    3인
+                  </button>
+                )}
+                {currentPlayers <= 4 && (
+                  <button
+                    className={`bg-blue-200 text-gray-500 w-14 rounded mx-2 ${
+                      roomData.maxPlayers === 4 ? "bg-blue-400" : "bg-blue-200"
+                    }`}
+                    value={roomData.maxPlayers}
+                    onClick={() =>
+                      setRoomData((prevData) => ({
+                        ...prevData,
+                        maxPlayers: Number(4),
+                      }))
+                    }
+                    type="button"
+                  >
+                    4인
+                  </button>
+                )}
               </div>
             </div>
             {/* 방 생성 or 취소 */}

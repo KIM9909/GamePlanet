@@ -7,11 +7,11 @@ const BURUMABUL_API_BASE_URL = `${
 }/game/blue-marble/rooms`; // 로컬 API
 
 const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token")?.trim() || "";
   if (!token) throw new Error("인증 토큰이 없습니다.");
-  console.log("Token from localStorage:", token);
+  // 토큰에서 불필요한 문자 제거
   return {
-    Authorization: `${token}`,
+    Authorization: `Bearer ${token}`,
     "Content-Type": "application/json",
   };
 };
