@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import CreateRoomModal from "../../components/game/CreateRoomModal";
 import { createPortal } from "react-dom";
 import BurumabulRoomCreateModal from "../../components/game/burumabul/BurumabulRoomCreateModal";
 import FriendModal from "../../components/friend/FriendModal";
 import { useSelector, useDispatch } from "react-redux";
+import CreateRoomModal from "../../components/game/cockroachcard/modal/CreateRoomModal";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -38,15 +39,15 @@ const HomePage = () => {
       );
 
       if (!response.ok) {
-        throw new Error(`Failed to create room: ${response.status}`);
+        throw new Error(`서버 오류: ${response.status} - ${responseText}`);
       }
 
       const data = await response.json();
       console.log("Response data:", data);
       navigate(`/game/cockroach/${data.roomId}`);
     } catch (error) {
-      console.error("Error creating room:", error);
-      alert("방 생성에 실패했습니다.");
+      console.error("Error details:", error);
+      throw new Error(`방 생성 실패: ${error.message}`);
     }
   };
 

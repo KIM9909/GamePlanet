@@ -1,18 +1,23 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
-import axios from "axios";
 
-// global 객체가 없을 경우를 대비한 폴리필
 if (typeof global === "undefined") {
   window.global = window;
 }
 
-const useSocket = (roomId) => {
+const useSocket = (roomId, isGameStarted) => {
   const clientRef = useRef(null);
   const [messages, setMessages] = useState([]);
+  const [connected, setConnected] = useState(false);
+  const [stompClient, setStompClient] = useState(null);
+  const isConnecting = useRef(false);
+  const subscriptionsRef = useRef(new Map());
 
   const connect = useCallback(() => {
+    if (isConnecting.current) return;
+    isConnecting.current = true;
+
     const client = new Client({
       webSocketFactory: () => new SockJS("http://localhost:8090/ws"),
       reconnectDelay: 5000,
@@ -21,14 +26,64 @@ const useSocket = (roomId) => {
     });
 
     client.onConnect = () => {
-      client.subscribe(`/topic/messages/${roomId}`, (message) => {
-        const newMessage = JSON.parse(message.body);
-        setMessages((prev) => [...prev, newMessage]);
-      });
+      console.log("WebSocket connected");
+      setConnected(true);
+      setStompClient(client);
+      isConnecting.current = false;
 
-      client.subscribe(`/topic/game/${roomId}`, (message) => {
-        const data = JSON.parse(message.body);
-      });
+      // 게임 메시지 구독
+      if (!subscriptionsRef.current.has("game")) {
+        const gameSubscription = client.subscribe(
+          `/topic/game/${roomId}`,
+          (message) => {
+            console.log("Game message received:", message.body);
+            const response = JSON.parse(message.body);
+            // 게임 시작 메시지 특별 처리
+            if (response.gameData?.isGameStart) {
+              console.log("Game start message received");
+            }
+          }
+        );
+        subscriptionsRef.current.set("game", gameSubscription);
+      }
+
+      // 채팅 메시지 구독
+      if (!subscriptionsRef.current.has("chat")) {
+        const chatSubscription = client.subscribe(
+          `/topic/messages/${roomId}`,
+          (message) => {
+            console.log("Chat message received:", message.body);
+            const newMessage = JSON.parse(message.body);
+            setMessages((prev) => [
+              ...prev,
+              {
+                content: newMessage.content,
+                sender: newMessage.sender,
+                timestamp: newMessage.timestamp,
+              },
+            ]);
+          }
+        );
+        subscriptionsRef.current.set("chat", chatSubscription);
+      }
+    };
+
+    client.onDisconnect = () => {
+      console.log("WebSocket disconnected");
+      setConnected(false);
+      setStompClient(null);
+      isConnecting.current = false;
+    };
+
+    client.onWebSocketClose = () => {
+      console.log("WebSocket closed");
+      // 자동 재연결 시도
+      if (!client.deactivated) {
+        setTimeout(() => {
+          console.log("Attempting to reconnect...");
+          connect();
+        }, 5000);
+      }
     };
 
     clientRef.current = client;
@@ -36,63 +91,120 @@ const useSocket = (roomId) => {
   }, [roomId]);
 
   const disconnect = useCallback(() => {
+    if (isGameStarted) {
+      console.log("게임 진행 중 - 연결 유지");
+      return;
+    }
+
+    subscriptionsRef.current.forEach((subscription) => {
+      try {
+        subscription.unsubscribe();
+      } catch (error) {
+        console.error("Error unsubscribing:", error);
+      }
+    });
+    subscriptionsRef.current.clear();
+
     if (clientRef.current) {
+      clientRef.current.deactivated = true;
       clientRef.current.deactivate();
     }
-  }, []);
-
-  const sendMessage = useCallback(
-    (messageData) => {
-      if (clientRef.current?.connected) {
-        clientRef.current.publish({
-          destination: `/app/chat/${roomId}`,
-          body: JSON.stringify({
-            message: messageData.message,
-            sender: messageData.sender,
-          }),
-        });
-      }
-    },
-    [roomId]
-  );
+  }, [isGameStarted]);
 
   const startGame = useCallback(() => {
-    if (clientRef.current?.connected) {
-      console.log("게임 시작 요청 전송");
+    return new Promise((resolve, reject) => {
+      if (!clientRef.current?.connected) {
+        reject(new Error("WebSocket not connected"));
+        return;
+      }
+
+      console.log("Sending game start request");
+
+      // 게임 시작 요청 전송
       clientRef.current.publish({
         destination: `/app/game/start-game/${roomId}`,
         body: JSON.stringify({}),
       });
 
-      // 게임 시작 응답을 받기 위한 구독
-      return new Promise((resolve) => {
-        const subscription = clientRef.current.subscribe(
-          `/topic/game/${roomId}`,
-          (message) => {
-            const response = JSON.parse(message.body);
-            console.log("게임 시작 응답:", response);
-            subscription.unsubscribe(); // 응답을 받은 후 구독 해제
-            resolve({ data: response });
-          }
-        );
-      });
-    } else {
-      throw new Error("WebSocket이 연결되어 있지 않습니다.");
-    }
+      // 게임 시작 응답은 기본 구독에서 처리됨
+      resolve();
+    });
   }, [roomId]);
+
+  const sendMessage = useCallback(
+    (messageData) => {
+      if (!clientRef.current?.connected) {
+        console.error("WebSocket not connected");
+        return;
+      }
+
+      try {
+        if (!messageData.type) {
+          clientRef.current.publish({
+            destination: `/app/game/chat/${roomId}`,
+            body: JSON.stringify({
+              message: messageData.message,
+              sender: messageData.sender,
+            }),
+          });
+          return;
+        }
+
+        let destination;
+        let body = messageData.data;
+
+        switch (messageData.type) {
+          case "GUESS_CARD":
+            destination = `/app/game/single-card/${roomId}`;
+            break;
+          case "GIVE_CARD":
+          case "PASS_CARD":
+            destination = `/app/game/give-card/${roomId}`;
+            break;
+          case "MULTI_CARD":
+            destination = `/app/game/multi-card/${roomId}`;
+            break;
+          case "HAND_CHECK":
+            destination = `/app/game/hand-check/${roomId}`;
+            break;
+          case "GAME_END":
+            destination = `/app/game/game-end/${roomId}`;
+            break;
+          case "UPDATE_ROOM":
+            destination = `/app/game/update-room/${roomId}`;
+            break;
+          default:
+            destination = `/app/game/${messageData.type.toLowerCase()}/${roomId}`;
+        }
+
+        clientRef.current.publish({
+          destination,
+          body: JSON.stringify(body),
+        });
+      } catch (error) {
+        console.error("Error sending message:", error);
+        throw error;
+      }
+    },
+    [roomId]
+  );
 
   useEffect(() => {
     if (roomId) {
       connect();
-      return () => disconnect();
     }
+
+    return () => {
+      disconnect();
+    };
   }, [roomId, connect, disconnect]);
 
   return {
-    connected: !!clientRef.current?.connected,
+    connected,
     sendMessage,
     messages,
     startGame,
+    stompClient,
   };
 };
 

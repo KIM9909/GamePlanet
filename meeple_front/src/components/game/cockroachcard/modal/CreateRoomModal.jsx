@@ -5,6 +5,7 @@ const CreateRoomModal = ({ isOpen, onClose, onCreateRoom }) => {
   const [roomTitle, setRoomTitle] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
   const [password, setPassword] = useState("");
+  const [maxPeople, setMaxPeople] = useState(4);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -14,6 +15,7 @@ const CreateRoomModal = ({ isOpen, onClose, onCreateRoom }) => {
       creator: "testUser", // TODO: 실제 로그인된 사용자 정보로 교체 필요
       private: isPrivate,
       password: isPrivate ? password : "",
+      maxPeople: maxPeople,
     };
     await onCreateRoom(roomData);
     onClose();
@@ -55,6 +57,20 @@ const CreateRoomModal = ({ isOpen, onClose, onCreateRoom }) => {
               required
             />
           )}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              최대 인원
+            </label>
+            <select
+              value={maxPeople}
+              onChange={(e) => setMaxPeople(Number(e.target.value))}
+              className="w-full p-2 border rounded"
+            >
+              <option value={2}>2명</option>
+              <option value={3}>3명</option>
+              <option value={4}>4명</option>
+            </select>
+          </div>
           <div className="flex justify-end gap-2">
             <button
               type="button"

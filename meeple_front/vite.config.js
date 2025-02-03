@@ -8,14 +8,14 @@ export default defineConfig({
     global: "globalThis",
   },
   server: {
-    port: 5173,
+    port: 3000,
     proxy: {
       "/ws": {
         target: "http://localhost:8090",
         ws: true,
       },
-      "/api": {                       // 추가
-        target: "http://localhost:8090" // API 프록시
+      "/api": {
+        target: "http://localhost:8090",  
       }
     },
   },

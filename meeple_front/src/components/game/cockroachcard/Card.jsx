@@ -49,7 +49,8 @@ const Card = ({
     const cardImageType = type === "Joker" ? "JockerCard" : "BlackCard";
     return (
       <div
-        onClick={() => onClick?.({ type })}
+        data-card-id={type}  // data-card-id 추가
+        onClick={(e) => onClick?.({ type }, e)}
         className={`flex-shrink-0 w-16 h-24 rounded-lg relative group cursor-pointer overflow-hidden
           ${selectedCard?.type === type ? "ring-2 ring-blue-500" : ""} 
           ${isActive ? "ring-2 ring-green-500" : ""}`}
@@ -70,16 +71,15 @@ const Card = ({
   const displayName = isRoyal ? `King${type}` : type;
 
   return (
-    <div
-      data-card-id={type}
-      onClick={() => onClick?.({ type, isRoyal })}
-      className={`
-        flex-shrink-0 w-16 h-24 rounded-lg relative group cursor-pointer overflow-hidden
-        transition-all duration-300 ease-in-out
-        ${selectedCard?.type === type ? "ring-2 ring-blue-500" : ""}
-        ${isActive ? "shadow-lg shadow-blue-500/50" : ""}
-      `}
-    >
+      <div
+        data-card-id={type}
+        onClick={(e) => onClick?.({ type, isRoyal }, e)}
+        className={`
+          flex-shrink-0 w-16 h-24 rounded-lg relative group cursor-pointer overflow-hidden
+          ${selectedCard?.type === type ? "ring-2 ring-blue-500" : ""}
+          ${isActive ? "shadow-lg shadow-blue-500/50" : ""}
+        `}
+      >
       <img
         src={`/src/assets/image/cockroachpoker/${cardImageType}.svg`}
         alt={displayName}
