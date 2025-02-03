@@ -1,18 +1,21 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux"; // Redux 추가
 
 const CreateRoomModal = ({ isOpen, onClose, onCreateRoom }) => {
   const [roomTitle, setRoomTitle] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
   const [password, setPassword] = useState("");
   const [maxPeople, setMaxPeople] = useState(4);
+  
+  // 현재 유저 정보 가져오기
+  const currentUser = useSelector((state) => state.user.userId);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const roomData = {
-      gameId: 1, // 바퀴벌레 포커 게임 ID
+      gameId: 1,
       roomTitle,
-      creator: "testUser", // TODO: 실제 로그인된 사용자 정보로 교체 필요
+      creator: currentUser, // 하드코딩된 'testUser' 대신 실제 유저 ID 사용
       private: isPrivate,
       password: isPrivate ? password : "",
       maxPeople: maxPeople,
@@ -20,7 +23,6 @@ const CreateRoomModal = ({ isOpen, onClose, onCreateRoom }) => {
     await onCreateRoom(roomData);
     onClose();
   };
-
   if (!isOpen) return null;
 
   return (

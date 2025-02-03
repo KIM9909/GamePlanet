@@ -1,14 +1,22 @@
-// ChatView.jsx
 import React, { useState, useEffect, useRef } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchProfile } from "../../sources/store/slices/ProfileSlice";
 
 const ChatView = ({ connected, sendMessage, messages }) => {
   const [chatInput, setChatInput] = useState("");
   const messagesEndRef = useRef(null);
+  const dispatch = useDispatch();
 
-  // 임시 유저 정보 (실제 구현 시에는 Redux store에서 가져올 예정)
-  const currentUser = {
-    userNickname: "TestUser", // 테스트용 임시 닉네임
-  };
+  // Redux에서 userId와 프로필 데이터 가져오기
+  const userId = useSelector((state) => state.user.userId);
+  const profileData = useSelector((state) => state.profile.profileData);
+
+  // 컴포넌트 마운트 시 프로필 정보 가져오기
+  useEffect(() => {
+    if (userId) {
+      dispatch(fetchProfile(userId));
+    }
+  }, [userId, dispatch]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -22,10 +30,9 @@ const ChatView = ({ connected, sendMessage, messages }) => {
     e.preventDefault();
     if (!chatInput.trim() || !connected) return;
 
-    // 채팅 메시지 전송
     sendMessage({
       message: chatInput,
-      sender: currentUser.userNickname,
+      sender: profileData?.userNickname || userId, // 닉네임이 없으면 userId를 대체값으로 사용
     });
 
     setChatInput("");
@@ -39,14 +46,14 @@ const ChatView = ({ connected, sendMessage, messages }) => {
             <div
               key={index}
               className={`flex ${
-                msg.sender === currentUser.userNickname
+                msg.sender === profileData?.userNickname
                   ? "justify-end"
                   : "justify-start"
               }`}
             >
               <div
                 className={`rounded-lg p-2 max-w-[75%] ${
-                  msg.sender === currentUser.userNickname
+                  msg.sender === profileData?.userNickname
                     ? "bg-gray-600 text-white"
                     : "bg-gray-700 text-white"
                 }`}
@@ -69,7 +76,7 @@ const ChatView = ({ connected, sendMessage, messages }) => {
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
             placeholder="채팅을 입력하세요..."
-            className="w-full bg-gray-700 rounded px-3 py-2 text-sm focus:outline-none"
+            className="w-full bg-gray-700 rounded px-3 py-2 text-sm focus:outline-none text-white"
             disabled={!connected}
           />
           <button

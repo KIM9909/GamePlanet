@@ -17,67 +17,55 @@ import { toast } from "react-hot-toast";
 const CockroachPokerPage = () => {
   const { roomId } = useParams();
   const dispatch = useDispatch();
-  const { sendMessage, startGame, stompClient, connected } = useSocket(roomId);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const subscriptionRef = useRef(null);
-
-  // Redux state를 먼저 가져오기
-  const { roomData, isGameStarted } = useSelector((state) => state.cockroach);
+  
+  const { isGameStarted } = useSelector((state) => state.cockroach);
+  const { sendMessage, startGame, stompClient, connected } = useSocket(roomId, isGameStarted);
   const currentUser = useSelector((state) => state.user.nickname);
+  
 
   // WebSocket 메시지 핸들러
-  const handleWebSocketMessage = useCallback(
-    (message) => {
-      try {
-        const response = JSON.parse(message.body);
-        console.log("게임 메시지 수신:", response);
-        console.log("현재 게임 상태:", isGameStarted);
+  const handleWebSocketMessage = useCallback((message) => {
+    try {
+      const response = JSON.parse(message.body);
+      console.log("게임 메시지 수신:", response);
 
-        if (response.players && response.gameData) {
-          console.log("게임 데이터 받음, Redux 업데이트 전:", response);
-          dispatch(setGameData(response));
+      if (response.players && response.gameData) {
+        dispatch(setGameData(response));
 
-          if (response.gameData.isGameStart) {
-            setIsStarting(false);
-            dispatch(setGameStarted(true));
-            toast.success("게임이 시작되었습니다!");
-          }
+        if (response.gameData.isGameStart) {
+          setIsStarting(false);
+          dispatch(setGameStarted(true));
+          toast.success("게임이 시작되었습니다!");
         }
-      } catch (error) {
-        console.error("메시지 처리 중 오류 발생:", error);
       }
-    },
-    [dispatch, isGameStarted]
-  );
-
-  // WebSocket 구독 설정
-  useEffect(() => {
-    if (!stompClient || !roomId || !connected) return;
-
-    console.log("WebSocket 구독 설정 시도");
-
-    if (subscriptionRef.current) {
-      console.log("이미 구독 중입니다.");
-      return;
+    } catch (error) {
+      console.error("메시지 처리 중 오류 발생:", error);
     }
+  }, [dispatch]);
 
-    console.log("새로운 WebSocket 구독 생성");
+  useEffect(() => {
+    if (!stompClient || !connected) return;
+
+    // 이미 구독 중이면 새로 구독하지 않음
+    if (subscriptionRef.current) return;
+
+    // 게임 시작 상태에 따라 구독 관리
     subscriptionRef.current = stompClient.subscribe(
       `/topic/game/${roomId}`,
       handleWebSocketMessage
     );
 
     return () => {
-      console.log("Cleanup 실행 - gameStarted:", isGameStarted);
-      // 게임이 시작된 상태면 절대 구독 해제하지 않음
+      // 게임이 시작된 상태에서는 구독 유지
       if (isGameStarted) {
-        console.log("게임이 시작된 상태 - 구독 유지");
+        console.log("게임 진행 중 - 구독 유지");
         return;
       }
 
       if (subscriptionRef.current) {
-        console.log("게임 시작 전 상태 - 구독 해제");
         subscriptionRef.current.unsubscribe();
         subscriptionRef.current = null;
       }
@@ -91,13 +79,10 @@ const CockroachPokerPage = () => {
       return;
     }
 
-    if (isStarting) {
-      return;
-    }
+    if (isStarting) return;
 
     try {
       setIsStarting(true);
-      console.log("게임 시작 요청...");
       await startGame();
     } catch (error) {
       console.error("게임 시작 실패:", error);
@@ -136,11 +121,13 @@ const CockroachPokerPage = () => {
       >
         <div className="flex-1 overflow-hidden">
           <GameBoard
-            onStartGame={handleStartGame}
-            currentUser={currentUser}
-            sendMessage={sendMessage}
-            onGameEnd={() => dispatch(resetGame())}
-          />
+          onStartGame={handleStartGame}
+          currentUser={currentUser}
+          sendMessage={sendMessage}
+          stompClient={stompClient}
+          roomId={roomId}
+          onGameEnd={() => dispatch(resetGame())}
+        />
         </div>
 
         {/* 화상 채팅 영역 */}
