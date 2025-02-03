@@ -1,7 +1,12 @@
-const InfoSideBar = () =>{
+const InfoSideBar = ({ onMenuSelect }) => {
   return (
-    <div>
-      InfoSideBar
+    <div className="sidebar">
+      <button onClick={() => onMenuSelect("gameinfo")}>gameinfo</button>
+      <button onClick={() => onMenuSelect("gamerule")}>gamerule</button>
+
+      <button onClick={() => onMenuSelect("gamecommunity")}>gamecommunity</button>
+      <button onClick={() => onMenuSelect("review")}>review</button>
+      <button onClick={() => onMenuSelect("playvideo")}>playvideo</button>
     </div>
   )
 };
