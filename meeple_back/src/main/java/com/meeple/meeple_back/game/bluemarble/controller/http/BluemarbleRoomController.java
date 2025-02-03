@@ -1,7 +1,6 @@
 package com.meeple.meeple_back.game.bluemarble.controller.http;
 
 import com.meeple.meeple_back.game.bluemarble.controller.port.BluemarbleRoomService;
-import com.meeple.meeple_back.game.bluemarble.controller.request.RoomJoinWithPassword;
 import com.meeple.meeple_back.game.bluemarble.controller.request.RoomUpdatePassword;
 import com.meeple.meeple_back.game.bluemarble.controller.response.RoomResponse;
 import com.meeple.meeple_back.game.bluemarble.domain.RoomUpdate;
@@ -13,8 +12,6 @@ import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.handler.annotation.DestinationVariable;
-import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,26 +30,6 @@ public class BluemarbleRoomController {
 
 	private final BluemarbleRoomService bluemarbleRoomService;
 	private final SimpMessageSendingOperations messagingTemplate;
-
-
-	@MessageMapping("/{roomId}/user/{userId}")
-	@Operation(summary = "게임방 참가", description = "게임방에 참가합니다.")
-	public void join(@DestinationVariable("roomId") int roomId,
-			@DestinationVariable("userId") long userId) {
-		RoomResponse roomResponse = RoomResponse.from(bluemarbleRoomService.join(roomId, userId));
-		messagingTemplate.convertAndSend("/topic/rooms/" + roomId,
-				roomResponse);
-	}
-
-	@MessageMapping("/{roomId}/private-room/{userId}")
-	@Operation(summary = "private게임방 참가", description = "게임방에 참가합니다.")
-	public void joinWithPassword(@DestinationVariable("roomId") int roomId,
-			@RequestBody RoomJoinWithPassword roomJoinWithPassword) {
-		RoomResponse roomResponse = RoomResponse.from(
-				bluemarbleRoomService.joinWithPassword(roomId, roomJoinWithPassword));
-		messagingTemplate.convertAndSend("/topic/rooms/" + roomId,
-				roomResponse);
-	}
 
 	@GetMapping
 	@Operation(summary = "게임방 목록 조회", description = "생성된 게임방 목록을 조회합니다.")
