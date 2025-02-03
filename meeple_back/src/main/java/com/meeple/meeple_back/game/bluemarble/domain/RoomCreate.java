@@ -20,17 +20,15 @@ public class RoomCreate {
 	@Min(value = 2, message = "최소 2명의 플레이어가 필요합니다.")
 	private int maxPlayers;
 
-	private int creatorId;
 
 	@JsonCreator
 	public RoomCreate(@JsonProperty("roomName") String roomName,
 			@JsonProperty("private") boolean isPrivate,
 			@JsonProperty("password") String password,
-			@JsonProperty("maxPlayers") int maxPlayers, @JsonProperty("creatorId") int creatorId) {
+			@JsonProperty("maxPlayers") int maxPlayers) {
 		this.roomName = roomName;
 		this.isPrivate = isPrivate;
 		this.password = password;
 		this.maxPlayers = maxPlayers;
-		this.creatorId = creatorId;
 	}
 }
