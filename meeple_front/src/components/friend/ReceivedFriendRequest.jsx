@@ -1,51 +1,78 @@
-import React from "react";
-import useFriendSocket from "../../hooks/useFriendSocket";
+import React, { useEffect, useState } from "react";
+
 import { useSelector, useDispatch } from "react-redux";
+import {
+  processFriendRequest,
+  requestFriendList,
+} from "../../sources/api/FriendApi";
 
-const ReceivedFriendRequest = () => {
+const ReceivedFriendRequest = ({ requestedList }) => {
   const userId = useSelector((state) => state.user.userId);
-  const dispatch = useDispatch();
-  const friendRequests = useSelector((state) => state.friend.friendRequests);
+  console.log(requestedList);
+  const [requestList, setRequestList] = useState();
 
-  const { processFriendRequest, connected } = useFriendSocket((data) => {
-    console.log("친구 요청 알림 수신", data);
-  });
+  useEffect(() => {
+    setRequestList(requestedList);
+  }, [requestedList]);
 
-  console.log(friendRequests);
+  const handleAccept = async (friendId) => {
+    if (requestList && userId) {
+      try {
+        const requirements = "ACCEPT";
+        await processFriendRequest(friendId, requirements);
+        const response = await requestFriendList(userId);
+        setRequestList(response.requestedList);
+      } catch (error) {
+        console.error("친구 요청 승인 중 오류 : ", error);
+        throw error;
+      }
+    }
+  };
 
-  if (!friendRequests.length || friendRequests.length === 0) {
-    return <div>받은 친구 요청이 없습니다.</div>;
-  }
+  const handleDeny = async (friendId) => {
+    if (requestList && userId) {
+      try {
+        const requirements = "DENY";
+        await processFriendRequest(friendId, requirements);
+        const response = await requestFriendList(userId);
+        setRequestList(response.requestedList);
+      } catch (error) {
+        console.error("친구 요청 거절 중 에러 : ", error);
+        throw error;
+      }
+    }
+  };
+
   return (
-    <div>
-      <ul>
-        {friendRequests.map((request) => (
-          <>
-            <li key={request.senderName}>
-              <span>{request.senderName}님이 친구요청을 보냈습니다.</span>
+    <div className="my-2">
+      {requestList && requestList.length > 0 ? (
+        <ul>
+          {requestList.map((list, index) => (
+            <li
+              key={index}
+              className="p-2 border-b flex flex-row justify-between"
+            >
+              <p>{list.user.userNickname}</p>
+              <div className="flex flex-row mx-2">
+                <button
+                  className="mx-2 w-12 rounded bg-cyan-400 text-white font-semibold shadow-lg hover:bg-cyan-500 hover:shadow-xl active:scale-95 transition-all duration-300 animate-pulse"
+                  onClick={() => handleAccept(list.friendId)}
+                >
+                  승인
+                </button>
+                <button
+                  className="mx-2 w-12 rounded bg-gray-400 text-white font-semibold shadow-lg hover:bg-gray-600 hover:shadow-xl active:scale-95 transition-all duration-300 animate-pulse"
+                  onClick={() => handleDeny(list.friendId)}
+                >
+                  거절
+                </button>
+              </div>
             </li>
-            <button
-              onClick={() =>
-                processFriendRequest(
-                  request.senderId,
-                  request.friendId,
-                  "ACCEPT"
-                )
-              }
-              disabled={!connected}
-            >
-              친구 요청 승인 O
-            </button>
-            <button
-              onClick={() =>
-                processFriendRequest(request.senderId, request.friendId, "DENY")
-              }
-            >
-              친구 요청 거절 X
-            </button>
-          </>
-        ))}
-      </ul>
+          ))}
+        </ul>
+      ) : (
+        <p>받은 친구 요청이 없습니다.</p>
+      )}
     </div>
   );
 };
