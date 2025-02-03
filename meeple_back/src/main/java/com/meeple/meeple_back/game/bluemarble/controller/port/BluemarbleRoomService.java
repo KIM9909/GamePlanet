@@ -23,7 +23,7 @@ public interface BluemarbleRoomService {
 
 	List<Room> search(String searchName);
 
-	void changePassword(int roomId, RoomUpdatePassword roomUpdatePassword);
+	Room changePassword(int roomId, RoomUpdatePassword roomUpdatePassword);
 
 	Room joinWithPassword(int roomId, RoomJoinWithPassword roomJoinWithPassword);
 }

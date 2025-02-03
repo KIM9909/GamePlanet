@@ -1,0 +1,69 @@
+package com.meeple.meeple_back.game.bluemarble.controller.socket;
+
+import com.meeple.meeple_back.game.bluemarble.controller.port.BluemarbleRoomService;
+import com.meeple.meeple_back.game.bluemarble.controller.request.RoomUpdatePassword;
+import com.meeple.meeple_back.game.bluemarble.controller.response.RoomResponse;
+import com.meeple.meeple_back.game.bluemarble.domain.Message;
+import com.meeple.meeple_back.game.bluemarble.domain.RoomUpdate;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.Builder;
+import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Tag(name = "소켓 게임방(블루마블)")
+@Controller
+@RequestMapping("/game/blue-marble/rooms")
+@Builder
+@RequiredArgsConstructor
+public class BluemarbleSocketRoomController {
+
+	private final BluemarbleRoomService bluemarbleRoomService;
+	private final SimpMessageSendingOperations messagingTemplate;
+
+	@MessageMapping("{roomId}/sendMessage")
+	@Operation(summary = "메시지 전송", description = "메시지를 전송합니다.")
+	public void sendMessage(@DestinationVariable("roomId") int roomId,
+			@Payload Message message) {
+		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, message);
+	}
+
+	@MessageMapping("/{roomId}/user/{userId}")
+	@Operation(summary = "게임방 참가", description = "게임방에 참가합니다.")
+	public void join(@DestinationVariable("roomId") int roomId,
+			@DestinationVariable("userId") long userId) {
+		RoomResponse roomResponse = RoomResponse.from(bluemarbleRoomService.join(roomId, userId));
+		messagingTemplate.convertAndSend("/topic/rooms/" + roomId,
+				roomResponse);
+	}
+
+	@MessageMapping("/{roomId}/update")
+	@Operation(summary = "소켓 게임방 업데이트", description = "게임방 정보를 업데이트합니다.")
+	public void updateRoom(@DestinationVariable("roomId") int roomId,
+			@Payload RoomUpdate roomUpdate) {
+		RoomResponse roomResponse = RoomResponse.from(
+				bluemarbleRoomService.update(roomId, roomUpdate));
+		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, roomResponse);
+	}
+
+	@MessageMapping("/{roomId}/changePassword")
+	@Operation(summary = "소켓 게임방 비밀번호 변경", description = "게임방의 비밀번호를 변경합니다.")
+	public void changePassword(@DestinationVariable("roomId") int roomId,
+			@Payload RoomUpdatePassword newPassword) {
+		messagingTemplate.convertAndSend("/topic/rooms/" + roomId,
+				RoomResponse.from(bluemarbleRoomService.changePassword(roomId, newPassword)));
+	}
+
+	@MessageMapping("/{roomId}/user/{userId}/delete")
+	@Operation(summary = "소켓 게임방 삭제", description = "게임방을 삭제합니다.")
+	public void deleteSocketCommunication(@DestinationVariable("roomId") int roomId,
+			@DestinationVariable("userId") Long userId) {
+		RoomResponse roomResponse = RoomResponse.from(bluemarbleRoomService.delete(roomId, userId));
+		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, roomResponse);
+	}
+}
