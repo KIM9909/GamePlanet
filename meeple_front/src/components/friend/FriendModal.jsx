@@ -18,7 +18,7 @@ const FriendModal = ({ userId }) => {
   const renderContent = () => {
     switch (activeTab) {
       case "friendList":
-        return <FriendList />;
+        return <FriendList userId={userId} />;
       case "receivedRequest":
         return <ReceivedFriendRequest />;
       case "sentRequest":
