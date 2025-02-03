@@ -4,6 +4,7 @@ import boardReducer from "./slices/BoardSlice";
 import gameReducer from "./slices/GameSlice";
 import tournamentReducer from "./slices/TournamentSlice";
 import profileReducer from "./slices/ProfileSlice";
+import cockroachReducer from "./slices/CockroachSlice";
 
 // Redux 스토어 생성 및 설정
 export const Store = configureStore({
@@ -14,6 +15,7 @@ export const Store = configureStore({
     game: gameReducer, // 게임 관련 상태 관리
     tournament: tournamentReducer, // 토너먼트 관련 상태 관리
     profile: profileReducer,
+    cockroach: cockroachReducer
   },
   // 기본적으로 Redux DevTools와 Redux Thunk가 포함됨
 });

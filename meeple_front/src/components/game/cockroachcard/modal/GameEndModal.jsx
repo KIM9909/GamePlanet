@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-const GameEndModal = ({ isOpen, onClose, loser, reason, roomId }) => {
+const GameEndModal = ({ isOpen, onClose, loser, reason, roomId, setIsGameStarted }) => {
   const navigate = useNavigate();
 
   if (!isOpen) return null;
@@ -11,7 +11,8 @@ const GameEndModal = ({ isOpen, onClose, loser, reason, roomId }) => {
   };
 
   const handleGoToGameList = () => {
-    window.location.href = `/game/cockroach/${roomId}`;
+    setIsGameStarted(false);
+    onClose();
   };
 
   return (

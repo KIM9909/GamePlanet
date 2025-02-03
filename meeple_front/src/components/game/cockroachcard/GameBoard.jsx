@@ -16,62 +16,14 @@ import GameEndModal from "./modal/GameEndModal";
 import MyArea from "./areas/MyArea";
 import DeckArea from "./areas/DeckArea";
 import OpponentArea from "./areas/OpponentArea";
-import { normalizeCardData } from "./utils/cardUtils";
+import {
+  ANIMAL_ORDER,
+  sortCards,
+  sortPenaltyGroups,
+  getKoreanName,
+  normalizeCardData
+} from "./utils/cardUtils";
 import handleKingCardPenalty from "./handleKingCardPenalty";
-
-const ANIMAL_ORDER = [
-  "Bat",
-  "Rat",
-  "Fly",
-  "Cockroach",
-  "Scorpion",
-  "Toad",
-  "Stinkbug",
-  "Joker",
-  "Black",
-];
-
-const sortCards = (cards) => {
-  return [...cards].sort((a, b) => {
-    const typeA = a.type.replace("King", "");
-    const typeB = b.type.replace("King", "");
-
-    if (typeA === typeB) {
-      return a.type.includes("King") ? 1 : -1;
-    }
-
-    return ANIMAL_ORDER.indexOf(typeA) - ANIMAL_ORDER.indexOf(typeB);
-  });
-};
-
-const sortPenaltyGroups = (groups) => {
-  return Object.values(groups).sort((a, b) => {
-    const typeA = a.type.replace("King", "");
-    const typeB = b.type.replace("King", "");
-    return ANIMAL_ORDER.indexOf(typeA) - ANIMAL_ORDER.indexOf(typeB);
-  });
-};
-
-const getKoreanName = (type) => {
-  const nameMap = {
-    Bat: "박쥐",
-    Rat: "쥐",
-    Fly: "파리",
-    Cockroach: "바퀴벌레",
-    Scorpion: "전갈",
-    Toad: "두꺼비",
-    Stinkbug: "노린재",
-    Joker: "조커",
-    Black: "블랙",
-  };
-
-  if (type.startsWith("King")) {
-    const baseName = type.replace("King", "");
-    return `${nameMap[baseName]}:킹`;
-  }
-
-  return nameMap[type] || type;
-};
 
 const PenaltyCardStack = ({ type, count = 3, isRoyal }) => {
   const baseType = type.startsWith("King") ? type.replace("King", "") : type;
@@ -143,6 +95,7 @@ const GameBoard = ({
       (player) => player !== cardSender && !passedPlayers.includes(player)
     );
   }, [gameData]);
+  
 
   useEffect(() => {
     if (gameData?.gameData?.gameState?.currentTurn) {
@@ -273,20 +226,50 @@ const GameBoard = ({
     setSelectedPlayer(null);
   };
 
-  const handleGameEnd = useCallback(
-    async (gameFinishResult) => {
-      console.log("게임 종료:", gameFinishResult);
+ // handleGameEnd 함수에서
+const handleGameEnd = useCallback(
+  async (gameFinishResult) => {
+    console.log("게임 종료:", gameFinishResult);
 
-      await sendMessage({
-        type: "GAME_END",
-        data: {
-          loser: gameFinishResult.loser,
-          reason: gameFinishResult.reason,
-        },
-      });
-    },
-    [sendMessage]
-  );
+    setGameEndInfo({
+      loser: gameFinishResult.loser,
+      reason: gameFinishResult.reason,
+    });
+    setShowGameEndModal(true);
+
+    // 게임 종료 메시지 전송
+    await sendMessage({
+      type: "GAME_END",
+      data: {
+        loser: gameFinishResult.loser,
+        reason: gameFinishResult.reason,
+      },
+    });
+
+    // 게임 종료 후에 상태 초기화
+    setTimeout(() => {
+      const updatedGameState = {
+        ...gameData.gameData.gameState,
+        currentCard: null,
+        cardSender: null,
+        cardReceiver: null,
+        claimedAnimal: null,
+        isKing: false,
+        passedPlayers: [],
+        passCount: 0,
+      };
+      
+      setGameData(prev => ({
+        ...prev,
+        gameData: {
+          ...prev.gameData,
+          gameState: updatedGameState
+        }
+      }));
+    }, 1000); // 1초 후에 초기화
+  },
+  [sendMessage, gameData]
+);
 
   const checkGameFinish = useCallback(
     (userName, tableCards) => {
@@ -998,6 +981,7 @@ const GameBoard = ({
         loser={gameEndInfo.loser}
         reason={gameEndInfo.reason}
         roomId={gameData?.roomId}
+        setIsGameStarted={setIsGameStarted}
       />
     </div>
   );

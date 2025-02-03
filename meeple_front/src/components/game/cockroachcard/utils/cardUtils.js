@@ -1,4 +1,4 @@
-const ANIMAL_ORDER = [
+export const ANIMAL_ORDER = [
   "Bat",
   "Rat",
   "Fly",
@@ -86,5 +86,3 @@ export const normalizeCardData = (card) => {
     isRoyal: card.royal || card.isRoyal // 백워드 호환성을 위해 유지
   };
 };
-
-export default ANIMAL_ORDER;

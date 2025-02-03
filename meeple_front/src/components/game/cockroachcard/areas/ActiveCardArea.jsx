@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Card from "../Card";
-import { getCardInfo } from '../utils/cardUtils';
+import { getCardInfo, normalizeCardData } from "../utils/cardUtils";
 
 const ActiveCardArea = ({
   currentCard,
@@ -14,6 +14,17 @@ const ActiveCardArea = ({
   selectedCard,
 }) => {
   const [cardVisible, setCardVisible] = useState(true);
+
+  // 디버깅을 위한 useEffect 추가
+  useEffect(() => {
+    console.log("ActiveCardArea props:", {
+      currentCard,
+      selectedCard,
+      cardSender,
+      cardReceiver,
+      isPassing,
+    });
+  }, [currentCard, selectedCard, cardSender, cardReceiver, isPassing]);
 
   const shouldShowFront = () => {
     if (cardSender === currentUser || isPassing) return true;
@@ -32,8 +43,20 @@ const ActiveCardArea = ({
     setShowGuessModal(true);
   };
 
+  // 카드 정보 처리 과정 디버깅
+  const activeCard = currentCard || selectedCard;
+  const cardType = activeCard?.type?.startsWith("King")
+    ? activeCard.type.substring(4)
+    : activeCard?.type;
 
-  const cardInfo = getCardInfo(currentCard || selectedCard, shouldShowFront());
+  const cardInfo = activeCard
+    ? {
+        type: cardType || "",
+        isBack: !(cardSender === currentUser || isPassing),
+        isRoyal:
+          activeCard?.royal || activeCard?.type?.startsWith("King") || false,
+      }
+    : null;
 
   return (
     <div className="absolute top-[60%] right-4 w-72 active-card-area">
@@ -42,14 +65,16 @@ const ActiveCardArea = ({
           PLAY ZONE
         </div>
 
-        <div 
+        <div
           className="relative flex justify-center h-24"
           data-active-card-slot
         >
-          <div className={`
+          <div
+            className={`
             transition-all duration-300 ease-in-out
-            ${cardVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}
-          `}>
+            ${cardVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"}
+          `}
+          >
             {cardInfo && cardVisible ? (
               <Card
                 type={cardInfo.type}
@@ -79,7 +104,9 @@ const ActiveCardArea = ({
             )}
             <button
               className={`px-4 py-2 ${
-                isPassing ? "bg-gray-500 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-500"
+                isPassing
+                  ? "bg-gray-500 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-500"
               } text-white rounded`}
               onClick={handleGuessClick}
               disabled={isPassing}
