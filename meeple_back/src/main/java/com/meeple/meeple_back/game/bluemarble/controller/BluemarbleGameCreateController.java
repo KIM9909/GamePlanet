@@ -23,7 +23,7 @@ public class BluemarbleGameCreateController {
 	private final BluemarbleGameService bluemarbleGameService;
 	private final SimpMessagingTemplate messagingTemplate;
 
-	@MessageMapping
+	@MessageMapping("/create")
 	@Operation(summary = "게임환경 생성", description = "게임환경을 생성합니다.")
 	public void create(@RequestBody GamePlayCreate gamePlayCreate) {
 		GamePlay gamePlay = bluemarbleGameService.create(gamePlayCreate);
