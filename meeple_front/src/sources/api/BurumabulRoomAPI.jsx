@@ -17,12 +17,13 @@ const getAuthHeaders = () => {
 };
 
 // 게임방 생성
-export const createBurumabulRoom = async (roomData) => {
+export const createBurumabulRoom = async (userId, roomData) => {
   try {
     console.log("Request payload:", roomData);
-    const response = await axios.post(`${BURUMABUL_API_BASE_URL}`, roomData, {
-      headers: getAuthHeaders(),
-    });
+    const response = await axios.post(
+      `${BURUMABUL_API_BASE_URL}/${userId}`,
+      roomData
+    );
     return response.data;
   } catch (error) {
     console.error("방 생성 실패: ", error);

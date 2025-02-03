@@ -3,8 +3,10 @@ import { FaRegEye } from "react-icons/fa";
 import { FaRegEyeSlash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { createBurumabulRoom } from "../../../sources/api/BurumabulRoomAPI";
+import { useSelector } from "react-redux";
 
 const BurumabulRoomCreateModal = ({ onClose }) => {
+  const userId = useSelector((state) => state.user.userId);
   const [showPassword, setShowPassword] = useState(false);
 
   const initialRoomData = {
@@ -12,7 +14,6 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
     private: false,
     password: "",
     maxPlayers: 2,
-    // private: false,
   };
   const [roomData, setRoomData] = useState(initialRoomData);
 
@@ -23,7 +24,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
 
     try {
       console.log(roomData);
-      const response = await createBurumabulRoom(roomData);
+      const response = await createBurumabulRoom(userId, roomData);
       const roomId = response.roomId;
       navigate(`/game/burumabul/waitingroom/${roomId}`, {
         state: { roomInfo: response },
