@@ -95,8 +95,8 @@ export const CatchMindAPI = {
       }
 
       const config = {
-        baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
-        // baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
+        // baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
+        baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -207,6 +207,72 @@ export const CatchMindAPI = {
         success: false,
         message: "서버 오류가 발생했습니다.",
       };
+    }
+  },
+
+  requestQuiz: async (roomId) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("로그인이 필요합니다.");
+      }
+
+      const config = {
+        baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      };
+
+      const response = await axios.post(
+        `${config.baseURL}/catch-mind/request-quiz/${roomId}`,
+        null,
+        config
+      );
+      return response.data;
+    } catch (error) {
+      console.log("퀴즈 요청 실패:", {
+        errorMessage: error.message,
+        serverResponse: error.response?.data,
+      });
+      throw error;
+    }
+  },
+
+  // 게임 시작 요청
+  startGame: async (roomId) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("로그인이 필요합니다");
+      }
+
+      const config = {
+        baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
+        // baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      };
+
+      const response = await axios.post(
+        `${config.baseURL}/catch-mind/start-game/${roomId}`,
+        null,
+        config
+      );
+      return response.data;
+    } catch (error) {
+      console.error("게임 시작 요청 실패:", {
+        errorMessage: error.message,
+        serverResponse: error.response?.data,
+      });
+      throw error;
     }
   },
 };
