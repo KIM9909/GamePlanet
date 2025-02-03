@@ -24,7 +24,6 @@ public class BluemarbleGameController {
 	private final SimpMessageSendingOperations messagingTemplate;
 	private final BluemarbleGameService bluemarbleGameService;
 
-	// TODO : 블루마불
 	@MessageMapping("/{roomId}/roll-dice")
 	@Operation(summary = "주사위 굴리기", description = "주사위를 굴립니다.")
 	public void rollDice(@DestinationVariable("roomId") int roomId,
