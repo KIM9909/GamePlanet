@@ -1,6 +1,18 @@
 version: '3.8'
 
 services:
+  openvidu-server:
+    image: openvidu/openvidu-server-kms:22.09.0
+    ports:
+      - "4443:4443"
+    environment:
+      - DOMAIN_OR_PUBLIC_IP=boardjjigae.duckdns.org
+      #      - OPENVIDU_SECRET=YOUR_SECRET
+      - CERT_TYPE=selfsigned
+    restart: unless-stopped
+    networks:
+      - meeple_network
+
   redis:
     image: redis:latest
     ports:
