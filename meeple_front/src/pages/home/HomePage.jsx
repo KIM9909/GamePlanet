@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import CreateRoomModal from "../../components/game/CreateRoomModal";
+import CreateRoomModal from "../../components/game/cockroachcard/modal/CreateRoomModal";
 import { createPortal } from "react-dom";
 import BurumabulRoomCreateModal from "../../components/game/burumabul/BurumabulRoomCreateModal";
 import FriendModal from "../../components/friend/FriendModal";
 import { useSelector, useDispatch } from "react-redux";
-import CreateRoomModal from "../../components/game/cockroachcard/modal/CreateRoomModal";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -18,11 +17,6 @@ const HomePage = () => {
 
   const userId = useSelector((state) => state.user.userId);
   console.log(userId);
-
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate("/");
-  };
 
   const handleCreateRoom = async (roomData) => {
     console.log("roomData:", roomData);
@@ -39,6 +33,7 @@ const HomePage = () => {
       );
 
       if (!response.ok) {
+        const responseText = await response.text();
         throw new Error(`서버 오류: ${response.status} - ${responseText}`);
       }
 

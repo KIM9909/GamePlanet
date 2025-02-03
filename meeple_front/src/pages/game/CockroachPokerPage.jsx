@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import useSocket from "../../hooks/useSocket";
+import useSocket from "../../hooks/useCockroachSocket";
 import GameBoard from "../../components/game/cockroachcard/GameBoard";
 import GameSidebar from "../../components/sidebar/GameSidebar";
 import VideoChat from "../../components/game/cockroachcard/VideoChat";

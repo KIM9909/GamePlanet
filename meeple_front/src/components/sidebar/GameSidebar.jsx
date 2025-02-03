@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import ChatView from "./ChatView";
 import RuleView from "./RuleView";
 import SettingView from "./SettingView";
-import useSocket from "../../hooks/useSocket";
+import useSocket from "../../hooks/useCockroachSocket";
 import Galmuri9 from "../../assets/fonts/Galmuri9.ttf";
 
 const GameSidebar = () => {
