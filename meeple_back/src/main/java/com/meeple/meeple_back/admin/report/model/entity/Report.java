@@ -13,9 +13,19 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "tbl_report")
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
 public class Report {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,8 +39,14 @@ public class Report {
     @Enumerated(EnumType.STRING)
     private ReportReason reportReason;
 
+    @Column(name = "report_title")
+    private String reportTitle;
+
     @Column(name = "report_content")
     private String reportContent;
+
+    @Column(name = "process_status")
+    private String processStatus;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
