@@ -5,7 +5,14 @@ import { createPortal } from "react-dom";
 import BurumabulRoomCreateModal from "../../components/game/burumabul/BurumabulRoomCreateModal";
 import FriendModal from "../../components/friend/FriendModal";
 import { useSelector, useDispatch } from "react-redux";
+
+import GameCard from "../../components/game/GameCard";
+import CockroachPokerRoyalMainImg from "../../assets/images/games/MainImage/Cockroach_Poker_Royal.webp"
+import BurumabulMainImg from "../../assets/images/games/MainImage/BuruMabul.png"
+import CatchMindMainImg from "../../assets/images/games/MainImage/CatchMind.jpg"
+
 import RoomList from "../../components/game/cockroachcard/RoomList";
+
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -17,7 +24,14 @@ const HomePage = () => {
     useState(false);
 
   const userId = useSelector((state) => state.user.userId);
+
+  // const handleLogout = () => {
+  //   dispatch(logout());
+  //   navigate("/");
+  // };
+
   console.log(userId);
+
 
   const handleCreateRoom = async (roomData) => {
     console.log("roomData:", roomData);
@@ -60,7 +74,7 @@ const HomePage = () => {
             <h1 className="text-2xl font-bold mb-6">게임 목록</h1>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* 바퀴벌레 포커 */}
-              <div className="bg-gray-50 p-6 rounded-lg shadow">
+              {/* <div className="bg-gray-50 p-6 rounded-lg shadow">
                 <h2 className="text-xl font-semibold mb-4">바퀴벌레 포커</h2>
                 <p className="text-gray-600 mb-4">
                   블러핑과 심리전이 핵심인 카드게임입니다.
@@ -71,11 +85,17 @@ const HomePage = () => {
                 >
                   방 만들기
                 </button>
-              </div>
+
+              </div> */}
+              
+              <GameCard imgUrl={CockroachPokerRoyalMainImg} title={"바퀴벌레포커"} description={"블러핑과 심리전이 핵심인 카드게임입니다."}/>
+
+
               <RoomList/>
 
+
               {/* 부루마불 */}
-              <div className="bg-gray-50 p-6 rounded-lg shadow">
+              {/* <div className="bg-gray-50 p-6 rounded-lg shadow">
                 <h2 className="text-xl font-semibold mb-4">부루마불</h2>
                 <p className="text-gray-600 mb-4">
                   친구들과 함께 떠나는 미플만의 우주여행!
@@ -86,10 +106,12 @@ const HomePage = () => {
                 >
                   방 만들기
                 </button>
-              </div>
+              </div> */}
+
+              <GameCard imgUrl={BurumabulMainImg} title={"부루마블"} description={"친구들과 함께 떠나는 미플만의 우주여행!"}/>
 
               {/* 캐치마인드 */}
-              <div className="bg-gray-50 p-6 rounded-lg shadow">
+              {/* <div className="bg-gray-50 p-6 rounded-lg shadow">
                 <h2 className="text-xl font-semibold mb-4">캐치마인드</h2>
                 <p className="text-gray-600 mb-4">
                   폭풍을 부르는 그림 그림 대소동 퀴즈 작전!
@@ -105,7 +127,10 @@ const HomePage = () => {
                     게임 보기
                   </button>
                 </div>
-              </div>
+              </div> */}
+
+              <GameCard imgUrl={CatchMindMainImg} title={"캐치마인드"} description={"폭풍을 부르는 그림 그림 대소동 퀴즈 작전!"}/>
+
             </div>
           </div>
         </div>
