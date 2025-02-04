@@ -9,11 +9,12 @@ import CockroachPokerLogo from "../../../assets/image/cockroachpoker/cockroachpo
 const GameStartScreen = ({
   playerCount,
   onStart,
-  roomTitle = "바퀴벌레 포커",
+  roomTitle,
+  maxPeople,
 }) => {
   console.log("GameStartScreen roomTitle:", roomTitle); // 전달받은 값 확인
   return (
-    <div className="relative w-full h-[800px] max-w-[1600px] mx-auto bg-gray-800/95 rounded-3xl flex items-center justify-center overflow-hidden">
+    <div className="relative w-full h-[800px] max-w-[1600px] mx-auto bg-gray-700/10 rounded-3xl flex items-center justify-center">
       {/* 메인 로고 배경 */}
       <div className="absolute inset-0 opacity-30">
         <img
@@ -95,9 +96,9 @@ const GameStartScreen = ({
               alt="Rat"
             />
           </div>
-          <p className="text-2xl text-yellow-400 font-semibold animate-pulse">
-            {playerCount}명이 입장하셨습니다
-          </p>
+          <div className="text-xl text-gray-300">
+            {playerCount}/{maxPeople} 명 참가 중
+          </div>
           <div className="space-y-2 text-gray-300">
             <p className="text-lg hover:text-blue-300 transition-colors duration-300">
               거짓말과 심리전으로 가득한
@@ -110,12 +111,15 @@ const GameStartScreen = ({
 
         <button
           onClick={onStart}
-          className="group px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-800 
-              text-white text-xl rounded-xl animate-shimmer bg-[length:200%_100%]
-              hover:shadow-[0_0_20px_rgba(37,99,235,0.5)]
-              transition-all duration-300 transform hover:scale-105"
+          disabled={playerCount < 2}
+          className={`px-8 py-3 text-xl font-medium rounded-lg transition-colors
+            ${
+              playerCount >= 2
+                ? "bg-blue-500 hover:bg-blue-600 text-white"
+                : "bg-gray-400 cursor-not-allowed text-gray-200"
+            }`}
         >
-          <span>게임 시작</span>
+          {playerCount < 2 ? "최소 2명이 필요합니다" : "게임 시작"}
         </button>
       </div>
     </div>

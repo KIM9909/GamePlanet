@@ -3,22 +3,26 @@ import { Lock, Plus, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { CatchMindAPI } from "../../../../sources/api/CatchMindAPI";
 import CatchMindCreateRoomModal from "./CatchMindCreateRoomModal";
+import CatchMindPasswordModal from "./CatchMindPasswordModal";
 
 const CatchMindListPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState(null);
   const [rooms, setRooms] = useState([]);
   const navigate = useNavigate();
 
   const fetchRooms = async () => {
     try {
-      const response = await CatchMindAPI.getRoomList();
-
-      // 방 상세 정보를 가져오는 로직 추가
-      const roomDetails = await Promise.all(
-        response.map((roomId) => CatchMindAPI.getRoomInfo(roomId))
-      );
-
-      setRooms(roomDetails || []);
+      const roomDetails = await CatchMindAPI.getRoomList();
+      // 각 방의 players 배열을 정제하여 저장
+      const cleanedRooms = roomDetails.map((room) => ({
+        ...room,
+        players: Array.isArray(room.players)
+          ? [...new Set(room.players.filter(Boolean))]
+          : [],
+      }));
+      setRooms(cleanedRooms);
     } catch (error) {
       console.error("방 목록 가져오기 실패:", error);
       setRooms([]);
@@ -27,9 +31,28 @@ const CatchMindListPage = () => {
 
   useEffect(() => {
     fetchRooms();
+    // 2초마다 방 목록 갱신
+    const intervalId = setInterval(fetchRooms, 2000);
+    return () => clearInterval(intervalId);
   }, []);
 
-  const handleEnterRoom = (roomId) => {
+  const handleEnterRoom = async (room) => {
+    try {
+      const userNickname = localStorage.getItem("userNickname");
+
+      if (room.isPrivate) {
+        setSelectedRoom(room);
+        setIsPasswordModalOpen(true);
+      } else {
+        await CatchMindAPI.joinRoom(room.roomId, userNickname);
+        navigate(`/catch-mind/${room.roomId}`);
+      }
+    } catch (error) {
+      console.error("방 입장 실패:", error);
+    }
+  };
+
+  const handleSuccessfulEntry = (roomId) => {
     navigate(`/catch-mind/${roomId}`);
   };
 
@@ -48,57 +71,53 @@ const CatchMindListPage = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {rooms &&
-          rooms.map((room) => (
-            <div
-              key={room.roomId}
-              className="bg-white rounded-lg shadow-md overflow-hidden"
-            >
-              <div className="bg-gray-200 h-32 flex items-center justify-center">
-                <span className="text-gray-500">Game Image</span>
+        {rooms.map((room) => (
+          <div
+            key={room.roomId}
+            className="bg-white rounded-lg shadow-md overflow-hidden"
+          >
+            <div className="bg-gray-200 h-32 flex items-center justify-center">
+              <span className="text-gray-500">Game Image</span>
+            </div>
+
+            <div className="p-4">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="font-semibold text-lg">{room.roomTitle}</h3>
+                {room.isPrivate && <Lock size={18} className="text-gray-600" />}
               </div>
 
-              <div className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold text-lg">{room.roomName}</h3>
-                  {room.isPrivate && (
-                    <Lock size={18} className="text-gray-600" />
-                  )}
-                </div>
-
-                <div className="flex justify-between items-center mb-3">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Users size={16} />
-                    <span>
-                      {/* players 배열이 존재하는지 확인 */}
-                      {(room.players || []).length}/{room.maxPeople}
-                    </span>
-                  </div>
-                  <span
-                    className={`text-sm px-2 py-1 rounded ${
-                      room.isGameStart
-                        ? "bg-red-100 text-red-600"
-                        : "bg-green-100 text-green-600"
-                    }`}
-                  >
-                    {room.isGameStart ? "게임 중" : "대기 중"}
+              <div className="flex justify-between items-center mb-3">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Users size={16} />
+                  <span>
+                    {room.players.length}/{room.maxPeople}
                   </span>
                 </div>
+                <span
+                  className={`text-sm px-2 py-1 rounded ${
+                    room.isGameStart
+                      ? "bg-red-100 text-red-600"
+                      : "bg-green-100 text-green-600"
+                  }`}
+                >
+                  {room.isGameStart ? "게임 중" : "대기 중"}
+                </span>
+              </div>
 
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">
-                    방장: {room.creator}
-                  </span>
-                  <button
-                    onClick={() => handleEnterRoom(room.roomId)}
-                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                  >
-                    입장하기
-                  </button>
-                </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">
+                  방장: {room.creator}
+                </span>
+                <button
+                  onClick={() => handleEnterRoom(room)}
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                >
+                  입장하기
+                </button>
               </div>
             </div>
-          ))}
+          </div>
+        ))}
       </div>
 
       <CatchMindCreateRoomModal
@@ -108,6 +127,19 @@ const CatchMindListPage = () => {
           fetchRooms();
         }}
       />
+
+      {selectedRoom && (
+        <CatchMindPasswordModal
+          isOpen={isPasswordModalOpen}
+          onClose={() => {
+            setIsPasswordModalOpen(false);
+            setSelectedRoom(null);
+          }}
+          roomId={selectedRoom.roomId}
+          roomTitle={selectedRoom.roomTitle}
+          onSuccessfulEntry={handleSuccessfulEntry}
+        />
+      )}
     </div>
   );
 };

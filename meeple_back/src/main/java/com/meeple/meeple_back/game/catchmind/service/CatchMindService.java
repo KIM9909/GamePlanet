@@ -11,13 +11,13 @@ public interface CatchMindService {
 
     ResponseJoinRoom joinRoom(RequestJoinRoom request);
 
-    List<String> getList();
+    List<Map<String, Object>> getList();
 
     void deleteRoom(String roomId);
 
     ResponseStartGame startGame(String roomId);
 
-    void sendMessage(String roomId, RequestSendMessage request);
+    ResponseSendMessage sendMessage(String roomId, RequestSendMessage request);
 
     ResponseQuiz requestQuiz(String roomId);
 
@@ -31,5 +31,5 @@ public interface CatchMindService {
 
     ResponseUpdateRoom updateRoom(String roomId, RequestUpdateRoom request);
 
-    Map<String, Object> getRoomDetail(String roomId);
+    ResponseExitCatchmindRoom exitRoom(String roomId, String userName);
 }

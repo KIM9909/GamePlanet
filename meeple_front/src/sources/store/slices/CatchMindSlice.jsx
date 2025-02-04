@@ -1,11 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { UserAPI } from "../../api/UserAPI";
 
-/**
- * 유저 프로필 정보를 가져오는 비동기 액션 생성자
- * @param userId - 유저 ID
- * @returns {Promise} - 프로필 정보를 담은 Promise 객체
- */
 export const fetchUserInfo = createAsyncThunk(
   "catchmind/fetchUserInfo",
   async (userId, { rejectWithValue }) => {
@@ -19,57 +14,30 @@ export const fetchUserInfo = createAsyncThunk(
 );
 
 const initialState = {
-  roomId: "1",
-  currentWord: "사과",
+  roomId: null,
+  currentWord: null, // 초기값을 null로 변경
   currentRound: 1,
   totalRounds: 5,
   timeLimit: 90,
-  players: [
-    // 첫 번째 플레이어는 현재 유저
-    { id: 1, nickname: "", score: 0, isTurn: true, isCurrentUser: true },
-    // 나머지는 다른 플레이어들
-    {
-      id: 2,
-      nickname: "player2",
-      score: 0,
-      isTurn: false,
-      isCurrentUser: false,
-    },
-    {
-      id: 3,
-      nickname: "player3",
-      score: 0,
-      isTurn: false,
-      isCurrentUser: false,
-    },
-    {
-      id: 4,
-      nickname: "player4",
-      score: 0,
-      isTurn: false,
-      isCurrentUser: false,
-    },
-  ],
-  isGameStarted: true,
+  players: [],
+  isGameStarted: false,
+  currentTurnIndex: 0,
+  quizCategory: null, // 퀴즈 카테고리 추가
+  remainQuizCount: 0, // 남은 퀴즈 수 추가
   userStatus: {
+    isLoading: false,
+    error: null,
+  },
+  gameStatus: {
     isLoading: false,
     error: null,
   },
 };
 
-/**
- * 캐치마인드 Redux Slice
- * 게임 상태 관리를 위한 리듀서와 액션 생성자 포함
- */
 const CatchMindSlice = createSlice({
   name: "catchmind",
   initialState,
   reducers: {
-    /**
-     * 플레이어의 닉네임을 업데이트하는 리듀서
-     * @param {Object} state - 현재 상태
-     * @param {Object} action - playerId와 nickname을 포함한 액션 객체
-     */
     updatePlayerNickname: (state, action) => {
       const { playerId, nickname } = action.payload;
       const player = state.players.find((p) => p.id === playerId);
@@ -78,41 +46,126 @@ const CatchMindSlice = createSlice({
       }
     },
 
-    /**
-     * 현재 제시어를 설정하는 리듀서
-     */
+    updatePlayers: (state, action) => {
+      const { players } = action.payload;
+      if (Array.isArray(players)) {
+        state.players = players.map((player) => ({
+          id: player.id || Math.random().toString(36).substr(2, 9),
+          nickname: player.nickname,
+          score: player.score || 0,
+          isTurn: player.isTurn || false,
+          isCurrentUser: player.isCurrentUser || false,
+        }));
+      }
+    },
+
+    updatePlayerScore: (state, action) => {
+      const { nickname, score } = action.payload;
+      const player = state.players.find((p) => p.nickname === nickname);
+      if (player) {
+        player.score = (player.score || 0) + score;
+      }
+    },
+
+    nextTurn: (state) => {
+      const currentIndex = state.players.findIndex((p) => p.isTurn);
+      const nextIndex = (currentIndex + 1) % state.players.length;
+
+      state.players.forEach((player, index) => {
+        player.isTurn = index === nextIndex;
+      });
+
+      state.currentTurnIndex = nextIndex;
+    },
+
     setCurrentWord: (state, action) => {
       state.currentWord = action.payload;
     },
 
-    /**
-     * 게임 전체 상태를 업데이트하는 리듀서
-     */
+    // 게임 시작 상태 업데이트 리듀서 추가
+    setGameStarted: (state, action) => {
+      state.isGameStarted = action.payload;
+    },
+
     updateGameState: (state, action) => {
-      return { ...state, ...action.payload };
+      const {
+        currentWord,
+        currentRound,
+        currentTurn,
+        quizCategory,
+        remainQuizCount,
+      } = action.payload;
+
+      // 상태 업데이트
+      if (currentWord !== undefined) state.currentWord = currentWord;
+      if (currentRound !== undefined) state.currentRound = currentRound;
+      if (quizCategory !== undefined) state.quizCategory = quizCategory;
+      if (remainQuizCount !== undefined)
+        state.remainQuizCount = remainQuizCount;
+
+      // 턴 업데이트
+      if (currentTurn) {
+        state.players.forEach((player) => {
+          player.isTurn = player.nickname === currentTurn;
+        });
+      }
+    },
+
+    setRoomId: (state, action) => {
+      state.roomId = action.payload;
+    },
+
+    // 라운드 초기화
+    resetRound: (state) => {
+      state.currentRound = 1;
+    },
+
+    // 라운드 증가
+    incrementRound: (state) => {
+      console.group("Redux 라운드 증가");
+      console.log("현재 라운드:", state.currentRound);
+      console.log("현재 게임 상태:", state);
+
+      state.currentRound += 1;
+
+      console.log("증가된 라운드:", state.currentRound);
+      console.groupEnd();
+    },
+
+    // 게임 상태 초기화 리듀서 추가
+    resetGameState: (state) => {
+      state.currentWord = null;
+      state.currentRound = 1;
+      state.isGameStarted = false;
+      state.quizCategory = null;
+      state.remainQuizCount = 0;
+      state.players = state.players.map((player) => ({
+        ...player,
+        score: 0,
+        isTurn: false,
+      }));
     },
   },
-
-  /**
-   * 비동기 액션에 대한 리듀서들
-   */
   extraReducers: (builder) => {
     builder
-      // fetchUserInfo 액션이 시작될 때
       .addCase(fetchUserInfo.pending, (state) => {
         state.userStatus.isLoading = true;
         state.userStatus.error = null;
       })
-      // fetchUserInfo 액션이 성공했을 때
       .addCase(fetchUserInfo.fulfilled, (state, action) => {
         state.userStatus.isLoading = false;
-        // 현재 유저(첫 번째 플레이어)의 닉네임 설정
-        const currentPlayer = state.players[0];
-        if (currentPlayer && action.payload) {
-          currentPlayer.nickname = action.payload.nickname;
+        if (action.payload && state.players.length === 0) {
+          state.players = [
+            {
+              id: 1,
+              nickname: action.payload.nickname,
+              score: 0,
+              isTurn: true,
+              isCurrentUser: true,
+            },
+          ];
         }
       })
-      // fetchUserInfo 액션이 실패했을 때
       .addCase(fetchUserInfo.rejected, (state, action) => {
         state.userStatus.isLoading = false;
         state.userStatus.error = action.payload;
@@ -120,13 +173,18 @@ const CatchMindSlice = createSlice({
   },
 });
 
-// 액션 생성자들을 export
 export const {
-  updateScore,
+  resetRound,
+  incrementRound,
+  updatePlayers,
+  updatePlayerScore,
+  nextTurn,
   setCurrentWord,
   updateGameState,
+  setRoomId,
   updatePlayerNickname,
+  setGameStarted,
+  resetGameState,
 } = CatchMindSlice.actions;
 
-// 리듀서를 export
 export default CatchMindSlice.reducer;

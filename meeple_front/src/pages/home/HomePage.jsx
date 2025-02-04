@@ -1,14 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import CreateRoomModal from "../../components/game/CreateRoomModal";
+import CreateRoomModal from "../../components/game/cockroachcard/modal/CreateRoomModal";
 import { createPortal } from "react-dom";
 import BurumabulRoomCreateModal from "../../components/game/burumabul/BurumabulRoomCreateModal";
 import FriendModal from "../../components/friend/FriendModal";
 import { useSelector, useDispatch } from "react-redux";
+
 import GameCard from "../../components/game/GameCard";
 import CockroachPokerRoyalMainImg from "../../assets/images/games/MainImage/Cockroach_Poker_Royal.webp"
 import BurumabulMainImg from "../../assets/images/games/MainImage/BuruMabul.png"
 import CatchMindMainImg from "../../assets/images/games/MainImage/CatchMind.jpg"
+
+import RoomList from "../../components/game/cockroachcard/RoomList";
+
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -26,11 +30,14 @@ const HomePage = () => {
   //   navigate("/");
   // };
 
+  console.log(userId);
+
+
   const handleCreateRoom = async (roomData) => {
     console.log("roomData:", roomData);
     try {
       const response = await fetch(
-        `http://localhost:8090/api/game/create-room`,
+        `http://localhost:8090/game/create-room`,
         {
           method: "POST",
           headers: {
@@ -41,15 +48,16 @@ const HomePage = () => {
       );
 
       if (!response.ok) {
-        throw new Error(`Failed to create room: ${response.status}`);
+        const responseText = await response.text();
+        throw new Error(`서버 오류: ${response.status} - ${responseText}`);
       }
 
       const data = await response.json();
       console.log("Response data:", data);
       navigate(`/game/cockroach/${data.roomId}`);
     } catch (error) {
-      console.error("Error creating room:", error);
-      alert("방 생성에 실패했습니다.");
+      console.error("Error details:", error);
+      throw new Error(`방 생성 실패: ${error.message}`);
     }
   };
 
@@ -77,9 +85,14 @@ const HomePage = () => {
                 >
                   방 만들기
                 </button>
+
               </div> */}
               
               <GameCard imgUrl={CockroachPokerRoyalMainImg} title={"바퀴벌레포커"} description={"블러핑과 심리전이 핵심인 카드게임입니다."}/>
+
+
+              <RoomList/>
+
 
               {/* 부루마불 */}
               {/* <div className="bg-gray-50 p-6 rounded-lg shadow">
@@ -137,8 +150,6 @@ const HomePage = () => {
           />,
           document.body
         )}
-
-      <FriendModal userId={userId} />
     </div>
   );
 };

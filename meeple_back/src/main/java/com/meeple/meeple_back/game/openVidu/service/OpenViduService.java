@@ -13,7 +13,7 @@ public class OpenViduService {
 
     private OpenVidu openVidu;
     // OpenVidu 서버 접속 정보
-    private static final String OPENVIDU_URL = "https://localhost:4443";
+    private static final String OPENVIDU_URL = "https://boardjjigae.duckdns.org:4443";
     private static final String SECRET = "MY_SECRET";
 
     /**

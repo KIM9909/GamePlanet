@@ -1,7 +1,8 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:8090",
+  baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
+  // baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -55,9 +56,9 @@ API.interceptors.response.use(
 );
 
 export const VideoAPI = {
-  createSession: async () => {
+  createSession: async (options = {}) => {
     try {
-      const response = await API.post("/api/video/create-session");
+      const response = await API.post("api/video/create-session", options);
       if (!response) {
         throw new Error("No response received from createSession");
       }
@@ -73,7 +74,7 @@ export const VideoAPI = {
       if (!sessionId) {
         throw new Error("SessionId is required");
       }
-      const response = await API.post(`/api/video/generate-token/${sessionId}`);
+      const response = await API.post(`api/video/generate-token/${sessionId}`);
       if (!response) {
         throw new Error("No response received from generateToken");
       }
@@ -93,9 +94,9 @@ export const CatchMindAPI = {
         throw new Error("로그인이 필요합니다");
       }
 
-      // 기본 config에 추가된 헤더 설정
       const config = {
-        baseURL: "http://localhost:8090",
+        // baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
+        baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -104,20 +105,22 @@ export const CatchMindAPI = {
         withCredentials: true,
       };
 
-      // axios 인스턴스 대신 직접 axios 사용
-      const response = await axios.post(
-        `${config.baseURL}/api/catch-mind/create-room`,
-        roomData,
-        config
-      );
-
-      return response.data;
+      // axios 요청 및 응답 로깅
+      try {
+        const response = await axios.post(
+          `${config.baseURL}/catch-mind/create-room`,
+          roomData,
+          config
+        );
+        return response.data;
+      } catch (error) {
+        throw error;
+      }
     } catch (error) {
       console.error("Create room error:", {
-        config: error.config,
-        status: error.response?.status,
-        data: error.response?.data,
-        headers: error.response?.headers,
+        requestData: roomData,
+        errorMessage: error.message,
+        serverResponse: error.response?.data,
       });
       throw error;
     }
@@ -125,13 +128,131 @@ export const CatchMindAPI = {
 
   getRoomList: async () => {
     try {
+      const response = await API.get("/catch-mind");
+
+      // response 자체가 방 목록 전체 정보를 포함하고 있을 것이므로 바로 반환
+      return response;
+    } catch (error) {
+      console.error("방 목록 조회 실패:", error);
+      throw error;
+    }
+  },
+
+  getRoomInfo: async (roomId) => {
+    try {
+      const roomList = await API.get("/catch-mind");
+      const roomInfo = roomList.find((room) => room.roomId === roomId);
+
+      if (!roomInfo) {
+        throw new Error(`Room with ID ${roomId} not found`);
+      }
+
+      return roomInfo;
+    } catch (error) {
+      console.error(`방 정보 조회 실패 (${roomId}):`, error);
+      throw error;
+    }
+  },
+
+  // 방 비밀번호 확인
+  checkRoomPassword: async (roomId, password) => {
+    try {
+      // joinRoom API를 사용해 비밀번호 검증
+      const joinRequest = {
+        roomId: parseInt(roomId),
+        password: password,
+        playerName: localStorage.getItem("userNickname"), // 로그인한 사용자의 닉네임
+      };
+
+      const response = await API.post("/catch-mind/join-room", joinRequest);
+
+      // response.code가 200이면 비밀번호 일치, 400이면 불일치
+      return { isCorrect: response.code === 200 };
+    } catch (error) {
+      return { isCorrect: false };
+    }
+  },
+
+  // 방 입장 API
+  joinRoom: async (roomId, playerName, password = "") => {
+    try {
+      const joinRequest = {
+        roomId: String(roomId),
+        playerName: playerName,
+        password: password || "",
+      };
+
+      const response = await API.post("/catch-mind/join-room", joinRequest);
+
+      // 기존 로직 유지
+      if (response?.code === 200) {
+        const roomInfo = response.roomInfo || {};
+        return {
+          success: true,
+          roomInfo: {
+            ...roomInfo,
+            roomId: String(roomInfo.roomId),
+          },
+        };
+      } else {
+        console.error("방 입장 실패:", response);
+        return {
+          success: false,
+          message: response?.message || "방 입장에 실패했습니다.",
+        };
+      }
+    } catch (error) {
+      console.error("방 입장 요청 실패:", error);
+      return {
+        success: false,
+        message: "서버 오류가 발생했습니다.",
+      };
+    }
+  },
+
+  requestQuiz: async (roomId) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("로그인이 필요합니다.");
+      }
+
+      const config = {
+        baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      };
+
+      const response = await axios.post(
+        `${config.baseURL}/catch-mind/request-quiz/${roomId}`,
+        null,
+        config
+      );
+      return response.data;
+    } catch (error) {
+      console.log("퀴즈 요청 실패:", {
+        errorMessage: error.message,
+        serverResponse: error.response?.data,
+      });
+      throw error;
+    }
+  },
+
+  // 게임 시작 요청
+  startGame: async (roomId) => {
+    try {
       const token = localStorage.getItem("token");
       if (!token) {
         throw new Error("로그인이 필요합니다");
       }
 
-      // 토큰 유효성 추가 검증 로직
       const config = {
+        baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
+        // baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -140,45 +261,18 @@ export const CatchMindAPI = {
         withCredentials: true,
       };
 
-      const listResponse = await axios.get(
-        "http://localhost:8090/api/catch-mind",
+      const response = await axios.post(
+        `${config.baseURL}/catch-mind/start-game/${roomId}`,
+        null,
         config
       );
-
-      return listResponse.data;
+      return response.data;
     } catch (error) {
-      console.error("Room list error:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
+      console.error("게임 시작 요청 실패:", {
+        errorMessage: error.message,
+        serverResponse: error.response?.data,
       });
-
-      // 토큰 만료 시 로그아웃 처리 등
-      if (error.response?.status === 401) {
-        localStorage.removeItem("token");
-        // 로그인 페이지로 리다이렉트 등의 처리
-      }
-
       throw error;
-    }
-  },
-
-  getRoomInfo: async (roomId) => {
-    try {
-      const response = await API.get(`/api/catch-mind/rooms/${roomId}`);
-      return response; // 여기서 response를 그대로 반환
-    } catch (error) {
-      console.error(`Failed to fetch room info for room ${roomId}:`, error);
-      // 에러 발생 시 기본 객체 반환
-      return {
-        roomId,
-        roomName: "알 수 없는 방",
-        isPrivate: false,
-        players: [],
-        maxPeople: 4,
-        isGameStart: false,
-        creator: "알 수 없음",
-      };
     }
   },
 };

@@ -9,7 +9,7 @@ const FriendModalLayout = ({ children }) => {
   const { token } = useSelector((state) => state.user);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const location = useLocation();
-  const userId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
+  const userId = useSelector((state) => state.user.userId);
 
   const showButton =
     location.pathname !== "/" &&
@@ -26,7 +26,7 @@ const FriendModalLayout = ({ children }) => {
           <div className="fixed right-0 top-1/2 transform -translate-y-1/2">
             <div className="relative group">
               <button
-                className="invisible group-hover:visible bg-blue-500 text-white p-2 rounded-l-lg transition-all duration-300 shadow-lg"
+                className="bg-black bg-opacity-20 text-white p-2 rounded-l-lg transition-all duration-300 shadow-lg z-50"
                 onClick={() => setIsModalOpen(true)}
               >
                 <FaUserFriends size={25} />
