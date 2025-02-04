@@ -9,5 +9,6 @@ public abstract class Card {
 
 	private int id;
 	private String name;
+	private int ownerId;
 
 }
