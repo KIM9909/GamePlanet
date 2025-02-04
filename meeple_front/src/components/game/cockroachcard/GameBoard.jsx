@@ -121,6 +121,7 @@ const GameBoard = ({
   }, [gameData, currentUser, sendMessage]);
 
   const handleStartGame = () => {
+    console.log("GameBoard handleStartGame called");
     setIsGameStarted(true);
     if (onStartGame) {
       onStartGame();
@@ -709,52 +710,6 @@ const handleGameEnd = useCallback(
     };
   }, [stompClient, gameData, currentUser]);
 
-  const handleUpdateRoom = (updateData) => {
-    // 로컬 상태도 업데이트
-    const updatedGameData = {
-      ...gameData,
-      roomName: updateData.roomName,
-      maxPeople: updateData.maxPeople,
-      isPrivate: updateData.isPrivate,
-      password: updateData.password,
-    };
-    setGameData(updatedGameData);
-
-    // 서버로 메시지 전송
-    sendMessage({
-      type: "UPDATE_ROOM",
-      data: updateData,
-    });
-  };
-
-  if (!isGameStarted) {
-    return (
-      <>
-
-      
-      <GameStartScreen
-        playerCount={playerCount}
-        onStart={handleStartGame}
-        roomTitle={gameData?.roomName || roomData?.roomName || "바퀴벌레 포커"}  // roomData도 체크
-        maxPeople={gameData?.maxPeople || roomData?.maxPeople || 4}
-      />
-        {currentUser === gameData?.creator && (
-          <button
-            onClick={() => setUpdateModalOpen(true)}
-            className="absolute top-4 right-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            방 설정
-          </button>
-        )}
-        <UpdateRoomModal
-          isOpen={isUpdateModalOpen}
-          onClose={() => setUpdateModalOpen(false)}
-          onUpdateRoom={handleUpdateRoom}
-          initialData={gameData}
-        />
-      </>
-    );
-  }
 
   if (!gameData) {
     return (
@@ -768,132 +723,54 @@ const handleGameEnd = useCallback(
     players = [],
     gameData: { playerCards = {}, publicDeck = [], userTableCards = {} } = {},
   } = gameData || {};
-
+  
+  // 현재 유저를 제외한 다른 플레이어들을 가져옵니다
+  const opponents = players.filter(player => player !== currentUser);
+  
   return (
     <div className="p-4">
       <div className="relative w-full h-[800px] max-w-[1600px] mx-auto bg-gray-700/10 rounded-3xl">
-        {playerCount === 2 ? (
-          <div className="absolute top-4 left-0 right-0 flex justify-center">
-            <OpponentArea
-              ref={(el) => (penaltyStackRefs.current[players[1]] = el)}
-              playerNumber={2}
-              penaltyCards={userTableCards[players[1]] || []}
-              handCards={playerCards[players[1]] || []}
-              playerName={players[1]}
-              isMyTurn={isMyTurn || isPassing}
-              selectedCard={selectedCard}
-              handlePlayerClick={handlePlayerClick}
-              isPassing={isPassing}
-              passedPlayers={gameData?.gameData?.gameState?.passedPlayers || []}
-              cardSender={gameData?.gameData?.gameState?.cardSender}
-              remainingPlayers={remainingPlayers}
-              currentUser={currentUser}
-            />
-          </div>
-        ) : (
-          <div className="absolute top-4 left-4 right-4">
-            {playerCount === 3 ? (
-              <div className="flex justify-between">
-                <div className="w-[calc(40%-1rem)]">
-                  <OpponentArea
-                    ref={(el) => (penaltyStackRefs.current[players[1]] = el)}
-                    playerNumber={2}
-                    penaltyCards={userTableCards[players[1]] || []}
-                    handCards={playerCards[players[1]] || []}
-                    playerName={players[1]}
-                    isMyTurn={isMyTurn || isPassing}
-                    selectedCard={selectedCard}
-                    handlePlayerClick={handlePlayerClick}
-                    isPassing={isPassing}
-                    passedPlayers={
-                      gameData?.gameData?.gameState?.passedPlayers || []
-                    }
-                    cardSender={gameData?.gameData?.gameState?.cardSender}
-                    remainingPlayers={remainingPlayers}
-                    currentUser={currentUser}
-                  />
-                </div>
-                <div className="w-[calc(40%-1rem)]">
-                  <OpponentArea
-                    ref={(el) => (penaltyStackRefs.current[players[2]] = el)}
-                    playerNumber={3}
-                    penaltyCards={userTableCards[players[2]] || []}
-                    handCards={playerCards[players[2]] || []}
-                    playerName={players[2]}
-                    isMyTurn={isMyTurn || isPassing}
-                    selectedCard={selectedCard}
-                    handlePlayerClick={handlePlayerClick}
-                    isPassing={isPassing}
-                    passedPlayers={
-                      gameData?.gameData?.gameState?.passedPlayers || []
-                    }
-                    cardSender={gameData?.gameData?.gameState?.cardSender}
-                    remainingPlayers={remainingPlayers}
-                    currentUser={currentUser}
-                  />
-                </div>
+        {/* 상대방 영역 */}
+        <div className="absolute top-4 left-0 right-0">
+          <div className={`flex justify-between ${opponents.length === 1 ? 'justify-center' : 'px-4'}`}>
+            {opponents.map((opponent, index) => (
+              <div 
+                key={opponent} 
+                className={`${
+                  opponents.length === 1 
+                    ? 'w-64' 
+                    : opponents.length === 2 
+                      ? 'w-[calc(40%-1rem)]'
+                      : 'w-[calc(33%-1rem)]'
+                }`}
+              >
+                <OpponentArea
+                  ref={(el) => (penaltyStackRefs.current[opponent] = el)}
+                  playerNumber={index + 2}
+                  penaltyCards={userTableCards[opponent] || []}
+                  handCards={playerCards[opponent] || []}
+                  playerName={opponent}
+                  isMyTurn={isMyTurn || isPassing}
+                  selectedCard={selectedCard}
+                  handlePlayerClick={handlePlayerClick}
+                  isPassing={isPassing}
+                  passedPlayers={gameData?.gameData?.gameState?.passedPlayers || []}
+                  cardSender={gameData?.gameData?.gameState?.cardSender}
+                  remainingPlayers={remainingPlayers}
+                  currentUser={currentUser}
+                />
               </div>
-            ) : (
-              <div className="flex justify-between">
-                <div className="w-[calc(33%-1rem)]">
-                  <OpponentArea
-                    ref={(el) => (penaltyStackRefs.current[players[1]] = el)}
-                    playerNumber={2}
-                    penaltyCards={userTableCards[players[1]] || []}
-                    handCards={playerCards[players[1]] || []}
-                    playerName={players[1]}
-                    isMyTurn={isMyTurn}
-                    selectedCard={selectedCard}
-                    handlePlayerClick={handlePlayerClick}
-                    isPassing={isPassing}
-                    passedPlayers={passedPlayers}
-                    cardSender={gameData?.gameData?.gameState?.cardSender}
-                    remainingPlayers={remainingPlayers}
-                  />
-                </div>
-                <div className="w-[calc(33%-1rem)]">
-                  <OpponentArea
-                    ref={(el) => (penaltyStackRefs.current[players[2]] = el)}
-                    playerNumber={3}
-                    penaltyCards={userTableCards[players[2]] || []}
-                    handCards={playerCards[players[2]] || []}
-                    playerName={players[2]}
-                    isMyTurn={isMyTurn}
-                    selectedCard={selectedCard}
-                    handlePlayerClick={handlePlayerClick}
-                    isPassing={isPassing}
-                    passedPlayers={passedPlayers}
-                    cardSender={gameData?.gameData?.gameState?.cardSender}
-                    remainingPlayers={remainingPlayers}
-                  />
-                </div>
-                <div className="w-[calc(33%-1rem)]">
-                  <OpponentArea
-                    ref={(el) => (penaltyStackRefs.current[players[3]] = el)}
-                    playerNumber={4}
-                    penaltyCards={userTableCards[players[3]] || []}
-                    handCards={playerCards[players[3]] || []}
-                    playerName={players[3]}
-                    isMyTurn={isMyTurn}
-                    selectedCard={selectedCard}
-                    handlePlayerClick={handlePlayerClick}
-                    isPassing={isPassing}
-                    passedPlayers={passedPlayers}
-                    cardSender={gameData?.gameData?.gameState?.cardSender}
-                    remainingPlayers={remainingPlayers}
-                  />
-                </div>
-              </div>
-            )}
+            ))}
           </div>
-        )}
-
+        </div>
+  
         <DeckArea openCard={publicDeck[publicDeck.length - 1]} />
-
+  
+        {/* 내 영역 */}
         <MyArea
           ref={(el) => (penaltyStackRefs.current[currentUser] = el)}
-          penaltyCards={userTableCards[players[0]] || []}
-          handCards={playerCards[players[0]] || []}
+          penaltyCards={userTableCards[currentUser] || []}
+          handCards={playerCards[currentUser] || []}
           isMyTurn={isMyTurn && !isPassing}
           selectedCard={selectedCard}
           handleCardClick={handleCardClick}

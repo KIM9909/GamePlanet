@@ -1,28 +1,35 @@
 import React, { useState } from "react";
-import { useSelector } from "react-redux"; // Redux 추가
+import { useDispatch, useSelector } from "react-redux";
 
 const CreateRoomModal = ({ isOpen, onClose, onCreateRoom }) => {
-  const [roomTitle, setRoomTitle] = useState("");
+  const [roomTitle, setLocalRoomTitle] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
   const [password, setPassword] = useState("");
   const [maxPeople, setMaxPeople] = useState(4);
-  
-  // 현재 유저 정보 가져오기
+
+  const dispatch = useDispatch();
   const currentUser = useSelector((state) => state.user.userId);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const roomData = {
       gameId: 1,
       roomTitle,
-      creator: currentUser, // 하드코딩된 'testUser' 대신 실제 유저 ID 사용
+      creator: currentUser,
       private: isPrivate,
       password: isPrivate ? password : "",
       maxPeople: maxPeople,
     };
-    await onCreateRoom(roomData);
-    onClose();
+
+    try {
+      await onCreateRoom(roomData);
+      onClose();
+    } catch (error) {
+      console.error("방 생성 중 오류:", error);
+    }
   };
+
   if (!isOpen) return null;
 
   return (
@@ -33,10 +40,11 @@ const CreateRoomModal = ({ isOpen, onClose, onCreateRoom }) => {
           <input
             type="text"
             value={roomTitle}
-            onChange={(e) => setRoomTitle(e.target.value)}
+            onChange={(e) => setLocalRoomTitle(e.target.value)}
             placeholder="방 이름을 입력하세요"
             className="w-full p-2 border rounded mb-4"
             required
+            maxLength={20}
           />
           <div className="mb-4">
             <label className="flex items-center">

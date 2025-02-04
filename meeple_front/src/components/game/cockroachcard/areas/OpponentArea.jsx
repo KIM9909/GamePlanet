@@ -2,7 +2,7 @@
 import React, { forwardRef, useMemo } from "react";
 import Card from "../Card";
 import { sortPenaltyGroups } from "../utils/cardUtils";
-import PenaltyCardStack from "../PenaltyCardStack";
+import PenaltyCardStack from "./PenaltyCardArea";
 
 const OpponentArea = forwardRef(
   (

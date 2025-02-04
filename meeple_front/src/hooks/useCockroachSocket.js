@@ -27,7 +27,7 @@ const useSocket = (roomId) => {
     });
 
     client.onConnect = () => {
-      console.log("WebSocket connected");
+      console.log("웹소켓 연결 완료");
       setConnected(true);
       setStompClient(client);
       isConnecting.current = false;
@@ -37,8 +37,8 @@ const useSocket = (roomId) => {
         const gameSubscription = client.subscribe(
           `/topic/game/${roomId}`,
           (message) => {
-            console.log("Game message received:", message.body);
             const response = JSON.parse(message.body);
+            console.log("Game message received:", response);
             // 게임 시작 메시지 처리
             if (response.gameData?.isGameStart) {
               console.log("Game start message received");
@@ -61,18 +61,28 @@ const useSocket = (roomId) => {
         );
         subscriptionsRef.current.set("chat", chatSubscription);
       }
+
+      // 입장 메시지 전송
+      client.publish({
+        destination: `/app/game/join/${roomId}`,
+        body: JSON.stringify({ type: "JOIN" }),
+      });
     };
 
     client.onDisconnect = () => {
       console.log("WebSocket disconnected");
-      if (isGameStartedRef.current) {
-        console.log("Game is in progress - attempting to reconnect");
-        setTimeout(() => connect(), 1000);
-        return;
-      }
       setConnected(false);
       setStompClient(null);
       isConnecting.current = false;
+
+      if (isGameStartedRef.current) {
+        console.log("Game is in progress - attempting to reconnect");
+        setTimeout(() => connect(), 1000);
+      }
+    };
+
+    client.onWebSocketError = (error) => {
+      console.error("WebSocket error:", error);
     };
 
     clientRef.current = client;
@@ -100,21 +110,15 @@ const useSocket = (roomId) => {
   }, []);
 
   const startGame = useCallback(() => {
-    return new Promise((resolve, reject) => {
-      if (!clientRef.current?.connected) {
-        reject(new Error("WebSocket not connected"));
-        return;
-      }
+    if (!clientRef.current?.connected) {
+      return Promise.reject(new Error("웹소켓 연결 끊김"));
+    }
 
-      console.log("Sending game start request");
-
-      // 게임 시작 요청 전송
+    return new Promise((resolve) => {
       clientRef.current.publish({
         destination: `/app/game/start-game/${roomId}`,
         body: JSON.stringify({}),
       });
-
-      // 게임 시작 응답은 기본 구독에서 처리됨
       resolve();
     });
   }, [roomId]);
@@ -126,48 +130,14 @@ const useSocket = (roomId) => {
         return;
       }
 
+      const destination = messageData.type
+        ? `/app/game/${messageData.type.toLowerCase()}/${roomId}`
+        : `/app/game/chat/${roomId}`;
+
       try {
-        if (!messageData.type) {
-          clientRef.current.publish({
-            destination: `/app/game/chat/${roomId}`,
-            body: JSON.stringify({
-              message: messageData.message,
-              sender: messageData.sender,
-            }),
-          });
-          return;
-        }
-
-        let destination;
-        let body = messageData.data;
-
-        switch (messageData.type) {
-          case "GUESS_CARD":
-            destination = `/app/game/single-card/${roomId}`;
-            break;
-          case "GIVE_CARD":
-          case "PASS_CARD":
-            destination = `/app/game/give-card/${roomId}`;
-            break;
-          case "MULTI_CARD":
-            destination = `/app/game/multi-card/${roomId}`;
-            break;
-          case "HAND_CHECK":
-            destination = `/app/game/hand-check/${roomId}`;
-            break;
-          case "GAME_END":
-            destination = `/app/game/game-end/${roomId}`;
-            break;
-          case "UPDATE_ROOM":
-            destination = `/app/game/update-room/${roomId}`;
-            break;
-          default:
-            destination = `/app/game/${messageData.type.toLowerCase()}/${roomId}`;
-        }
-
         clientRef.current.publish({
           destination,
-          body: JSON.stringify(body),
+          body: JSON.stringify(messageData.data || messageData),
         });
       } catch (error) {
         console.error("Error sending message:", error);
