@@ -9,7 +9,7 @@ import ReviewList from "../../components/info/ReviewList"
 import PlayVideo from "../../components/info/PlayVideo"
 
 const GameInfoPage = () => {
-  const [selectedMenu, setSelectedMenu] = useState('default')
+  const [selectedMenu, setSelectedMenu] = useState("gameinfo")
 
   const renderContent = () => {
     switch(selectedMenu) {
