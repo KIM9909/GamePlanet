@@ -358,7 +358,7 @@ public class CatchMindServiceImpl implements CatchMindService {
                     .nextAnswer(quiz.getQuiz())
                     .remainQuizCount(quizList.size())
                     .timestamp(LocalDateTime.now())
-                    .score(request.getScore() + 10)
+                    .score(10)
                     .isCorrect(true)
                     .build();
 
