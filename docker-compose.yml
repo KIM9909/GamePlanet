@@ -4,11 +4,18 @@ services:
   openvidu-server:
     image: openvidu/openvidu-server-kms:2.22.0
     ports:
-      - "4443:4443"
+      - "4443:4443"               # HTTPS
+      - "3478:3478/udp"          # STUN/TURN 등
+      - "49152-65535:49152-65535/udp"  # 미디어 스트리밍 포트
     environment:
+      - OPENVIDU_PUBLICURL=https://boardjjigae.duckdns.org
       - DOMAIN_OR_PUBLIC_IP=boardjjigae.duckdns.org
-      #      - OPENVIDU_SECRET=YOUR_SECRET
-      - CERT_TYPE=selfsigned
+      - OPENVIDU_COTURN_IP=boardjjigae.duckdns.org
+      - OPENVIDU_COTURN_PORT=3478
+      # - OPENVIDU_SECRET=YOUR_SECRET
+      - CERT_TYPE=letsencrypt
+      - LETSENCRYPT_EMAIIL=aruesin2@gmail.com
+      - LETSENCRYPT_DOMAIN=boardjjigae.duckdns.org
     restart: unless-stopped
     networks:
       - meeple_network
@@ -50,6 +57,7 @@ services:
       - meeple_front
       - meeple_back
       - certbot
+      - openvidu-server
     networks:
       - meeple_network
 
