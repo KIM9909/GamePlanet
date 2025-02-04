@@ -3,8 +3,7 @@ import axios from "axios";
 import { useSelector } from "react-redux";
 import { exp } from "three/tsl";
 
-// const FRIEND_API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/friend`; // 배포 API 주소
-const FRIEND_API_BASE_URL = `${import.meta.env.VITE_LOCAL_API_BASE_URL}/friend`; // 로컬 API 주소
+const FRIEND_API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/friend`; // 배포 API 주소
 
 // 친구 요청 처리
 export const processFriendRequest = async (friendId, requirements) => {

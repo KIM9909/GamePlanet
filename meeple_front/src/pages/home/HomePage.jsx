@@ -22,16 +22,13 @@ const HomePage = () => {
   const handleCreateRoom = async (roomData) => {
     console.log("roomData:", roomData);
     try {
-      const response = await fetch(
-        `http://localhost:8090/game/create-room`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(roomData),
-        }
-      );
+      const response = await fetch(`http://localhost:8090/game/create-room`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(roomData),
+      });
 
       if (!response.ok) {
         const responseText = await response.text();
@@ -47,9 +44,15 @@ const HomePage = () => {
     }
   };
 
-  // 부루마불 방생성 -> 후에 백엔드와 연결 예정
+  // 부루마불 방생성 모달에서 정보 입력 후 대기방 이동
   const handleCreateBurumabulRoom = () => {
     navigate("/game/burumabul/waitingroom");
+  };
+
+  // 부루마불 방 목록 페이지 이동
+
+  const goToRoomList = async () => {
+    await navigate("/burumabul/room-list");
   };
 
   return (
@@ -72,20 +75,29 @@ const HomePage = () => {
                   방 만들기
                 </button>
               </div>
-              <RoomList/>
+              <RoomList />
 
               {/* 부루마불 */}
               <div className="bg-gray-50 p-6 rounded-lg shadow">
                 <h2 className="text-xl font-semibold mb-4">부루마불</h2>
                 <p className="text-gray-600 mb-4">
-                  친구들과 함께 떠나는 미플만의 우주여행!
+                  친구들과 함께 떠나는 신기한 우주여행!
                 </p>
-                <button
-                  onClick={() => setIsCreateBurumabulRoomModalOpen(true)}
-                  className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                >
-                  방 만들기
-                </button>
+                <div className="flex flex-row gap-4 justify-between">
+                  <button
+                    onClick={() => setIsCreateBurumabulRoomModalOpen(true)}
+                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                  >
+                    방 만들기
+                  </button>
+
+                  <button
+                    onClick={goToRoomList}
+                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                  >
+                    방 목록 보기
+                  </button>
+                </div>
               </div>
 
               {/* 캐치마인드 */}

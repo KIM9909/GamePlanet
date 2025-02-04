@@ -1,5 +1,20 @@
 import React, { useEffect, useState, useRef, Suspense, useMemo } from "react";
 import { createPortal } from "react-dom";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  setGameData,
+  addPlayer,
+  removePlayer,
+  movePlayer,
+  handleDiceRoll,
+  updateMinusBalance,
+  updatePlusBalance,
+  nextTurn,
+  nextRound,
+  changeDice,
+} from "../../../../sources/store/slices/BurumabulGameSlice";
+// 소켓 사용
+
 import {
   Canvas,
   render,
@@ -57,6 +72,7 @@ import telepathyCard from "../../../../assets/burumabul_images/telepathycard.png
 import neuronsCard from "../../../../assets/burumabul_images/neuronscard.png";
 import BlueRobot from "./BlueRobot";
 import SpaceBase from "./SpaceBase";
+import useBurumabulSocket from "../../../../hooks/useBurumabulSocket";
 
 const Cell = ({
   position,
@@ -128,7 +144,7 @@ const Cell = ({
   );
 };
 
-const TravelMap = ({ onRollDice, onBasesInfo }) => {
+const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
   // cities 배열
   const cities = [
     "지구 Start",
@@ -172,14 +188,14 @@ const TravelMap = ({ onRollDice, onBasesInfo }) => {
     "수성",
     "금성",
   ];
-
+  const dispatch = useDispatch();
   const [positions, setPositions] = useState([]);
   const [cellSizes, setCellSizes] = useState([]);
 
   const size = 11; // 각 변의 칸 수
   const totalCells = size * 4 - 4; // 전체 칸 개수
   const cells = Array.from({ length: totalCells }, (_, i) => i); // 칸 번호
-  const [currentPosition, setCurrentPosition] = useState(0); // 현재 말 위치
+  // const [currentPosition, setCurrentPosition] = useState(0); // 현재 말 위치
   const [isFirstMove, setIsFirstMove] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
@@ -190,23 +206,13 @@ const TravelMap = ({ onRollDice, onBasesInfo }) => {
     }
   }, [onRollDice]);
 
-  // 주사위 점수 저장
-  const [totalScore, setTotalScore] = useState(0);
-
-  // 칸 스타일
-  const cellClass =
-    "flex justify-center items-center border border-gray-400 text-xs h-20 w-20 bg-white relative";
-
-  // 보드판 스타일
-  const boardClass = "flex flex-col";
-
-  // 말 이동 함수
-  const moveToken = () => {
-    setCurrentPosition((prev) => {
-      setIsFirstMove(false);
-      return (prev + 1) % totalCells;
-    });
-  };
+  // // 말 이동 함수
+  // const moveToken = () => {
+  //   setCurrentPosition((prev) => {
+  //     setIsFirstMove(false);
+  //     return (prev + 1) % totalCells;
+  //   });
+  // };
 
   // 카메라 위치 초기화하기 위한..
   const orbitControlsRef = useRef();
@@ -373,17 +379,19 @@ const TravelMap = ({ onRollDice, onBasesInfo }) => {
     ));
   };
 
-  // 플레이어 상태 관리
-  const [players, setPlayers] = useState([
-    { id: 1, position: 0, color: "#E82561" },
-    { id: 2, position: 0, color: "#4635B1" },
-    { id: 3, position: 0, color: "#15F5BA" },
-    { id: 4, position: 0, color: "#FFDC00" },
-  ]);
+  const players = useSelector((state) => state.burumabul.players);
+  const currentPosition = useSelector((state) => state.burumabul.prevPosition);
+  const numPlayers = players.length;
 
-  const [numPlayers, setNumPlayers] = useState(2); //기본 2명
-  const [currentPlayer, setCurrentPlayer] = useState(0);
-
+  // 현재 플레이어는 인덱스 번호로
+  const currentPlayerIndex = useSelector(
+    (state) => state.burumabul.currentPlayerIndex
+  );
+  // 플레이어 위치 초기화
+  const [playersPositions, setPlayersPositions] = useState(
+    Array(numPlayers).fill(0)
+  );
+  console.log(playersPositions);
   // 플레이어 우주 기지를 세운!
   const [playerBases, setPlayerBases] = useState([[], [], [], []]);
 
@@ -412,30 +420,36 @@ const TravelMap = ({ onRollDice, onBasesInfo }) => {
 
   // 주사위 굴린 후 플레이어 이동 처리
   const handleDiceComplete = (score) => {
-    setTotalScore(score);
-    const player = players[currentPlayer];
-    const targetPosition = (player.position + score) % totalCells;
+    const player = players[currentPlayerIndex];
 
-    console.log(`🎲 Player ${currentPlayer + 1} rolled: ${score}`);
+    const targetPosition = player.position;
+
+    console.log(`🎲 Player ${currentPlayerIndex + 1} rolled: ${score}`);
     console.log(`➡️ Moving to position: ${targetPosition}`);
 
-    const animateMovement = (current, target) => {
-      if (current !== target) {
-        setPlayers((prevPlayers) => {
-          const newPlayers = [...prevPlayers];
-          newPlayers[currentPlayer].position = (current + 1) % totalCells;
-          return newPlayers;
+    const animateMovement = (currentPosition, targetPosition) => {
+      if (currentPosition !== targetPosition) {
+        setPlayersPositions((prevPlayersPosition) => {
+          const newPlayersPosition = [...prevPlayersPosition];
+          newPlayersPosition[currentPlayerIndex] =
+            (currentPosition + 1) % totalCells;
+          return newPlayersPosition;
         });
         setTimeout(
-          () => animateMovement((current + 1) % totalCells, target),
+          () =>
+            animateMovement((currentPosition + 1) % totalCells, targetPosition),
           300
         );
       } else {
         // 우주기지 생성 로직
-        const targetCity = cities[target];
-        console.log("Building space base at:", positions[target]);
+        const targetCity = cities[targetPosition];
+        console.log("Building space base at:", positions[targetPosition]);
         setSpaceBases((prevBases) => {
-          if (prevBases.some((base) => base.position === positions[target])) {
+          if (
+            prevBases.some(
+              (base) => base.position === positions[targetPosition]
+            )
+          ) {
             console.log("⚠️ Space base already exists at this position!");
             return prevBases; // 기존 상태 유지 (새로 추가하지 않음)
           }
@@ -444,20 +458,23 @@ const TravelMap = ({ onRollDice, onBasesInfo }) => {
           setPlayerBases((prev) => {
             const newBases = [...prev];
             return prev.map((bases, index) =>
-              index === currentPlayer && !bases.includes(targetCity)
+              index === currentPlayerIndex && !bases.includes(targetCity)
                 ? [...bases, targetCity]
                 : bases
             );
           });
 
           console.log(
-            `player ${currentPlayer + 1} built a base in ${targetCity}`
+            `player ${currentPlayerIndex + 1} built a base in ${targetCity}`
           );
 
-          const newBase = { position: positions[target], color: player.color };
+          const newBase = {
+            position: positions[targetPosition],
+            color: player.color,
+          };
           return [...prevBases, newBase];
         });
-        setCurrentPlayer((prev) => (prev + 1) % numPlayers);
+        dispatch(nextTurn());
       }
     };
     animateMovement(player.position, targetPosition);
@@ -466,23 +483,10 @@ const TravelMap = ({ onRollDice, onBasesInfo }) => {
   };
   console.log(playerBases);
 
-  // 플레이어 수 변경 핸들러
-  const handlePlayerCountChange = (count) => {
-    const newCount = Number(count);
-    setNumPlayers(count);
-    setCurrentPlayer(0);
-    // 모든 플레이어 위치 초기화
-    setPlayers((prevPlayers) =>
-      prevPlayers.map((player) => ({ ...player, position: 0 }))
-    );
-    setSpaceBases([]);
-    setPlayerBases(Array.from({ length: newCount }, () => []));
-  };
-
   // positions 배열에서 각 플레이어의 위치 좌표 계산
   const getPlayerPosition = (playerPosition, playerIndex) => {
     if (!positions[playerPosition]) {
-      return [0, 0, 0];
+      return playersPositions;
     }
     const basePosition = positions[playerPosition];
     // 말이 같은 칸에 있을 때 겹치지 않도록 약간의 오프셋 추가
@@ -541,12 +545,12 @@ const TravelMap = ({ onRollDice, onBasesInfo }) => {
     <div className="h-[100%] flex flex-col">
       {/* 이동 버튼 + 주사위 버튼 */}
       <div className="flex justify-center mb-5">
-        <button
+        {/* <button
           onClick={moveToken}
           className="mt-5 mx-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
           Move Token
-        </button>
+        </button> */}
 
         <button
           onClick={resetCamera}
@@ -554,7 +558,7 @@ const TravelMap = ({ onRollDice, onBasesInfo }) => {
         >
           Reset Camera
         </button>
-        <select
+        {/* <select
           value={numPlayers}
           onChange={(e) => handlePlayerCountChange(e.target.value)}
           className="mt-5 mx-3 px-4 py-2 bg-yellow-300 text-white rounded hover:bg-blue-600"
@@ -562,14 +566,7 @@ const TravelMap = ({ onRollDice, onBasesInfo }) => {
           <option value={2}>2 players</option>
           <option value={3}>3 players</option>
           <option value={4}>4 players</option>
-        </select>
-      </div>
-      <div className="text-center">
-        {totalScore !== 0 && (
-          <p className="mt-5 text-lg">
-            마지막 주사위 점수 : <strong>{totalScore}</strong>
-          </p>
-        )}
+        </select> */}
       </div>
       <div className="flex w-full h-full">
         <div className=" w-full h-full">
@@ -641,7 +638,7 @@ const TravelMap = ({ onRollDice, onBasesInfo }) => {
             {players.slice(0, numPlayers).map((player, index) => (
               <BlueRobot
                 key={player.id}
-                position={getPlayerPosition(player.position, index)}
+                position={getPlayerPosition(playersPositions[index], index)}
                 scale={0.005}
               />
             ))}
@@ -655,6 +652,7 @@ const TravelMap = ({ onRollDice, onBasesInfo }) => {
             <Dice
               onComplete={handleDiceComplete}
               onClose={() => setShowModal(false)}
+              roomId={roomId}
             />
             ,
           </div>,
