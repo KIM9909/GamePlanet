@@ -14,7 +14,7 @@ public class OpenViduConfig {
         System.setProperty("javax.net.debug", "ssl,handshake"); // SSL 디버깅 활성화
 
         // OpenVidu 서버 설정
-        System.setProperty("OPENVIDU_URL", "https://localhost:4443");
+        System.setProperty("OPENVIDU_URL", "https://boardjjigae.duckdns.org:4443");
         System.setProperty("OPENVIDU_SECRET", "MY_SECRET");
     }
 }
