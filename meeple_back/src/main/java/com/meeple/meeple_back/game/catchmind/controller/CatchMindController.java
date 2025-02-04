@@ -155,7 +155,7 @@ public class CatchMindController {
             ) {
         ResponseSendMessage response = catchMindService.sendMessage(roomId, request);
 
-
+        messagingTemplate.convertAndSend("/topic/catch-mind-message/" + roomId, response);
     }
 
     @Operation(summary = "게임 결과 요청", description = "게임 결과 WebSocket 요청을 확인합니다.")
