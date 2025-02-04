@@ -5,9 +5,11 @@ import {
   processFriendRequest,
   requestFriendList,
 } from "../../sources/api/FriendApi";
+import useFriendSocket from "../../hooks/useFriendSocket";
 
 const ReceivedFriendRequest = ({ requestedList }) => {
   const userId = useSelector((state) => state.user.userId);
+  const { processFriendRequest } = useFriendSocket(userId);
   console.log(requestedList);
   const [requestList, setRequestList] = useState();
 
@@ -19,7 +21,10 @@ const ReceivedFriendRequest = ({ requestedList }) => {
     if (requestList && userId) {
       try {
         const requirements = "ACCEPT";
-        await processFriendRequest(friendId, requirements);
+        const responseSocket = await processFriendRequest(
+          friendId,
+          requirements
+        );
         const response = await requestFriendList(userId);
         setRequestList(response.requestedList);
       } catch (error) {

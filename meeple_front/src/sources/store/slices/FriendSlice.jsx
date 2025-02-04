@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk, isAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { fetchFriendList, deleteFriend } from "../../api/FriendApi";
-import { act } from "react";
 
 // 비동기 액션 (친구 목록 가져오기)
 export const fetchFriends = createAsyncThunk(
@@ -42,7 +41,6 @@ const friendSlice = createSlice({
     addFriend: (state, action) => {
       state.friends.push(action.payload);
     },
-
     clearFriendRequests: (state) => {
       state.friendRequests = [];
     },
