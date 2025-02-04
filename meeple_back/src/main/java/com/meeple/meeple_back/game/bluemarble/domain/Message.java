@@ -14,6 +14,4 @@ public class Message {
 	private String type;
 	private int sender;
 	private String content;
-	private String roomId;
-	private Object payload;
 }

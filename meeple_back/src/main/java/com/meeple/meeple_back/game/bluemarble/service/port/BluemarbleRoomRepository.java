@@ -16,4 +16,6 @@ public interface BluemarbleRoomRepository {
 	List<Room> findAll();
 
 	void delete(Room room);
+
+	List<Room> findByRoomName(String searchName);
 }

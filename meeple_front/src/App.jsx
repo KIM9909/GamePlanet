@@ -24,7 +24,7 @@ function App() {
     <BrowserRouter>
       <ScrollToTop />
       <TopLayout>
-        <SideLayout>
+        {/* <SideLayout> */}
           <FriendModalLayout>
             <Routes>
               {/* Admin */}
@@ -82,7 +82,7 @@ function App() {
               <Route path="/introduce" element={<Introduce />} />
             </Routes>
           </FriendModalLayout>
-        </SideLayout>
+        {/* </SideLayout> */}
       </TopLayout>
     </BrowserRouter>
   );

@@ -1,9 +1,45 @@
-const GameInfoPage = () => {
-  return (
-    <div>
-      GameInfoPage
-    </div>
-  )
-}
+import { useState } from "react"
+import TopNavbar from "../../components/Navbar/TopNavBar"
+import InfoSideBar from "../../components/info/InfoSideBar"
+import GameInfo from "../../components/info/GameInfo"
+import GameRule from "../../components/info/GameRule"
+import GameCommunity from "../../components/info/GameCommunity"
+import ArticleList from "../../components/info/ArticleList"
+import ReviewList from "../../components/info/ReviewList"
+import PlayVideo from "../../components/info/PlayVideo"
 
-export default GameInfoPage
+const GameInfoPage = () => {
+  const [selectedMenu, setSelectedMenu] = useState("gameinfo")
+
+  const renderContent = () => {
+    switch(selectedMenu) {
+      case "gameinfo":
+        return <GameInfo />
+      case "gamerule":
+        return <GameRule />
+      case "gamecommunity":
+        return <GameCommunity />
+      case "review":
+        return <ReviewList />
+      case "playvideo":
+        return <PlayVideo />
+      default:
+        return <GameInfo />
+    }
+  }
+
+  return (
+    <>
+      <div>
+      </div>
+      <div className="flex">
+        <InfoSideBar onMenuSelect={setSelectedMenu} />
+        <div className="content">
+          {renderContent()}
+        </div>
+      </div>
+    </>
+  )
+};
+
+export default GameInfoPage;

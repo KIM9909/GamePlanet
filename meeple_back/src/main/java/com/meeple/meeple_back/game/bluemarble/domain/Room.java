@@ -1,7 +1,6 @@
 package com.meeple.meeple_back.game.bluemarble.domain;
 
 import com.meeple.meeple_back.common.domain.exception.ResourceNotFoundException;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import java.util.Iterator;
@@ -38,7 +37,6 @@ public class Room {
 
 	private Player creator;
 
-	@Min(value = 1, message = "Max players must be at least 1")
 	private int maxPlayers;
 
 	private List<Player> players;
@@ -105,4 +103,10 @@ public class Room {
 	public boolean isPlayerNotExists() {
 		return players.isEmpty();
 	}
+
+	public void changePassword(String newPassword) {
+		this.password = newPassword;
+	}
+
+
 }

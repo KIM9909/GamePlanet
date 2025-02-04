@@ -17,7 +17,7 @@ public class GamePlay {
 	private String gameStatus;
 	private int round;
 	private List<Tile> board;
-
+	private List<Card> cards;
 
 	@Builder
 	public static GamePlay from(GamePlayCreate gamePlayCreate, List<Player> players) {

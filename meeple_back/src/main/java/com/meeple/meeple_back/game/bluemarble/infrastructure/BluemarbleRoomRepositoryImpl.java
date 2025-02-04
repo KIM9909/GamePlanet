@@ -44,5 +44,12 @@ public class BluemarbleRoomRepositoryImpl implements BluemarbleRoomRepository {
 		blueMarbleRoomRedisRepository.delete(room);
 	}
 
+	@Override
+	public List<Room> findByRoomName(String searchName) {
+		return StreamSupport.stream(blueMarbleRoomRedisRepository.findAll().spliterator(), false)
+				.filter(room -> room.getRoomName().contains(searchName))
+				.collect(Collectors.toList());
+	}
+
 
 }

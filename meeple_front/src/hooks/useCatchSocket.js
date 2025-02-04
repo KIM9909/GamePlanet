@@ -46,7 +46,6 @@ const useCatchSocket = (roomId) => {
       // SockJS를 사용하여 WebSocket 연결 생성
       const socket = new SockJS(
         `${import.meta.env.VITE_SOCKET_API_BASE_URL}`,
-        // `${import.meta.env.VITE_SOCKET_LOCAL_API_BASE_URL}`,
         null,
         {
           transports: ["websocket", "xhr-streaming", "xhr-polling"],
@@ -242,9 +241,6 @@ const useCatchSocket = (roomId) => {
                       `${
                         import.meta.env.VITE_API_BASE_URL
                       }/catch-mind/delete-room?roomId=${roomId}`,
-                      // `${
-                      //   import.meta.env.VITE_LOCAL_API_BASE_URL
-                      // }/catch-mind/delete-room?roomId=${roomId}`,
                       { method: "DELETE" }
                     )
                       .then(() => console.log("Room deletion request sent"))
