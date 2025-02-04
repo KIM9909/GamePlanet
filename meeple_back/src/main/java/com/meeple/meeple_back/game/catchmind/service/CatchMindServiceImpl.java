@@ -129,6 +129,7 @@ public class CatchMindServiceImpl implements CatchMindService {
         redisTemplate.opsForHash().put(ROOM_KEY, roomIdStr, roomInfo);
 
         return ResponseJoinRoom.builder()
+                .type("roomInfo")
                 .code(200)
                 .message(request.getPlayerName() + " " + roomIdStr + "번 방 입장 성공")
                 .roomInfo(roomInfo)
