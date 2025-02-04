@@ -17,7 +17,7 @@ public interface CatchMindService {
 
     ResponseStartGame startGame(String roomId);
 
-    void sendMessage(String roomId, RequestSendMessage request);
+    ResponseSendMessage sendMessage(String roomId, RequestSendMessage request);
 
     ResponseQuiz requestQuiz(String roomId);
 

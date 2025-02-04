@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -154,7 +153,9 @@ public class CatchMindController {
             @DestinationVariable String roomId,
             @RequestBody RequestSendMessage request
             ) {
-        catchMindService.sendMessage(roomId, request);
+        ResponseSendMessage response = catchMindService.sendMessage(roomId, request);
+
+
     }
 
     @Operation(summary = "게임 결과 요청", description = "게임 결과 WebSocket 요청을 확인합니다.")
