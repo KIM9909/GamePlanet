@@ -49,12 +49,12 @@ public class CatchMindController {
 
     @Operation(summary = "게임 방 참가", description = "기존 캐치마인드 게임 방에 참가합니다.")
     @PostMapping("/join-room")
-    public ResponseEntity<ResponseJoinRoom> joinRoom(
+    public void joinRoom(
             @RequestBody RequestJoinRoom request
             ) {
         ResponseJoinRoom response = catchMindService.joinRoom(request);
 
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        messagingTemplate.convertAndSend("/topic/catch-mind/" + request.getRoomId(), response);
     }
 
     @MessageMapping("/update-room/{roomId}")
