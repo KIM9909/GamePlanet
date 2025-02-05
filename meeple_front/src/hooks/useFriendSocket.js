@@ -4,8 +4,8 @@ import { Client } from "@stomp/stompjs";
 import { useDispatch, useSelector } from "react-redux";
 import {
   addFriendRequest,
-  removeFriendRequest,
-  fetchFriends,
+  // removeFriendRequest,
+  // fetchFriends,
 } from "../sources/store/slices/FriendSlice";
 
 const useFriendSocket = (userId) => {

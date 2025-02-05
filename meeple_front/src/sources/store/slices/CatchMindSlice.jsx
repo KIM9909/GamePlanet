@@ -128,10 +128,15 @@ const CatchMindSlice = createSlice({
 
       // 상태 업데이트
       if (currentWord !== undefined) state.currentWord = currentWord;
-      if (currentRound !== undefined) state.currentRound = currentRound;
+      // if (currentRound !== undefined) state.currentRound = currentRound;
       if (quizCategory !== undefined) state.quizCategory = quizCategory;
-      if (remainQuizCount !== undefined)
+      if (remainQuizCount !== undefined) {
         state.remainQuizCount = remainQuizCount;
+        // quizCount가 있으면 그것을 사용, 없으면 기본값 10 사용
+        const totalQuizzes = quizCount || state.quizCount || 10;
+        // 현재 라운드는 (전체 퀴즈 수 - 남은 퀴즈 수)
+        state.currentRound = totalQuizzes - remainQuizCount;
+      }
       // 추가 필드 업데이트
       if (creator !== undefined) state.creator = creator;
       if (roomTitle !== undefined) state.roomTitle = roomTitle;

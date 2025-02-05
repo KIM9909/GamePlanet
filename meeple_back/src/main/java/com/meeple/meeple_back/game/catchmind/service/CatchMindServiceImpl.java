@@ -437,10 +437,10 @@ public class CatchMindServiceImpl implements CatchMindService {
 
             ResponseSendMessage response = ResponseSendMessage.builder()
                     .type("message")
-                    .message(systemMessage)
+                    .message(messageDTO)
                     .build();
 
-            messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, messageDTO);
+            messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, systemMessage);
 
             return response;
 
