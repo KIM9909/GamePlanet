@@ -103,8 +103,11 @@ const MainLayout = () => {
   const profileData = useSelector((state) => state.profile.profileData);
   const userId = useSelector((state) => state.user.userId);
 
+  // creator 체크를 redux store 기반으로 수정
+  const isCreator = gameState.creator === profileData?.userNickname;
+
   // useCatchSocket hook 사용
-  const { sendMessage, client } = useCatchSocket(roomId);
+  const { sendMessage, client, joinRoom } = useCatchSocket(roomId);
 
   // 드로잉 도구 상태 관리
   const [selectedColor, setSelectedColor] = useState("#000000");
@@ -132,38 +135,11 @@ const MainLayout = () => {
       // 방 나가기 전에 게임 상태 초기화
       dispatch(resetGameState());
 
-      if (roomInfo?.creator === profileData.userNickname) {
-        const nextCreator = roomInfo.players.find(
-          (player) => player !== profileData.userNickname
-        );
-        if (nextCreator) {
-          try {
-            await client.publish({
-              destination: `/app/update-room/${roomId}`,
-              body: JSON.stringify({
-                roomTitle: roomInfo.roomTitle,
-                creator: nextCreator,
-                maxPeople: roomInfo.maxPeople,
-                timeLimit: roomInfo.timeLimit,
-                quizCount: roomInfo.quizCount,
-                isPrivate: roomInfo.isPrivate,
-                password: roomInfo.password,
-                players: roomInfo.players,
-              }),
-              headers: { "content-type": "application/json" },
-            });
-
-            await new Promise((resolve) => setTimeout(resolve, 100));
-          } catch (error) {
-            console.error("[ExitRoom] Error updating room creator:", error);
-          }
-        }
-      }
-
+      // WebSocket을 통해 방 나가기 메시지 전송 - 텍스트로 전송
       client.publish({
         destination: `/app/exit-room/${roomId}`,
-        body: profileData.userNickname,
-        headers: { "content-type": "text/plain" },
+        body: profileData.userNickname, // JSON.stringify 제거, 텍스트로 전송
+        headers: { "content-type": "text/plain" }, // content-type을 text/plain으로 변경
       });
 
       setTimeout(() => {
@@ -181,7 +157,6 @@ const MainLayout = () => {
     client,
     navigate,
     isExiting,
-    roomInfo,
     dispatch,
   ]);
 
@@ -276,11 +251,11 @@ const MainLayout = () => {
       }
     };
 
-    if (roomId && profileData?.userNickname && !isExiting) {
-      fetchRoomInfo();
-      const intervalId = setInterval(fetchRoomInfo, 2000);
-      return () => clearInterval(intervalId);
-    }
+    // if (roomId && profileData?.userNickname && !isExiting) {
+    //   fetchRoomInfo();
+    //   const intervalId = setInterval(fetchRoomInfo, 2000);
+    //   return () => clearInterval(intervalId);
+    // }
   }, [
     roomId,
     profileData?.userNickname,
@@ -295,16 +270,14 @@ const MainLayout = () => {
       if (!isInitialJoin || !profileData?.userNickname || !roomId) return;
 
       try {
-        // 방 입장 전에 게임 상태 초기화
-        dispatch(resetGameState());
-
-        const response = await CatchMindAPI.joinRoom(
+        const joinData = await CatchMindAPI.joinRoom(
           roomId,
           profileData.userNickname,
           roomInfo?.password || ""
         );
 
-        if (response.success) {
+        if (joinRoom && typeof joinRoom === "function") {
+          joinRoom(joinData);
           setIsInitialJoin(false);
         }
       } catch (error) {
@@ -378,23 +351,31 @@ const MainLayout = () => {
     return currentPlayer?.nickname === getCurrentUserNickname();
   }, [currentPlayer?.nickname, getCurrentUserNickname]);
 
-  // 현재 사용자가 방장인지 확인
-  const isCreator = roomInfo?.creator === profileData?.userNickname;
+  // // 현재 사용자가 방장인지 확인
+  // const isCreator = roomInfo?.creator === profileData?.userNickname;
 
   // 게임 시작 처리 함수
   const handleStartGame = useCallback(async () => {
     if (!roomId || !client) return;
 
     try {
-      console.log("게임 시작 요청 전송");
+      console.log("[StartGame] 게임 시작 요청 전송");
+
+      // 게임 시작 전에 초기 상태 리셋
+      dispatch(resetGameState());
+
+      // WebSocket을 통해 게임 시작 요청 전송
       client.publish({
         destination: `/app/start-game/${roomId}`,
-        headers: { "content-type": "application/json" },
+        body: "", // 빈 body 추가
+        headers: {
+          "content-type": "text/plain", // JSON이 아닌 text/plain으로 변경
+        },
       });
     } catch (error) {
-      console.error("게임 시작 요청 실패:", error);
+      console.error("[StartGame] 게임 시작 요청 실패:", error);
     }
-  }, [roomId, client]);
+  }, [roomId, client, dispatch]);
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-900 to-gray-800">
@@ -403,10 +384,18 @@ const MainLayout = () => {
           <GameInfo
             round={gameState?.currentRound || 1}
             word={currentWord}
-            roomInfo={roomInfo}
+            roomInfo={{
+              roomTitle: gameState.roomTitle,
+              isPrivate: gameState.isPrivate,
+              timeLimit: gameState.timeLimit,
+              maxPeople: gameState.maxPeople,
+              quizCount: gameState.quizCount,
+              players: gameState.players.map((p) => p.nickname),
+              isGameStarted: gameState.isGameStarted,
+            }}
             handleExitRoom={handleExitRoom}
             handleStartGame={handleStartGame}
-            isCreator={isCreator}
+            isCreator={isCreator} // 수정된 isCreator 전달
           />
           <div className="flex-1 p-6">
             <div className="h-full bg-white rounded-xl border border-gray-200">
@@ -419,7 +408,7 @@ const MainLayout = () => {
       <div className="w-1/3 flex flex-col gap-4 p-4 border-l border-gray-700">
         <div className="grid grid-cols-2 gap-3">
           {gameState?.players?.map((player) => {
-            console.log("Rendering PlayerCard:", player);
+            // console.log("Rendering PlayerCard:", player);
             return (
               <PlayerCard
                 key={player.id}

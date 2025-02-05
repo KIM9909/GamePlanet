@@ -30,11 +30,9 @@ const GameInfoPage = () => {
 
   return (
     <>
-      <div>
-      </div>
       <div className="flex">
         <InfoSideBar onMenuSelect={setSelectedMenu} />
-        <div className="content">
+        <div className="content flex-1 mx-10px bg-gray-200">
           {renderContent()}
         </div>
       </div>

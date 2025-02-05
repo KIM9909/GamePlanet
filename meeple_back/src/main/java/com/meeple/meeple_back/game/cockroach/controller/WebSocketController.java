@@ -3,9 +3,11 @@ package com.meeple.meeple_back.game.cockroach.controller;
 import com.meeple.meeple_back.game.cockroach.model.request.*;
 import com.meeple.meeple_back.game.cockroach.model.response.*;
 import com.meeple.meeple_back.game.cockroach.service.CockroachService;
+import com.meeple.meeple_back.game.cockroach.service.GameRoomService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -15,16 +17,21 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Tag(name = "WebSocket Game", description = "WebSocket을 이용한 바퀴벌레 게임 관련 API")
+@AllArgsConstructor
 public class WebSocketController {
 
+    private final GameRoomService gameRoomService;
     private final CockroachService cockroachService;
     private final SimpMessageSendingOperations messagingTemplate;
 
-    @Autowired
-    public WebSocketController(CockroachService cockroachService,
-        SimpMessageSendingOperations messagingTemplate) {
-        this.cockroachService = cockroachService;
-        this.messagingTemplate = messagingTemplate;
+    @MessageMapping("/game/join-room")
+    public void joinRoom(
+            @RequestParam String roomId,
+            @RequestParam String playerName,
+            @RequestParam String password) {
+        ResponseCockroachRoom response = gameRoomService.addPlayer(roomId, playerName, password);
+
+        messagingTemplate.convertAndSend("/topic/game/" + roomId, response);
     }
 
     // WebSocket API를 Swagger에서 확인할 수 있도록 REST API 엔드포인트 추가

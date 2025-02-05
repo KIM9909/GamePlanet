@@ -6,12 +6,14 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Map;
 
 @Builder
 @Data
 public class ResponseStartGame {
-    @Schema(description = "게임 순서", example = "[nick1, nick2]")
-    private List<String> sequence;
-    @Schema(description = "퀴즈 목록", example = "[{quiz: 사과}, {quiz: 바나나}, ...]")
-    private List<Quiz> quizList;
+    @Schema(description = "메세지 타입", example = "gameInfo")
+    private String type;
+    @Schema(description = "게임 정보", example = "{currentTurn: 김싸피, quiz: 사과}")
+    private Map<String, Object> gameInfo;
+
 }

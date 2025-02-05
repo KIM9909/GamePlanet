@@ -44,7 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
 @AllArgsConstructor
 public class CockroachServiceImpl implements CockroachService {
 
-    private static final String ROOM_KEY = "GAME_ROOMS";
+    private static final String ROOM_KEY = "COCKROACH_GAME_ROOMS";
     private static final String[] CARD_TYPES = {"Bat", "Rat", "Fly",
             "Cockroach", "Scorpion", "Toad", "Stinkbug"};
 
@@ -426,8 +426,12 @@ public class CockroachServiceImpl implements CockroachService {
         }
 
         roomInfo.put("player", userList);
+        if (userList.size() == 0) {
+            redisTemplate.opsForHash().delete(ROOM_KEY, roomId);
+        } else {
+            redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
+        }
 
-        redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
 
         ResponseExitRoom response = ResponseExitRoom.builder()
                 .players(userList)
