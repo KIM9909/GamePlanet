@@ -5,10 +5,12 @@ import com.meeple.meeple_back.admin.report.model.entity.Report;
 import com.meeple.meeple_back.admin.report.model.entity.ReportProcess;
 import com.meeple.meeple_back.admin.report.model.request.RequestCreateReport;
 import com.meeple.meeple_back.admin.report.model.request.RequestProcessReport;
+import com.meeple.meeple_back.admin.report.model.request.RequestUpdateProcess;
 import com.meeple.meeple_back.admin.report.model.response.ResponseCreateReport;
 import com.meeple.meeple_back.admin.report.model.response.ResponseProcessReport;
 import com.meeple.meeple_back.admin.report.model.response.ResponseReport;
 import com.meeple.meeple_back.admin.report.model.response.ResponseReportList;
+import com.meeple.meeple_back.admin.report.model.response.ResponseUpdateProcess;
 import com.meeple.meeple_back.admin.report.repo.ReportProcessRepository;
 import com.meeple.meeple_back.admin.report.repo.ReportRepository;
 import com.meeple.meeple_back.user.model.User;
@@ -140,6 +142,81 @@ public class ReportSerivceImpl implements ReportService {
             ResponseProcessReport reponse = ResponseProcessReport.builder()
                 .code(500)
                 .message("신고 처리가 실패했습니다.")
+                .build();
+
+            return reponse;
+        }
+    }
+
+    @Override
+    public ResponseUpdateProcess updateProcess(RequestUpdateProcess request) {
+        ReportProcess reportProcess = reportProcessRepository.findById(request.getReportProcessId())
+            .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 신고 처리"));
+
+        if (request.getReportResult().equals("PASS")) {
+            Report report = reportProcess.getReport();
+
+            report.setProcessStatus("PASS");
+
+            if (report.getUser().getUserDeletedAt() != null) {
+                User user = report.getUser();
+                user.setUserDeletedAt(null);
+                userRepository.save(user);
+            }
+
+            reportProcessRepository.delete(reportProcess);
+
+            reportRepository.save(report);
+
+            ResponseUpdateProcess response = ResponseUpdateProcess.builder()
+                .code(200)
+                .message("(상태: 무혐의) 정상적으로 처리 됐습니다.")
+                .build();
+            return response;
+        } else if (request.getReportResult().equals("WARNING")) {
+            reportProcess.setReportResult(ReportResult.WARNING);
+            reportProcessRepository.save(reportProcess);
+
+            Report report = reportProcess.getReport();
+
+            if (report.getUser().getUserDeletedAt() != null) {
+                User user = report.getUser();
+                user.setUserDeletedAt(null);
+                userRepository.save(user);
+            }
+
+            report.setProcessStatus("WARNING");
+            reportRepository.save(report);
+
+            ResponseUpdateProcess reponse = ResponseUpdateProcess.builder()
+                .code(200)
+                .message("(상태: 경고) 정상적으로 처리 됐습니다.")
+                .build();
+
+            return reponse;
+        } else if (request.getReportResult().equals("BAN")) {
+
+            Report report = reportProcess.getReport();
+
+            User user = report.getUser();
+            user.setUserDeletedAt(LocalDateTime.now());
+            userRepository.save(user);
+
+            report.setProcessStatus("BAN");
+            reportRepository.save(report);
+
+            reportProcess.setReportResult(ReportResult.BAN);
+            reportProcessRepository.save(reportProcess);
+            ResponseUpdateProcess reponse = ResponseUpdateProcess.builder()
+                .code(200)
+                .message("(상태: 영구제한) 정상적으로 처리 됐습니다.")
+                .build();
+
+            return reponse;
+        } else {
+            ResponseUpdateProcess reponse = ResponseUpdateProcess.builder()
+                .code(500)
+                .message("처리 불가 백엔드 오류")
                 .build();
 
             return reponse;
