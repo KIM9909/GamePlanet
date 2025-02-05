@@ -51,7 +51,7 @@ export const messageList = async (userId) => {
   if (userId) {
     try {
       const response = await axios.get(
-        `${FRIEND_API_BASE_URL}/message?=${userId}`
+        `${FRIEND_API_BASE_URL}/message?userId=${userId}`
       );
       return response.data;
     } catch (error) {
