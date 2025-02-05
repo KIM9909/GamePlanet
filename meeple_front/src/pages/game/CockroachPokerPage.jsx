@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import useSocket from "../../hooks/useCockroachSocket";
@@ -11,6 +11,7 @@ import {
   setGameData,
   setGameStarted,
   resetGame,
+  setCurrentUser,
 } from "../../sources/store/slices/CockroachSlice";
 import { toast } from "react-hot-toast";
 
@@ -19,20 +20,18 @@ const CockroachPokerPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  // Redux selectors
+  const { isGameStarted, gameData, roomData, players, currentUser } =
+    useSelector((state) => state.cockroach);
+  const userId = useSelector((state) => state.user.userId);
+
   // States
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [hasJoined, setHasJoined] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
 
   // Refs
   const subscriptionRef = useRef(null);
-
-  // Selectors
-  const { isGameStarted, gameData, roomData, players } = useSelector(
-    (state) => state.cockroach
-  );
-  const userId = useSelector((state) => state.user.userId);
 
   // Socket
   const { sendMessage, startGame, stompClient, connected } = useSocket(roomId);
@@ -42,49 +41,29 @@ const CockroachPokerPage = () => {
       isGameStarted,
       roomData,
       userId,
-      players
+      players,
     });
   }, [isGameStarted, roomData, userId, players]);
 
   useEffect(() => {
     console.log("소켓 연결 상태:", {
       connected,
-      stompClient: !!stompClient
+      stompClient: !!stompClient,
     });
   }, [connected, stompClient]);
 
-  const fetchPlayerNicknames = async (playerIds) => {
-    const nicknameMap = new Map();
-    if (userId) nicknameMap.set(userId.toString(), currentUser);
+  useEffect(() => {
+    console.log("currentUser 값이 변경됨:", currentUser);
+  }, [currentUser]);
 
-    const promises = playerIds.map(async (playerId) => {
-      if (nicknameMap.has(playerId)) return;
-
-      try {
-        const profileResp = await fetch(
-          `http://localhost:8090/profile/${playerId}`
-        );
-        if (!profileResp.ok)
-          throw new Error(`Failed to fetch profile for ${playerId}`);
-        const profile = await profileResp.json();
-        nicknameMap.set(playerId, profile.userNickname);
-      } catch (error) {
-        console.error(`Failed to fetch nickname for ${playerId}:`, error);
-        nicknameMap.set(playerId, playerId);
-      }
-    });
-
-    await Promise.all(promises);
-    return playerIds.map((id) => nicknameMap.get(id) || id);
-  };
-
-  // Profile fetch and room join effect 수정
   const fetchProfileAndJoinRoom = async () => {
     try {
       // 프로필 정보 가져오기
       const response = await fetch(`http://localhost:8090/profile/${userId}`);
       const profileData = await response.json();
-      setCurrentUser(profileData.userNickname);
+
+      dispatch(setCurrentUser(profileData.userNickname));
+      console.log("현재 유저:", profileData.userNickname);
 
       // 방 정보 가져오기
       const roomCheckResponse = await fetch(
@@ -92,21 +71,12 @@ const CockroachPokerPage = () => {
       );
       const currentRoomData = await roomCheckResponse.json();
 
-      // 플레이어 닉네임 가져오기
-      const playerNicknames = await fetchPlayerNicknames(
-        currentRoomData.players || []
-      );
-
       const updatedRoomInfo = {
         ...currentRoomData,
-        players: playerNicknames,
-        // 방 제목 우선순위 변경: 서버에서 받은 roomTitle을 우선적으로 사용
         roomTitle: currentRoomData.roomTitle || "바퀴벌레 포커",
       };
 
-      // roomData 업데이트
       dispatch(setRoomData(updatedRoomInfo));
-
       setHasJoined(true);
     } catch (error) {
       console.error("Error:", error);
@@ -152,30 +122,20 @@ const CockroachPokerPage = () => {
           console.log("웹소켓 메시지 수신:", response);
 
           if (response.type === "UPDATE_ROOM") {
-            const uniquePlayers = [...new Set(response.data.players)];
-            const playerNicknames = await fetchPlayerNicknames(uniquePlayers);
-
-            const updatedRoomData = {
-              ...response.data,
-              players: playerNicknames.filter((nickname) => nickname),
-              roomTitle: response.data.roomTitle,
-            };
-
-            // roomData 업데이트만 하고 roomTitle은 따로 업데이트하지 않음
-            dispatch(setRoomData(updatedRoomData));
-
-              } else if (response.players && response.gameData) {
-            const uniquePlayers = [...new Set(response.players)];
-            const playerNicknames = await fetchPlayerNicknames(uniquePlayers);
-
-            // 게임 데이터 업데이트 시에도 기존 방 제목 유지
-            const updatedGameData = {
-              ...response,
-              players: playerNicknames.filter((nickname) => nickname),
-              roomTitle: roomData?.roomTitle || response.roomTitle,
-            };
-
-            dispatch(setGameData(updatedGameData));
+            dispatch(
+              setRoomData({
+                ...response.data,
+                roomTitle: response.data.roomTitle,
+              })
+            );
+          } else if (response.players && response.gameData) {
+            dispatch(
+              setGameData({
+                ...response,
+                roomTitle: roomData?.roomTitle || response.roomTitle,
+                currentUser,
+              })
+            );
 
             if (response.gameData.isGameStart) {
               setIsStarting(false);
@@ -189,21 +149,21 @@ const CockroachPokerPage = () => {
       }
     );
 
-    // 방 입장 메시지 전송
+    // 서버의 addPlayer에서 playerName으로 사용될 nickname만 전송
     stompClient.publish({
       destination: `/app/game/join/${roomId}`,
       body: JSON.stringify({
-        userId,
-        nickname: currentUser,
+        playerName: currentUser, // 서버에서 사용하는 playerName 키로 변경
       }),
     });
+    console.log("나야 :", currentUser);
 
     return () => {
       if (subscriptionRef.current) {
         subscriptionRef.current.unsubscribe();
       }
     };
-  }, [stompClient, connected, currentUser, roomId, roomData]);
+  }, [stompClient, connected, currentUser, roomId, roomData, dispatch]);
 
   const handleStartGame = async () => {
     if (!connected) {
@@ -273,7 +233,7 @@ const CockroachPokerPage = () => {
               onStart={handleStartGame}
               roomTitle={roomData?.roomTitle || "바퀴벌레 포커"}
               maxPeople={roomData?.maxPeople || 4}
-              isCreator={roomData?.creator?.toString() === userId?.toString()}
+              isCreator={roomData?.creator === currentUser}
               onUpdateRoom={handleUpdateRoom}
               gameData={gameData}
               players={players || []}
@@ -294,8 +254,8 @@ const CockroachPokerPage = () => {
 
         <div className="h-48 bg-gray-800 border-t border-gray-700">
           {connected && (
-            <VideoChat 
-              userId={currentUser} 
+            <VideoChat
+              userId={currentUser}
               playerCount={players?.length || 0}
               players={players}
             />

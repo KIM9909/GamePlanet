@@ -14,7 +14,6 @@ const RoomList = () => {
     try {
       const response = await fetch("http://localhost:8090/game/rooms");
       const data = await response.json();
-      // 최신 방 6개만 표시
       const sortedRooms = data.sort((a, b) => b.roomId - a.roomId).slice(0, 5);
       setRooms(sortedRooms);
     } catch (error) {
@@ -29,22 +28,28 @@ const RoomList = () => {
     }
 
     try {
-      // 먼저 해당 방의 현재 상태를 확인
+      // 먼저 프로필 정보를 가져와서 닉네임 획득
+      const profileResponse = await fetch(`http://localhost:8090/profile/${userId}`);
+      const profileData = await profileResponse.json();
+      const userNickname = profileData.userNickname;
+
+      // 해당 방의 현재 상태를 확인
       const roomCheckResponse = await fetch(
         `http://localhost:8090/game/room/${roomId}`
       );
       const roomData = await roomCheckResponse.json();
 
-      // 이미 참가한 플레이어인지 확인
-      if (roomData.players.includes(userId.toString())) {
+      // 이미 참가한 플레이어인지 확인 (닉네임으로 체크)
+      if (roomData.players.includes(userNickname)) {
         console.log("이미 참가한 방입니다. 바로 입장합니다.");
         navigate(`/game/cockroach/${roomId}`);
         return;
       }
 
+      // 방 참가 요청 전송
       const formData = new URLSearchParams();
       formData.append("roomId", roomId.toString());
-      formData.append("playerName", userId.toString());
+      formData.append("playerName", userNickname);  // userId 대신 닉네임 사용
       formData.append("password", password);
 
       const response = await fetch("http://localhost:8090/game/join-room", {
@@ -86,7 +91,6 @@ const RoomList = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {Array.isArray(rooms) ? (
           rooms.map((room, index) => {
-            // room.roomId가 없을 경우 index를 사용하여 유니크한 키 생성
             const uniqueKey = room.roomId
               ? `room-${room.roomId}`
               : `temp-room-${index}`;
