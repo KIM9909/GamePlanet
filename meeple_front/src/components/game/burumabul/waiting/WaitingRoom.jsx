@@ -18,7 +18,7 @@ const WaitingRoom = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  // const roomInfo = location.state?.roomInfo;
+  const roomInfo = location.state?.roomInfo;
 
   const [friendList, setFriendList] = useState(null);
 
@@ -31,51 +31,52 @@ const WaitingRoom = () => {
     }
   });
 
-  const roomInfo = {
-    roomId: 1,
-    roomName: "보드찌개 시작해볼까!",
-    createTime: "2025-02-02T18:14:34.803Z",
-    creator: {
-      playerId: 13,
-      playerName: "성수컨님",
-      position: 0,
-      balance: 0,
-      seedCertificateCardOwned: ["string"],
-    },
-    maxPlayers: 4,
-    players: [
-      {
-        playerId: 1,
-        playerName: "성수컨님",
-        position: 0,
-        balance: 0,
-        seedCertificateCardOwned: ["string"],
-      },
-      {
-        playerId: 2,
-        playerName: "희준찌개",
-        position: 0,
-        balance: 0,
-        seedCertificateCardOwned: ["string"],
-      },
-      {
-        playerId: 3,
-        playerName: "짼 팀장",
-        position: 0,
-        balance: 0,
-        seedCertificateCardOwned: ["string"],
-      },
-      {
-        playerId: 4,
-        playerName: "현범 프님",
-        position: 0,
-        balance: 0,
-        seedCertificateCardOwned: ["string"],
-      },
-    ],
-    gameStart: false,
-    private: true,
-  };
+  // const roomInfo = {
+  //   roomId: 1,
+  //   roomName: "보드찌개 시작해볼까!",
+  //   createTime: "2025-02-02T18:14:34.803Z",
+  //   creator: {
+  //     playerId: 13,
+  //     playerName: "성수컨님",
+  //     position: 0,
+  //     balance: 0,
+  //     seedCertificateCardOwned: ["string"],
+  //   },
+  //   maxPlayers: 4,
+  //   players: [
+  //     {
+  //       playerId: 1,
+  //       playerName: "성수컨님",
+  //       position: 0,
+  //       balance: 0,
+  //       seedCertificateCardOwned: ["string"],
+  //     },
+  //     {
+  //       playerId: 2,
+  //       playerName: "희준찌개",
+  //       position: 0,
+  //       balance: 0,
+  //       seedCertificateCardOwned: ["string"],
+  //     },
+  //     {
+  //       playerId: 3,
+  //       playerName: "짼 팀장",
+  //       position: 0,
+  //       balance: 0,
+  //       seedCertificateCardOwned: ["string"],
+  //     },
+  //     {
+  //       playerId: 4,
+  //       playerName: "현범 프님",
+  //       position: 0,
+  //       balance: 0,
+  //       seedCertificateCardOwned: ["string"],
+  //     },
+  //   ],
+  //   gameStart: false,
+  //   private: true,
+  // };
+
   console.log(roomInfo);
   const playersInfo = roomInfo.players;
   const roomName = roomInfo.roomName;

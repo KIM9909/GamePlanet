@@ -11,7 +11,6 @@ import {
   nextTurn,
   nextRound,
 } from "../sources/store/slices/BurumabulGameSlice";
-import { exp } from "three/tsl";
 
 const useBurumabulSocket = (roomId) => {
   const [connected, setConnected] = useState(false);
@@ -28,7 +27,12 @@ const useBurumabulSocket = (roomId) => {
       return;
     }
 
-    const socket = new SockJS(`${import.meta.env.VITE_SOCKET_API_BASE_URL}`); // 배포 서버 소켓 통신 URL
+    const socket = new SockJS(
+      `${import.meta.env.VITE_SOCKET_LOCAL_API_BASE_URL}`
+    ); // 로컬 서버 소켓 통신 URL
+    // const socket = new SockJS(
+    //   `${import.meta.env.VITE_SOCKET_API_BASE_URL}`
+    // ); // 배포 서버 소켓 통신 URL
     const stompClient = new Client({
       webSocketFactory: () => socket,
       reconnectDelay: 5000,
@@ -79,6 +83,9 @@ const useBurumabulSocket = (roomId) => {
           }
         }
       );
+
+      // 게임방 참가
+      // const enterGameRoom = stompClient.subscribe(`topic/rooms/${roomId}`);
 
       cleanupSubscriptions.current = () => {
         gamePlaySubscribe.unsubscribe();
