@@ -88,7 +88,7 @@ const HomePage = () => {
 
               </div> */}
               
-              <GameCard imgUrl={CockroachPokerRoyalMainImg} title={"바퀴벌레포커"} description={"블러핑과 심리전이 핵심인 카드게임입니다."}/>
+              <GameCard imgUrl={CockroachPokerRoyalMainImg} title={"바퀴벌레포커"} description={"블러핑과 심리전이 핵심인 카드게임입니다."} gameId={1}/>
 
 
               <RoomList/>
