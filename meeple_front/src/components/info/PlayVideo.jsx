@@ -2,7 +2,8 @@ const PlayVideo = () =>{
   return (
     <div>
       {/* 영상 표시 */}
-      <section>Video</section>
+      <h1>Video</h1>
+      <video src="/videos/pokerexample.mp4" type="video/mp4" className="flex-1" controls></video>
     </div>
   )
 };
