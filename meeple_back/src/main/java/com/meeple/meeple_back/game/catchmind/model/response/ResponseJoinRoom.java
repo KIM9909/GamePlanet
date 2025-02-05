@@ -9,6 +9,8 @@ import java.util.Map;
 @Data
 @Builder
 public class ResponseJoinRoom {
+    @Schema(description = "메세지 타입", example = "roomInfo", required = true)
+    private String type;
     @Schema(description = "상태코드", example = "200", required = true)
     private int code;
     @Schema(description = "처리 메세지", example = "메세지", required = true)
