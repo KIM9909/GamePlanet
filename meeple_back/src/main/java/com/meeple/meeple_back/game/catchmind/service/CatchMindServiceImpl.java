@@ -407,10 +407,6 @@ public class CatchMindServiceImpl implements CatchMindService {
                     .score(10)
                     .build();
 
-            ResponseSendMessage response = ResponseSendMessage.builder()
-                    .type("message")
-                    .message(messageDTO)
-                    .build();
 
             MessageDTO systemMessage = MessageDTO.builder()
                     .sender("SYSTEM")
@@ -420,7 +416,12 @@ public class CatchMindServiceImpl implements CatchMindService {
                     .isNotice(true)
                     .build();
 
-            messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, systemMessage);
+            ResponseSendMessage response = ResponseSendMessage.builder()
+                    .type("message")
+                    .message(systemMessage)
+                    .build();
+
+            messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, messageDTO);
 
             return response;
 
