@@ -173,39 +173,11 @@ export const CatchMindAPI = {
 
   // 방 입장 API
   joinRoom: async (roomId, playerName, password = "") => {
-    try {
-      const joinRequest = {
-        roomId: String(roomId),
-        playerName: playerName,
-        password: password || "",
-      };
-
-      const response = await API.post("/catch-mind/join-room", joinRequest);
-
-      // 기존 로직 유지
-      if (response?.code === 200) {
-        const roomInfo = response.roomInfo || {};
-        return {
-          success: true,
-          roomInfo: {
-            ...roomInfo,
-            roomId: String(roomInfo.roomId),
-          },
-        };
-      } else {
-        console.error("방 입장 실패:", response);
-        return {
-          success: false,
-          message: response?.message || "방 입장에 실패했습니다.",
-        };
-      }
-    } catch (error) {
-      console.error("방 입장 요청 실패:", error);
-      return {
-        success: false,
-        message: "서버 오류가 발생했습니다.",
-      };
-    }
+    return {
+      roomId: parseInt(roomId),
+      playerName: playerName,
+      password: password || "",
+    };
   },
 
   requestQuiz: async (roomId) => {

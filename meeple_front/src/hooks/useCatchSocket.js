@@ -32,6 +32,9 @@ const useCatchSocket = (roomId) => {
   const [messages, setMessages] = useState([]); // 채팅 메시지 목록
   const [connectionStatus, setConnectionStatus] = useState("disconnected"); // 연결 상태
   const reconnectTimeoutRef = useRef(null); // 재연결 타이머 참조
+  const currentUserNickname = useSelector(
+    (state) => state.profile.profileData?.userNickname
+  );
 
   /**
    * WebSocket 연결을 설정하는 함수
@@ -86,70 +89,70 @@ const useCatchSocket = (roomId) => {
          */
         // useCatchSocket.js 수정부분
 
-        client.subscribe(`/topic/catch-mind-messages/${roomId}`, (message) => {
-          try {
-            const chatMessage = JSON.parse(message.body);
-            console.log("수신된 채팅 메시지:", chatMessage);
+        // client.subscribe(`/topic/catch-mind-messages/${roomId}`, (message) => {
+        //   try {
+        //     const chatMessage = JSON.parse(message.body);
+        //     console.log("수신된 채팅 메시지:", chatMessage);
 
-            if (chatMessage.roomId === roomId) {
-              setMessages((prev) => [
-                ...prev,
-                {
-                  sender: chatMessage.sender,
-                  content: chatMessage.content,
-                  timestamp: chatMessage.timestamp,
-                  isCorrect: chatMessage.isCorrect,
-                  isNotice: chatMessage.isNotice,
-                  score: chatMessage.score,
-                },
-              ]);
+        //     if (chatMessage.roomId === roomId) {
+        //       setMessages((prev) => [
+        //         ...prev,
+        //         {
+        //           sender: chatMessage.sender,
+        //           content: chatMessage.content,
+        //           timestamp: chatMessage.timestamp,
+        //           isCorrect: chatMessage.correct,
+        //           isNotice: chatMessage.notice,
+        //           score: chatMessage.score,
+        //         },
+        //       ]);
 
-              // 정답을 맞췄을 때의 처리
-              if (chatMessage.correct) {
-                // 점수 업데이트
-                dispatch(
-                  updatePlayerScore({
-                    nickname: chatMessage.sender,
-                    score: chatMessage.score,
-                  })
-                );
+        //       // 정답을 맞췄을 때의 처리
+        //       if (chatMessage.correct) {
+        //         // 점수 업데이트
+        //         dispatch(
+        //           updatePlayerScore({
+        //             nickname: chatMessage.sender,
+        //             score: chatMessage.score,
+        //           })
+        //         );
 
-                // 현재 퀴즈 데이터가 있는지 확인
-                if (window.quizData) {
-                  const nextIndex = window.quizData.currentIndex + 1;
+        //         // 현재 퀴즈 데이터가 있는지 확인
+        //         if (window.quizData) {
+        //           const nextIndex = window.quizData.currentIndex + 1;
 
-                  // 다음 퀴즈가 있는 경우
-                  if (nextIndex < window.quizData.quizList.length) {
-                    const nextQuiz = window.quizData.quizList[nextIndex];
-                    console.log("다음 퀴즈 설정 시도:", nextQuiz);
+        //           // 다음 퀴즈가 있는 경우
+        //           if (nextIndex < window.quizData.quizList.length) {
+        //             const nextQuiz = window.quizData.quizList[nextIndex];
+        //             console.log("다음 퀴즈 설정 시도:", nextQuiz);
+        //             console.log("현재 게임 상태:", currentGameState);
+        //             // 게임 상태 업데이트 - 라운드 증가는 여기서만 처리
+        //             dispatch(
+        //               updateGameState({
+        //                 currentWord: nextQuiz.quiz,
+        //                 currentRound: currentGameState.currentRound + 1, // 라운드 증가
+        //                 quizCategory: nextQuiz.quizCategory,
+        //                 remainQuizCount:
+        //                   window.quizData.quizList.length - nextIndex - 1,
+        //               })
+        //             );
 
-                    // 게임 상태 업데이트 - 라운드 증가는 여기서만 처리
-                    dispatch(
-                      updateGameState({
-                        currentWord: nextQuiz.quiz,
-                        currentRound: currentGameState.currentRound + 1, // 라운드 증가
-                        quizCategory: nextQuiz.quizCategory,
-                        remainQuizCount:
-                          window.quizData.quizList.length - nextIndex - 1,
-                      })
-                    );
+        //             // 현재 인덱스 업데이트
+        //             window.quizData.currentIndex = nextIndex;
 
-                    // 현재 인덱스 업데이트
-                    window.quizData.currentIndex = nextIndex;
-
-                    console.log("제시어 변경 완료. 새 제시어:", nextQuiz.quiz);
-                  } else {
-                    // 모든 퀴즈가 끝난 경우
-                    console.log("게임 종료!");
-                    dispatch(setGameStarted(false));
-                  }
-                }
-              }
-            }
-          } catch (error) {
-            console.error("채팅 메시지 처리 중 오류:", error);
-          }
-        });
+        //             console.log("제시어 변경 완료. 새 제시어:", nextQuiz.quiz);
+        //           } else {
+        //             // 모든 퀴즈가 끝난 경우
+        //             console.log("게임 종료!");
+        //             dispatch(setGameStarted(false));
+        //           }
+        //         }
+        //       }
+        //     }
+        //   } catch (error) {
+        //     console.error("채팅 메시지 처리 중 오류:", error);
+        //   }
+        // });
 
         /**
          * 게임 상태 구독 설정
@@ -160,6 +163,161 @@ const useCatchSocket = (roomId) => {
           try {
             const data = JSON.parse(message.body);
             console.log("전체 게임 상태 데이터:", data);
+
+            // gameInfo 타입 처리 추가
+            if (data.type === "gameInfo" && data.gameInfo) {
+              console.log("게임 정보 업데이트:", data.gameInfo);
+
+              // 먼저 게임 시작 상태 설정
+              dispatch(setGameStarted(true));
+
+              // 현재 플레이어 목록 가져오기
+              const currentPlayers = store.getState().catchmind.players;
+
+              // 플레이어들의 현재 턴 상태 업데이트
+              const updatedPlayers = currentPlayers.map((player) => ({
+                ...player,
+                isTurn: player.nickname === data.gameInfo.currentTurn,
+                // 기존 점수와 다른 정보는 유지
+              }));
+
+              // 상태 업데이트
+              dispatch(
+                updateGameState({
+                  currentWord: data.gameInfo.quiz,
+                  remainQuizCount: data.gameInfo.remainQuizCount,
+                })
+              );
+
+              // 플레이어 정보 업데이트
+              dispatch(
+                updatePlayers({
+                  players: updatedPlayers,
+                })
+              );
+
+              console.log("게임 정보 업데이트 완료:", {
+                currentTurn: data.gameInfo.currentTurn,
+                quiz: data.gameInfo.quiz,
+                players: updatedPlayers,
+              });
+
+              return;
+            }
+
+            // 메시지 타입 처리
+            if (data.type === "message") {
+              console.log("채팅 메시지 수신:", data.message);
+
+              setMessages((prev) => [
+                ...prev,
+                {
+                  sender: data.message.sender,
+                  content: data.message.content,
+                  timestamp: data.message.timestamp,
+                  isCorrect: data.message.correct, // 서버에서 오는 correct 사용
+                  isNotice: data.message.notice, // 서버에서 오는 notice 사용
+                  score: data.message.score,
+                  remainQuizCount: data.message.remainQuizCount,
+                },
+              ]);
+
+              // 정답을 맞췄을 때의 처리
+              if (data.message.correct) {
+                // 점수 업데이트
+                dispatch(
+                  updatePlayerScore({
+                    nickname: data.message.sender,
+                    score: data.message.score,
+                  })
+                );
+
+                // 현재 퀴즈 데이터가 있는지 확인
+                if (data.message.quiz) {
+                  console.log("새로운 퀴즈 설정:", data.message.quiz);
+                  dispatch(
+                    updateGameState({
+                      currentWord: data.message.quiz,
+                      currentRound: currentGameState.currentRound + 1,
+                      remainQuizCount: data.message.remainQuizCount,
+                      currentTurn: data.message.nextTurn, // 이 부분 추가
+                    })
+                  );
+                }
+              }
+            }
+
+            // players 타입 처리 추가
+            if (data.type === "players") {
+              // 플레이어 정보만 업데이트
+              dispatch(
+                updatePlayers({
+                  players: data.players.map((playerName, index) => ({
+                    id: index + 1,
+                    nickname: playerName,
+                    score: 0, // 기본 점수 설정
+                    isTurn: false, // 기본적으로 턴은 false로 설정
+                    isCurrentUser: playerName === currentUserNickname,
+                  })),
+                })
+              );
+
+              // 방이 비어있을 때 처리
+              if (data.players.length === 0) {
+                console.log("Room is empty, cleaning up...");
+
+                if (clientRef.current) {
+                  try {
+                    clientRef.current.deactivate();
+                    clientRef.current = null;
+                  } catch (error) {
+                    console.error("Error during cleanup:", error);
+                  }
+                }
+
+                setConnectionStatus("disconnected");
+                setMessages([]);
+                dispatch(updatePlayers({ players: [] }));
+
+                setTimeout(() => {
+                  window.location.href = "/catch-mind";
+                }, 500);
+              }
+              return; // players 타입 처리 후 리턴
+            }
+
+            if (data.type === "roomInfo" && data.roomInfo) {
+              // roomInfo의 모든 데이터를 유지하면서 Redux store 업데이트
+              store.dispatch(
+                updateGameState({
+                  currentWord: data.roomInfo.gameInfo?.currentWord,
+                  currentRound: data.roomInfo.gameInfo?.currentRound,
+                  quizCategory: data.roomInfo.gameInfo?.quizCategory,
+                  remainQuizCount: data.roomInfo.gameInfo?.quizList?.length,
+                  creator: data.roomInfo.creator, // creator 정보 추가
+                  roomTitle: data.roomInfo.roomTitle,
+                  maxPeople: data.roomInfo.maxPeople,
+                  timeLimit: data.roomInfo.timeLimit,
+                  quizCount: data.roomInfo.quizCount,
+                  isPrivate: data.roomInfo.isPrivate,
+                  password: data.roomInfo.password,
+                  roomId: data.roomInfo.roomId,
+                })
+              );
+
+              // players 업데이트
+              store.dispatch(
+                updatePlayers({
+                  players: data.roomInfo.players.map((player, index) => ({
+                    id: index + 1,
+                    nickname: player,
+                    score: data.roomInfo.gameInfo?.playerScore?.[player] || 0,
+                    isTurn: player === data.roomInfo.gameInfo?.currentTurn,
+                    isCurrentUser: player === currentUserNickname,
+                  })),
+                })
+              );
+            }
 
             // drawing 관련 메시지는 무시
             if (data.type === "clear" || data.type === "draw") {
@@ -370,12 +528,44 @@ const useCatchSocket = (roomId) => {
     }
   }, [roomId, connect, disconnect]);
 
+  // 방 입장 함수 추가
+  const joinRoom = useCallback(
+    (joinData) => {
+      if (!clientRef.current?.connected) {
+        connect();
+        setTimeout(() => {
+          if (clientRef.current?.connected) {
+            clientRef.current.publish({
+              destination: "/app/join-room",
+              body: JSON.stringify(joinData),
+              headers: { "content-type": "application/json" },
+            });
+          }
+        }, 1000);
+        return;
+      }
+
+      try {
+        clientRef.current.publish({
+          destination: "/app/join-room",
+          body: JSON.stringify(joinData),
+          headers: { "content-type": "application/json" },
+        });
+      } catch (error) {
+        console.error("Error joining room:", error);
+        handleReconnect();
+      }
+    },
+    [connect, handleReconnect]
+  );
+
   // 필요한 상태와 메서드들 반환
   return {
     connected: connectionStatus === "connected",
     connectionStatus,
     sendMessage,
     messages,
+    joinRoom,
     client: clientRef.current,
   };
 };

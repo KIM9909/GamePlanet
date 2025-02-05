@@ -24,6 +24,13 @@ const initialState = {
   currentTurnIndex: 0,
   quizCategory: null, // 퀴즈 카테고리 추가
   remainQuizCount: 0, // 남은 퀴즈 수 추가
+  // 추가 필드들
+  creator: null,
+  roomTitle: "",
+  maxPeople: 2,
+  quizCount: 5,
+  isPrivate: false,
+  password: "",
   userStatus: {
     isLoading: false,
     error: null,
@@ -84,7 +91,22 @@ const CatchMindSlice = createSlice({
 
     // 게임 시작 상태 업데이트 리듀서 추가
     setGameStarted: (state, action) => {
+      console.log("게임 시작 상태 변경:", action.payload);
       state.isGameStarted = action.payload;
+
+      // 게임 시작 시에는 상태 초기화하지 않음
+      // 게임 종료 시에만 초기화
+      if (action.payload === false) {
+        state.currentWord = null;
+        state.currentRound = 1;
+        state.currentTurnIndex = 0;
+        // 플레이어 점수 초기화
+        state.players = state.players.map((player) => ({
+          ...player,
+          score: 0,
+          isTurn: false,
+        }));
+      }
     },
 
     updateGameState: (state, action) => {
@@ -94,6 +116,14 @@ const CatchMindSlice = createSlice({
         currentTurn,
         quizCategory,
         remainQuizCount,
+        creator,
+        roomTitle,
+        maxPeople,
+        timeLimit,
+        quizCount,
+        isPrivate,
+        password,
+        roomId,
       } = action.payload;
 
       // 상태 업데이트
@@ -102,12 +132,22 @@ const CatchMindSlice = createSlice({
       if (quizCategory !== undefined) state.quizCategory = quizCategory;
       if (remainQuizCount !== undefined)
         state.remainQuizCount = remainQuizCount;
+      // 추가 필드 업데이트
+      if (creator !== undefined) state.creator = creator;
+      if (roomTitle !== undefined) state.roomTitle = roomTitle;
+      if (maxPeople !== undefined) state.maxPeople = maxPeople;
+      if (timeLimit !== undefined) state.timeLimit = timeLimit;
+      if (quizCount !== undefined) state.quizCount = quizCount;
+      if (isPrivate !== undefined) state.isPrivate = isPrivate;
+      if (password !== undefined) state.password = password;
+      if (roomId !== undefined) state.roomId = roomId;
 
       // 턴 업데이트
       if (currentTurn) {
-        state.players.forEach((player) => {
-          player.isTurn = player.nickname === currentTurn;
-        });
+        state.players = state.players.map((player) => ({
+          ...player,
+          isTurn: player.nickname === currentTurn,
+        }));
       }
     },
 

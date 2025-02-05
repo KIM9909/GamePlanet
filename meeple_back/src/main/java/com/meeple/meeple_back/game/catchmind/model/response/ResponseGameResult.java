@@ -1,16 +1,18 @@
 package com.meeple.meeple_back.game.catchmind.model.response;
 
+import com.meeple.meeple_back.game.catchmind.model.GameResultDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Builder
 public class ResponseGameResult {
-    @Schema(description = "순위", example = "1", required = true)
-    private int rank;
-    @Schema(description = "플레이어 닉네임", example = "nick1", required = true)
-    private String player;
-    @Schema(description = "점수", example = "100", required = true)
-    private int point;
+    @Schema(description = "메세지 타입", example = "result")
+    private String type;
+    @Schema(description = "게임 결과", example = "[{playerName: 김싸피, point: 100, rank: 1}, {}, ..]")
+    private List<GameResultDTO> result;
+
 }
