@@ -589,4 +589,64 @@ public class CatchMindServiceImpl implements CatchMindService {
                 .players(userList)
                 .build();
     }
+
+    @Override
+    public ResponseTimeOut quizTimeOut(String roomId) {
+        Map<String, Object> roomInfo = (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+        Map<String, Object> gameInfo = (Map<String, Object>) roomInfo.get("gameInfo");
+
+        List<String> players = (List<String>) roomInfo.get("players");
+
+        if (players != null && !players.isEmpty()) {
+            String currentTurn = (String) gameInfo.get("currentTurn");
+            int currentIndex = currentTurn != null ? players.indexOf(currentTurn) : 0;
+            int nextIndex = (currentIndex + 1) % players.size();
+            String nextTurn = players.get(nextIndex);
+
+            // 다음 출제자를 gameInfo에 저장
+            gameInfo.put("currentTurn", nextTurn);
+        }
+
+        List<String> quizList = (List<String>) gameInfo.get("quizList");
+
+        if (quizList.isEmpty()) {
+            List<GameResultDTO> gameResult = gameResult(roomId);
+
+            ResponseGameResult responseResult = ResponseGameResult.builder()
+                    .type("result")
+                    .result(gameResult)
+                    .build();
+
+            messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, responseResult);
+
+            MessageDTO messageDTO = MessageDTO.builder()
+                    .sender("SYSTEM")
+                    .content("게임 종료")
+                    .timestamp(LocalDateTime.now())
+                    .isNotice(true)
+                    .build();
+            messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, responseResult);
+            return null;
+        }
+
+        String nextQuiz = quizList.get(0);
+        quizList.remove(0);
+        gameInfo.put("remainQuizCount", quizList.size());
+
+        roomInfo.put("gameInfo", gameInfo);
+        redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
+
+        ResponseQuiz responseQuiz = ResponseQuiz.builder()
+                .nextTurn(String.valueOf(gameInfo.get("nextTurn")))
+                .quiz(nextQuiz)
+                .remainQuizCount(quizList.size())
+                .build();
+
+        ResponseTimeOut responseTimeOut = ResponseTimeOut.builder()
+                .type("timeOut")
+                .gameData(responseQuiz)
+                .build();
+
+        return responseTimeOut;
+    }
 }
