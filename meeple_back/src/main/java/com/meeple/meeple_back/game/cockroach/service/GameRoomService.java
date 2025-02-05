@@ -43,6 +43,7 @@ public class GameRoomService {
         Optional<Game> game = gameRepository.findById(request.getGameId());
 
         roomInfo.put("players", players);
+        roomInfo.put("roomTitle", request.getRoomTitle());
         roomInfo.put("gameData", new HashMap<>());
         roomInfo.put("gameType", game.get().getGameName());
         roomInfo.put("isPrivate", request.isPrivate());
@@ -66,6 +67,7 @@ public class GameRoomService {
 
         ResponseCreateRoom response = ResponseCreateRoom.builder()
                 .roomId(savedRoom.getRoomId())
+                .roomInfo(roomInfo)
                 .build();
         return response;
     }
