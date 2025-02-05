@@ -248,4 +248,13 @@ public class CatchMindController {
 
         messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
     }
+
+    @MessageMapping("/time-out/{roomId}")
+    private void timeOutSocket(
+            @DestinationVariable String roomId
+    ) {
+        ResponseTimeOut response = catchMindService.quizTimeOut(roomId);
+
+        messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
+    }
 }
