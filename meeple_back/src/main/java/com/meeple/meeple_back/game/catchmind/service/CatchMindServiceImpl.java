@@ -74,6 +74,9 @@ public class CatchMindServiceImpl implements CatchMindService {
 
         ResponseCreateRoom response = ResponseCreateRoom.builder()
                 .roomId(savedRoom.getRoomId())
+                .creator(request.getCreator())
+                .isPrivate(request.isPrivate())
+                .password(request.getPassword())
                 .build();
 
         return response;
@@ -366,6 +369,22 @@ public class CatchMindServiceImpl implements CatchMindService {
 
             if (quizList.isEmpty()) {
                 List<GameResultDTO> gameResult = gameResult(roomId);
+
+                MessageDTO responseMessage = MessageDTO.builder()
+                        .sender(sender.getUserNickname())
+                        .content(request.getMessage())
+                        .timestamp(LocalDateTime.now())
+                        .nextTurn(String.valueOf(gameInfo.get("currentTurn")))
+                        .isCorrect(true)
+                        .remainQuizCount(quizList.size())
+                        .score(10)
+                        .build();
+                ResponseSendMessage responseSendMessage = ResponseSendMessage.builder()
+                        .type("message")
+                        .message(responseMessage)
+                        .build();
+
+                messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, responseSendMessage);
 
                 ResponseGameResult responseResult = ResponseGameResult.builder()
                         .type("result")
