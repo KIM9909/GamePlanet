@@ -1,5 +1,7 @@
 package com.meeple.meeple_back.game.bluemarble.controller.port;
 
+import com.meeple.meeple_back.game.bluemarble.controller.request.RoomJoinWithPassword;
+import com.meeple.meeple_back.game.bluemarble.controller.request.RoomUpdatePassword;
 import com.meeple.meeple_back.game.bluemarble.domain.Room;
 import com.meeple.meeple_back.game.bluemarble.domain.RoomCreate;
 import com.meeple.meeple_back.game.bluemarble.domain.RoomUpdate;
@@ -18,4 +20,10 @@ public interface BluemarbleRoomService {
 	Room update(int roomId, RoomUpdate roomUpdate);
 
 	Room findById(int roomId);
+
+	List<Room> search(String searchName);
+
+	Room changePassword(int roomId, RoomUpdatePassword roomUpdatePassword);
+
+	Room joinWithPassword(int roomId, RoomJoinWithPassword roomJoinWithPassword);
 }

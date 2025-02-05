@@ -1,10 +1,9 @@
 import React from "react";
 import axios from "axios";
 
-// const BURUMABUL_API_BASE_URL =  `${import.meta.env.VITE_API_BASE_URL}/game/blue-marble/rooms` // 배포 API
 const BURUMABUL_API_BASE_URL = `${
-  import.meta.env.VITE_LOCAL_API_BASE_URL
-}/game/blue-marble/rooms`; // 로컬 API
+  import.meta.env.VITE_API_BASE_URL
+}/game/blue-marble/rooms`; // 배포 API
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token")?.trim() || "";
@@ -17,12 +16,13 @@ const getAuthHeaders = () => {
 };
 
 // 게임방 생성
-export const createBurumabulRoom = async (roomData) => {
+export const createBurumabulRoom = async (userId, roomData) => {
   try {
     console.log("Request payload:", roomData);
-    const response = await axios.post(`${BURUMABUL_API_BASE_URL}`, roomData, {
-      headers: getAuthHeaders(),
-    });
+    const response = await axios.post(
+      `${BURUMABUL_API_BASE_URL}/${userId}`,
+      roomData
+    );
     return response.data;
   } catch (error) {
     console.error("방 생성 실패: ", error);

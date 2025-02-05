@@ -1,8 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  // baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
-  baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
+  baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -95,8 +94,7 @@ export const CatchMindAPI = {
       }
 
       const config = {
-        // baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
-        baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
+        baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -190,8 +188,7 @@ export const CatchMindAPI = {
       }
 
       const config = {
-        // baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
-        baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
+        baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-type": "application/json",
@@ -224,8 +221,7 @@ export const CatchMindAPI = {
       }
 
       const config = {
-        // baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
-        baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
+        baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",

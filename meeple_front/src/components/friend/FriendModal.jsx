@@ -1,75 +1,54 @@
 import React, { useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import {
-  fetchFriends,
-  removeFriend,
-} from "../../sources/store/slices/FriendSlice";
-import { AiFillMessage } from "react-icons/ai";
+import { useSelector } from "react-redux";
 import FriendList from "./FriendList";
-import ReceivedFriendRequest from "./ReceivedFriendRequest";
 import RequestFriend from "./RequestFriend";
+import { UsersRound, MessageSquareMore, Handshake } from "lucide-react";
+import Message from "./Message";
 
-const FriendModal = ({ userId }) => {
-  const dispatch = useDispatch();
-  const { friends, status, error } = useSelector((state) => state.friend);
-  const [newFriendName, setNewFriendName] = useState("");
+const FriendModal = () => {
+  const userId = useSelector((state) => state.user.userId);
+
   const [activeTab, setActiveTab] = useState("friendList");
 
   const renderContent = () => {
     switch (activeTab) {
       case "friendList":
-        return <FriendList />;
-      case "receivedRequest":
-        return <ReceivedFriendRequest />;
-      case "sentRequest":
+        return <FriendList userId={userId} />;
+      case "allRequest":
         return <RequestFriend />;
+      case "message":
+        return <Message />;
       default:
-        return <FriendList />;
+        return <FriendList userId={userId} />;
     }
   };
 
-  useEffect(() => {
-    dispatch(fetchFriends(userId));
-  }, [dispatch, userId]);
-
-  // if (status === "loading") return <p>불러오는 중...</p>;
-  // if (status === "failed") return <p>{error}</p>;
-
   return (
     <>
-      <div className="flex justify-between items-center ">
+      <div className="flex justify-around items-center ">
         <button
-          className={`rounded p-1 bg-gray-500 ${
-            activeTab === "friendList"
-              ? "text-black border-2 border-black"
-              : "text-white"
+          className={`rounded p-1 ${
+            activeTab === "friendList" ? "border-2 border-[#7a90ff] " : null
           }`}
           onClick={() => setActiveTab("friendList")}
         >
-          친구 목록
+          <UsersRound color="#7a90ff" strokeWidth={2.5} />
         </button>
         <button
-          className={`rounded p-1 bg-gray-500 ${
-            activeTab === "receivedRequest"
-              ? "text-black border-2 border-black"
-              : "text-white"
+          className={`rounded p-1 ${
+            activeTab === "allRequest" ? "border-2 border-[#7a90ff] " : null
           }`}
-          onClick={() => setActiveTab("receivedRequest")}
+          onClick={() => setActiveTab("allRequest")}
         >
-          받은 요청
+          <Handshake color="#7a90ff" strokeWidth={2.5} />
         </button>
         <button
-          className={`rounded p-1 bg-gray-500 ${
-            activeTab === "sentRequest"
-              ? "text-black border-2 border-black"
-              : "text-white"
+          className={`rounded p-1 ${
+            activeTab === "message" ? "border-2 border-[#7a90ff] " : null
           }`}
-          onClick={() => setActiveTab("sentRequest")}
+          onClick={() => setActiveTab("message")}
         >
-          보낸 요청
-        </button>
-        <button>
-          <AiFillMessage size={20} />
+          <MessageSquareMore color="#7a90ff" strokeWidth={2.5} />
         </button>
       </div>
       <div>{renderContent()}</div>

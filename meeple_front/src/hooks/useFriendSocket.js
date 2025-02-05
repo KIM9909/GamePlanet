@@ -8,21 +8,18 @@ import {
   fetchFriends,
 } from "../sources/store/slices/FriendSlice";
 
-const useFriendSocket = (onFriendRequestReceived) => {
+const useFriendSocket = (userId) => {
   const [connected, setConnected] = useState(false);
   const stompClientRef = useRef(null);
 
   const friendsRequsets = useSelector((state) => state.friend.friendRequests);
-  const userId = useSelector((state) => state.user.userId);
+
   const dispatch = useDispatch();
   useEffect(() => {
     if (!userId) return;
 
     // WebSocket 연결
-    // const socket = new SockJS(`${import.meta.env.VITE_SOCKET_API_BASE_URL}`); // 배포 서버 소켓 통신
-    const socket = new SockJS(
-      `${import.meta.env.VITE_SOCKET_LOCAL_API_BASE_URL}`
-    ); // 로컬 서버 소켓 통신
+    const socket = new SockJS(`${import.meta.env.VITE_SOCKET_API_BASE_URL}`); // 배포 서버 소켓 통신
     const stompClient = new Client({
       webSocketFactory: () => socket,
       reconnectDelay: 5000,
@@ -49,10 +46,6 @@ const useFriendSocket = (onFriendRequestReceived) => {
         }
         dispatch(addFriendRequest(receivedData));
         console.log("🔄 업데이트된 친구 요청 목록:", friendsRequsets);
-
-        if (onFriendRequestReceived) {
-          onFriendRequestReceived(receivedData);
-        }
       });
     };
 
@@ -88,27 +81,18 @@ const useFriendSocket = (onFriendRequestReceived) => {
   };
 
   // 친구요청 처리
-  const processFriendRequest = (friendId, friendRequestId, action) => {
+  const processFriendRequest = (friendId, action) => {
     if (stompClientRef.current && stompClientRef.current.connected) {
       stompClientRef.current.publish({
         destination: `/app/process-request/${friendId}`,
         body: JSON.stringify({
-          requesterId: userId,
-          targetId: friendId,
+          friendId,
           requirements: action, // "ACCEPT" 또는 "DENY"
         }),
       });
       console.log("친구 요청 확인 완료", action);
     } else {
       console.error("STOMP client");
-    }
-
-    // 요청 처리 후 해당 요청을 목록에서 제거
-    dispatch(removeFriendRequest(friendRequestId));
-
-    if (action === "ACCEPT") {
-      console.log("친구 목록 갱신 중");
-      dispatch(fetchFriends(userId));
     }
   };
 

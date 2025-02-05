@@ -4,7 +4,7 @@ import background from "../../../../assets/burumabul_images/waitingroom.gif";
 import PlayerCard from "./PlayerCard";
 import { LockKeyhole, LockKeyholeOpen } from "lucide-react";
 import FriendSearch from "../../FriendSearch";
-import { useDispatch, useSelector } from "react-redux";
+import { connect, useDispatch, useSelector } from "react-redux";
 import { putBurumabulRoom } from "../../../../sources/api/BurumabulRoomAPI";
 import PutBurumabulRoom from "../PutBurumabulRoom";
 import PlayerAlertModal from "./PlayerAlertModal";
@@ -14,65 +14,65 @@ import { createPortal } from "react-dom";
 const WaitingRoom = () => {
   const userId = Number(useSelector((state) => state.user.userId));
   console.log(userId);
+
   const navigate = useNavigate();
   const location = useLocation();
   // const roomInfo = location.state?.roomInfo;
-  // const playersInfo = roomInfo.players;
-  const roomInfo = [
-    {
-      roomId: 1,
-      roomName: "시작해볼까! 덕진이랑 은수",
-      createTime: "2025-02-02T18:14:34.803Z",
-      creator: {
+
+  const roomInfo = {
+    roomId: 1,
+    roomName: "시작해볼까! 덕진이랑 은수",
+    createTime: "2025-02-02T18:14:34.803Z",
+    creator: {
+      playerId: 13,
+      playerName: "은수",
+      position: 0,
+      balance: 0,
+      seedCertificateCardOwned: ["string"],
+    },
+    maxPlayers: 4,
+    players: [
+      {
         playerId: 1,
         playerName: "은수",
         position: 0,
         balance: 0,
         seedCertificateCardOwned: ["string"],
       },
-      maxPlayers: 4,
-      players: [
-        {
-          playerId: 1,
-          playerName: "은수",
-          position: 0,
-          balance: 0,
-          seedCertificateCardOwned: ["string"],
-        },
-        {
-          playerId: 2,
-          playerName: "덕진",
-          position: 0,
-          balance: 0,
-          seedCertificateCardOwned: ["string"],
-        },
-        {
-          playerId: 3,
-          playerName: "은수2",
-          position: 0,
-          balance: 0,
-          seedCertificateCardOwned: ["string"],
-        },
-        // {
-        //   playerId: 4,
-        //   playerName: "덕진2",
-        //   position: 0,
-        //   balance: 0,
-        //   seedCertificateCardOwned: ["string"],
-        // },
-      ],
-      gameStart: false,
-      private: true,
-    },
-  ];
-  const roomName = roomInfo[0].roomName;
-  const creatorId = Number(roomInfo[0].creator.playerId);
+      {
+        playerId: 2,
+        playerName: "덕진",
+        position: 0,
+        balance: 0,
+        seedCertificateCardOwned: ["string"],
+      },
+      {
+        playerId: 3,
+        playerName: "은수2",
+        position: 0,
+        balance: 0,
+        seedCertificateCardOwned: ["string"],
+      },
+      {
+        playerId: 4,
+        playerName: "덕진2",
+        position: 0,
+        balance: 0,
+        seedCertificateCardOwned: ["string"],
+      },
+    ],
+    gameStart: false,
+    private: true,
+  };
+  console.log(roomInfo);
+  const playersInfo = roomInfo.players;
+  const roomName = roomInfo.roomName;
+  const creatorId = Number(roomInfo.creator.playerId);
   console.log("creatorId", creatorId);
-  const creatorName = roomInfo[0].creator.playerName;
-  const playersInfo = roomInfo[0].players;
-  const isPrivate = roomInfo[0].private;
-  const maxPlayers = roomInfo[0].maxPlayers;
-  const playerLen = roomInfo[0].players.length;
+  const creatorName = roomInfo.creator.playerName;
+  const isPrivate = roomInfo.private;
+  const maxPlayers = roomInfo.maxPlayers;
+  const playerLen = roomInfo.players.length;
 
   console.log(playersInfo);
 
@@ -86,6 +86,18 @@ const WaitingRoom = () => {
 
   const handleAlertModal = () => {
     setShowAlertModal(true);
+  };
+
+  const goToGame = async () => {
+    if (roomInfo) {
+      try {
+        await navigate(`/game/burumabul/start/${roomInfo.roomId}`, {
+          state: { roomId: roomInfo.roomId },
+        });
+      } catch (error) {
+        console.error("게임 방 이동 중 오류 발생 :", error);
+      }
+    }
   };
 
   return (
@@ -157,9 +169,7 @@ const WaitingRoom = () => {
                       </button>
                       <button
                         className="relative overflow-hidden text-lg font-semibold text-white mx-10 bg-gradient-to-r from-cyan-500 to-blue-500 border-2 border-blue-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
-                        onClick={() => {
-                          navigate("/game/burumabul/start");
-                        }}
+                        onClick={goToGame}
                       >
                         게임 시작
                       </button>
@@ -182,7 +192,7 @@ const WaitingRoom = () => {
                   )}
                 </div>
               ) : (
-                <div>아무것도 안 떠</div>
+                <div>게임준비</div>
               )}
 
               {showPutRoomModal && (

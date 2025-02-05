@@ -8,7 +8,6 @@ import com.meeple.meeple_back.game.catchmind.model.response.*;
 import com.meeple.meeple_back.game.catchmind.repository.QuizRepository;
 import com.meeple.meeple_back.game.cockroach.model.entity.ChatMessage;
 import com.meeple.meeple_back.game.cockroach.model.entity.Room;
-import com.meeple.meeple_back.game.cockroach.model.response.ResponseExitRoom;
 import com.meeple.meeple_back.game.cockroach.repository.ChatMessageRespository;
 import com.meeple.meeple_back.game.cockroach.repository.RoomRepository;
 import com.meeple.meeple_back.game.game.model.Game;
@@ -307,7 +306,6 @@ public class CatchMindServiceImpl implements CatchMindService {
             return response;
         }
 
-        // 일반 사용자 메시지 처리
         User sender = userRepository.findByUserNickname(request.getSender());
         if (sender == null) {
             throw new IllegalArgumentException("존재하지 않는 사용자입니다: " + request.getSender());

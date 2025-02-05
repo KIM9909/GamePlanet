@@ -38,9 +38,6 @@ public class GameRoomService {
     public ResponseCreateRoom createRoom(RequestCreateRoom request) {
         Map<String, Object> roomInfo = new HashMap<>();
         List<String> players = new ArrayList<>();
-        players.add("user1");
-        players.add("user2");
-        players.add("user3");
         players.add(request.getCreator());
 
         Optional<Game> game = gameRepository.findById(request.getGameId());

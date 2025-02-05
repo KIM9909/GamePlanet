@@ -20,6 +20,7 @@ public class RoomCreate {
 	@Min(value = 2, message = "최소 2명의 플레이어가 필요합니다.")
 	private int maxPlayers;
 
+
 	@JsonCreator
 	public RoomCreate(@JsonProperty("roomName") String roomName,
 			@JsonProperty("private") boolean isPrivate,

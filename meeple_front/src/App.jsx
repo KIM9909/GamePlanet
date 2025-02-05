@@ -2,7 +2,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AdminPage from "./pages/admin/AdminPage";
 import BoardPage from "./pages/board/BoardPage";
-import BurumabulPage from "./pages/game/BurumabulPage";
+import BurumabulPage from "./pages/game/burumabul/BurumabulPage";
 import GameInfoPage from "./pages/gameInfo/GameInfoPage";
 import HomePage from "./pages/home/HomePage";
 import ProfilePage from "./pages/profile/ProfilePage";
@@ -18,12 +18,13 @@ import CatchMindPage from "./pages/game/CatchMindPage";
 import WaitingRoom from "./components/game/burumabul/waiting/WaitingRoom";
 import FriendModalLayout from "./components/layout/FriendModalLayout";
 import CatchMindListPage from "./components/game/catchMind/roomList/CatchMindListPage";
+import BurumabulRoomList from "./pages/game/burumabul/BurumabulRoomList";
 function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
       <TopLayout>
-        <SideLayout>
+        {/* <SideLayout> */}
           <FriendModalLayout>
             <Routes>
               {/* Admin */}
@@ -35,13 +36,20 @@ function App() {
 
               {/* Game */}
               <Route
-                path="/game/burumabul/start:roomId"
+                // path="/game/burumabul/start"
+                path="/game/burumabul/start/:roomId"
                 element={<BurumabulPage />}
               />
               <Route
-                path="/game/burumabul/waitingroom/"
+                // path="/game/burumabul/waitingroom/"
+                path="/game/burumabul/waitingroom/:roomId"
                 element={<WaitingRoom />}
               />
+              <Route
+                path="/burumabul/room-list"
+                element={<BurumabulRoomList />}
+              />
+
               <Route
                 path="/game/cockroach/:roomId"
                 element={<CockroachPokerPage />}
@@ -74,7 +82,7 @@ function App() {
               <Route path="/introduce" element={<Introduce />} />
             </Routes>
           </FriendModalLayout>
-        </SideLayout>
+        {/* </SideLayout> */}
       </TopLayout>
     </BrowserRouter>
   );
