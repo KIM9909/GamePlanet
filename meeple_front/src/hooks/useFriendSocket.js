@@ -67,7 +67,6 @@ const useFriendSocket = () => {
 
   return {
     connected,
-    friendsRequsets,
     responseSocket,
     stompClientRef,
   };
