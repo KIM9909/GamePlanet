@@ -62,7 +62,6 @@ const ReceivedMessage = ({ messages }) => {
           )}
         </div>
       )}
-      ;
       {showDetail && (
         <div>
           <div>작성자 : {message.sender.userName}</div>

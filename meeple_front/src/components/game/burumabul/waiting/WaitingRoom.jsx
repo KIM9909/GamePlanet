@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import background from "../../../../assets/burumabul_images/waitingroom.gif";
 import PlayerCard from "./PlayerCard";
@@ -9,6 +9,7 @@ import { putBurumabulRoom } from "../../../../sources/api/BurumabulRoomAPI";
 import PutBurumabulRoom from "../PutBurumabulRoom";
 import PlayerAlertModal from "./PlayerAlertModal";
 import { createPortal } from "react-dom";
+import { fetchFriendList } from "../../../../sources/api/FriendApi";
 
 // 백엔드 연결 필요
 const WaitingRoom = () => {
@@ -19,13 +20,24 @@ const WaitingRoom = () => {
   const location = useLocation();
   // const roomInfo = location.state?.roomInfo;
 
+  const [friendList, setFriendList] = useState(null);
+
+  useEffect(() => {
+    try {
+      const response = fetchFriendList(userId);
+      setFriendList(response);
+    } catch (error) {
+      console.log("친구 목록 로드 중 에러");
+    }
+  });
+
   const roomInfo = {
     roomId: 1,
-    roomName: "시작해볼까! 덕진이랑 은수",
+    roomName: "보드찌개 시작해볼까!",
     createTime: "2025-02-02T18:14:34.803Z",
     creator: {
       playerId: 13,
-      playerName: "은수",
+      playerName: "성수컨님",
       position: 0,
       balance: 0,
       seedCertificateCardOwned: ["string"],
@@ -34,28 +46,28 @@ const WaitingRoom = () => {
     players: [
       {
         playerId: 1,
-        playerName: "은수",
+        playerName: "성수컨님",
         position: 0,
         balance: 0,
         seedCertificateCardOwned: ["string"],
       },
       {
         playerId: 2,
-        playerName: "덕진",
+        playerName: "희준찌개",
         position: 0,
         balance: 0,
         seedCertificateCardOwned: ["string"],
       },
       {
         playerId: 3,
-        playerName: "은수2",
+        playerName: "짼 팀장",
         position: 0,
         balance: 0,
         seedCertificateCardOwned: ["string"],
       },
       {
         playerId: 4,
-        playerName: "덕진2",
+        playerName: "현범 프님",
         position: 0,
         balance: 0,
         seedCertificateCardOwned: ["string"],
@@ -116,7 +128,7 @@ const WaitingRoom = () => {
         <div className="h-[600px] w-[1000px] bg-white bg-opacity-70 rounded-lg flex flex-col justify-start items-center">
           {/* 친구 검색해서 친구 추가 */}
           <div className="mt-5">
-            <FriendSearch />
+            <FriendSearch friendList={friendList} />
           </div>
           <div className="flex flex-col items-center my-5">
             <div className="flex flex-row justify-center items-center mt-5">
