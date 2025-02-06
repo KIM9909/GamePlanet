@@ -2,6 +2,7 @@ package com.meeple.meeple_back.game.catchmind.service;
 
 import com.meeple.meeple_back.game.catchmind.model.GameResultDTO;
 import com.meeple.meeple_back.game.catchmind.model.MessageDTO;
+import com.meeple.meeple_back.game.catchmind.model.RoomInfoDTO;
 import com.meeple.meeple_back.game.catchmind.model.entity.Quiz;
 import com.meeple.meeple_back.game.catchmind.model.request.*;
 import com.meeple.meeple_back.game.catchmind.model.response.*;
@@ -157,7 +158,7 @@ public class CatchMindServiceImpl implements CatchMindService {
             roomInfo.put("password", request.getPassword());
         }
 
-        if (request.getMaxPeople() != Integer.parseInt(String.valueOf(roomInfo.get("password")))) {
+        if (request.getMaxPeople() != Integer.parseInt(String.valueOf(roomInfo.get("maxPeople")))) {
             roomInfo.put("maxPeople", request.getMaxPeople());
         }
 
@@ -171,7 +172,7 @@ public class CatchMindServiceImpl implements CatchMindService {
 
         redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
 
-        ResponseUpdateRoom response = ResponseUpdateRoom.builder()
+        RoomInfoDTO roomInfoDTO = RoomInfoDTO.builder()
                 .roomTitle(request.getRoomTitle())
                 .isPrivate(request.isPrivate())
                 .password(request.getPassword())
@@ -179,6 +180,11 @@ public class CatchMindServiceImpl implements CatchMindService {
                 .timeLimit(request.getTimeLimit())
                 .quizCount(request.getQuizCount())
                 .build();
+
+        ResponseUpdateRoom response = ResponseUpdateRoom.builder()
+            .type("updateRoom")
+            .roomInfo(roomInfoDTO)
+            .build();
 
         return response;
     }
