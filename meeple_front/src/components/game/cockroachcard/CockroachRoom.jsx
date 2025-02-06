@@ -14,7 +14,11 @@ const CockroachRoom = () => {
     try {
       console.log("방 생성 시작", roomData.roomTitle);
   
-      const response = await fetch("http://localhost:8090/game/create-room", {
+      const response = await fetch(
+        // `${import.meta.env.VITE_LOCAL_API_BASE_URL}/game/create-room`
+        `${import.meta.env.VITE_API_BASE_URL}/game/create-room`
+        , 
+        {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

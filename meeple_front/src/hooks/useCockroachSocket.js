@@ -2,13 +2,30 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
 
-if (typeof global === "undefined") {
-  window.global = window;
-}
+// WebSocket URL constants
+export const WS_ENDPOINTS = {
+  SUBSCRIBE_ROOMS: "/topic/game/rooms",
+  JOIN_ROOM: "/game/join-room",
+  CHAT: (roomId) => `/game/chat/${roomId}`,
+  UPDATE_ROOM: (roomId) => `/game/update-room/${roomId}`,
+  START_GAME: (roomId) => `/game/start-game/${roomId}`,
+  GIVE_CARD: (roomId) => `/game/give-card/${roomId}`,
+  SINGLE_CARD: (roomId) => `/game/single-card/${roomId}`,
+  MULTI_CARD: (roomId) => `/game/multi-card/${roomId}`,
+  EXIT_ROOM: (roomId) => `/game/exit-room/${roomId}`,
+  SEND_VOTE: (roomId) => `/game/send-vote/${roomId}`,
+  VOTE: (roomId) => `/game/vote/${roomId}`,
+  VOTE_RESULT: (roomId) => `/game/vote-result/${roomId}`,
+  HAND_CHECK: (roomId) => `/game/hand-check/${roomId}`,
+  // Subscribe endpoints
+  SUBSCRIBE_GAME: (roomId) => `/topic/game/${roomId}`,
+  SUBSCRIBE_CHAT: (roomId) => `/topic/messages/${roomId}`,
+};
 
-const useSocket = (roomId) => {
+const useCockroachSocket = (roomId) => {
   const clientRef = useRef(null);
   const [messages, setMessages] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [connected, setConnected] = useState(false);
   const [stompClient, setStompClient] = useState(null);
   const isConnecting = useRef(false);
@@ -20,7 +37,11 @@ const useSocket = (roomId) => {
     isConnecting.current = true;
 
     const client = new Client({
-      webSocketFactory: () => new SockJS("http://localhost:8090/ws"),
+      webSocketFactory: () =>
+        new SockJS(
+          // `${import.meta.env.VITE_SOCKET_LOCAL_API_BASE_URL}`),
+          `${import.meta.env.VITE_SOCKET_API_BASE_URL}`
+        ),
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
@@ -33,44 +54,55 @@ const useSocket = (roomId) => {
       isConnecting.current = false;
 
       // 게임 메시지 구독
-      if (!subscriptionsRef.current.has("game")) {
-        const gameSubscription = client.subscribe(
-          `/topic/game/${roomId}`,
-          (message) => {
-            const response = JSON.parse(message.body);
-            console.log("Game message received:", response);
-            // 게임 시작 메시지 처리
-            if (response.gameData?.isGameStart) {
-              console.log("Game start message received");
-              isGameStartedRef.current = true;
+      // 구독 설정
+      const setupSubscriptions = () => {
+        // 방 목록 화면
+        if (roomId === "rooms") {
+          const roomsSubscription = client.subscribe(
+            WS_ENDPOINTS.SUBSCRIBE_ROOMS,
+            (message) => {
+              const roomList = JSON.parse(message.body);
+              setRooms(roomList.sort((a, b) => b.roomId - a.roomId));
             }
-          }
-        );
-        subscriptionsRef.current.set("game", gameSubscription);
-      }
+          );
+          subscriptionsRef.current.set("rooms", roomsSubscription);
+          return;
+        }
 
-      // 채팅 메시지 구독
-      if (!subscriptionsRef.current.has("chat")) {
-        const chatSubscription = client.subscribe(
-          `/topic/messages/${roomId}`,
-          (message) => {
-            console.log("Chat message received:", message.body);
-            const newMessage = JSON.parse(message.body);
-            setMessages((prev) => [...prev, newMessage]);
-          }
-        );
-        subscriptionsRef.current.set("chat", chatSubscription);
-      }
+        // 게임방 내부
+        if (!subscriptionsRef.current.has("game")) {
+          const gameSubscription = client.subscribe(
+            WS_ENDPOINTS.SUBSCRIBE_GAME(roomId),
+            (message) => {
+              const response = JSON.parse(message.body);
+              console.log("게임 메시지 수신:", response);
+              if (response.gameData?.isGameStart) {
+                isGameStartedRef.current = true;
+              }
+            }
+          );
+          subscriptionsRef.current.set("game", gameSubscription);
+        }
 
-      // 입장 메시지 전송
-      client.publish({
-        destination: `/app/game/join/${roomId}`,
-        body: JSON.stringify({ type: "JOIN" }),
-      });
+        // 채팅 메시지 구독
+        if (!subscriptionsRef.current.has("chat")) {
+          const chatSubscription = client.subscribe(
+            WS_ENDPOINTS.SUBSCRIBE_CHAT(roomId),
+            (message) => {
+              console.log("채팅 메시지 수신:", message.body);
+              const newMessage = JSON.parse(message.body);
+              setMessages((prev) => [...prev, newMessage]);
+            }
+          );
+          subscriptionsRef.current.set("chat", chatSubscription);
+        }
+      };
+
+      setupSubscriptions();
     };
 
     client.onDisconnect = () => {
-      console.log("WebSocket disconnected");
+      console.log("웹소켓 연결이 끊겼습니다.");
       setConnected(false);
       setStompClient(null);
       isConnecting.current = false;
@@ -82,88 +114,79 @@ const useSocket = (roomId) => {
     };
 
     client.onWebSocketError = (error) => {
-      console.error("WebSocket error:", error);
+      console.error("웹소켓 에러 :", error);
     };
 
     clientRef.current = client;
     client.activate();
   }, [roomId]);
 
-  const disconnect = useCallback(() => {
-    if (isGameStartedRef.current) {
-      console.log("Game is in progress - maintaining connection");
-      return;
-    }
-
-    subscriptionsRef.current.forEach((subscription) => {
-      try {
-        subscription.unsubscribe();
-      } catch (error) {
-        console.error("Error unsubscribing:", error);
-      }
-    });
-    subscriptionsRef.current.clear();
-
-    if (clientRef.current) {
-      clientRef.current.deactivate();
-    }
-  }, []);
-
-  const startGame = useCallback(() => {
-    if (!clientRef.current?.connected) {
-      return Promise.reject(new Error("웹소켓 연결 끊김"));
-    }
-
-    return new Promise((resolve) => {
-      clientRef.current.publish({
-        destination: `/app/game/start-game/${roomId}`,
-        body: JSON.stringify({}),
-      });
-      resolve();
-    });
-  }, [roomId]);
-
   const sendMessage = useCallback(
-    (messageData) => {
+    (type, data) => {
       if (!clientRef.current?.connected) {
-        console.error("WebSocket not connected");
-        return;
+        console.error("웹소켓이 연결 되었습니다.");
+        return Promise.reject(new Error("웹소켓 연결 끊김"));
       }
 
-      const destination = messageData.type
-        ? `/app/game/${messageData.type.toLowerCase()}/${roomId}`
-        : `/app/game/chat/${roomId}`;
+      const endpoint =
+        WS_ENDPOINTS[type]?.(roomId) || WS_ENDPOINTS.CHAT(roomId);
 
-      try {
-        clientRef.current.publish({
-          destination,
-          body: JSON.stringify(messageData.data || messageData),
-        });
-      } catch (error) {
-        console.error("Error sending message:", error);
-        throw error;
-      }
+      console.log("보낸 웹소켓 메시지:", {
+        destination: `/app${endpoint}`,
+        type,
+        data,
+      });
+
+      return new Promise((resolve, reject) => {
+        try {
+          clientRef.current.publish({
+            destination: `/app${endpoint}`,
+            body: JSON.stringify(data),
+          });
+          console.log("메시지를 성공적으로 보냈습니다.");
+          resolve();
+        } catch (error) {
+          console.error("메시지 전송 실패", error);
+          reject(error);
+        }
+      });
     },
     [roomId]
   );
+
+  // Specific message sending functions
+  const gameActions = {
+    joinRoom: (data) => sendMessage("JOIN_ROOM", data),
+    sendChat: (message) => sendMessage("CHAT", { message }),
+    updateRoom: (data) => sendMessage("UPDATE_ROOM", data),
+    startGame: () => sendMessage("START_GAME", {}),
+    giveCard: (data) => sendMessage("GIVE_CARD", data),
+    checkSingleCard: (data) => sendMessage("SINGLE_CARD", data),
+    checkMultiCard: (data) => sendMessage("MULTI_CARD", data),
+    exitRoom: (nickname) =>
+      sendMessage("EXIT_ROOM", { userNickname: nickname }),
+    sendVote: (data) => sendMessage("SEND_VOTE", data),
+    vote: (data) => sendMessage("VOTE", data),
+    sendVoteResult: (data) => sendMessage("VOTE_RESULT", data),
+    checkHand: (data) => sendMessage("HAND_CHECK", data),
+  };
 
   useEffect(() => {
     if (roomId) {
       connect();
     }
-
     return () => {
-      disconnect();
+      if (clientRef.current) {
+        clientRef.current.deactivate();
+      }
     };
-  }, [roomId, connect, disconnect]);
+  }, [roomId, connect]);
 
   return {
     connected,
-    sendMessage,
     messages,
-    startGame,
     stompClient,
+    ...gameActions,
   };
 };
-
-export default useSocket;
+export default useCockroachSocket;

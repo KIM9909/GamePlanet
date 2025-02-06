@@ -33,7 +33,10 @@ const CockroachPokerPage = () => {
 
   const fetchProfileAndJoinRoom = async () => {
     try {
-      const response = await fetch(`http://localhost:8090/profile/${userId}`);
+      const response = await fetch(
+        // `${import.meta.env.VITE_LOCAL_API_BASE_URL}/profile/${userId}`
+        `${import.meta.env.VITE_API_BASE_URL}/profile/${userId}`
+      );
       const profileData = await response.json();
 
       dispatch(setCurrentUser(profileData.userNickname));
@@ -41,7 +44,8 @@ const CockroachPokerPage = () => {
 
       // 방 정보 가져오기
       const roomCheckResponse = await fetch(
-        `http://localhost:8090/game/room/${roomId}`
+        // `${import.meta.env.VITE_LOCAL_API_BASE_URL}/game/room/${roomId}`
+        `${import.meta.env.VITE_API_BASE_URL}/game/room/${roomId}`
       );
       const currentRoomData = await roomCheckResponse.json();
 
