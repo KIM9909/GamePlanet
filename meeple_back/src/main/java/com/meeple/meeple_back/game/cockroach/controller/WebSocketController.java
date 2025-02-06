@@ -26,12 +26,10 @@ public class WebSocketController {
 
     @MessageMapping("/game/join-room")
     public void joinRoom(
-            @RequestParam String roomId,
-            @RequestParam String playerName,
-            @RequestParam String password) {
-        ResponseCockroachRoom response = gameRoomService.addPlayer(roomId, playerName, password);
+            @RequestBody RequestJoinRoom request) {
+        ResponseCockroachRoom response = gameRoomService.addPlayer(request);
 
-        messagingTemplate.convertAndSend("/topic/game/" + roomId, response);
+        messagingTemplate.convertAndSend("/topic/game/" + request.getRoomId(), response);
     }
 
     // WebSocket API를 Swagger에서 확인할 수 있도록 REST API 엔드포인트 추가

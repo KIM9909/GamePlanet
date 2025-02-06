@@ -6,8 +6,8 @@ import axios from "axios";
  * withCredentials: 쿠키를 포함한 인증 요청 허용
  */
 const API = axios.create({
-  // baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
   baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
+  // baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
   headers: {
     "Content-Type": "application/json",
   },

@@ -352,6 +352,8 @@ public class CatchMindServiceImpl implements CatchMindService {
             int currentScore = playerScore.getOrDefault(request.getSender(), 0);
             playerScore.put(request.getSender(), currentScore + 30);
 
+            gameInfo.put("playerScore", playerScore);
+
             List<String> players = (List<String>) roomInfo.get("players");
 
 
@@ -385,6 +387,8 @@ public class CatchMindServiceImpl implements CatchMindService {
                         .build();
 
                 messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, responseSendMessage);
+
+                playerScore.put(request.getSender(), currentScore + 30);
 
                 ResponseGameResult responseResult = ResponseGameResult.builder()
                         .type("result")

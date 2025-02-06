@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "게임방(블루마블)")
+@Tag(name = "대기방(블루마블)")
 @RestController
 @RequestMapping("/game/blue-marble/rooms")
 @Builder
@@ -26,7 +26,7 @@ public class BluemarbleRoomCreateController {
 	private final BluemarbleRoomService bluemarbleRoomService;
 
 	@PostMapping("/{userId}")
-	@Operation(summary = "게임방 생성", description = "새로운 블루마블 게임방을 생성합니다.")
+	@Operation(summary = "대기방 생성", description = "새로운 블루마블 대기방을 생성합니다.")
 	public ResponseEntity<RoomResponse> create(@PathVariable Long userId,
 			@Valid @RequestBody RoomCreate roomCreate) {
 		return ResponseEntity.status(HttpStatus.CREATED)

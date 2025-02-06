@@ -9,7 +9,6 @@ import useFriendSocket from "../../hooks/useFriendSocket";
 
 const ReceivedFriendRequest = ({ requestedList }) => {
   const userId = useSelector((state) => state.user.userId);
-  const { processFriendRequest } = useFriendSocket(userId);
   console.log(requestedList);
   const [requestList, setRequestList] = useState();
 
@@ -17,14 +16,45 @@ const ReceivedFriendRequest = ({ requestedList }) => {
     setRequestList(requestedList);
   }, [requestedList]);
 
+  const { connected, responseSocket, stompClientRef } = useFriendSocket();
+
+  useEffect(() => {
+    if (connected) {
+      console.log("소켓이 연결되었습니다.");
+    } else {
+      console.error("소켓 연결 에러");
+      // 재연결 시도
+      const reconnectSocket = async () => {
+        if (stompClientRef.current) {
+          try {
+            await stompClientRef.current.activate();
+          } catch (error) {
+            console.error("재연결 실패:", error);
+          }
+        }
+      };
+      reconnectSocket();
+    }
+  }, [connected]);
+
+  useEffect(() => {
+    if (responseSocket) {
+      console.log("새로운 소켓 응답:", responseSocket);
+    }
+  }, [responseSocket]);
+
   const handleAccept = async (friendId) => {
     if (requestList && userId) {
       try {
         const requirements = "ACCEPT";
-        const responseSocket = await processFriendRequest(
-          friendId,
-          requirements
-        );
+        const responseAPI = await processFriendRequest(friendId, requirements);
+        console.log(responseAPI);
+        console.log(connected);
+        if (connected) {
+          console.log(responseSocket);
+        }
+        console.log(responseSocket);
+
         const response = await requestFriendList(userId);
         setRequestList(response.requestedList);
       } catch (error) {
