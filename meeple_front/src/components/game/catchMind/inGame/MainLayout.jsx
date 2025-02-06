@@ -15,6 +15,7 @@ import {
 import Canvas from "./Canvas";
 import ChatBox from "./ChatBox";
 import PlayerCard from "./PlayerCard";
+import CatchMindUpdateRoomModal from "./CatchMindUpdateRoomModal";
 import {
   updatePlayers,
   resetGameState,
@@ -68,14 +69,12 @@ const MainLayout = () => {
       setIsExiting(true);
       console.log("[ExitRoom] Starting exit process");
 
-      // 방 나가기 전에 게임 상태 초기화
       dispatch(resetGameState());
 
-      // WebSocket을 통해 방 나가기 메시지 전송 - 텍스트로 전송
       client.publish({
         destination: `/app/exit-room/${roomId}`,
-        body: profileData.userNickname, // JSON.stringify 제거, 텍스트로 전송
-        headers: { "content-type": "text/plain" }, // content-type을 text/plain으로 변경
+        body: profileData.userNickname,
+        headers: { "content-type": "text/plain" },
       });
 
       setTimeout(() => {
@@ -105,8 +104,9 @@ const MainLayout = () => {
         callback: (message) => {
           try {
             const data = JSON.parse(message.body);
+
+            // 플레이어 목록 업데이트
             if (data.players) {
-              // 플레이어 목록 업데이트
               const players = data.players.map((player, index) => ({
                 id: index + 1,
                 nickname: player,
@@ -116,6 +116,14 @@ const MainLayout = () => {
               }));
               dispatch(updatePlayers({ players }));
               setRoomInfo((prev) => ({ ...prev, players: data.players }));
+            }
+
+            // 방 정보 업데이트 처리
+            if (data.type === "updateRoom" && data.roomInfo) {
+              setRoomInfo((prev) => ({
+                ...prev,
+                ...data.roomInfo,
+              }));
             }
           } catch (error) {
             console.error("메시지 파싱 오류:", error);
@@ -158,7 +166,6 @@ const MainLayout = () => {
               : [],
           };
 
-          // roomInfo가 실제로 변경되었을 때만 상태 업데이트
           setRoomInfo((prev) => {
             if (JSON.stringify(prev) !== JSON.stringify(cleanedRoom)) {
               return cleanedRoom;
@@ -171,13 +178,12 @@ const MainLayout = () => {
             id: index + 1,
             nickname: player,
             score: currentRoom.gameInfo?.playerScore?.[player] || 0,
-            isTurn: currentRoom.gameInfo?.currentTurn // currentTurn이 있으면 그 값을 사용
+            isTurn: currentRoom.gameInfo?.currentTurn
               ? player === currentRoom.gameInfo.currentTurn
-              : index === 0, // 없으면 첫 번째 플레이어가 턴
+              : index === 0,
             isCurrentUser: player === currentUserNickname,
           }));
 
-          // players 정보가 실제로 변경되었을 때만 dispatch
           if (JSON.stringify(gameState.players) !== JSON.stringify(players)) {
             dispatch(updatePlayers({ players }));
           }
@@ -186,12 +192,6 @@ const MainLayout = () => {
         console.error("방 정보 가져오기 실패:", error);
       }
     };
-
-    // if (roomId && profileData?.userNickname && !isExiting) {
-    //   fetchRoomInfo();
-    //   const intervalId = setInterval(fetchRoomInfo, 2000);
-    //   return () => clearInterval(intervalId);
-    // }
   }, [
     roomId,
     profileData?.userNickname,
@@ -223,7 +223,6 @@ const MainLayout = () => {
 
     handleInitialJoin();
 
-    // 컴포넌트 언마운트 시 게임 상태 초기화
     return () => {
       dispatch(resetGameState());
     };
@@ -235,29 +234,33 @@ const MainLayout = () => {
     dispatch,
   ]);
 
+  // 게임 시작 처리 함수
+  const handleStartGame = useCallback(async () => {
+    if (!roomId || !client) return;
+
+    try {
+      console.log("[StartGame] 게임 시작 요청 전송");
+      dispatch(resetGameState());
+
+      client.publish({
+        destination: `/app/start-game/${roomId}`,
+        body: "",
+        headers: {
+          "content-type": "text/plain",
+        },
+      });
+    } catch (error) {
+      console.error("[StartGame] 게임 시작 요청 실패:", error);
+    }
+  }, [roomId, client, dispatch]);
+
   // 제시어 가져오기
   const currentWord = useMemo(() => {
-    console.log("게임 상태 체크:", {
-      isGameStarted: gameState.isGameStarted,
-      currentWord: gameState.currentWord,
-      currentPlayerNick: currentPlayer?.nickname,
-      profileNick: profileData?.userNickname,
-      allPlayers: gameState.players,
-    });
-
     if (!gameState.isGameStarted) {
-      console.log("게임이 시작되지 않음");
       return "";
     }
 
     const isDrawer = currentPlayer?.nickname === profileData?.userNickname;
-
-    console.log("제시어 체크:", {
-      isDrawer,
-      currentWord: gameState.currentWord,
-      willReturn: isDrawer ? gameState.currentWord || "준비중..." : "???",
-    });
-
     return isDrawer ? gameState.currentWord || "준비중..." : "???";
   }, [
     gameState.isGameStarted,
@@ -265,53 +268,6 @@ const MainLayout = () => {
     currentPlayer?.nickname,
     profileData?.userNickname,
   ]);
-
-  // 상태 변경 감지
-  useEffect(() => {
-    console.log("상태 변경 감지:", {
-      gameStarted: gameState.isGameStarted,
-      currentWord: gameState.currentWord,
-      players: gameState.players,
-      currentPlayer: currentPlayer,
-      profileData: profileData,
-    });
-  }, [
-    gameState.isGameStarted,
-    gameState.currentWord,
-    gameState.players,
-    currentPlayer,
-    profileData,
-  ]);
-
-  const isCurrentUsersTurn = useCallback(() => {
-    return currentPlayer?.nickname === getCurrentUserNickname();
-  }, [currentPlayer?.nickname, getCurrentUserNickname]);
-
-  // // 현재 사용자가 방장인지 확인
-  // const isCreator = roomInfo?.creator === profileData?.userNickname;
-
-  // 게임 시작 처리 함수
-  const handleStartGame = useCallback(async () => {
-    if (!roomId || !client) return;
-
-    try {
-      console.log("[StartGame] 게임 시작 요청 전송");
-
-      // 게임 시작 전에 초기 상태 리셋
-      dispatch(resetGameState());
-
-      // WebSocket을 통해 게임 시작 요청 전송
-      client.publish({
-        destination: `/app/start-game/${roomId}`,
-        body: "", // 빈 body 추가
-        headers: {
-          "content-type": "text/plain", // JSON이 아닌 text/plain으로 변경
-        },
-      });
-    } catch (error) {
-      console.error("[StartGame] 게임 시작 요청 실패:", error);
-    }
-  }, [roomId, client, dispatch]);
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-900 to-gray-800">
@@ -332,7 +288,7 @@ const MainLayout = () => {
             }}
             handleExitRoom={handleExitRoom}
             handleStartGame={handleStartGame}
-            isCreator={isCreator} // 수정된 isCreator 전달
+            isCreator={isCreator}
             client={client}
             isCurrentUserDrawer={isCurrentUserDrawer}
           />
@@ -346,18 +302,15 @@ const MainLayout = () => {
 
       <div className="w-1/3 flex flex-col gap-4 p-4 border-l border-gray-700">
         <div className="grid grid-cols-2 gap-3">
-          {gameState?.players?.map((player) => {
-            // console.log("Rendering PlayerCard:", player);
-            return (
-              <PlayerCard
-                key={player.id}
-                userId={player.id}
-                userNickname={player.nickname}
-                isCurrentTurn={player.isTurn}
-                score={player.score}
-              />
-            );
-          })}
+          {gameState?.players?.map((player) => (
+            <PlayerCard
+              key={player.id}
+              userId={player.id}
+              userNickname={player.nickname}
+              isCurrentTurn={player.isTurn}
+              score={player.score}
+            />
+          ))}
         </div>
 
         <div className="flex-1 bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
@@ -380,9 +333,10 @@ const GameInfo = ({
   handleStartGame,
   isCreator,
   client,
-  isCurrentUserDrawer, // 추가
+  isCurrentUserDrawer,
 }) => {
   const [timeLeft, setTimeLeft] = useState(roomInfo?.timeLimit || 90);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
 
   useEffect(() => {
     let timer;
@@ -391,7 +345,6 @@ const GameInfo = ({
       timer = setInterval(() => {
         setTimeLeft((prevTime) => {
           if (prevTime <= 0) {
-            // 출제자일 때만 타임아웃 요청 보내기
             if (client && isCurrentUserDrawer) {
               console.log("출제자가 타임아웃 요청을 보냅니다.");
               client.publish({
@@ -422,7 +375,6 @@ const GameInfo = ({
     isCurrentUserDrawer,
   ]);
 
-  // 새로운 턴이 시작될 때마다 타이머 리셋
   useEffect(() => {
     if (roomInfo?.isGameStarted) {
       setTimeLeft(roomInfo?.timeLimit || 90);
@@ -431,7 +383,6 @@ const GameInfo = ({
 
   return (
     <div className="flex items-center justify-between px-8 py-4 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-t-lg border-b border-gray-700">
-      {/* 왼쪽: 방 제목과 잠금 아이콘 */}
       <div className="flex items-center space-x-2 min-w-[200px]">
         <h2 className="text-xl font-bold truncate">{roomInfo?.roomTitle}</h2>
         {roomInfo?.isPrivate && (
@@ -439,16 +390,23 @@ const GameInfo = ({
         )}
       </div>
 
-      {/* 중앙: 게임 상태 정보 */}
       <div className="flex items-center justify-center space-x-6 flex-1 mx-4">
-        {/* 방장이고 게임이 시작되지 않았을 때만 시작하기 버튼 표시 */}
+        {/* 방장이고 게임이 시작되지 않았을 때 버튼들 표시 */}
         {isCreator && !roomInfo?.isGameStarted && (
-          <button
-            onClick={handleStartGame}
-            className="px-6 py-2 bg-green-600 hover:bg-green-700 rounded-full transition-colors flex items-center space-x-2"
-          >
-            <span>게임 시작</span>
-          </button>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={handleStartGame}
+              className="px-6 py-2 bg-green-600 hover:bg-green-700 rounded-full transition-colors flex items-center space-x-2"
+            >
+              <span>게임 시작</span>
+            </button>
+            <button
+              onClick={() => setIsUpdateModalOpen(true)}
+              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-full transition-colors flex items-center space-x-2"
+            >
+              <span>방 정보 수정</span>
+            </button>
+          </div>
         )}
 
         <div className="flex items-center space-x-2 bg-gray-700/50 px-4 py-2 rounded-full">
@@ -470,7 +428,6 @@ const GameInfo = ({
         )}
       </div>
 
-      {/* 오른쪽: 플레이어 수와 나가기 버튼 */}
       <div className="flex items-center space-x-4 min-w-[200px] justify-end">
         <div className="flex items-center space-x-2 bg-gray-700/50 px-3 py-1.5 rounded-full">
           <Users className="w-4 h-4 text-blue-400" />
@@ -486,6 +443,14 @@ const GameInfo = ({
           <span>나가기</span>
         </button>
       </div>
+
+      {/* 방 정보 수정 모달 */}
+      <CatchMindUpdateRoomModal
+        isOpen={isUpdateModalOpen}
+        onClose={() => setIsUpdateModalOpen(false)}
+        roomInfo={roomInfo}
+        client={client}
+      />
     </div>
   );
 };

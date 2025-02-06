@@ -176,25 +176,61 @@ const VideoChat = ({ nickname }) => {
         if (!isComponentMounted) return;
         setSession(session);
 
+        // streamCreated 이벤트 핸들러 수정
         session.on("streamCreated", (event) => {
           if (!isComponentMounted) return;
 
+          const streamNickname = JSON.parse(
+            event.stream.connection.data
+          ).clientData;
+
+          // 현재 사용자의 스트림은 구독하지 않음
+          if (streamNickname === nickname) {
+            return;
+          }
+
+          // 새로운 div 엘리먼트를 생성하여 subscriber를 위한 컨테이너로 사용
+          const subscriberContainer = document.createElement("div");
+          subscriberContainer.className = "absolute inset-0";
+          subscriberContainer.id = `subscriber-${event.stream.streamId}`;
+
           const subscriber = session.subscribe(
             event.stream,
-            videoContainerRef.current
+            subscriberContainer
           );
+
           subscriber.on("videoElementCreated", (e) => {
             e.element.classList.add("w-full", "h-full", "object-cover");
           });
 
-          setSubscribers((prev) => [...prev, subscriber]);
+          // subscribers 배열에 추가하기 전에 컨테이너를 DOM에 추가
+          if (publisherRef.current?.parentElement) {
+            publisherRef.current.parentElement.appendChild(subscriberContainer);
+          }
+
+          setSubscribers((prev) => [
+            ...prev,
+            {
+              stream: subscriber,
+              nickname: streamNickname,
+              containerId: subscriberContainer.id,
+            },
+          ]);
         });
 
+        // streamDestroyed 이벤트 핸들러 수정
         session.on("streamDestroyed", (event) => {
           if (isComponentMounted) {
+            // DOM에서 subscriber 컨테이너 제거
+            const containerId = `subscriber-${event.stream.streamId}`;
+            const container = document.getElementById(containerId);
+            if (container) {
+              container.remove();
+            }
+
             setSubscribers((prev) =>
               prev.filter(
-                (sub) => sub.stream.streamId !== event.stream.streamId
+                (sub) => sub.stream.stream.streamId !== event.stream.streamId
               )
             );
           }
@@ -207,6 +243,7 @@ const VideoChat = ({ nickname }) => {
         const tokenResponse = await VideoAPI.generateToken(
           sessionResponse.sessionId
         );
+        // 연결 시 닉네임 정보 포함
         await session.connect(tokenResponse.token, { clientData: nickname });
 
         const publisher = OV.initPublisher(publisherRef.current, {
@@ -241,7 +278,7 @@ const VideoChat = ({ nickname }) => {
         await session.publish(publisher);
         if (isComponentMounted) {
           setPublisher(publisher);
-          retryCountRef.current = 0; // 성공하면 재시도 카운트 리셋
+          retryCountRef.current = 0;
         }
       } catch (error) {
         console.error("비디오 초기화 중 오류:", error);
@@ -284,9 +321,10 @@ const VideoChat = ({ nickname }) => {
         </div>
       )}
 
-      <div ref={publisherRef} className="absolute inset-0" />
-      <div ref={videoContainerRef} className="absolute inset-0" />
+      {/* Publisher 컨테이너 */}
+      {isCurrentUser && <div ref={publisherRef} className="absolute inset-0" />}
 
+      {/* 컨트롤 버튼 */}
       {isCurrentUser && (
         <div className="absolute bottom-2 right-2 flex gap-2 z-10">
           <button
