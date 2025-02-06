@@ -2,6 +2,8 @@ package com.meeple.meeple_back.game.bluemarble.controller.socket;
 
 import com.meeple.meeple_back.game.bluemarble.controller.port.BluemarbleGameService;
 import com.meeple.meeple_back.game.bluemarble.controller.request.DiceRollRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.response.SocketBuyLandResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.SocketDiceRollResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,5 +33,14 @@ public class BluemarbleGameController {
 		SocketDiceRollResponse socketDiceRollResponse = SocketDiceRollResponse.from("roll-dice",
 				bluemarbleGameService.rollDice(roomId, diceRollRequest), "주사위를 굴렸습니다.");
 		messagingTemplate.convertAndSend("/topic/room/" + roomId, socketDiceRollResponse);
+	}
+
+	@MessageMapping("/{roomId}/buy-land")
+	@Operation(summary = "땅 구매", description = "땅을 구매합니다.")
+	public void buyLand(@DestinationVariable("roomId") int roomId,
+			@Payload BuyLandRequest buyLandRequest) {
+		SocketBuyLandResponse socketBuyLandResponse = SocketBuyLandResponse.from("buy-land",
+				bluemarbleGameService.buyLand(roomId, buyLandRequest), "땅을 구매했습니다.");
+		messagingTemplate.convertAndSend("/topic/room/" + roomId, socketBuyLandResponse);
 	}
 }

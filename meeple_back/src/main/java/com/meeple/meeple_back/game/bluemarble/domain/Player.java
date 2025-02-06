@@ -50,7 +50,6 @@ public class Player {
 		if (!diceRollRequest.isWasDouble()) {
 			isDouble = diceRollRequest.getFirstDice() == diceRollRequest.getSecondDice();
 		}
-	
 		int prevPosition = this.position;
 		int nextPosition = (this.position + sum) % 40;
 		if (this.position + sum >= 40) {
@@ -58,5 +57,20 @@ public class Player {
 		}
 		this.position = nextPosition;
 		return new DiceRollResponse(this.playerId, prevPosition, nextPosition, isDouble);
+	}
+
+	public void payMoney(int price) {
+		if (this.getBalance() < price) {
+			throw new IllegalArgumentException("Not enough money");
+		}
+		this.balance -= price;
+	}
+
+	public void addLandOwned(int tileId) {
+		this.landOwned.add(tileId);
+	}
+
+	public void addCardOwned(Card card) {
+		this.cardOwned.add(card);
 	}
 }

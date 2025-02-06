@@ -3,7 +3,9 @@ package com.meeple.meeple_back.game.bluemarble.service;
 import com.meeple.meeple_back.common.domain.exception.ResourceNotFoundException;
 import com.meeple.meeple_back.game.bluemarble.controller.port.BluemarbleGameService;
 import com.meeple.meeple_back.game.bluemarble.controller.request.DiceRollRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.response.BuyLandResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DiceRollResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
 import com.meeple.meeple_back.game.bluemarble.domain.GamePlay;
 import com.meeple.meeple_back.game.bluemarble.domain.GamePlayCreate;
 import com.meeple.meeple_back.game.bluemarble.domain.Player;
@@ -37,5 +39,13 @@ public class BluemarbleGameServiceImpl implements BluemarbleGameService {
 		gamePlay.rollDices(diceRollRequest);
 		bluemarbleGameRepository.save(gamePlay);
 		return gamePlay.rollDices(diceRollRequest);
+	}
+
+	@Override
+	public BuyLandResponse buyLand(int roomId, BuyLandRequest buyLandRequest) {
+		GamePlay gamePlay = bluemarbleGameRepository.findById(roomId)
+				.orElseThrow(() -> new ResourceNotFoundException("GamePlay", roomId));
+		//
+		return gamePlay.buyLand(buyLandRequest);
 	}
 }
