@@ -18,7 +18,9 @@ import CatchMindPage from "./pages/game/CatchMindPage";
 import WaitingRoom from "./components/game/burumabul/waiting/WaitingRoom";
 import FriendModalLayout from "./components/layout/FriendModalLayout";
 import CatchMindListPage from "./components/game/catchMind/roomList/CatchMindListPage";
+import CockroachRoom from "./components/game/cockroachcard/CockroachRoom";
 import BurumabulRoomListPage from "./pages/game/burumabul/BurumabulRoomListPaage";
+
 function App() {
   return (
     <BrowserRouter>
@@ -69,12 +71,12 @@ function App() {
             <Route path="/proposal" element={<ProposalPage />} />
             <Route path="/proposal/:proposalId" element={<ProposalPage />} />
 
-            {/* Tournament */}
-            <Route path="/tournament" element={<TournamentPage />} />
-            <Route
-              path="/tournament/:tournamentId"
-              element={<TournamentPage />}
-            />
+
+              {/* INTRODUCE */}
+              <Route path="/introduce" element={<Introduce />} />
+
+              {/* Cockroach Room List */}
+              <Route path="/test/cockroach" element={<CockroachRoom />} />
 
             {/* INTRODUCE */}
             <Route path="/introduce" element={<Introduce />} />

@@ -64,9 +64,9 @@ public class CockroachController {
     })
     @PostMapping("/update-data")
     public ResponseEntity<String> updateGameData(
-        @RequestParam String roomId,
-        @RequestParam String key,
-        @RequestParam Object value) {
+            @RequestParam String roomId,
+            @RequestParam String key,
+            @RequestParam Object value) {
         gameRoomService.updateGameData(roomId, key, value);
 
         return ResponseEntity.ok("Game data updated for room: " + roomId);

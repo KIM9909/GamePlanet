@@ -44,8 +44,8 @@ public class WebSocketController {
     }
     @MessageMapping("/game/chat/{roomId}")
     public void handleMessage(
-        @DestinationVariable String roomId,
-        @RequestBody RequestSendMessage request) {
+            @DestinationVariable String roomId,
+            @RequestBody RequestSendMessage request) {
         if (roomId == null || roomId.isEmpty()) {
             throw new IllegalArgumentException("유효하지 않은 roomId 입니다.");
         }
@@ -56,7 +56,7 @@ public class WebSocketController {
 
         // 받은 메시지를 콘솔에 출력 (디버깅용)
         System.out.println("Received message in room " + roomId + ": "
-            + request.getMessage());
+                + request.getMessage());
 
         cockroachService.sendMessage(roomId, request);
     }
@@ -82,7 +82,7 @@ public class WebSocketController {
     }
     @MessageMapping("/game/start-game/{roomId}")
     public void startGameSocket(
-        @DestinationVariable String roomId
+            @DestinationVariable String roomId
     ) {
         System.out.println("게임 시작 호출");
         ResponseStartGame response = cockroachService.startGame(roomId);
@@ -102,8 +102,8 @@ public class WebSocketController {
 
     @MessageMapping("/game/give-card/{roomId}")
     public void giveCardSocket(
-        @DestinationVariable String roomId,
-        @RequestBody RequestGiveCard request
+            @DestinationVariable String roomId,
+            @RequestBody RequestGiveCard request
     ) {
         ResponseGiveCard response = cockroachService.giveCard(roomId, request);
 
@@ -129,8 +129,8 @@ public class WebSocketController {
     }
     @MessageMapping("/game/single-card/{roomId}")
     public void singleCardSocket(
-        @DestinationVariable String roomId,
-        @RequestBody RequestSingleCard request
+            @DestinationVariable String roomId,
+            @RequestBody RequestSingleCard request
     ) {
         ResponseCheckCard response = cockroachService.singleCard(roomId, request);
 
@@ -156,8 +156,8 @@ public class WebSocketController {
     }
     @MessageMapping("/game/multi-card/{roomId}")
     public void multiCardSocket(
-        @DestinationVariable String roomId,
-        @RequestBody RequestMultiCard request
+            @DestinationVariable String roomId,
+            @RequestBody RequestMultiCard request
     ) {
         ResponseMultiCard response = cockroachService.multiCard(roomId, request);
 

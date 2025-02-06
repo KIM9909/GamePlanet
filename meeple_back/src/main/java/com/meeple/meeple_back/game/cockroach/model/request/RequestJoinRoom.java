@@ -1,10 +1,14 @@
 package com.meeple.meeple_back.game.cockroach.model.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class RequestJoinRoom {
     @Schema(description = "게임방 pk", example = "1", required = true)

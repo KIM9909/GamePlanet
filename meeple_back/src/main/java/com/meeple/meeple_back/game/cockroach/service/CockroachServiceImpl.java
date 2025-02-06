@@ -90,6 +90,7 @@ public class CockroachServiceImpl implements CockroachService {
         Map<String, Object> roomInfo =
                 (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
 
+ 
         if (!request.getRoomTitle().equals(roomInfo.get("roomTitle"))) {
             roomInfo.put("roomTitle", request.getRoomTitle());
         }
@@ -102,7 +103,7 @@ public class CockroachServiceImpl implements CockroachService {
             roomInfo.put("password", request.getPassword());
         }
 
-        if (request.getMaxPeople() != Integer.parseInt(String.valueOf(roomInfo.get("password")))) {
+        if (request.getMaxPeople() != Integer.parseInt(String.valueOf(roomInfo.get("maxPeople")))) {
             roomInfo.put("maxPeople", request.getMaxPeople());
         }
 

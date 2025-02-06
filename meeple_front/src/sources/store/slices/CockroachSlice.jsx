@@ -1,5 +1,4 @@
-// CockroachSlice.jsx
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAction } from "@reduxjs/toolkit";
 
 const initialState = {
   roomData: null,
@@ -18,107 +17,155 @@ const initialState = {
     claimedAnimal: null,
     isKing: false,
     passedPlayers: [],
-    passCount: 0
-  }
+    passCount: 0,
+  },
 };
 
-const loadStateFromStorage = () => {
-  try {
-    const serializedState = localStorage.getItem('cockroachState');
-    if (serializedState === null) {
-      return initialState;
-    }
-    return JSON.parse(serializedState);
-  } catch (err) {
-    console.error('Error loading state:', err);
-    return initialState;
-  }
-};
-
-const saveStateToStorage = (state) => {
-  try {
-    localStorage.setItem('cockroachState', JSON.stringify(state));
-  } catch (err) {
-    console.error('Error saving state:', err);
-  }
-};
+export const setRoomData = createAction("cockroach/setRoomData", (roomData) => {
+  console.log("방 데이터 설정:", roomData);
+  return {
+    payload: {
+      ...roomData,
+      roomTitle: roomData.roomTitle || "바퀴벌레 포커",
+    },
+  };
+});
 
 const cockroachSlice = createSlice({
-  name: 'cockroach',
-  initialState: loadStateFromStorage(),
+  name: "cockroach",
+  initialState,
   reducers: {
-    setRoomData: (state, action) => {
-      state.roomData = action.payload;
-      saveStateToStorage(state);
-    },
     setGameData: (state, action) => {
-      console.log("setGameData action received:", action.payload);
+      console.log("Setting gameData:", action.payload);
+
+      if (!action.payload) return;
+
+      // gameData가 직접 전달된 경우
+      if (action.payload.playerCards || action.payload.gameState) {
+        state.gameData = action.payload;
+        state.playerCards = action.payload.playerCards || {};
+        state.publicDeck = action.payload.publicDeck || [];
+        state.userTableCards = action.payload.userTableCards || {};
+        if (action.payload.gameState) {
+          state.gameState = {
+            ...state.gameState,
+            ...action.payload.gameState,
+          };
+        }
+        // isGameStart가 true일 때만 isGameStarted를 true로 설정
+        if (action.payload.isGameStart) {
+          state.isGameStarted = true;
+        }
+        return;
+      }
+
+      // players와 gameData가 분리되어 전달된 경우
       const { players, gameData } = action.payload;
-      
-      state.players = players;
+
+      if (players) {
+        state.players = [...new Set(players)];
+      }
+
       if (gameData) {
         state.gameData = gameData;
         state.playerCards = gameData.playerCards || {};
         state.publicDeck = gameData.publicDeck || [];
         state.userTableCards = gameData.userTableCards || {};
-        state.gameState = {
-          ...state.gameState,
-          ...gameData.gameState,
-        };
-        // isGameStart가 true이면 isGameStarted도 true로 설정
+        if (gameData.gameState) {
+          state.gameState = {
+            ...state.gameState,
+            ...gameData.gameState,
+          };
+        }
+        // isGameStart가 true일 때만 isGameStarted를 true로 설정
         if (gameData.isGameStart) {
           state.isGameStarted = true;
         }
       }
-      saveStateToStorage(state);
+
+      console.log("State after update:", {
+        players: state.players,
+        gameData: state.gameData,
+        isGameStarted: state.isGameStarted,
+      });
     },
-    setGameStarted: (state, action) => {
-        console.log("이전 게임 상태:", state.isGameStarted);
-        console.log("새로운 게임 상태로 설정:", action.payload);
-        state.isGameStarted = action.payload;
-        saveStateToStorage(state);
-      },
+
+    startGame: (state) => {
+      console.log("Starting game...");
+      state.isGameStarted = true;
+    },
+
     updateGameState: (state, action) => {
+      console.log("Updating gameState:", action.payload);
       state.gameState = { ...state.gameState, ...action.payload };
-      saveStateToStorage(state);
     },
+
     updatePlayerCards: (state, action) => {
       const { player, cards } = action.payload;
+      if (!player || !cards) return;
+      console.log("Updating playerCards for:", player);
       state.playerCards[player] = cards;
-      saveStateToStorage(state);
     },
+
     updateTableCards: (state, action) => {
       const { player, cards } = action.payload;
+      if (!player || !cards) return;
+      console.log("Updating tableCards for:", player);
       state.userTableCards[player] = cards;
-      saveStateToStorage(state);
     },
+
     setCurrentUser: (state, action) => {
+      console.log("Setting currentUser:", action.payload);
       state.currentUser = action.payload;
-      saveStateToStorage(state);
     },
+
     updatePublicDeck: (state, action) => {
+      console.log("Updating publicDeck");
       state.publicDeck = action.payload;
-      saveStateToStorage(state);
     },
+
     resetGame: (state) => {
-      // isGameStarted만 초기화하고 다른 데이터는 유지
-      state.isGameStarted = false;
-      state.gameState = initialState.gameState;
-      saveStateToStorage(state);
-    }
-  }
+      console.log("Resetting game state");
+      // roomData와 players는 유지하고 나머지 상태만 초기화
+      return {
+        ...initialState,
+        roomData: state.roomData,
+        players: state.players
+      };
+    },
+
+    leaveGame: (state) => {
+      console.log("Leaving game - full reset");
+      // 모든 상태를 완전히 초기화
+      return initialState;
+    },
+
+    setGameStarted: (state, action) => {
+      state.isGameStarted = action.payload;
+    },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(setRoomData, (state, action) => {
+      console.log("Reducer received room data:", action.payload);
+      state.roomData = action.payload;
+      if (action.payload && action.payload.players) {
+        state.players = [...new Set(action.payload.players)];
+      }
+    });
+  },
 });
 
 export const {
-  setRoomData,
   setGameData,
-  setGameStarted,
+  startGame,
   updateGameState,
   updatePlayerCards,
   updateTableCards,
   setCurrentUser,
   updatePublicDeck,
-  resetGame
+  resetGame,
+  leaveGame,
+  setGameStarted
 } = cockroachSlice.actions;
 
 export default cockroachSlice.reducer;
