@@ -402,6 +402,7 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
     }
   }, [playerBases, onBasesInfo]); // playerBase가 변경될 때마다 실행
 
+  // 우주기지 생성
   const [spaceBases, setSpaceBases] = useState(() => {
     //모든 포지션에 대해 초기 우주기지 생성
     // positions가 아직 설정되지 않았으므로 빈 배열로 시작
@@ -412,13 +413,22 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
   useEffect(() => {
     if (positions.length > 0) {
       // 모든 positions에 대해 우주기지 생성
-      const initialBases = positions.map((position) => ({
-        position: position,
-        color: "gray",
-      }));
+
+      const initialBases = positions.map((position, index) => {
+        const cellSize = cellSizes[index];
+        return {
+          position: position,
+          color: "gray",
+          size: {
+            width: cellSize[0] * 0.8,
+            height: 0.1,
+            depth: cellSize[0] * 0.8,
+          },
+        };
+      });
       setSpaceBases(initialBases);
     }
-  }, [positions]);
+  }, [positions, cellSizes]);
 
   // Preload textures
   const floor = useMemo(() => useLoader(TextureLoader, floorTexture), []);
@@ -546,9 +556,25 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
   // 우주 기지 렌더링 추가
   const renderSpaceBases = useMemo(() => {
     console.log("render base");
-    return spaceBases.map((base, index) => (
-      <SpaceBase key={index} position={base.position} color={base.color} />
-    ));
+    return spaceBases.map((base, index) => {
+      const adjustedPosition = [
+        base.position[0],
+        base.position[1] + 0.3,
+        base.position[2],
+      ]; // y축을 살짝 띄움 const size = [1, 1.5, 0.6];
+
+      return (
+        <SpaceBase
+          position={adjustedPosition}
+          key={index}
+          color={base.color}
+          width={base.size.width}
+          height={base.size.height}
+          depth={base.size.depth} // 3D 크기
+          visible={true}
+        />
+      );
+    });
   }, [spaceBases]);
 
   return (
