@@ -73,6 +73,7 @@ import neuronsCard from "../../../../assets/burumabul_images/neuronscard.png";
 import BlueRobot from "./BlueRobot";
 import SpaceBase from "./SpaceBase";
 import useBurumabulSocket from "../../../../hooks/useBurumabulSocket";
+import { color } from "framer-motion";
 
 const Cell = ({
   position,
@@ -401,7 +402,23 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
     }
   }, [playerBases, onBasesInfo]); // playerBase가 변경될 때마다 실행
 
-  const [spaceBases, setSpaceBases] = useState([]);
+  const [spaceBases, setSpaceBases] = useState(() => {
+    //모든 포지션에 대해 초기 우주기지 생성
+    // positions가 아직 설정되지 않았으므로 빈 배열로 시작
+    return [];
+  });
+
+  // positions가 설정된 후 우주기지 초기화
+  useEffect(() => {
+    if (positions.length > 0) {
+      // 모든 positions에 대해 우주기지 생성
+      const initialBases = positions.map((position) => ({
+        position: position,
+        color: "gray",
+      }));
+      setSpaceBases(initialBases);
+    }
+  }, [positions]);
 
   // Preload textures
   const floor = useMemo(() => useLoader(TextureLoader, floorTexture), []);
@@ -445,35 +462,28 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
         const targetCity = cities[targetPosition];
         console.log("Building space base at:", positions[targetPosition]);
         setSpaceBases((prevBases) => {
-          if (
-            prevBases.some(
-              (base) => base.position === positions[targetPosition]
-            )
-          ) {
-            console.log("⚠️ Space base already exists at this position!");
-            return prevBases; // 기존 상태 유지 (새로 추가하지 않음)
-          }
-
-          // 우주기지 생성 시 도시 이름도 배열에 추가
-          setPlayerBases((prev) => {
-            const newBases = [...prev];
-            return prev.map((bases, index) =>
-              index === currentPlayerIndex && !bases.includes(targetCity)
-                ? [...bases, targetCity]
-                : bases
-            );
+          return prevBases.map((base) => {
+            if (base.position === positions[targetPosition]) {
+              return { ...base, color: player.color };
+            }
+            return base;
           });
-
-          console.log(
-            `player ${currentPlayerIndex + 1} built a base in ${targetCity}`
-          );
-
-          const newBase = {
-            position: positions[targetPosition],
-            color: player.color,
-          };
-          return [...prevBases, newBase];
         });
+
+        // 플레이어의 우주기지 목록 업데이트
+        setPlayerBases((prev) => {
+          const newBases = [...prev];
+          return prev.map((bases, index) =>
+            index === currentPlayerIndex && !bases.includes(targetCity)
+              ? [...bases, targetCity]
+              : bases
+          );
+        });
+
+        console.log(
+          `player ${currentPlayerIndex + 1} built a base in ${targetCity}`
+        );
+
         dispatch(nextTurn());
       }
     };

@@ -49,54 +49,54 @@ export const listBurumabulRoom = async () => {
   }
 };
 
-// // 게임 방 삭제
-// export const deleteBurumabulRoom = async (roomId) => {
-//   try {
-//     const response = await axios.delete(
-//       `${BURUMABUL_API_BASE_URL}/${roomId}`,
-//       {},
-//       { headers: getAuthHeaders() }
-//     );
+// 게임 방 삭제
+export const deleteBurumabulRoom = async (roomId) => {
+  try {
+    const response = await axios.delete(
+      `${BURUMABUL_API_BASE_URL}/${roomId}`,
+      {},
+      { headers: getAuthHeaders() }
+    );
 
-//     return response.data;
-//   } catch (error) {
-//     console.error("방 삭제 실패 :", error);
-//     throw error;
-//   }
-// };
+    return response.data;
+  } catch (error) {
+    console.error("방 삭제 실패 :", error);
+    throw error;
+  }
+};
 
-// // 게임방 참가
-// export const joinBurumabulRoom = async (roomId) => {
-//   try {
-//     const response = await axios.post(
-//       `${BURUMABUL_API_BASE_URL}/${roomId}`,
-//       {},
-//       { headers: getAuthHeaders() }
-//     );
+// 게임방 참가
+export const joinBurumabulRoom = async (roomId) => {
+  try {
+    const response = await axios.post(
+      `${BURUMABUL_API_BASE_URL}/${roomId}`,
+      {},
+      { headers: getAuthHeaders() }
+    );
 
-//     return response.data;
-//   } catch (error) {
-//     console.error("방 참가 실패 : ", error);
-//     throw error;
-//   }
-// };
+    return response.data;
+  } catch (error) {
+    console.error("방 참가 실패 : ", error);
+    throw error;
+  }
+};
 
-// // 게임방 수정
-// export const putBurumabulRoom = async (roomData, roomId) => {
-//   try {
-//     const requestBody = roomData;
+// 게임방 수정
+export const putBurumabulRoom = async (roomData, roomId) => {
+  try {
+    const requestBody = roomData;
 
-//     const response = await axios.put(
-//       `${BURUMABUL_API_BASE_URL}/${roomId}`,
-//       requestBody
-//     );
+    const response = await axios.put(
+      `${BURUMABUL_API_BASE_URL}/${roomId}`,
+      requestBody
+    );
 
-//     return response.data;
-//   } catch (error) {
-//     console.error("방 수정에 실패했습니다. : ", error);
-//     throw error;
-//   }
-// };
+    return response.data;
+  } catch (error) {
+    console.error("방 수정에 실패했습니다. : ", error);
+    throw error;
+  }
+};
 
 // 게임방 조회
 export const findBurumabulRoom = async (roomId) => {
