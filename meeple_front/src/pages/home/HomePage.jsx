@@ -110,6 +110,9 @@ const HomePage = () => {
                 >
                   방 만들기
                 </button>
+                <button onClick={() => navigate("/burumabul/room-list")}>
+                  대기방 목록 보기
+                </button>
               </div>
 
               <GameCard
