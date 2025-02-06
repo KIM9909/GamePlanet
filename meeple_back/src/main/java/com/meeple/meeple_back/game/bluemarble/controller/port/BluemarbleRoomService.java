@@ -25,5 +25,5 @@ public interface BluemarbleRoomService {
 
 	Room changePassword(int roomId, RoomUpdatePassword roomUpdatePassword);
 
-	Room joinWithPassword(int roomId, RoomJoinWithPassword roomJoinWithPassword);
+	Room joinWithPassword(int roomId, int userId, RoomJoinWithPassword roomJoinWithPassword);
 }
