@@ -1,26 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { CatchMindAPI } from "../../../../sources/api/CatchMindAPI";
-import { fetchProfile } from "../../../../sources/store/slices/ProfileSlice";
+import { useSelector } from "react-redux";
 
-const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-
-  const userId = useSelector((state) => state.user.userId);
-  const profileData = useSelector((state) => state.profile.profileData);
-  const token = useSelector((state) => state.user.token);
-
-  // 컴포넌트 마운트 시 프로필 정보 가져오기
-  useEffect(() => {
-    if (userId) {
-      dispatch(fetchProfile(userId));
-    }
-  }, [userId, dispatch]);
-
+const CatchMindUpdateRoomModal = ({ isOpen, onClose, roomInfo, client }) => {
   const [formData, setFormData] = useState({
-    roomTitle: "", // roomTitle이 아닌 roomTitle으로 통일
+    roomTitle: "",
     isPrivate: false,
     password: "",
     maxPeople: "2",
@@ -28,45 +11,46 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
     quizCount: "5",
   });
 
+  // 컴포넌트 마운트 시 현재 방 정보로 폼 초기화
+  useEffect(() => {
+    if (roomInfo) {
+      setFormData({
+        roomTitle: roomInfo.roomTitle || "",
+        isPrivate: Boolean(roomInfo.isPrivate), // boolean 값 보장
+        password: roomInfo.password || "",
+        maxPeople: String(roomInfo.maxPeople || 2),
+        timeLimit: String(roomInfo.timeLimit || 90),
+        quizCount: String(roomInfo.quizCount || 5),
+      });
+    }
+  }, [roomInfo]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      // 리덕스의 토큰과 localStorage의 토큰 확인
-      const localToken = localStorage.getItem("token");
-      if (!localToken || !token || localToken !== token) {
-        console.error("토큰이 유효하지 않습니다.");
-        // 토큰 갱신 또는 로그인 처리
-        return;
-      }
-
+      // RoomInfoDTO 구조에 맞게 데이터 구성
       const requestData = {
-        roomTitle: formData.roomTitle,
-        creator: profileData?.userNickname,
+        roomTitle: formData.roomTitle.trim(),
         isPrivate: formData.isPrivate,
-        password: formData.password,
+        password: formData.isPrivate ? formData.password : "", // 비공개가 아닐 경우 빈 문자열
         maxPeople: parseInt(formData.maxPeople),
         timeLimit: parseInt(formData.timeLimit),
         quizCount: parseInt(formData.quizCount),
-        gameId: 1,
       };
 
-      const response = await CatchMindAPI.createRoom(requestData);
-
-      if (response.roomId) {
-        navigate(`/catch-mind/${response.roomId}`);
+      // WebSocket을 통해 방 정보 업데이트 메시지 전송
+      if (client) {
+        client.publish({
+          destination: `/app/update-room/${roomInfo.roomId}`,
+          body: JSON.stringify(requestData),
+          headers: { "content-type": "application/json" },
+        });
       }
+
+      onClose();
     } catch (error) {
-      console.error("Room creation error details:", {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-      });
-
-      if (error.response?.status === 401) {
-        localStorage.removeItem("token");
-        // 토큰 갱신 또는 로그인 페이지로 리다이렉트
-      }
+      console.error("Room update error:", error);
     }
   };
 
@@ -80,7 +64,7 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
     >
       <div className="bg-white rounded-lg p-6 w-96">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">방 만들기</h2>
+          <h2 className="text-xl font-bold text-gray-900">방 정보 수정</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
@@ -91,7 +75,7 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               방 제목
             </label>
             <input
@@ -103,15 +87,14 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
                   roomTitle: e.target.value,
                 }))
               }
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
               placeholder="방 제목을 입력하세요"
               required
             />
           </div>
 
-          {/* 비밀방 설정 */}
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-gray-700">비밀방</label>
+            <label className="text-sm font-medium text-gray-900">비밀방</label>
             <div
               className="relative inline-flex items-center cursor-pointer"
               onClick={() =>
@@ -135,10 +118,9 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          {/* 비밀번호 입력 */}
           {formData.isPrivate && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 비밀번호 (숫자 최대 8자리)
               </label>
               <input
@@ -153,16 +135,15 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
                     }));
                   }
                 }}
-                className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                 placeholder="비밀번호를 입력하세요"
                 required={formData.isPrivate}
               />
             </div>
           )}
 
-          {/* 최대 인원 선택 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               최대 인원
             </label>
             <select
@@ -173,7 +154,7 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
                   maxPeople: e.target.value,
                 }))
               }
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
             >
               <option value="2">2인</option>
               <option value="3">3인</option>
@@ -181,9 +162,8 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
             </select>
           </div>
 
-          {/* 제한 시간 설정 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               제한 시간 (초)
             </label>
             <select
@@ -194,7 +174,7 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
                   timeLimit: e.target.value,
                 }))
               }
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
             >
               <option value="5">5초</option>
               <option value="90">90초</option>
@@ -202,9 +182,8 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
             </select>
           </div>
 
-          {/* 퀴즈 개수 설정 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               퀴즈 개수
             </label>
             <select
@@ -215,7 +194,7 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
                   quizCount: e.target.value,
                 }))
               }
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
             >
               <option value="5">5개</option>
               <option value="7">7개</option>
@@ -223,12 +202,11 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
             </select>
           </div>
 
-          {/* 제출 버튼 */}
           <button
             type="submit"
             className="w-full py-2 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
-            방 만들기
+            수정하기
           </button>
         </form>
       </div>
@@ -236,4 +214,4 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
   );
 };
 
-export default CatchMindCreateRoomModal;
+export default CatchMindUpdateRoomModal;

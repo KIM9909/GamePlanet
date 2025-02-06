@@ -107,6 +107,22 @@ const useCatchSocket = (roomId) => {
                 // console.log(`[${debugId}] Received message:`, data);
                 console.log("전체 게임 상태 데이터:", data);
 
+                if (data.type === "updateRoom" && data.roomInfo) {
+                  console.log("방 정보 업데이트:", data.roomInfo);
+
+                  // 방 정보 업데이트
+                  dispatch(
+                    updateGameState({
+                      roomTitle: data.roomInfo.roomTitle,
+                      isPrivate: data.roomInfo.isPrivate,
+                      password: data.roomInfo.password,
+                      maxPeople: data.roomInfo.maxPeople,
+                      timeLimit: data.roomInfo.timeLimit,
+                      quizCount: data.roomInfo.quizCount,
+                    })
+                  );
+                }
+
                 // 타임아웃 처리
                 if (data.type === "timeOut" && data.gameData) {
                   console.log(
