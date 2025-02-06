@@ -16,7 +16,7 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-@Tag(name = "소켓 게임방(블루마블)")
+@Tag(name = "소켓 대기방(블루마블)")
 @Controller
 @RequestMapping("/game/blue-marble/rooms")
 @Builder
@@ -34,7 +34,7 @@ public class BluemarbleSocketRoomController {
 	}
 
 	@MessageMapping("/{roomId}/user/{userId}")
-	@Operation(summary = "게임방 참가", description = "게임방에 참가합니다.")
+	@Operation(summary = "대기방 참가", description = "대기방에 참가합니다.")
 	public void join(@DestinationVariable("roomId") int roomId,
 			@DestinationVariable("userId") long userId) {
 		RoomResponse roomResponse = RoomResponse.from(bluemarbleRoomService.join(roomId, userId));
@@ -43,7 +43,7 @@ public class BluemarbleSocketRoomController {
 	}
 
 	@MessageMapping("/{roomId}/update")
-	@Operation(summary = "소켓 게임방 업데이트", description = "게임방 정보를 업데이트합니다.")
+	@Operation(summary = "소켓 대기방 업데이트", description = "대기방 정보를 업데이트합니다.")
 	public void updateRoom(@DestinationVariable("roomId") int roomId,
 			@Payload RoomUpdate roomUpdate) {
 		RoomResponse roomResponse = RoomResponse.from(
@@ -52,7 +52,7 @@ public class BluemarbleSocketRoomController {
 	}
 
 	@MessageMapping("/{roomId}/changePassword")
-	@Operation(summary = "소켓 게임방 비밀번호 변경", description = "게임방의 비밀번호를 변경합니다.")
+	@Operation(summary = "소켓 대기방 비밀번호 변경", description = "대기방의 비밀번호를 변경합니다.")
 	public void changePassword(@DestinationVariable("roomId") int roomId,
 			@Payload RoomUpdatePassword newPassword) {
 		messagingTemplate.convertAndSend("/topic/rooms/" + roomId,
@@ -60,7 +60,7 @@ public class BluemarbleSocketRoomController {
 	}
 
 	@MessageMapping("/{roomId}/user/{userId}/delete")
-	@Operation(summary = "소켓 게임방 삭제", description = "게임방을 삭제합니다.")
+	@Operation(summary = "소켓 대기방 삭제", description = "대기방을 삭제합니다.")
 	public void deleteSocketCommunication(@DestinationVariable("roomId") int roomId,
 			@DestinationVariable("userId") Long userId) {
 		RoomResponse roomResponse = RoomResponse.from(bluemarbleRoomService.delete(roomId, userId));
