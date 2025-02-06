@@ -100,7 +100,6 @@ export const deleteMessage = async (friendMessageId) => {
 // 친구 목록 조회
 export const fetchFriendList = async (userId) => {
   if (!userId) throw new Error("유저 아이디가 없습니다.");
-  console.log(userId);
   if (userId) {
     try {
       const response = await axios.get(

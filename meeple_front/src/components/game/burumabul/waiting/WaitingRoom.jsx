@@ -14,7 +14,6 @@ import { fetchFriendList } from "../../../../sources/api/FriendApi";
 // 백엔드 연결 필요
 const WaitingRoom = () => {
   const userId = Number(useSelector((state) => state.user.userId));
-  console.log(userId);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,7 +28,8 @@ const WaitingRoom = () => {
     } catch (error) {
       console.log("친구 목록 로드 중 에러");
     }
-  });
+  }, []);
+  console.log(roomInfo);
 
   // const roomInfo = {
   //   roomId: 1,
@@ -77,17 +77,14 @@ const WaitingRoom = () => {
   //   private: true,
   // };
 
-  console.log(roomInfo);
   const playersInfo = roomInfo.players;
   const roomName = roomInfo.roomName;
   const creatorId = Number(roomInfo.creator.playerId);
-  console.log("creatorId", creatorId);
+
   const creatorName = roomInfo.creator.playerName;
   const isPrivate = roomInfo.private;
   const maxPlayers = roomInfo.maxPlayers;
   const playerLen = roomInfo.players.length;
-
-  console.log(playersInfo);
 
   const [showPutRoomModal, setShowPutRoomModal] = useState(false);
 
