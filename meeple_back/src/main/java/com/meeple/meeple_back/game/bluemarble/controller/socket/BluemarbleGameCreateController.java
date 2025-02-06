@@ -1,7 +1,7 @@
-package com.meeple.meeple_back.game.bluemarble.controller;
+package com.meeple.meeple_back.game.bluemarble.controller.socket;
 
 import com.meeple.meeple_back.game.bluemarble.controller.port.BluemarbleGameService;
-import com.meeple.meeple_back.game.bluemarble.domain.GamePlay;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.response.SocketGamePlayResponse;
 import com.meeple.meeple_back.game.bluemarble.domain.GamePlayCreate;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,10 +24,12 @@ public class BluemarbleGameCreateController {
 	private final SimpMessagingTemplate messagingTemplate;
 
 	@MessageMapping("/create")
-	@Operation(summary = "게임환경 생성", description = "게임환경을 생성합니다.")
+	@Operation(summary = "부루마불 환경이 생성됐습니다.", description = "게임환경을 생성합니다.")
 	public void create(@RequestBody GamePlayCreate gamePlayCreate) {
-		GamePlay gamePlay = bluemarbleGameService.create(gamePlayCreate);
-		messagingTemplate.convertAndSend("/topic/game-plays/" + gamePlayCreate.getGamePlayId(),
-				gamePlay);
+		SocketGamePlayResponse socketGamePlayResponse = SocketGamePlayResponse.from("create",
+				bluemarbleGameService.create(gamePlayCreate),
+				"부루마불 환경이 생성되었습니다.");
+		messagingTemplate.convertAndSend("/topic/rooms/" + gamePlayCreate.getGamePlayId(),
+				socketGamePlayResponse);
 	}
 }

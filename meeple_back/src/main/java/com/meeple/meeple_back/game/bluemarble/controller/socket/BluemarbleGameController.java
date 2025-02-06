@@ -1,4 +1,4 @@
-package com.meeple.meeple_back.game.bluemarble.controller;
+package com.meeple.meeple_back.game.bluemarble.controller.socket;
 
 import com.meeple.meeple_back.game.bluemarble.controller.port.BluemarbleGameService;
 import com.meeple.meeple_back.game.bluemarble.controller.request.DiceRollRequest;
@@ -29,6 +29,6 @@ public class BluemarbleGameController {
 	public void rollDice(@DestinationVariable("roomId") int roomId,
 			@Payload DiceRollRequest diceRollRequest) {
 		DiceRollResponse diceRollResponse = bluemarbleGameService.rollDice(roomId, diceRollRequest);
-		messagingTemplate.convertAndSend("/topic/game-plays/" + roomId, diceRollResponse);
+		messagingTemplate.convertAndSend("/topic/room/" + roomId, diceRollResponse);
 	}
 }
