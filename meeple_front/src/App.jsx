@@ -7,7 +7,6 @@ import GameInfoPage from "./pages/gameInfo/GameInfoPage";
 import HomePage from "./pages/home/HomePage";
 import ProfilePage from "./pages/profile/ProfilePage";
 import ProposalPage from "./pages/proposal/ProposalPage";
-import TournamentPage from "./pages/tournament/TournamentPage";
 import CockroachPokerPage from "./pages/game/CockroachPokerPage";
 import MainPage from "./pages/main/MainPage";
 import TopLayout from "./components/layout/TopLayout";

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import CreateRoomModal from "../../components/game/cockroachcard/modal/CreateRoomModal";
 import { createPortal } from "react-dom";
 import BurumabulRoomCreateModal from "../../components/game/burumabul/BurumabulRoomCreateModal";
 import FriendModal from "../../components/friend/FriendModal";
@@ -11,9 +10,6 @@ import CockroachPokerRoyalMainImg from "../../assets/images/games/MainImage/Cock
 import BurumabulMainImg from "../../assets/images/games/MainImage/BuruMabul.png";
 import CatchMindMainImg from "../../assets/images/games/MainImage/CatchMind.jpg";
 
-import RoomList from "../../components/game/cockroachcard/RoomList";
-import { setRoomData } from "../../sources/store/slices/CockroachSlice";
-import CockroachRoom from "../../components/game/cockroachcard/CockroachRoom";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -29,8 +25,8 @@ const HomePage = () => {
   useEffect(() => {
     const path = window.location.pathname;
     // 게임 페이지가 아닐 때만 체크
-    if (!userId && !path.includes('/game/')) {
-      navigate("/"); 
+    if (!userId && !path.includes("/game/")) {
+      navigate("/");
       return;
     }
   }, [userId, navigate]);
@@ -41,41 +37,6 @@ const HomePage = () => {
   // };
 
   console.log(userId);
-
-  const handleCreateRoom = async (roomData) => {
-    try {
-      console.log("방 생성 시작", roomData.roomTitle);
-  
-      const response = await fetch("http://localhost:8090/game/create-room", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(roomData),
-      });
-
-      if (!response.ok) {
-        const responseText = await response.text();
-        throw new Error(`서버 오류: ${response.status} - ${responseText}`);
-      }
-
-      const data = await response.json();
-      
-      if (response.ok) {
-        dispatch(
-          setRoomData({
-            ...data,
-            creator: roomData.creator,  // 닉네임 유지
-            roomTitle: roomData.roomTitle,
-          })
-        );
-  
-        navigate(`/game/cockroach/${data.roomId}`);
-      }
-    } catch (error) {
-      console.error("방 생성 오류:", error);
-    }
-  };
 
   // 부루마불 방생성 모달에서 정보 입력 후 대기방 이동
   const handleCreateBurumabulRoom = () => {
@@ -123,10 +84,10 @@ const HomePage = () => {
                   친구들과 함께 떠나는 신기한 우주여행!
                 </p>
                 <button
-                onClick={() => setIsCreateBurumabulRoomModalOpen(true)}
-                className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                  onClick={() => setIsCreateBurumabulRoomModalOpen(true)}
+                  className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
                 >
-                방 만들기
+                  방 만들기
                 </button>
                 <button onClick={() => navigate("/burumabul/room-list")}>
                   대기방 목록 보기
@@ -167,12 +128,6 @@ const HomePage = () => {
           </div>
         </div>
       </div>
-
-      <CreateRoomModal
-        isOpen={isCreateRoomModalOpen}
-        onClose={() => setCreateRoomModalOpen(false)}
-        onCreateRoom={handleCreateRoom}
-      />
 
       {/* 부루마불 */}
       {isCreateBurumabulRoomModalOpen &&

@@ -8,6 +8,9 @@ const PenaltyCardSelectModal = ({
   count,
   claimedAnimal,
   isKing,
+  sendMessage,
+  currentUser,
+  currentLoser,
 }) => {
   const [selectedCards, setSelectedCards] = useState([]);
   const [animatingCards, setAnimatingCards] = useState([]);
@@ -65,11 +68,27 @@ const PenaltyCardSelectModal = ({
   const handleSubmit = () => {
     setAnimatingCards(selectedCards);
     setTimeout(() => {
+      // 선택된 카드 수에 따라 다른 메시지 타입 사용
+      const messageType = selectedCards.length > 1 ? "MULTI_CARD" : "SINGLE_CARD";
+      
+      sendMessage({
+        type: messageType,
+        data: messageType === "MULTI_CARD" ? {
+          user: currentLoser,
+          cards: selectedCards,
+          isBlack: true
+        } : {
+          from: currentUser,
+          to: currentLoser,
+          card: selectedCards[0],
+          correct: false
+        }
+      });
+  
       onSubmit(selectedCards);
       onClose();
     }, 1000);
   };
-
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-gray-800 rounded-lg p-6 w-full max-w-2xl space-y-6">

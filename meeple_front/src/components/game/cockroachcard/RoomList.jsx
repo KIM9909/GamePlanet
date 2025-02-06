@@ -1,155 +1,32 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import SockJS from "sockjs-client";
-import { Client } from "@stomp/stompjs";
+import useCockroachSocket from "../../../hooks/useCockroachSocket";
 import CreateRoomModal from "./modal/CreateRoomModal";
 
 const RoomList = () => {
-  const [rooms, setRooms] = useState([]);
+  const userId = useSelector((state) => state.user.userId);
+  const userNickname = useSelector((state) => state.user.userNickname);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [password, setPassword] = useState("");
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [connected, setConnected] = useState(false);
-  const stompClientRef = useRef(null);
-  const navigate = useNavigate();
-  const userId = useSelector((state) => state.user.userId);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const navigate = useNavigate();
+  const { connected, rooms, joinRoom } = useCockroachSocket("rooms");
 
-  // WebSocket 연결 설정
-  const setupWebSocket = useCallback(() => {
-    const client = new Client({
-      webSocketFactory: () => new SockJS("http://localhost:8090/ws"),
-      reconnectDelay: 5000,
-      heartbeatIncoming: 4000,
-      heartbeatOutgoing: 4000,
-    });
-
-    client.onConnect = () => {
-      console.log("WebSocket 연결 성공");
-      setConnected(true);
-      stompClientRef.current = client;
-
-      // 방 목록 업데이트 구독
-      client.subscribe("/topic/game/rooms", (message) => {
-        try {
-          const roomList = JSON.parse(message.body);
-          setRooms((prevRooms) => {
-            const newRooms = roomList.sort((a, b) => b.roomId - a.roomId);
-            // 방 목록이 실제로 변경되었을 때만 상태 업데이트
-            return JSON.stringify(prevRooms) !== JSON.stringify(newRooms)
-              ? newRooms
-              : prevRooms;
-          });
-        } catch (error) {
-          console.error("방 목록 업데이트 처리 실패:", error);
-        }
-      });
-    };
-
-    client.onDisconnect = () => {
-      console.log("WebSocket 연결 해제");
-      setConnected(false);
-      stompClientRef.current = null;
-    };
-
-    client.activate();
-
-    return () => {
-      if (client.active) {
-        client.deactivate();
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    const cleanup = setupWebSocket();
-    return cleanup;
-  }, [setupWebSocket]);
-
-  // 방 목록 조회
-  const fetchRooms = useCallback(async () => {
-    try {
-      const response = await fetch("http://localhost:8090/game/rooms");
-      if (!response.ok) {
-        throw new Error("방 목록 조회에 실패했습니다.");
-      }
-      const data = await response.json();
-      setRooms(data.sort((a, b) => b.roomId - a.roomId));
-    } catch (error) {
-      console.error("방 목록 조회 실패:", error);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchRooms(); // 초기 방 목록 로딩만 유지
-  }, [fetchRooms]);
-
-  // 방 참여 처리
   const handleJoinRoom = useCallback(
     async (roomId, isPrivate, password = "") => {
       try {
-        if (!connected) {
-          throw new Error("서버와의 연결이 끊어졌습니다.");
-        }
+        if (!connected) throw new Error("서버 연결 끊김");
+        if (!userNickname) throw new Error("사용자 정보 없음");
 
-        // 유저 프로필과 방 정보를 병렬로 조회
-        const [profileResponse, roomCheckResponse] = await Promise.all([
-          fetch(`http://localhost:8090/profile/${userId}`),
-          fetch(`http://localhost:8090/game/room/${roomId}`),
-        ]);
+        await joinRoom({
+          roomId,
+          playerName: userNickname,
+          password,
+        });
 
-        if (!profileResponse.ok || !roomCheckResponse.ok) {
-          throw new Error("프로필 또는 방 정보 조회에 실패했습니다.");
-        }
-
-        const [profileData, roomData] = await Promise.all([
-          profileResponse.json(),
-          roomCheckResponse.json(),
-        ]);
-
-        const userNickname = profileData.userNickname;
-
-        // 이미 참여 중인 경우 바로 이동
-        if (roomData.players.includes(userNickname)) {
-          navigate(`/game/cockroach/${roomId}`);
-          return;
-        }
-
-        if (stompClientRef.current) {
-          // 방 참여 응답을 받기 위한 구독 설정
-          const subscription = stompClientRef.current.subscribe(
-            `/topic/game/${roomId}`,
-            (message) => {
-              try {
-                const response = JSON.parse(message.body);
-                if (response.code === 200) {
-                  navigate(`/game/cockroach/${roomId}`);
-                } else {
-                  throw new Error(
-                    response.message || "방 참여에 실패했습니다."
-                  );
-                }
-              } catch (error) {
-                console.error("방 참여 응답 처리 실패:", error);
-                alert(error.message);
-              } finally {
-                subscription.unsubscribe();
-              }
-            }
-          );
-
-          // WebSocket으로 방 참여 요청
-          stompClientRef.current.publish({
-            destination: "/app/game/join-room",
-            body: JSON.stringify({
-              roomId: roomId,
-              playerName: userNickname,
-              password: password,
-            }),
-          });
-          console.log(roomId, userNickname, password);
-        }
+        navigate(`/game/cockroach/${roomId}`);
       } catch (error) {
         console.error("방 참가 실패:", error);
         alert(error.message);
@@ -161,10 +38,9 @@ const RoomList = () => {
         }
       }
     },
-    [connected, navigate, userId, showPasswordModal]
+    [connected, navigate, userNickname, joinRoom, showPasswordModal]
   );
 
-  // 방 렌더링 최적화
   const renderRoom = useCallback(
     (room, index) => {
       const uniqueKey = room.roomId
@@ -208,9 +84,25 @@ const RoomList = () => {
     [handleJoinRoom]
   );
 
-  const handleCreateRoom = (roomData) => {
-    // Implementation of handleCreateRoom
-  };
+  // Debugging log
+  console.log("방 제목 :", { userId, userNickname, connected, rooms });
+
+  // Loading checks
+  if (!connected) {
+    return (
+      <div className="mt-8">
+        <h2 className="text-xl font-bold mb-4">서버에 연결 중...</h2>
+      </div>
+    );
+  }
+
+  if (!rooms) {
+    return (
+      <div className="mt-8">
+        <h2 className="text-xl font-bold mb-4">방 목록을 불러오는 중...</h2>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-8">
@@ -256,13 +148,6 @@ const RoomList = () => {
           </div>
         </div>
       )}
-
-      <CreateRoomModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onCreateRoom={handleCreateRoom}
-        stompClientRef={stompClientRef}
-      />
     </div>
   );
 };
