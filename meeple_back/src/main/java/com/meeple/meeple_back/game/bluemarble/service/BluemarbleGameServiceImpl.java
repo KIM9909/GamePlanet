@@ -34,6 +34,7 @@ public class BluemarbleGameServiceImpl implements BluemarbleGameService {
 	public DiceRollResponse rollDice(int roomId, DiceRollRequest diceRollRequest) {
 		GamePlay gamePlay = bluemarbleGameRepository.findById(roomId)
 				.orElseThrow(() -> new ResourceNotFoundException("GamePlay", roomId));
+		gamePlay.rollDices(diceRollRequest);
 		bluemarbleGameRepository.save(gamePlay);
 		return gamePlay.rollDices(diceRollRequest);
 	}

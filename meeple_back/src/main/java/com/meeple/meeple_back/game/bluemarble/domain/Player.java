@@ -21,7 +21,7 @@ public class Player {
 	private String playerName;
 	private int position;
 	private int balance;
-	private Set<Card> seedCertificateCardOwned;
+	private Set<Card> cardOwned;
 	private List<Integer> landOwned;
 
 	public Player(User user) {
@@ -31,7 +31,7 @@ public class Player {
 		this.playerName = user.getUserName();
 		this.position = INITIAL_POSITION;
 		this.balance = INITIAL_BALANCE;
-		this.seedCertificateCardOwned = new HashSet<>();
+		this.cardOwned = new HashSet<>();
 	}
 
 	public static Player init(User user) {
@@ -40,18 +40,23 @@ public class Player {
 				.playerName(user.getUserName())
 				.position(0)
 				.balance(0)
-				.seedCertificateCardOwned(new HashSet<>())
+				.cardOwned(new HashSet<>())
 				.build();
 	}
 
 	public DiceRollResponse rollDices(DiceRollRequest diceRollRequest) {
 		int sum = diceRollRequest.getFirstDice() + diceRollRequest.getSecondDice();
+		boolean isDouble = false;
+		if (!diceRollRequest.isWasDouble()) {
+			isDouble = diceRollRequest.getFirstDice() == diceRollRequest.getSecondDice();
+		}
+	
 		int prevPosition = this.position;
 		int nextPosition = (this.position + sum) % 40;
 		if (this.position + sum >= 40) {
 			this.balance += 200;
 		}
 		this.position = nextPosition;
-		return new DiceRollResponse(prevPosition, nextPosition);
+		return new DiceRollResponse(this.playerId, prevPosition, nextPosition, isDouble);
 	}
 }
