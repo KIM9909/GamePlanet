@@ -13,8 +13,10 @@ public class RoomUpdate {
 	@NotBlank(message = "Room name is mandatory")
 	private final String roomName;
 
+	@JsonProperty("isPrivate")
 	private final boolean isPrivate;
-
+	
+	@JsonProperty("isGameStart")
 	private final boolean isGameStart;
 
 	@Min(value = 1, message = "플레이어는 최소 1명 이상이 필요합니다.")
