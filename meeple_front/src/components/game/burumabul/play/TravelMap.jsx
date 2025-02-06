@@ -74,6 +74,7 @@ import BlueRobot from "./BlueRobot";
 import SpaceBase from "./SpaceBase";
 import useBurumabulSocket from "../../../../hooks/useBurumabulSocket";
 import { color } from "framer-motion";
+import { depth } from "three/tsl";
 
 const Cell = ({
   position,
@@ -416,19 +417,33 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
 
       const initialBases = positions.map((position, index) => {
         const cellSize = cellSizes[index];
+        let baseSize;
+        // 인덱스  0-9, 20-29: 가로가 세로의 2배
+        if ((index >= 0 && index <= 9) || (index >= 20 && index <= 29)) {
+          baseSize = {
+            width: cellSize[0] * 0.64,
+            height: 1.3,
+            depth: cellSize[2] * 0.28,
+          };
+        } else if (
+          (index >= 10 && index <= 19) ||
+          (index >= 30 && index <= 39)
+        ) {
+          baseSize = {
+            width: cellSize[0] * 0.28,
+            height: 1.3,
+            depth: cellSize[2] * 0.64,
+          };
+        }
         return {
           position: position,
           color: "gray",
-          size: {
-            width: cellSize[0] * 0.8,
-            height: 0.1,
-            depth: cellSize[0] * 0.8,
-          },
+          size: baseSize,
         };
       });
       setSpaceBases(initialBases);
     }
-  }, [positions, cellSizes]);
+  }, [positions, cellSizes, size]);
 
   // Preload textures
   const floor = useMemo(() => useLoader(TextureLoader, floorTexture), []);
@@ -557,11 +572,36 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
   const renderSpaceBases = useMemo(() => {
     console.log("render base");
     return spaceBases.map((base, index) => {
-      const adjustedPosition = [
-        base.position[0],
-        base.position[1] + 0.3,
-        base.position[2],
-      ]; // y축을 살짝 띄움 const size = [1, 1.5, 0.6];
+      let adjustedPosition;
+      if (index >= 0 && index <= 9) {
+        // 하단 1/3
+        adjustedPosition = [
+          base.position[0],
+          base.position[1] + 0.3,
+          base.position[2] + base.size.depth + 0.1,
+        ];
+      } else if (index >= 10 && index <= 19) {
+        // 좌측 1/3
+        adjustedPosition = [
+          base.position[0] - base.size.width - 0.1,
+          base.position[1] + 0.3,
+          base.position[2],
+        ];
+      } else if (index >= 20 && index <= 29) {
+        // 상단 1/3
+        adjustedPosition = [
+          base.position[0],
+          base.position[1] + 0.3,
+          base.position[2] - base.size.depth - 0.1,
+        ];
+      } else if (index >= 30 && index <= 39) {
+        // 우측 1/3
+        adjustedPosition = [
+          base.position[0] + base.size.width + 0.1,
+          base.position[1] + 0.3,
+          base.position[2],
+        ];
+      }
 
       return (
         <SpaceBase
