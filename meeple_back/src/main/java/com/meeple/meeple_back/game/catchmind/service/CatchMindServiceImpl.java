@@ -629,7 +629,7 @@ public class CatchMindServiceImpl implements CatchMindService {
                     .timestamp(LocalDateTime.now())
                     .isNotice(true)
                     .build();
-            messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, responseResult);
+            messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, messageDTO);
             return null;
         }
 
@@ -641,7 +641,7 @@ public class CatchMindServiceImpl implements CatchMindService {
         redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
 
         ResponseQuiz responseQuiz = ResponseQuiz.builder()
-                .nextTurn(String.valueOf(gameInfo.get("nextTurn")))
+                .nextTurn(String.valueOf(gameInfo.get("currentTurn")))
                 .quiz(nextQuiz)
                 .remainQuizCount(quizList.size())
                 .build();

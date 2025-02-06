@@ -23,75 +23,6 @@ import { fetchProfile } from "../../../../sources/store/slices/ProfileSlice";
 import { CatchMindAPI } from "../../../../sources/api/CatchMindAPI";
 import useCatchSocket from "../../../../hooks/useCatchSocket";
 
-const GameInfo = ({
-  round,
-  word,
-  roomInfo,
-  handleExitRoom,
-  handleStartGame,
-  isCreator,
-}) => {
-  return (
-    <div className="flex items-center justify-between px-8 py-4 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-t-lg border-b border-gray-700">
-      {/* 왼쪽: 방 제목과 잠금 아이콘 */}
-      <div className="flex items-center space-x-2 min-w-[200px]">
-        <h2 className="text-xl font-bold truncate">{roomInfo?.roomTitle}</h2>
-        {roomInfo?.isPrivate && (
-          <Lock className="w-4 h-4 text-gray-400 flex-shrink-0" />
-        )}
-      </div>
-
-      {/* 중앙: 게임 상태 정보 */}
-      <div className="flex items-center justify-center space-x-6 flex-1 mx-4">
-        {/* 방장이고 게임이 시작되지 않았을 때만 시작하기 버튼 표시 */}
-        {isCreator && !roomInfo?.isGameStarted && (
-          <button
-            onClick={handleStartGame}
-            className="px-6 py-2 bg-green-600 hover:bg-green-700 rounded-full transition-colors flex items-center space-x-2"
-          >
-            <span>게임 시작</span>
-          </button>
-        )}
-
-        <div className="flex items-center space-x-2 bg-gray-700/50 px-4 py-2 rounded-full">
-          <Flag className="w-4 h-4 text-blue-400" />
-          <span className="font-medium">
-            Round {round}/{roomInfo?.quizCount || 10}
-          </span>
-        </div>
-
-        <div className="flex items-center space-x-2 bg-gray-700/50 px-4 py-2 rounded-full">
-          <Timer className="w-4 h-4 text-blue-400" />
-          <span className="font-medium">{roomInfo?.timeLimit}초</span>
-        </div>
-
-        {word && (
-          <div className="px-6 py-2 bg-blue-500/20 rounded-full border border-blue-400/30">
-            <span className="font-medium text-blue-100">제시어: {word}</span>
-          </div>
-        )}
-      </div>
-
-      {/* 오른쪽: 플레이어 수와 나가기 버튼 */}
-      <div className="flex items-center space-x-4 min-w-[200px] justify-end">
-        <div className="flex items-center space-x-2 bg-gray-700/50 px-3 py-1.5 rounded-full">
-          <Users className="w-4 h-4 text-blue-400" />
-          <span className="text-gray-200">
-            {roomInfo?.players?.length || 0}/{roomInfo?.maxPeople}
-          </span>
-        </div>
-        <button
-          onClick={handleExitRoom}
-          className="flex items-center space-x-2 px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
-        >
-          <LogOut className="w-4 h-4" />
-          <span>나가기</span>
-        </button>
-      </div>
-    </div>
-  );
-};
-
 const MainLayout = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -119,6 +50,11 @@ const MainLayout = () => {
   const currentPlayer = useSelector((state) =>
     state.catchmind.players.find((p) => p.isTurn)
   );
+
+  // 현재 유저가 출제자인지 확인
+  const isCurrentUserDrawer = useMemo(() => {
+    return currentPlayer?.nickname === profileData?.userNickname;
+  }, [currentPlayer?.nickname, profileData?.userNickname]);
 
   const getCurrentUserNickname = useCallback(() => {
     return profileData?.userNickname || "Player 1";
@@ -385,6 +321,7 @@ const MainLayout = () => {
             round={gameState?.currentRound || 1}
             word={currentWord}
             roomInfo={{
+              roomId: roomId,
               roomTitle: gameState.roomTitle,
               isPrivate: gameState.isPrivate,
               timeLimit: gameState.timeLimit,
@@ -396,6 +333,8 @@ const MainLayout = () => {
             handleExitRoom={handleExitRoom}
             handleStartGame={handleStartGame}
             isCreator={isCreator} // 수정된 isCreator 전달
+            client={client}
+            isCurrentUserDrawer={isCurrentUserDrawer}
           />
           <div className="flex-1 p-6">
             <div className="h-full bg-white rounded-xl border border-gray-200">
@@ -428,6 +367,124 @@ const MainLayout = () => {
             correctAnswer={gameState?.currentWord || ""}
           />
         </div>
+      </div>
+    </div>
+  );
+};
+
+const GameInfo = ({
+  round,
+  word,
+  roomInfo,
+  handleExitRoom,
+  handleStartGame,
+  isCreator,
+  client,
+  isCurrentUserDrawer, // 추가
+}) => {
+  const [timeLeft, setTimeLeft] = useState(roomInfo?.timeLimit || 90);
+
+  useEffect(() => {
+    let timer;
+
+    if (roomInfo?.isGameStarted) {
+      timer = setInterval(() => {
+        setTimeLeft((prevTime) => {
+          if (prevTime <= 0) {
+            // 출제자일 때만 타임아웃 요청 보내기
+            if (client && isCurrentUserDrawer) {
+              console.log("출제자가 타임아웃 요청을 보냅니다.");
+              client.publish({
+                destination: `/app/time-out/${roomInfo.roomId}`,
+                body: "",
+                headers: { "content-type": "text/plain" },
+              });
+            }
+            return roomInfo?.timeLimit || 90;
+          }
+          return prevTime - 1;
+        });
+      }, 1000);
+    } else {
+      setTimeLeft(roomInfo?.timeLimit || 90);
+    }
+
+    return () => {
+      if (timer) {
+        clearInterval(timer);
+      }
+    };
+  }, [
+    roomInfo?.isGameStarted,
+    roomInfo?.timeLimit,
+    roomInfo?.roomId,
+    client,
+    isCurrentUserDrawer,
+  ]);
+
+  // 새로운 턴이 시작될 때마다 타이머 리셋
+  useEffect(() => {
+    if (roomInfo?.isGameStarted) {
+      setTimeLeft(roomInfo?.timeLimit || 90);
+    }
+  }, [word, roomInfo?.timeLimit]);
+
+  return (
+    <div className="flex items-center justify-between px-8 py-4 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-t-lg border-b border-gray-700">
+      {/* 왼쪽: 방 제목과 잠금 아이콘 */}
+      <div className="flex items-center space-x-2 min-w-[200px]">
+        <h2 className="text-xl font-bold truncate">{roomInfo?.roomTitle}</h2>
+        {roomInfo?.isPrivate && (
+          <Lock className="w-4 h-4 text-gray-400 flex-shrink-0" />
+        )}
+      </div>
+
+      {/* 중앙: 게임 상태 정보 */}
+      <div className="flex items-center justify-center space-x-6 flex-1 mx-4">
+        {/* 방장이고 게임이 시작되지 않았을 때만 시작하기 버튼 표시 */}
+        {isCreator && !roomInfo?.isGameStarted && (
+          <button
+            onClick={handleStartGame}
+            className="px-6 py-2 bg-green-600 hover:bg-green-700 rounded-full transition-colors flex items-center space-x-2"
+          >
+            <span>게임 시작</span>
+          </button>
+        )}
+
+        <div className="flex items-center space-x-2 bg-gray-700/50 px-4 py-2 rounded-full">
+          <Flag className="w-4 h-4 text-blue-400" />
+          <span className="font-medium">
+            Round {round}/{roomInfo?.quizCount || 10}
+          </span>
+        </div>
+
+        <div className="flex items-center space-x-2 bg-gray-700/50 px-4 py-2 rounded-full">
+          <Timer className="w-4 h-4 text-blue-400" />
+          <span className="font-medium">{timeLeft}초</span>
+        </div>
+
+        {word && (
+          <div className="px-6 py-2 bg-blue-500/20 rounded-full border border-blue-400/30">
+            <span className="font-medium text-blue-100">제시어: {word}</span>
+          </div>
+        )}
+      </div>
+
+      {/* 오른쪽: 플레이어 수와 나가기 버튼 */}
+      <div className="flex items-center space-x-4 min-w-[200px] justify-end">
+        <div className="flex items-center space-x-2 bg-gray-700/50 px-3 py-1.5 rounded-full">
+          <Users className="w-4 h-4 text-blue-400" />
+          <span className="text-gray-200">
+            {roomInfo?.players?.length || 0}/{roomInfo?.maxPeople}
+          </span>
+        </div>
+        <button
+          onClick={handleExitRoom}
+          className="flex items-center space-x-2 px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
+        >
+          <LogOut className="w-4 h-4" />
+          <span>나가기</span>
+        </button>
       </div>
     </div>
   );
