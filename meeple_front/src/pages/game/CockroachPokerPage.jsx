@@ -20,45 +20,19 @@ const CockroachPokerPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Redux selectors
   const { isGameStarted, gameData, roomData, players, currentUser } =
     useSelector((state) => state.cockroach);
   const userId = useSelector((state) => state.user.userId);
 
-  // States
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [hasJoined, setHasJoined] = useState(false);
 
-  // Refs
   const subscriptionRef = useRef(null);
-
-  // Socket
   const { sendMessage, startGame, stompClient, connected } = useSocket(roomId);
-
-  useEffect(() => {
-    console.log("Redux 상태 변화:", {
-      isGameStarted,
-      roomData,
-      userId,
-      players,
-    });
-  }, [isGameStarted, roomData, userId, players]);
-
-  useEffect(() => {
-    console.log("소켓 연결 상태:", {
-      connected,
-      stompClient: !!stompClient,
-    });
-  }, [connected, stompClient]);
-
-  useEffect(() => {
-    console.log("currentUser 값이 변경됨:", currentUser);
-  }, [currentUser]);
 
   const fetchProfileAndJoinRoom = async () => {
     try {
-      // 프로필 정보 가져오기
       const response = await fetch(`http://localhost:8090/profile/${userId}`);
       const profileData = await response.json();
 
@@ -78,6 +52,19 @@ const CockroachPokerPage = () => {
 
       dispatch(setRoomData(updatedRoomInfo));
       setHasJoined(true);
+
+      // WebSocket을 통해 방 참여 처리
+      if (connected && stompClient) {
+        stompClient.publish({
+          destination: "/app/game/join-room",
+          body: JSON.stringify({
+            roomId: parseInt(roomId),
+            playerName: profileData.userNickname,
+            password: "",
+          }),
+        });
+        console.log(roomId, profileData.userNickname, "");
+      }
     } catch (error) {
       console.error("Error:", error);
       toast.error("방 입장에 실패했습니다.");
@@ -128,6 +115,14 @@ const CockroachPokerPage = () => {
                 roomTitle: response.data.roomTitle,
               })
             );
+          } else if (response.roomTitle || response.maxPeople) {
+            // 방 업데이트 응답 처리 추가
+            dispatch(
+              setRoomData({
+                ...roomData,
+                ...response,
+              })
+            );
           } else if (response.players && response.gameData) {
             dispatch(
               setGameData({
@@ -148,15 +143,6 @@ const CockroachPokerPage = () => {
         }
       }
     );
-
-    // 서버의 addPlayer에서 playerName으로 사용될 nickname만 전송
-    stompClient.publish({
-      destination: `/app/game/join/${roomId}`,
-      body: JSON.stringify({
-        playerName: currentUser, // 서버에서 사용하는 playerName 키로 변경
-      }),
-    });
-    console.log("나야 :", currentUser);
 
     return () => {
       if (subscriptionRef.current) {
@@ -238,6 +224,7 @@ const CockroachPokerPage = () => {
               gameData={gameData}
               players={players || []}
               roomData={roomData}
+              stompClient={stompClient}
             />
           ) : (
             <GameBoard

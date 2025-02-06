@@ -3,8 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-hot-toast";
 import UserAPI from "../../../../sources/api/UserAPI";
 
-
-const CreateRoomModal = ({ isOpen, onClose, onCreateRoom }) => {
+const CreateRoomModal = ({ isOpen, onClose, onCreateRoom, stompClientRef }) => {
   const [roomTitle, setLocalRoomTitle] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
   const [password, setPassword] = useState("");
@@ -19,7 +18,7 @@ const CreateRoomModal = ({ isOpen, onClose, onCreateRoom }) => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (!currentUser) return;
-      
+
       try {
         setIsLoading(true);
         const profileData = await UserAPI.getProfile(currentUser);
@@ -37,23 +36,38 @@ const CreateRoomModal = ({ isOpen, onClose, onCreateRoom }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!creatorNickname) {
-      toast.error("닉네임 정보를 가져오는 중입니다. 잠시 후 다시 시도해주세요.");
+      toast.error(
+        "닉네임 정보를 가져오는 중입니다. 잠시 후 다시 시도해주세요."
+      );
       return;
     }
 
     const roomData = {
       gameId: 1,
-      roomTitle: roomTitle || "바퀴벌레 포커",
-      creator: creatorNickname,  // 닉네임 사용
+      roomTitle: roomTitle,
+      creator: creatorNickname,
       private: isPrivate,
       password: isPrivate ? password : "",
       maxPeople: maxPeople,
     };
 
     try {
-      await onCreateRoom(roomData);
+      const createdRoom = await onCreateRoom(roomData);
+
+      // 방 생성 후 자동으로 방 참여 요청
+      if (stompClientRef) {
+        stompClientRef.current.publish({
+          destination: "/app/game/join-room",
+          body: JSON.stringify({
+            roomId: createdRoom.roomId,
+            playerName: creatorNickname,
+            password: roomData.password,
+          }),
+        });
+      }
+
       onClose();
     } catch (error) {
       console.error("방 생성 중 오류:", error);

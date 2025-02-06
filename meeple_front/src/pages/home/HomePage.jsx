@@ -13,6 +13,7 @@ import CatchMindMainImg from "../../assets/images/games/MainImage/CatchMind.jpg"
 
 import RoomList from "../../components/game/cockroachcard/RoomList";
 import { setRoomData } from "../../sources/store/slices/CockroachSlice";
+import CockroachRoom from "../../components/game/cockroachcard/CockroachRoom";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -54,11 +55,6 @@ const HomePage = () => {
       });
   
       const data = await response.json();
-      console.log("--------------");
-      console.log("전송된 roomData:", roomData);
-      console.log("creator 닉네임:", roomData.creator);
-      console.log("--------------");
-      console.log("서버 응답 데이터:", data);
       
       if (response.ok) {
         dispatch(
@@ -140,21 +136,7 @@ const HomePage = () => {
                 title={"캐치마인드"}
                 description={"폭풍을 부르는 그림 그림 대소동 퀴즈 작전!"}
               />
-
-              <div className="bg-gray-50 p-6 rounded-lg shadow">
-                <h2 className="text-xl font-semibold mb-4">바퀴벌레 포커</h2>
-                <p className="text-gray-600 mb-4">
-                  블러핑과 심리전이 핵심인 카드게임입니다.
-                </p>
-                <button
-                  onClick={() => setCreateRoomModalOpen(true)}
-                  className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                >
-                  방 만들기
-                </button>
-              </div>
             </div>
-            <RoomList />
           </div>
         </div>
       </div>

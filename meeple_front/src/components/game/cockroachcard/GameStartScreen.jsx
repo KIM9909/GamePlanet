@@ -17,6 +17,7 @@ const GameStartScreen = ({
   gameData,
   players,
   roomData,
+  stompClient,
 }) => {
   const [isUpdateModalOpen, setUpdateModalOpen] = useState(false);
   useEffect(() => {
@@ -28,6 +29,16 @@ const GameStartScreen = ({
     });
   }, [playerCount, roomTitle, maxPeople, isCreator]);
   const canStartGame = playerCount >= 2;
+
+  const handleUpdateRoom = async (updateData) => {
+    if (stompClient) {
+      stompClient.publish({
+        destination: `/app/game/update-room/${roomData.roomId}`,
+        body: JSON.stringify(updateData),
+      });
+    }
+  };
+
   return (
     <div className="relative w-full h-[800px] max-w-[1600px] mx-auto bg-gray-700/10 rounded-3xl flex items-center justify-center">
       {/* 메인 로고 배경 */}
@@ -173,8 +184,19 @@ const GameStartScreen = ({
       <UpdateRoomModal
         isOpen={isUpdateModalOpen}
         onClose={() => setUpdateModalOpen(false)}
-        onUpdateRoom={onUpdateRoom}
-        initialData={gameData}
+        onUpdateRoom={(updateData) => {
+          if (stompClient) {
+            stompClient.publish({
+              destination: `/app/game/update-room/${roomData.roomId}`,
+              body: JSON.stringify(updateData),
+            });
+          }
+        }}
+        initialData={{
+          roomTitle: roomData?.roomTitle,
+          maxPeople: roomData?.maxPeople,
+          password: roomData?.password,
+        }}
       />
     </div>
   );
