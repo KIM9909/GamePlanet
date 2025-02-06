@@ -5,11 +5,30 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
-import lombok.Getter;
 
-@Getter
+
 @Builder
 public class RoomCreate {
+
+	@JsonProperty("roomName")
+	public String getRoomName() {
+		return roomName;
+	}
+
+	@JsonProperty("isPrivate")
+	public boolean isPrivate() {
+		return isPrivate;
+	}
+
+	@JsonProperty("password")
+	public String getPassword() {
+		return password;
+	}
+
+	@JsonProperty("maxPlayers")
+	public int getMaxPlayers() {
+		return maxPlayers;
+	}
 
 	@NotBlank(message = "Room name is mandatory")
 	private String roomName;
