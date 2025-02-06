@@ -30,6 +30,28 @@ const BurumabulRoomList = () => {
   }, []);
   console.log(roomList);
 
+  // 검색어가 변경될 때마다 검색 실행
+  useEffect(() => {
+    const fetchSearchResult = async () => {
+      if (!searchName.trim()) {
+        getRoomList();
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const searchResult = await searchBurumabulRoomname(searchName);
+        setRoomList(searchResult);
+        setVisibleRooms(searchResult.slice(0, ITEMS_PER_LOAD));
+      } catch (error) {
+        console.error("검색 중 에러 발생: ", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSearchResult();
+  }, [searchName]);
+
   // 검색 핸들러
   const handleSearch = async (e) => {
     e.preventDefault();
