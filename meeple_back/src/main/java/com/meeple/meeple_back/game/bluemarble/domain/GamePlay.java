@@ -4,6 +4,7 @@ import com.meeple.meeple_back.game.bluemarble.controller.request.DiceRollRequest
 import com.meeple.meeple_back.game.bluemarble.controller.response.DiceRollResponse;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -66,26 +67,26 @@ public class GamePlay {
 					i,                                        // id
 					"Tile " + i,                              // name
 					0,                                        // owner (0은 미소유)
-					i * 5,                                    // toll (예시로 i에 따라 증가)
+					i * 50,                                   // toll (예시로 i에 따라 증가)
 					false,                                    // hasBase (기본값: 없음)
 					TileType.SEED_CERTIFICATE_CARD,
 					// type (항상 TileType.SEED_CERTIFICATE_CARD)
-					i * 50,                                   // price (예시로 i에 따라 증가)
-					"http://example.com/images/tile" + i + ".png" // imageUrl
+					"image:url"                                   // price (예시로 i에 따라 증가)
 			);
 			tiles.add(tile);
 		}
 		return tiles;
 	}
 
-	public Player getCurrentPlayer() {
-		return this.getPlayers().stream()
-				.filter(player -> player.getPlayerId() == currentPlayerIndex)
-				.findFirst()
-				.orElseThrow(() -> new IllegalArgumentException("Player not found"));
+	private Optional<Player> findPlayerById(int playerId) {
+		return players.stream()
+				.filter(player -> player.getPlayerId() == playerId)
+				.findFirst();
 	}
 
 	public DiceRollResponse rollDices(DiceRollRequest diceRollRequest) {
-		return getCurrentPlayer().rollDices(diceRollRequest);
+		Player currentPlayer = findPlayerById(diceRollRequest.getPlayerId())
+				.orElseThrow(() -> new IllegalArgumentException("Player not found"));
+		return currentPlayer.rollDices(diceRollRequest);
 	}
 }

@@ -2,7 +2,7 @@ package com.meeple.meeple_back.game.bluemarble.controller.socket;
 
 import com.meeple.meeple_back.game.bluemarble.controller.port.BluemarbleGameService;
 import com.meeple.meeple_back.game.bluemarble.controller.request.DiceRollRequest;
-import com.meeple.meeple_back.game.bluemarble.controller.response.DiceRollResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.response.SocketDiceRollResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Builder;
@@ -28,7 +28,8 @@ public class BluemarbleGameController {
 	@Operation(summary = "주사위 굴리기", description = "주사위를 굴립니다.")
 	public void rollDice(@DestinationVariable("roomId") int roomId,
 			@Payload DiceRollRequest diceRollRequest) {
-		DiceRollResponse diceRollResponse = bluemarbleGameService.rollDice(roomId, diceRollRequest);
-		messagingTemplate.convertAndSend("/topic/room/" + roomId, diceRollResponse);
+		SocketDiceRollResponse socketDiceRollResponse = SocketDiceRollResponse.from("roll-dice",
+				bluemarbleGameService.rollDice(roomId, diceRollRequest), "주사위를 굴렸습니다.");
+		messagingTemplate.convertAndSend("/topic/room/" + roomId, socketDiceRollResponse);
 	}
 }

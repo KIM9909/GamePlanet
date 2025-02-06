@@ -11,10 +11,9 @@ public class Tile {
 
 	private int id;
 	private String name;
-	private int owner;
-	private int toll;
+	private int ownerId;
+	private int tollPrice;
 	private boolean hasBase;
 	private TileType type;
-	private int price;
 	private String imageUrl;
 }
