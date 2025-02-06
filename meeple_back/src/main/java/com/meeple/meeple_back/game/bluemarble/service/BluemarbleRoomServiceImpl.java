@@ -124,7 +124,8 @@ public class BluemarbleRoomServiceImpl implements BluemarbleRoomService {
 
 	@Override
 	@Transactional
-	public Room joinWithPassword(int roomId, RoomJoinWithPassword roomJoinWithPassword) {
+	public Room joinWithPassword(int roomId, int userId,
+			RoomJoinWithPassword roomJoinWithPassword) {
 		Room room = bluemarbleRoomRepository.findById(roomId)
 				.orElseThrow(() -> new ResourceNotFoundException("Room", roomId));
 		boolean isCorrectPassword = passwordEncoder.matches(roomJoinWithPassword.getPassword(),
@@ -133,7 +134,7 @@ public class BluemarbleRoomServiceImpl implements BluemarbleRoomService {
 			throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
 		}
 		room = room.addPlayer(
-				new Player(userService.findById(roomJoinWithPassword.getUserId())));
+				new Player(userService.findById(userId)));
 		bluemarbleRoomRepository.save(room);
 		return room;
 	}

@@ -17,5 +17,4 @@ public class RoomUpdatePassword {
 		return password;
 	}
 
-
 }
