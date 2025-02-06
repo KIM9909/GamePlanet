@@ -11,7 +11,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
 
   const initialRoomData = {
     roomName: "",
-    private: false,
+    isPrivate: false,
     password: "",
     maxPlayers: 2,
   };
@@ -86,13 +86,13 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
               <div>
                 <button
                   className={`bg-green-500 mx-2 text-white w-14 rounded ${
-                    roomData.private ? "bg-green-500" : "bg-slate-500"
+                    roomData.isPrivate ? "bg-green-500" : "bg-slate-500"
                   }`}
-                  value={roomData.private}
+                  value={roomData.isPrivate}
                   onClick={() =>
                     setRoomData((prevData) => ({
                       ...prevData,
-                      private: true,
+                      isPrivate: true,
                       // private: true,
                     }))
                   }
@@ -102,13 +102,13 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
                 </button>
                 <button
                   className={`"bg-red-500" mx-2 text-white w-14 rounded ${
-                    roomData.private ? "bg-slate-500" : "bg-red-500"
+                    roomData.isPrivate ? "bg-slate-500" : "bg-red-500"
                   }`}
-                  value={roomData.private}
+                  value={roomData.isPrivate}
                   onClick={() =>
                     setRoomData((prevData) => ({
                       ...prevData,
-                      private: false,
+                      isPrivate: false,
                       password: "",
                       // private: false,
                     }))
@@ -121,7 +121,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
             </div>
             {/* 비밀방이면 비밀번호 설정 */}
             <div>
-              {roomData.private && (
+              {roomData.isPrivate && (
                 <div className="flex flex-col items-center my-3">
                   <label className="text-lg" htmlFor="password">
                     비밀번호 설정(숫자 8자리)
