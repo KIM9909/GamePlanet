@@ -84,7 +84,7 @@ const ChatBox = ({ roomId, currentUser, correctAnswer }) => {
                 <p>{msg.content}</p>
                 {msg.isCorrect && (
                   <div className="text-xs mt-1 text-green-200">
-                    🎉 정답을 맞추셨습니다! +{msg.score}점
+                    🎉 정답을 맞추셨습니다! + 30점
                   </div>
                 )}
               </div>

@@ -107,6 +107,57 @@ const useCatchSocket = (roomId) => {
                 // console.log(`[${debugId}] Received message:`, data);
                 console.log("전체 게임 상태 데이터:", data);
 
+                // 타임아웃 처리
+                if (data.type === "timeOut" && data.gameData) {
+                  console.log(
+                    "타임아웃 발생. 다음 턴으로 넘어갑니다.",
+                    data.gameData
+                  );
+
+                  // 메시지 추가
+                  setMessages((prev) => [
+                    ...prev,
+                    {
+                      sender: "SYSTEM",
+                      content: "시간이 초과되었습니다! 다음 턴으로 넘어갑니다.",
+                      timestamp: new Date(),
+                      isNotice: true,
+                    },
+                  ]);
+
+                  // 다음 퀴즈 정보로 업데이트
+                  dispatch(
+                    updateGameState({
+                      currentWord: data.gameData.quiz,
+                      remainQuizCount: data.gameData.remainQuizCount,
+                      // currentTurn: data.message.nextTurn,
+                    })
+                  );
+
+                  // 현재 플레이어 목록 가져오기
+                  const currentPlayers = store.getState().catchmind.players;
+
+                  // 플레이어들의 현재 턴 상태 업데이트
+                  const updatedPlayers = currentPlayers.map((player) => ({
+                    ...player,
+                    isTurn: player.nickname === data.gameData.nextTurn,
+                  }));
+
+                  console.log("턴 변경:", {
+                    nextTurn: data.gameData.nextTurn,
+                    updatedPlayers: updatedPlayers,
+                  });
+
+                  // 플레이어 정보 업데이트
+                  dispatch(
+                    updatePlayers({
+                      players: updatedPlayers,
+                    })
+                  );
+
+                  return;
+                }
+
                 if (data.type === "result" && Array.isArray(data.result)) {
                   console.log("게임 결과 수신:", data.result);
 
