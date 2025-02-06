@@ -1,7 +1,6 @@
 package com.meeple.meeple_back.game.bluemarble.domain;
 
 import com.meeple.meeple_back.game.bluemarble.controller.request.DiceRollRequest;
-import com.meeple.meeple_back.game.bluemarble.controller.response.DiceRollResponse;
 import com.meeple.meeple_back.user.model.User;
 import java.util.HashSet;
 import java.util.List;
@@ -44,7 +43,7 @@ public class Player {
 				.build();
 	}
 
-	public DiceRollResponse rollDices(DiceRollRequest diceRollRequest) {
+	public DiceRollResult rollDices(DiceRollRequest diceRollRequest) {
 		int sum = diceRollRequest.getFirstDice() + diceRollRequest.getSecondDice();
 		boolean isDouble = false;
 		if (!diceRollRequest.isWasDouble()) {
@@ -56,7 +55,7 @@ public class Player {
 			this.balance += 200;
 		}
 		this.position = nextPosition;
-		return new DiceRollResponse(this.playerId, prevPosition, nextPosition, isDouble);
+		return new DiceRollResult(this.playerId, prevPosition, nextPosition, isDouble);
 	}
 
 	public void payMoney(int price) {
@@ -72,5 +71,9 @@ public class Player {
 
 	public void addCardOwned(Card card) {
 		this.cardOwned.add(card);
+	}
+
+	public void addMoney(int toll) {
+		this.balance += toll;
 	}
 }

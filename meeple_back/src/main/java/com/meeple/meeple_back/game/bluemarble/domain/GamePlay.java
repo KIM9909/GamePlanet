@@ -4,6 +4,7 @@ import com.meeple.meeple_back.game.bluemarble.controller.request.DiceRollRequest
 import com.meeple.meeple_back.game.bluemarble.controller.response.BuyLandResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DiceRollResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +22,7 @@ public class GamePlay {
 	private int round;
 	private List<Tile> board;
 	private List<Card> cards;
+	private TurnManager turnManager;
 
 	@Builder
 	public static GamePlay from(GamePlayCreate gamePlayCreate, List<Player> players) {
@@ -32,9 +34,11 @@ public class GamePlay {
 				.round(1)
 				.board(createTiles())
 				.cards(createCards())
+				.turnManager(new TurnManager(new ArrayDeque<>()))
 				.build();
 	}
 
+	// TODO : 턴 시작 구현하기
 	private static List<Card> createCards() {
 		List<Card> cards = new ArrayList<>();
 
@@ -96,10 +100,69 @@ public class GamePlay {
 				.findFirst();
 	}
 
-	public DiceRollResponse rollDices(DiceRollRequest diceRollRequest) {
-		Player currentPlayer = findPlayerById(diceRollRequest.getPlayerId())
+	private Player getValidatedPlayer(int playerId) {
+		return findPlayerById(playerId)
 				.orElseThrow(() -> new IllegalArgumentException("Player not found"));
-		return currentPlayer.rollDices(diceRollRequest);
+	}
+
+	/**
+	 * 더블이면 주사위 한번더 던지기
+	 *
+	 * @param response
+	 */
+	private void processDoubleRoll(DiceRollResult response) {
+		if (response.isDouble()) {
+			turnManager.addTurnAction(ActionType.ROLL_DICE);
+		}
+	}
+
+	public DiceRollResponse rollDices(DiceRollRequest diceRollRequest) {
+		// turnManager.executeTurn();
+		Player currentPlayer = getValidatedPlayer(diceRollRequest.getPlayerId());
+		DiceRollResult response = currentPlayer.rollDices(diceRollRequest);
+		// 더블인 경우 주사위 한번더 던지기
+		processDoubleRoll(response);
+
+		// 주사위 굴려서 도착한 땅에 따라서 이벤트 추가
+		int currentPosition = response.getNextPosition();
+		processTileEvent(currentPlayer, currentPosition);
+		DiceRollResponse diceRollResponse = DiceRollResponse.from(response,
+				turnManager.peekTurn());
+		// 땅에 도착했을 때 이벤트 추가
+		return diceRollResponse;
+	}
+
+	private void processTileEvent(Player currentPlayer, int currentPosition) {
+		Tile currentTile = board.stream()
+				.filter(tile -> tile.getId() == currentPosition)
+				.findFirst()
+				.orElseThrow(() -> new IllegalArgumentException("Tile not found"));
+		// 행성에 도착할 경우.
+		if (TileType.SEED_CERTIFICATE_CARD == currentTile.getType()) {
+			processLandingOnPlanetEvent(currentPlayer, currentTile);
+		}
+		// TODO: 특수카드일 경우 처리
+		if (TileType.NEURONS_VALLEY_CARD == currentTile.getType()) {
+
+		}
+	}
+
+	/**
+	 * 땅에 도착했을 때 이벤트 처리 1. 땅이 비어있으면 구매할지 물어보기 2. 땅이 다른 플레이어 소유이면 통행료 지불
+	 *
+	 * @param currentPlayer - 현재 플레이어
+	 * @param currentTile   - 현재 타일
+	 */
+	private void processLandingOnPlanetEvent(Player currentPlayer, Tile currentTile) {
+		// 땅 구매할지 물어보도록 액션 추가
+		if (currentTile.getOwnerId() == 0 && currentPlayer.getBalance() >= currentTile.getPrice()) {
+			turnManager.addTurnAction(ActionType.BUY_LAND);
+		}
+		// 통행료 지불 하도록 액션 추가
+		if (currentTile.getOwnerId() != 0
+				&& currentTile.getOwnerId() != currentPlayer.getPlayerId()) {
+			turnManager.addTurnAction(ActionType.PAY_TOLL);
+		}
 	}
 
 	/**
@@ -109,6 +172,7 @@ public class GamePlay {
 	 * @return BuyLandResponse - playerId, action, prevMoney, updatedMoney, updatedTile
 	 */
 	public BuyLandResponse buyLand(BuyLandRequest buyLandRequest) {
+//		turnManager.executeTurn();
 		int tileId = buyLandRequest.getTileId();
 		Player player = findPlayerById(buyLandRequest.getPlayerId())
 				.orElseThrow(() -> new IllegalArgumentException("Player not found"));
@@ -146,12 +210,14 @@ public class GamePlay {
 		player.addLandOwned(tileId);
 		// 플레이어 카드 소유 추가
 		player.addCardOwned(card);
+		ActionType nextAction;
+		if (turnManager.hasNextTurn()) {
+			nextAction = turnManager.peekTurn();
+		} else {
+			nextAction = ActionType.END;
+		}
 
-		return BuyLandResponse.builder().playerId(currentPlayer.getPlayerId())
-				.action(buyLandRequest.getAction())
-				.prevMoney(prevMoney)
-				.updatedMoney(currentPlayer.getBalance())
-				.updatedTile(tile)
-				.build();
+		return BuyLandResponse.of(player.getPlayerId(), ActionType.BUY_LAND.getAction(), prevMoney,
+				currentPlayer.getBalance(), tile, nextAction);
 	}
 }

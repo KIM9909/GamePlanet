@@ -1,5 +1,6 @@
 package com.meeple.meeple_back.game.bluemarble.controller.response;
 
+import com.meeple.meeple_back.game.bluemarble.domain.ActionType;
 import com.meeple.meeple_back.game.bluemarble.domain.DiceRollResult;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,13 +17,15 @@ public class DiceRollResponse {
 	private final int nextPosition;
 
 	private final boolean isDouble;
+	private final String nextAction;
 
-	public static DiceRollResponse from(DiceRollResult diceRollResult) {
+	public static DiceRollResponse from(DiceRollResult diceRollResult, ActionType nextAction) {
 		return DiceRollResponse.builder()
 				.playerId(diceRollResult.getPlayerId())
 				.prevPosition(diceRollResult.getPrevPosition())
 				.nextPosition(diceRollResult.getNextPosition())
 				.isDouble(diceRollResult.isDouble())
+				.nextAction(nextAction.name())
 				.build();
 	}
 }
