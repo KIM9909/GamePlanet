@@ -1,19 +1,44 @@
-import React, { useCallback, useState } from "react";
-import TravelMap from "../../components/game/burumabul/play/TravelMap";
-import GameSidebar from "../../components/sidebar/GameSidebar";
+import React, { useCallback, useEffect, useState } from "react";
+import TravelMap from "../../../components/game/burumabul/play/TravelMap";
+import GameSidebar from "../../../components/sidebar/GameSidebar";
 import { ChevronLeft, ChevronRight, Menu, X } from "lucide-react";
-import DiceImage from "../../assets/burumabul_images/Dice.png";
-import PlayerVideo from "../../components/game/burumabul/play/PlayerVideo";
-import { div, p } from "framer-motion/client";
+import DiceImage from "../../../assets/burumabul_images/Dice.png";
+import PlayerVideo from "../../../components/game/burumabul/play/PlayerVideo";
+import useBurumabulSocket from "../../../hooks/useBurumabulSocket";
+import { useDispatch, useSelector } from "react-redux";
+import LoadingSpinner from "../../../components/game/burumabul/LoadingSpinner";
 
-const BurumabulPage = () => {
+const BurumabulPage = ({ roomId }) => {
+  // 소켓 사용
+  const { connected, error, createGame, rollTheDice } =
+    useBurumabulSocket(roomId);
+  const dispatch = useDispatch();
+  const gameData = useSelector((state) => state.burumabul);
+  const currentPlayer = gameData.players[gameData.currentPlayerIndex];
+
+  useEffect(() => {
+    if (connected && gameData.players.length > 0) {
+      createGame();
+    }
+  }, [connected, gameData.players]);
+
+  // const playerInfoList = [1, 2, 3, 4];
+  const firstDice = useSelector((state) => state.burumabul.firstDice);
+  const secondDice = useSelector((state) => state.burumabul.secondDice);
+
+  console.log("==================");
+  console.log(firstDice);
+  console.log(secondDice);
+
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   // const [playerCount, setPlayerCount] = useState()
   const [rollDice, setRollDice] = useState(null);
   const [playerBases, setPlayerBases] = useState([]);
-  const playerInfoList = [1, 2, 3, 4];
-
   const handleRollDiceRef = useCallback((rollDiceFn) => {
+    // if (!connected) {
+    //   alert("서버와 연결이 끊어졌습니다.");
+    //   return;
+    // }
     setRollDice(() => rollDiceFn);
   }, []);
 
@@ -58,7 +83,14 @@ const BurumabulPage = () => {
         </div>
       </div>
       {/* Main Content 영역 */}
-      <div className="bg-white h-12">정보</div>
+      <div className="bg-white h-12">
+        {!connected && (
+          <div>
+            주사위 결과 : 첫 번째{firstDice} + 두 번째{secondDice} = 총 점수 :
+            {firstDice + secondDice}
+          </div>
+        )}
+      </div>
       <div
         className={`transition-all duration-300 ease-in-out ${
           isSidebarOpen ? "ml-64" : "ml-0"
@@ -70,36 +102,36 @@ const BurumabulPage = () => {
             <TravelMap
               onRollDice={handleRollDiceRef}
               onBasesInfo={handlePlayerBasesRef}
+              gameData={gameData}
+              roomId={roomId}
             />
           </div>
 
           <div className="w-1/3 bg-gray-300 flex justify-center h-screen">
-            {/* 화상 칸 */}
             <div className="flex flex-col items-center justify-center w-full h-full">
               <div className="h-[60%] w-full border-2 overflow-y-auto thin-scrollbar max-h-[70vh]">
                 <h2 className="text-lg text-center my-2">현재 플레이어: </h2>
                 <div className="mx-2">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-3">
+                  {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-3">
                     {playerInfoList.map((player, index) => (
                       <PlayerVideo key={index} playerInfo={player} />
                     ))}
-                  </div>
+                  </div> */}
                 </div>
                 <div className="border-2 m-3 rounded-lg">
                   <h2 className="text-center m-3">플레이어 순위</h2>
-                  <div className="mb-3 mx-2">
+                  {/* <div className="mb-3 mx-2">
                     {playerInfoList.map((player, index) => (
                       <div
                         key={index}
                         className="flex justify-around overflow-hidden text-ellipsis"
                       >
-                        {/* 순위 아이콘 */}
                         <p>순위</p>
                         <p>player {index + 1}. : 누구누구</p>
                         <p>~~~~~ 만 마불</p>
                       </div>
                     ))}
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
@@ -108,7 +140,7 @@ const BurumabulPage = () => {
                 <div className="h-[78%] mt-3">
                   <h1 className="text-center">플레이어 이름 정보</h1>
                   <div>
-                    <p>
+                    <div>
                       내 기지 :{" "}
                       {playerBases.map((playerBase, playerIndex) => (
                         <div key={playerIndex}>
@@ -126,7 +158,7 @@ const BurumabulPage = () => {
                           )}
                         </div>
                       ))}
-                    </p>
+                    </div>
                   </div>
                 </div>
                 <div className="flex flex-row justify-center items-center">

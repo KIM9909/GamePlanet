@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
-import { OpenVidu } from "openvidu-browser";
-import { Camera, CameraOff, Mic, MicOff } from "lucide-react";
+import React, {useEffect, useRef, useState} from "react";
+import {OpenVidu} from "openvidu-browser";
+import {Camera, CameraOff, Mic, MicOff} from "lucide-react";
 import axios from "axios";
 
 const OPENVIDU_SERVER_URL = "https://boardjjigae.duckdns.org:4443";
@@ -41,14 +41,14 @@ const VideoChat = ({ playerCount, userId, players }) => {
   const checkSession = async (sessionId) => {
     try {
       const response = await axios.get(
-        `${OPENVIDU_SERVER_URL}/openvidu/api/sessions/${sessionId}`,
-        {
-          headers: {
-            Authorization:
-              "Basic " + btoa(`OPENVIDUAPP:${OPENVIDU_SERVER_SECRET}`),
-            "Content-Type": "application/json",
-          },
-        }
+          `${OPENVIDU_SERVER_URL}/openvidu/api/sessions/${sessionId}`,
+          {
+            headers: {
+              Authorization:
+                  "Basic " + btoa(`OPENVIDUAPP:${OPENVIDU_SERVER_SECRET}`),
+              "Content-Type": "application/json",
+            },
+          }
       );
       return response.data;
     } catch (error) {
@@ -60,9 +60,9 @@ const VideoChat = ({ playerCount, userId, players }) => {
   const createSession = async (sessionId) => {
     try {
       const response = await axios.post(
-        `${OPENVIDU_SERVER_URL}/openvidu/api/sessions`,
-        { customSessionId: sessionId },
-        { headers: HEADERS, validateStatus: () => true }
+          `${OPENVIDU_SERVER_URL}/openvidu/api/sessions`,
+          {customSessionId: sessionId},
+          {headers: HEADERS, validateStatus: () => true}
       );
 
       if (response.status === 409) {
@@ -76,9 +76,9 @@ const VideoChat = ({ playerCount, userId, players }) => {
 
   const createToken = async (sessionId) => {
     const response = await axios.post(
-      `${OPENVIDU_SERVER_URL}/openvidu/api/sessions/${sessionId}/connection`,
-      {},
-      { headers: HEADERS }
+        `${OPENVIDU_SERVER_URL}/openvidu/api/sessions/${sessionId}/connection`,
+        {},
+        {headers: HEADERS}
     );
     return response.data.token;
   };
@@ -86,26 +86,31 @@ const VideoChat = ({ playerCount, userId, players }) => {
   const handleStreamCreated = (event) => {
     try {
       const streamUserId = JSON.parse(event.stream.connection.data).clientData;
-      if (streamUserId === userId) return;
+      if (streamUserId === userId) {
+        return;
+      }
 
       const emptySlot = videoRefs.current.findIndex(
-        (ref, index) =>
-          index > 0 &&
-          !subscribers.some(
-            (sub) =>
-              sub.stream.streamManager.stream.streamId === event.stream.streamId
-          )
+          (ref, index) =>
+              index > 0 &&
+              !subscribers.some(
+                  (sub) =>
+                      sub.stream.streamManager.stream.streamId
+                      === event.stream.streamId
+              )
       );
 
-      if (emptySlot === -1) return;
+      if (emptySlot === -1) {
+        return;
+      }
 
       const subscriber = session.subscribe(
-        event.stream,
-        videoRefs.current[emptySlot]
+          event.stream,
+          videoRefs.current[emptySlot]
       );
       setSubscribers((prev) => [
         ...prev,
-        { ...subscriber, slotIndex: emptySlot },
+        {...subscriber, slotIndex: emptySlot},
       ]);
     } catch (error) {
       setError("스트림 구독 중 오류가 발생했습니다.");
@@ -115,7 +120,7 @@ const VideoChat = ({ playerCount, userId, players }) => {
   const handleStreamDestroyed = (event) => {
     console.log("Stream destroyed event:", event);
     setSubscribers((prev) =>
-      prev.filter((sub) => sub.stream.streamId !== event.stream.streamId)
+        prev.filter((sub) => sub.stream.streamId !== event.stream.streamId)
     );
   };
 
@@ -135,20 +140,20 @@ const VideoChat = ({ playerCount, userId, players }) => {
       setSession(session);
 
       const token = await createToken(sessionId);
-      await session.connect(token, { clientData: userId });
+      await session.connect(token, {clientData: userId});
 
       const publisher = await OVRef.current.initPublisher(
-        videoRefs.current[0],
-        {
-          audioSource: undefined,
-          videoSource: undefined,
-          publishAudio: true,
-          publishVideo: true,
-          resolution: "640x480",
-          frameRate: 30,
-          insertMode: "APPEND",
-          mirror: false,
-        }
+          videoRefs.current[0],
+          {
+            audioSource: undefined,
+            videoSource: undefined,
+            publishAudio: true,
+            publishVideo: true,
+            resolution: "640x480",
+            frameRate: 30,
+            insertMode: "APPEND",
+            mirror: false,
+          }
       );
 
       await session.publish(publisher);
@@ -196,13 +201,53 @@ const VideoChat = ({ playerCount, userId, players }) => {
     // 첫 번째 칸은 자신의 비디오 (publisher)
     if (index === 0) {
       return (
-        <div
-          key={index}
-          ref={(el) => (videoRefs.current[index] = el)}
-          className="relative bg-gray-900 rounded-lg flex items-center justify-center h-40 overflow-hidden"
-        >
-          <div className="absolute top-2 left-2 bg-gray-900/70 px-2 py-1 rounded text-xs text-white z-10">
-            {userId} (나)
+          <div
+              key={index}
+              ref={(el) => (videoRefs.current[index] = el)}
+              className="relative bg-gray-900 rounded-lg flex items-center justify-center h-40 overflow-hidden"
+          >
+            <div
+                className="absolute top-2 left-2 bg-gray-900/70 px-2 py-1 rounded text-xs text-white z-10">
+              {userId} (나)
+            </div>
+
+            {error && (
+                <div
+                    className="absolute top-2 right-2 bg-red-500/80 px-2 py-1 rounded text-xs text-white">
+                  {error}
+                </div>
+            )}
+
+            {!publisher && !error && (
+                <div className="text-gray-500 text-sm">
+                  {isConnecting ? "연결 중..." : "내 비디오"}
+                </div>
+            )}
+
+            {publisher && (
+                <div className="absolute bottom-2 right-2 flex gap-2 z-10">
+                  <button
+                      onClick={toggleMic}
+                      className="p-1.5 bg-gray-800/80 rounded-full hover:bg-gray-700/80 transition-colors"
+                  >
+                    {isMicOn ? (
+                        <Mic className="w-4 h-4 text-white"/>
+                    ) : (
+                        <MicOff className="w-4 h-4 text-red-500"/>
+                    )}
+                  </button>
+                  <button
+                      onClick={toggleCamera}
+                      className="p-1.5 bg-gray-800/80 rounded-full hover:bg-gray-700/80 transition-colors"
+                  >
+                    {isCameraOn ? (
+                        <Camera className="w-4 h-4 text-white"/>
+                    ) : (
+                        <CameraOff className="w-4 h-4 text-red-500"/>
+                    )}
+                  </button>
+                </div>
+            )}
           </div>
 
           {error && (
@@ -279,7 +324,7 @@ const VideoChat = ({ playerCount, userId, players }) => {
       {Array(Math.max(playerCount, 1))
         .fill(null)
         .map((_, i) => renderVideoElement(i))}
-    </div>
+      </div>
   );
 };
 

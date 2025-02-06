@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 //게임 목록에 표시할 게임카드 컴포넌트
 
-function GameCard({ imgUrl, title, description }) {
+function GameCard({ gameId, imgUrl, title, description }) {
   const [isHovered, setIsHovered] = useState(false);
+  const nav=useNavigate()
 
   return (
     <div
@@ -14,7 +16,7 @@ function GameCard({ imgUrl, title, description }) {
       {/* 배경 이미지 */}
       <div
         className={`absolute inset-0 bg-cover bg-center transition-opacity duration-300 ${
-          isHovered ? "opacity-50" : "opacity-100"
+          isHovered ? "opacity-30" : "opacity-100"
         }`}
         style={{ backgroundImage: `url(${imgUrl})` }}
       ></div>
@@ -30,10 +32,10 @@ function GameCard({ imgUrl, title, description }) {
 
           {/* 버튼 영역 */}
           <div className="flex justify-center gap-2">
-            <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition-colors">
+            <button onClick={()=>nav(`../game/${gameId}`)}className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition-colors">
               INFO
             </button>
-            <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition-colors">
+            <button onClick={()=>nav(``)} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition-colors">
               PLAY
             </button>
           </div>

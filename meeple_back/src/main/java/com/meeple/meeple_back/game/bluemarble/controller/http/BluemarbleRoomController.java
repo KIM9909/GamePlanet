@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "게임방(블루마블)")
+@Tag(name = "대기방(블루마블)")
 @RestController
 @RequestMapping("/game/blue-marble/rooms")
 @Builder
@@ -32,14 +32,14 @@ public class BluemarbleRoomController {
 	private final SimpMessageSendingOperations messagingTemplate;
 
 	@GetMapping
-	@Operation(summary = "게임방 목록 조회", description = "생성된 게임방 목록을 조회합니다.")
+	@Operation(summary = "대기방 목록 조회", description = "생성된 대기방 목록을 조회합니다.")
 	public ResponseEntity<List<RoomResponse>> getRooms() {
 		return ResponseEntity.status(HttpStatus.OK).body(bluemarbleRoomService.getList().stream()
 				.map(RoomResponse::from).toList());
 	}
 
 	@GetMapping("/{searchName}/search")
-	@Operation(summary = "게임방 이름으로 검색", description = "게임방 이름으로 검색합니다.")
+	@Operation(summary = "대기방 이름으로 검색", description = "대기방 이름으로 검색합니다.")
 	public ResponseEntity<List<RoomResponse>> searchRooms(@PathVariable String searchName) {
 		return ResponseEntity.status(HttpStatus.OK)
 				.body(bluemarbleRoomService.search(searchName).stream()
@@ -48,13 +48,13 @@ public class BluemarbleRoomController {
 
 
 	@GetMapping("/{roomId}")
-	@Operation(summary = "게임방 조회", description = "게임방을 조회합니다.")
+	@Operation(summary = "대기방 조회", description = "대기방을 조회합니다.")
 	public ResponseEntity<RoomResponse> getRoom(@PathVariable int roomId) {
 		return ResponseEntity.ok(RoomResponse.from(bluemarbleRoomService.findById(roomId)));
 	}
 
 	@PutMapping("/{roomId}")
-	@Operation(summary = "게임방 수정", description = "게임방을 수정합니다.")
+	@Operation(summary = "대기방 수정", description = "대기방을 수정합니다.")
 	public ResponseEntity<RoomResponse> update(@PathVariable int roomId,
 			@Valid @RequestBody RoomUpdate roomUpdate) {
 		return ResponseEntity.ok(
@@ -62,7 +62,7 @@ public class BluemarbleRoomController {
 	}
 
 	@DeleteMapping("/{roomId}/user/{userId}")
-	@Operation(summary = "게임방 삭제", description = "게임방을 삭제합니다.")
+	@Operation(summary = "대기방 삭제", description = "대기방을 삭제합니다.")
 	public ResponseEntity<RoomResponse> delete(@PathVariable int roomId,
 			@PathVariable("userId") Long userId) {
 		return ResponseEntity.status(HttpStatus.NO_CONTENT)
@@ -70,7 +70,7 @@ public class BluemarbleRoomController {
 	}
 
 	@PutMapping("/{roomId}/change-password")
-	@Operation(summary = "게임방 비밀번호 변경", description = "게임방 비밀번호를 변경합니다.")
+	@Operation(summary = "대기방 비밀번호 변경", description = "대기방 비밀번호를 변경합니다.")
 	public ResponseEntity<Void> changePassword(@PathVariable int roomId,
 			@Valid @RequestBody RoomUpdatePassword roomUpdatePassword) {
 		bluemarbleRoomService.changePassword(roomId, roomUpdatePassword);

@@ -11,6 +11,9 @@ import HongBeom from "../../assets/images/pixel_character/pixel-hongbeom.png";
 import JaeEun from "../../assets/images/pixel_character/pixel-jaeeun.png";
 import JinHyuk from "../../assets/images/pixel_character/pixel-jinhyuk.png";
 import SungHyun from "../../assets/images/pixel_character/pixel-sunghyun.png";
+import useFriendSocket from "../../hooks/useFriendSocket";
+import { Bell } from "lucide-react";
+import NotificationList from "../notification/NotificationList";
 
 const TopNavbar = () => {
   const dispatch = useDispatch();
@@ -20,6 +23,68 @@ const TopNavbar = () => {
   const { token } = useSelector((state) => state.user);
 
   const userId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
+
+  const userID = useSelector((state) => state.user.userId);
+  const { connected, responseSocket, stompClitenRef } = useFriendSocket();
+  const [notificationList, setNotificationList] = useState([]);
+  const [isShowNotifi, setIsShowNotifi] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(
+    notificationList.length
+  );
+
+  const notificationRef = useRef(null);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target)
+      ) {
+        setIsShowNotifi(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  });
+
+  useEffect(() => {
+    if (connected) {
+      console.log("소켓 연결 성공");
+    } else {
+      console.error("소켓 연결 에러");
+      // 재연결 시도
+      const reconnectSocket = async () => {
+        if (stompClitenRef.current) {
+          try {
+            await stompClitenRef.current.active();
+          } catch (error) {
+            console.error("재연결 실패:", error);
+          }
+        }
+      };
+      reconnectSocket();
+    }
+  }, [connected]);
+
+  useEffect(() => {
+    if (responseSocket) {
+      console.log("새로운 소켓 응답:", responseSocket, typeof responseSocket);
+      setNotificationList((prevList) => {
+        const updatedList = [...prevList, responseSocket];
+        console.log("업데이트 된 알림 목록:", updatedList);
+        return updatedList;
+      });
+      setNotificationCount((prevCount) => prevCount + 1);
+    }
+    console.log(notificationList);
+  }, [responseSocket]);
+
+  const showNotifi = () => {
+    setIsShowNotifi(true);
+  };
+
+  useEffect(() => {
+    setNotificationCount(notificationList.length);
+  }, [notificationList]);
 
   const characterInfo = {
     0: {
@@ -96,7 +161,7 @@ const TopNavbar = () => {
             </div>
           </div>
 
-          <div className="flex-1 flex justify-center space-x-9">
+          <div className="flex-1 flex justify-center space-x-9 mx-2">
             {[EunSoo, HeeJun, JinHyuk, HongBeom, JaeEun, SungHyun].map(
               (character, index) => (
                 <div
@@ -143,7 +208,29 @@ const TopNavbar = () => {
             )}
           </div>
 
-          <div className="flex items-center space-x-8">
+          <div className="flex items-center space-x-6">
+            <div className="relative" ref={notificationRef}>
+              <Bell
+                className="cursor-pointer"
+                onClick={showNotifi}
+                size={24}
+                color="#ffffff"
+                strokeWidth={2.5}
+              />
+              {notificationList.length > 0 && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold ">
+                    {notificationCount > 99 ? "99+" : notificationList.length}
+                  </span>
+                </div>
+              )}
+            </div>
+            {isShowNotifi && (
+              <NotificationList
+                notiList={notificationList}
+                setNotiList={setNotificationList}
+              />
+            )}
             <Link
               to={`/profile/${userId}`}
               className="text-2xl font-semibold tracking-wide hover:text-cyan-300 transition-colors duration-300

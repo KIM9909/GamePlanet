@@ -24,27 +24,24 @@ const ChatBox = ({ roomId, currentUser, correctAnswer }) => {
     e.preventDefault();
     if (!message.trim()) return;
 
-    const isCorrect =
-      message.trim().toLowerCase() === correctAnswer?.toLowerCase();
-
-    console.log("입력한 답:", message.trim().toLowerCase());
-    console.log("정답:", correctAnswer?.toLowerCase());
-    console.log("정답 일치 여부:", isCorrect);
-    console.log("현재 턴 여부:", currentUserTurn);
-
-    if (currentUserTurn && isCorrect) {
+    // 출제자가 정답을 입력하는 경우 무시
+    if (
+      currentUserTurn &&
+      message.trim().toLowerCase() === correctAnswer?.toLowerCase()
+    ) {
       console.log("출제자가 정답을 입력했습니다 - 무시됨");
       setMessage("");
       return;
     }
 
-    // 채팅 메시지 전송 - 정답 체크는 서버에서 처리
-    sendMessage({
+    // 모든 메시지를 일반 메시지 형식으로 전송
+    const messageData = {
       message: message.trim(),
       sender: currentUser,
-      correctAnswer: correctAnswer,
-    });
+      correctAnswer,
+    };
 
+    sendMessage(messageData);
     setMessage("");
   };
 
@@ -87,7 +84,7 @@ const ChatBox = ({ roomId, currentUser, correctAnswer }) => {
                 <p>{msg.content}</p>
                 {msg.isCorrect && (
                   <div className="text-xs mt-1 text-green-200">
-                    🎉 정답을 맞추셨습니다! +{msg.score}점
+                    🎉 정답을 맞추셨습니다! + 30점
                   </div>
                 )}
               </div>

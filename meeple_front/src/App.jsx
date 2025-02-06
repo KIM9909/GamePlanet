@@ -2,7 +2,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AdminPage from "./pages/admin/AdminPage";
 import BoardPage from "./pages/board/BoardPage";
-import BurumabulPage from "./pages/game/BurumabulPage";
+import BurumabulPage from "./pages/game/burumabul/BurumabulPage";
 import GameInfoPage from "./pages/gameInfo/GameInfoPage";
 import HomePage from "./pages/home/HomePage";
 import ProfilePage from "./pages/profile/ProfilePage";
@@ -19,69 +19,70 @@ import WaitingRoom from "./components/game/burumabul/waiting/WaitingRoom";
 import FriendModalLayout from "./components/layout/FriendModalLayout";
 import CatchMindListPage from "./components/game/catchMind/roomList/CatchMindListPage";
 import CockroachRoom from "./components/game/cockroachcard/CockroachRoom";
+import BurumabulRoomListPage from "./pages/game/burumabul/BurumabulRoomListPaage";
 
 function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
       <TopLayout>
-        <SideLayout>
-          <FriendModalLayout>
-            <Routes>
-              {/* Admin */}
-              <Route path="/admin" element={<AdminPage />} />
+        {/* <SideLayout> */}
+        <FriendModalLayout>
+          <Routes>
+            {/* Admin */}
+            <Route path="/admin" element={<AdminPage />} />
 
-              {/* Board */}
-              <Route path="/board" element={<BoardPage />} />
-              <Route path="/board/:boardId" element={<BoardPage />} />
+            {/* Board */}
+            <Route path="/board" element={<BoardPage />} />
+            <Route path="/board/:boardId" element={<BoardPage />} />
 
-              {/* Game */}
-              <Route
-                // path="/game/burumabul/start"
-                path="/game/burumabul/start/:roomId"
-                element={<BurumabulPage />}
-              />
-              <Route
-                // path="/game/burumabul/waitingroom/"
-                path="/game/burumabul/waitingroom/:roomId"
-                element={<WaitingRoom />}
-              />
-              <Route
-                path="/game/cockroach/:roomId"
-                element={<CockroachPokerPage />}
-              />
-              <Route path="/catch-mind/:roomId" element={<CatchMindPage />} />
-              <Route path="/catch-mind" element={<CatchMindListPage />} />
+            {/* Game */}
+            <Route
+              path="/game/burumabul/start/:roomId"
+              element={<BurumabulPage />}
+            />
+            <Route
+              path="/game/burumabul/waitingroom/:roomId"
+              element={<WaitingRoom />}
+            />
+            <Route
+              path="/burumabul/room-list"
+              element={<BurumabulRoomListPage />}
+            />
 
-              {/* GameInfo */}
-              <Route path="/game/:gameId" element={<GameInfoPage />} />
+            <Route
+              path="/game/cockroach/:roomId"
+              element={<CockroachPokerPage />}
+            />
+            <Route path="/catch-mind/:roomId" element={<CatchMindPage />} />
+            <Route path="/catch-mind" element={<CatchMindListPage />} />
 
-              {/* Home & Main */}
-              <Route path="/home" element={<HomePage />} />
-              <Route path="/" element={<MainPage />} />
+            {/* GameInfo */}
+            <Route path="/game/:gameId" element={<GameInfoPage />} />
 
-              {/* Profile */}
-              <Route path="/profile/:userId" element={<ProfilePage />} />
+            {/* Home & Main */}
+            <Route path="/home" element={<HomePage />} />
+            <Route path="/" element={<MainPage />} />
 
-              {/* Proposal */}
-              <Route path="/proposal" element={<ProposalPage />} />
-              <Route path="/proposal/:proposalId" element={<ProposalPage />} />
+            {/* Profile */}
+            <Route path="/profile/:userId" element={<ProfilePage />} />
 
-              {/* Tournament */}
-              <Route path="/tournament" element={<TournamentPage />} />
-              <Route
-                path="/tournament/:tournamentId"
-                element={<TournamentPage />}
-              />
+            {/* Proposal */}
+            <Route path="/proposal" element={<ProposalPage />} />
+            <Route path="/proposal/:proposalId" element={<ProposalPage />} />
+
 
               {/* INTRODUCE */}
               <Route path="/introduce" element={<Introduce />} />
 
               {/* Cockroach Room List */}
               <Route path="/test/cockroach" element={<CockroachRoom />} />
-            </Routes>
-          </FriendModalLayout>
-        </SideLayout>
+
+            {/* INTRODUCE */}
+            <Route path="/introduce" element={<Introduce />} />
+          </Routes>
+        </FriendModalLayout>
+        {/* </SideLayout> */}
       </TopLayout>
     </BrowserRouter>
   );

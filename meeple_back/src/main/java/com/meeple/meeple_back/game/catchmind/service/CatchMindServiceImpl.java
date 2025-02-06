@@ -1,6 +1,8 @@
 package com.meeple.meeple_back.game.catchmind.service;
 
-import com.meeple.meeple_back.game.catchmind.model.MessageType;
+import com.meeple.meeple_back.game.catchmind.model.GameResultDTO;
+import com.meeple.meeple_back.game.catchmind.model.MessageDTO;
+import com.meeple.meeple_back.game.catchmind.model.RoomInfoDTO;
 import com.meeple.meeple_back.game.catchmind.model.entity.Quiz;
 import com.meeple.meeple_back.game.catchmind.model.request.*;
 import com.meeple.meeple_back.game.catchmind.model.response.*;
@@ -73,6 +75,9 @@ public class CatchMindServiceImpl implements CatchMindService {
 
         ResponseCreateRoom response = ResponseCreateRoom.builder()
                 .roomId(savedRoom.getRoomId())
+                .creator(request.getCreator())
+                .isPrivate(request.isPrivate())
+                .password(request.getPassword())
                 .build();
 
         return response;
@@ -129,6 +134,7 @@ public class CatchMindServiceImpl implements CatchMindService {
         redisTemplate.opsForHash().put(ROOM_KEY, roomIdStr, roomInfo);
 
         return ResponseJoinRoom.builder()
+                .type("roomInfo")
                 .code(200)
                 .message(request.getPlayerName() + " " + roomIdStr + "번 방 입장 성공")
                 .roomInfo(roomInfo)
@@ -152,7 +158,7 @@ public class CatchMindServiceImpl implements CatchMindService {
             roomInfo.put("password", request.getPassword());
         }
 
-        if (request.getMaxPeople() != Integer.parseInt(String.valueOf(roomInfo.get("password")))) {
+        if (request.getMaxPeople() != Integer.parseInt(String.valueOf(roomInfo.get("maxPeople")))) {
             roomInfo.put("maxPeople", request.getMaxPeople());
         }
 
@@ -166,7 +172,7 @@ public class CatchMindServiceImpl implements CatchMindService {
 
         redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
 
-        ResponseUpdateRoom response = ResponseUpdateRoom.builder()
+        RoomInfoDTO roomInfoDTO = RoomInfoDTO.builder()
                 .roomTitle(request.getRoomTitle())
                 .isPrivate(request.isPrivate())
                 .password(request.getPassword())
@@ -174,6 +180,11 @@ public class CatchMindServiceImpl implements CatchMindService {
                 .timeLimit(request.getTimeLimit())
                 .quizCount(request.getQuizCount())
                 .build();
+
+        ResponseUpdateRoom response = ResponseUpdateRoom.builder()
+            .type("updateRoom")
+            .roomInfo(roomInfoDTO)
+            .build();
 
         return response;
     }
@@ -213,28 +224,46 @@ public class CatchMindServiceImpl implements CatchMindService {
         for (String player : players) {
             playerScore.put(player, 0);
         }
+        Map<String, Object> newInfo = new HashMap<>();
 
-        gameInfo.put("quizList", quizList);
+        String quiz = quizList.get(0).getQuiz();
+        quizList.remove(0);
+
+        List<String> strQuiz = new ArrayList<>();
+        for (int i = 0; i < quizList.size(); i++) {
+            strQuiz.add(quizList.get(i).getQuiz());
+        }
+
+        newInfo.put("currentTurn", players.get(0));
+        newInfo.put("quiz", quiz);
+        newInfo.put("remainQuizCount", quizList.size());
+
+        gameInfo.put("currentTurn", players.get(0));
+        gameInfo.put("remainQuizCount", quizList.size());
+        gameInfo.put("quiz", quiz);
         gameInfo.put("sequence", players);
         gameInfo.put("playerScore", playerScore);
+        gameInfo.put("quizList", strQuiz);
+
+        for (int i = 0; i < quizList.size(); i++) {
+            System.out.println(quizList.get(i).getQuiz());
+        }
 
         roomInfo.put("gameInfo", gameInfo);
-        roomInfo.put("isGameStart", true);
 
         redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
 
-
         ResponseStartGame response = ResponseStartGame.builder()
-                .quizList(quizList)
-                .sequence(players)
+                .type("gameInfo")
+                .gameInfo(newInfo)
                 .build();
 
         return response;
     }
 
 
-    @Override
-    public ResponseQuiz requestQuiz(String roomId) {
+//    @Override
+//    public ResponseQuiz requestQuiz(String roomId) {
 //        Map<String, Object> roomInfo =
 //                (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
 //
@@ -254,10 +283,9 @@ public class CatchMindServiceImpl implements CatchMindService {
 //        gameInfo.put("quizList", quizList);
 //        roomInfo.put("gameInfo", gameInfo);
 //        redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
-
+//
 //        return response;
-        return null;
-    }
+//    }
 
     @Override
     public ResponseSendMessage sendMessage(String roomId, RequestSendMessage request) {
@@ -269,13 +297,19 @@ public class CatchMindServiceImpl implements CatchMindService {
             throw new IllegalArgumentException("빈 메세지는 전송할 수 없습니다.");
         }
 
-        Map<String, Object> roomInfo = (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+        // 시스템 메시지인 경우 즉시 전송하고 리턴
+        if ("SYSTEM".equals(request.getSender())) {
+            MessageDTO messageDTO = MessageDTO.builder()
+                    .sender("SYSTEM")
+                    .content(request.getMessage())
+                    .timestamp(LocalDateTime.now())
+                    .isNotice(true)
+                    .score(0)
+                    .build();
 
-        if (roomInfo == null) {
             ResponseSendMessage response = ResponseSendMessage.builder()
-                    .messageType(MessageType.ERROR)
-                    .code(404)
-                    .responseMessage(roomId + "번은 존재하지 않는 방번호입니다.")
+                    .type("message")
+                    .message(messageDTO)
                     .build();
 
             return response;
@@ -298,87 +332,131 @@ public class CatchMindServiceImpl implements CatchMindService {
 
         chatMessageRespository.save(chatMessage);
 
+        Map<String, Object> roomInfo = (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+
+        if (roomInfo == null) {
+            return null;
+        }
 
         // 정답 체크
         if (request.getCorrectAnswer() != null &&
                 request.getMessage().trim().equalsIgnoreCase(request.getCorrectAnswer().trim())) {
-
-            // 1. gameInfo 가져오기 또는 초기화
             Map<String, Object> gameInfo = (Map<String, Object>) roomInfo.get("gameInfo");
-            if (gameInfo == null) {
-                gameInfo = new HashMap<>();
-                roomInfo.put("gameInfo", gameInfo);
-            }
 
-            // 2. 플레이어 점수 업데이트
+//            if (gameInfo == null) {
+//                gameInfo = new HashMap<>();
+//                roomInfo.put("gameInfo", gameInfo);
+//            }
+
             Map<String, Integer> playerScore = (Map<String, Integer>) gameInfo.get("playerScore");
-            if (playerScore == null) {
-                playerScore = new HashMap<>();
-                gameInfo.put("playerScore", playerScore);
-            }
+
+//            if (playerScore == null) {
+//                playerScore = new HashMap<>();
+//                gameInfo.put("playerScore", playerScore);
+//            }
 
             int currentScore = playerScore.getOrDefault(request.getSender(), 0);
-            playerScore.put(request.getSender(), currentScore + 10);
+            playerScore.put(request.getSender(), currentScore + 30);
 
-            // 3. 다음 출제자로 턴 변경
+            gameInfo.put("playerScore", playerScore);
+
             List<String> players = (List<String>) roomInfo.get("players");
-            String nextTurn = "";
+
+
             if (players != null && !players.isEmpty()) {
                 String currentTurn = (String) gameInfo.get("currentTurn");
                 int currentIndex = currentTurn != null ? players.indexOf(currentTurn) : 0;
                 int nextIndex = (currentIndex + 1) % players.size();
-                nextTurn = players.get(nextIndex);
+                String nextTurn = players.get(nextIndex);
 
                 // 다음 출제자를 gameInfo에 저장
                 gameInfo.put("currentTurn", nextTurn);
             }
 
-            List<Quiz> quizList = (List<Quiz>) gameInfo.get("quizList");
+            List<String> quizList = (List<String>) gameInfo.get("quizList");
 
-            Quiz quiz = quizList.get(0);
+            if (quizList.isEmpty()) {
+                List<GameResultDTO> gameResult = gameResult(roomId);
+
+                MessageDTO responseMessage = MessageDTO.builder()
+                        .sender(sender.getUserNickname())
+                        .content(request.getMessage())
+                        .timestamp(LocalDateTime.now())
+                        .nextTurn(String.valueOf(gameInfo.get("currentTurn")))
+                        .isCorrect(true)
+                        .remainQuizCount(quizList.size())
+                        .score(10)
+                        .build();
+                ResponseSendMessage responseSendMessage = ResponseSendMessage.builder()
+                        .type("message")
+                        .message(responseMessage)
+                        .build();
+
+                messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, responseSendMessage);
+
+                playerScore.put(request.getSender(), currentScore + 30);
+
+                ResponseGameResult responseResult = ResponseGameResult.builder()
+                        .type("result")
+                        .result(gameResult)
+                        .build();
+
+                messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, responseResult);
+
+                MessageDTO messageDTO = MessageDTO.builder()
+                        .sender("SYSTEM")
+                        .content("게임 종료")
+                        .timestamp(LocalDateTime.now())
+                        .isNotice(true)
+                        .build();
+
+                ResponseSendMessage response = ResponseSendMessage.builder()
+                        .type("message")
+                        .message(messageDTO)
+                        .build();
+
+                return response;
+            }
+
+            String nextQuiz = quizList.get(0);
             quizList.remove(0);
+            gameInfo.put("remainQuizCount", quizList.size());
 
-
-            // 4. Redis에 업데이트된 정보 저장
-            gameInfo.put("quizList", quizList);
             roomInfo.put("gameInfo", gameInfo);
             redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
 
-            // 5. 게임 상태 변경 알림
-            messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, roomInfo);
-
-            // 6. 정답 메시지 전송
-            ResponseSendMessage response = ResponseSendMessage.builder()
-                    .messageType(MessageType.SYSTEM)
-                    .code(200)
-                    .responseMessage("정상 작동")
+            MessageDTO messageDTO = MessageDTO.builder()
                     .sender(sender.getUserNickname())
                     .content(request.getMessage())
-                    .nextTurn(nextTurn)
-                    .nextAnswer(quiz.getQuiz())
-                    .remainQuizCount(quizList.size())
                     .timestamp(LocalDateTime.now())
-                    .score(request.getScore() + 10)
+                    .quiz(nextQuiz)
+                    .nextTurn(String.valueOf(gameInfo.get("currentTurn")))
                     .isCorrect(true)
+                    .remainQuizCount(quizList.size())
+                    .score(10)
                     .build();
 
+
+            MessageDTO systemMessage = MessageDTO.builder()
+                    .sender("SYSTEM")
+                    .content(String.format("%s님이 정답을 맞추셨습니다! (정답: %s)",
+                            sender.getUserNickname(), request.getCorrectAnswer()))
+                    .timestamp(LocalDateTime.now())
+                    .isNotice(true)
+                    .build();
+
+            ResponseSendMessage response = ResponseSendMessage.builder()
+                    .type("message")
+                    .message(messageDTO)
+                    .build();
+
+            messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, systemMessage);
+
             return response;
-            // 7. 시스템 알림 메시지 전송
-//            ResponseSendMessage noticeMessage = ResponseSendMessage.builder()
-//                    .sender("SYSTEM")
-//                    .content(String.format("%s님이 정답을 맞추셨습니다! (정답: %s)",
-//                            sender.getUserNickname(), request.getCorrectAnswer()))
-//                    .timestamp(LocalDateTime.now())
-//                    .isNotice(true)
-//                    .build();
-//            messagingTemplate.convertAndSend("/topic/catch-mind-messages/" + roomId, noticeMessage);
 
         } else {
             // 일반 메시지 전송
-            ResponseSendMessage response = ResponseSendMessage.builder()
-                    .messageType(MessageType.NORMAL)
-                    .code(200)
-                    .responseMessage("성공적으로 반환되었습니다.")
+            MessageDTO messageDTO = MessageDTO.builder()
                     .sender(sender.getUserNickname())
                     .content(request.getMessage())
                     .timestamp(LocalDateTime.now())
@@ -386,21 +464,25 @@ public class CatchMindServiceImpl implements CatchMindService {
                     .score(0)
                     .build();
 
+            ResponseSendMessage response = ResponseSendMessage.builder()
+                    .type("message")
+                    .message(messageDTO)
+                    .build();
             return response;
         }
     }
 
     @Override
-    public List<ResponseGameResult> gameResult(String roomId) {
+    public List<GameResultDTO> gameResult(String roomId) {
         Map<String, Object> roomInfo = (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
         Map<String, Object> gameInfo = (Map<String, Object>) roomInfo.get("gameInfo");
         Map<String, Integer> playerScore = (Map<String, Integer>) gameInfo.get("playerScore");
 
-        List<ResponseGameResult> response = new ArrayList<>();
+        List<GameResultDTO> response = new ArrayList<>();
 
         for (String player : playerScore.keySet()) {
             int score = playerScore.get(player);
-            ResponseGameResult result = ResponseGameResult.builder()
+            GameResultDTO result = GameResultDTO.builder()
                     .point(score)
                     .player(player)
                     .build();
@@ -409,7 +491,7 @@ public class CatchMindServiceImpl implements CatchMindService {
         }
 
         response = response.stream()
-                .sorted(Comparator.comparingInt(ResponseGameResult::getPoint).reversed())
+                .sorted(Comparator.comparingInt(GameResultDTO::getPoint).reversed())
                 .collect(Collectors.toList());
 
         int rank = 1;
@@ -513,7 +595,68 @@ public class CatchMindServiceImpl implements CatchMindService {
         }
 
         return ResponseExitCatchmindRoom.builder()
+                .type("players")
                 .players(userList)
                 .build();
+    }
+
+    @Override
+    public ResponseTimeOut quizTimeOut(String roomId) {
+        Map<String, Object> roomInfo = (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+        Map<String, Object> gameInfo = (Map<String, Object>) roomInfo.get("gameInfo");
+
+        List<String> players = (List<String>) roomInfo.get("players");
+
+        if (players != null && !players.isEmpty()) {
+            String currentTurn = (String) gameInfo.get("currentTurn");
+            int currentIndex = currentTurn != null ? players.indexOf(currentTurn) : 0;
+            int nextIndex = (currentIndex + 1) % players.size();
+            String nextTurn = players.get(nextIndex);
+
+            // 다음 출제자를 gameInfo에 저장
+            gameInfo.put("currentTurn", nextTurn);
+        }
+
+        List<String> quizList = (List<String>) gameInfo.get("quizList");
+
+        if (quizList.isEmpty()) {
+            List<GameResultDTO> gameResult = gameResult(roomId);
+
+            ResponseGameResult responseResult = ResponseGameResult.builder()
+                    .type("result")
+                    .result(gameResult)
+                    .build();
+
+            messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, responseResult);
+
+            MessageDTO messageDTO = MessageDTO.builder()
+                    .sender("SYSTEM")
+                    .content("게임 종료")
+                    .timestamp(LocalDateTime.now())
+                    .isNotice(true)
+                    .build();
+            messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, messageDTO);
+            return null;
+        }
+
+        String nextQuiz = quizList.get(0);
+        quizList.remove(0);
+        gameInfo.put("remainQuizCount", quizList.size());
+
+        roomInfo.put("gameInfo", gameInfo);
+        redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
+
+        ResponseQuiz responseQuiz = ResponseQuiz.builder()
+                .nextTurn(String.valueOf(gameInfo.get("currentTurn")))
+                .quiz(nextQuiz)
+                .remainQuizCount(quizList.size())
+                .build();
+
+        ResponseTimeOut responseTimeOut = ResponseTimeOut.builder()
+                .type("timeOut")
+                .gameData(responseQuiz)
+                .build();
+
+        return responseTimeOut;
     }
 }

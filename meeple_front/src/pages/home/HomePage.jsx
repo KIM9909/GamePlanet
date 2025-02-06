@@ -51,9 +51,14 @@ const HomePage = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(roomData),  // roomData를 그대로 전송
+        body: JSON.stringify(roomData),
       });
-  
+
+      if (!response.ok) {
+        const responseText = await response.text();
+        throw new Error(`서버 오류: ${response.status} - ${responseText}`);
+      }
+
       const data = await response.json();
       
       if (response.ok) {
@@ -72,9 +77,15 @@ const HomePage = () => {
     }
   };
 
-  // 부루마불 방생성 -> 후에 백엔드와 연결 예정
+  // 부루마불 방생성 모달에서 정보 입력 후 대기방 이동
   const handleCreateBurumabulRoom = () => {
     navigate("/game/burumabul/waitingroom");
+  };
+
+  // 부루마불 방 목록 페이지 이동
+
+  const goToRoomList = async () => {
+    await navigate("/burumabul/room-list");
   };
 
   return (
@@ -85,6 +96,19 @@ const HomePage = () => {
             <h1 className="text-2xl font-bold mb-6">게임 목록</h1>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* 바퀴벌레 포커 */}
+              {/* <div className="bg-gray-50 p-6 rounded-lg shadow">
+                <h2 className="text-xl font-semibold mb-4">바퀴벌레 포커</h2>
+                <p className="text-gray-600 mb-4">
+                  블러핑과 심리전이 핵심인 카드게임입니다.
+                </p>
+                <button
+                  onClick={() => setCreateRoomModalOpen(true)}
+                  className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                >
+                  방 만들기
+                </button>
+
+              </div> */}
 
               <GameCard
                 imgUrl={CockroachPokerRoyalMainImg}
@@ -93,10 +117,10 @@ const HomePage = () => {
               />
 
               {/* 부루마불 */}
-              {/* <div className="bg-gray-50 p-6 rounded-lg shadow">
+              <div className="bg-gray-50 p-6 rounded-lg shadow">
                 <h2 className="text-xl font-semibold mb-4">부루마불</h2>
                 <p className="text-gray-600 mb-4">
-                친구들과 함께 떠나는 미플만의 우주여행!
+                  친구들과 함께 떠나는 신기한 우주여행!
                 </p>
                 <button
                 onClick={() => setIsCreateBurumabulRoomModalOpen(true)}
@@ -104,7 +128,10 @@ const HomePage = () => {
                 >
                 방 만들기
                 </button>
-                </div> */}
+                <button onClick={() => navigate("/burumabul/room-list")}>
+                  대기방 목록 보기
+                </button>
+              </div>
 
               <GameCard
                 imgUrl={BurumabulMainImg}

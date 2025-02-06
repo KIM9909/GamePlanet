@@ -9,13 +9,12 @@ import lombok.Getter;
 @Builder
 public class RoomJoinWithPassword {
 
-	private final int userId;
+	@JsonProperty("password")
 	private final String password;
 
 	@JsonCreator
-	public RoomJoinWithPassword(@JsonProperty("userId") int userId,
+	public RoomJoinWithPassword(
 			@JsonProperty("password") String password) {
-		this.userId = userId;
 		this.password = password;
 	}
 }
