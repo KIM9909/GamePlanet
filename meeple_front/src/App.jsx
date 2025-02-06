@@ -52,7 +52,13 @@ function App() {
               <Route path="/catch-mind" element={<CatchMindListPage />} />
 
               {/* GameInfo */}
-              <Route path="/game/:gameId" element={<GameInfoPage />} />
+              <Route path="/game/:gameId/info" element={<GameInfoPage />} />
+              <Route path="/game/:gameId/rule" element />
+              <Route path="/game/:gameId/board" element />
+              <Route path="/game/:gameId/board/:articleId/detail" element />
+              <Route path="/game/:gameId/board/:articleId/edit" element />
+              <Route path="/game/:gameId/review" element />
+              <Route path="/game/:gameId/video" element />
 
               {/* Home & Main */}
               <Route path="/home" element={<HomePage />} />
