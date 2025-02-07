@@ -47,7 +47,7 @@ services:
     volumes:
       - cert-data:/etc/letsencrypt
       - ./webroot:/var/www/certbot
-    entrypoint: "/bin/sh -c 'if [ ! -f /etc/letsencrypt/live/boardjjigae.duckdns.org/fullchain.pem ]; then certbot certonly --webroot --webroot-path=/var/www/certbot -d boardjjigae.duckdns.org -d www.boardjjigae.duckdns.org --email aruesin2@example.com --agree-tos --non-interactive; fi'"
+    entrypoint: "/bin/sh -c 'if [ ! -f /etc/letsencrypt/live/boardjjigae.duckdns.org/fullchain.pem ]; then certbot certonly --webroot --webroot-path=/var/www/certbot -d boardjjigae.duckdns.org -d www.boardjjigae.duckdns.org --email aruesin2@gmail.com --agree-tos --non-interactive; fi'"
     networks:
       - meeple_network
 
