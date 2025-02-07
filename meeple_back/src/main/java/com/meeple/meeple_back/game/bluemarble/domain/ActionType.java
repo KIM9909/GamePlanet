@@ -4,7 +4,9 @@ import lombok.Getter;
 
 @Getter
 public enum ActionType {
-	ROLL_DICE("ROLL_DICE"), PAY_TOLL("PAY_TOLL"), BUY_LAND("BUY_LAND"), END("END");
+	ROLL_DICE("ROLL_DICE"), PAY_TOLL("PAY_TOLL"), BUY_LAND("BUY_LAND"), END("END"), USE_CARD(
+			"USE_CARD"
+	);
 
 	private final String action;
 

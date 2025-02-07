@@ -5,7 +5,9 @@ import com.meeple.meeple_back.game.bluemarble.controller.port.BluemarbleGameServ
 import com.meeple.meeple_back.game.bluemarble.controller.request.DiceRollRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.response.BuyLandResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DiceRollResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.response.DrawCardResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
 import com.meeple.meeple_back.game.bluemarble.domain.GamePlay;
 import com.meeple.meeple_back.game.bluemarble.domain.GamePlayCreate;
 import com.meeple.meeple_back.game.bluemarble.domain.Player;
@@ -45,7 +47,14 @@ public class BluemarbleGameServiceImpl implements BluemarbleGameService {
 	public BuyLandResponse buyLand(int roomId, BuyLandRequest buyLandRequest) {
 		GamePlay gamePlay = bluemarbleGameRepository.findById(roomId)
 				.orElseThrow(() -> new ResourceNotFoundException("GamePlay", roomId));
-		//
+
 		return gamePlay.buyLand(buyLandRequest);
+	}
+
+	@Override
+	public DrawCardResponse drawCard(int roomId, CardDrawRequest cardDrawRequest) {
+		GamePlay gamePlay = bluemarbleGameRepository.findById(roomId)
+				.orElseThrow(() -> new ResourceNotFoundException("GamePlay", roomId));
+		return gamePlay.drawCard(cardDrawRequest);
 	}
 }
