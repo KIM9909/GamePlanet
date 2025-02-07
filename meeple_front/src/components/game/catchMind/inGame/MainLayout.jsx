@@ -41,6 +41,8 @@ const MainLayout = () => {
   // useCatchSocket hook 사용
   const { sendMessage, client, joinRoom } = useCatchSocket(roomId);
 
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+
   // 드로잉 도구 상태 관리
   const [selectedColor, setSelectedColor] = useState("#000000");
   const [selectedWidth, setSelectedWidth] = useState(2);
@@ -309,6 +311,7 @@ const MainLayout = () => {
               userNickname={player.nickname}
               isCurrentTurn={player.isTurn}
               score={player.score}
+              isCurrentUser={player.isCurrentUser}
             />
           ))}
         </div>
