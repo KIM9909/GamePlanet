@@ -11,13 +11,12 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 @Tag(name = "게임플레이(블루마블) 생성")
 @Builder
 @RequiredArgsConstructor
-@RequestMapping("/game/blue-marble/game-plays")
+@MessageMapping("/game/blue-marble/game-plays")
 public class BluemarbleGameCreateController {
 
 	private final BluemarbleGameService bluemarbleGameService;

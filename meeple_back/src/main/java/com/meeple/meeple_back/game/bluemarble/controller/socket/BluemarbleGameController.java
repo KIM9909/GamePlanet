@@ -14,13 +14,12 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 @Tag(name = "게임플레이(블루마블)")
 @Builder
 @RequiredArgsConstructor
-@RequestMapping("/game/blue-marble/game-plays")
+@MessageMapping("/game/blue-marble/game-plays")
 public class BluemarbleGameController {
 
 	private final SimpMessageSendingOperations messagingTemplate;
