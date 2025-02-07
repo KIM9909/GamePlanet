@@ -7,9 +7,11 @@ import com.meeple.meeple_back.game.bluemarble.controller.response.BuildBaseRespo
 import com.meeple.meeple_back.game.bluemarble.controller.response.BuyLandResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DiceRollResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DrawCardResponse;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.BuildBaseRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.PayFeeResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuildBaseRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.PayFeeRequest;
 import com.meeple.meeple_back.game.bluemarble.domain.GamePlay;
 import com.meeple.meeple_back.game.bluemarble.domain.GamePlayCreate;
 import com.meeple.meeple_back.game.bluemarble.domain.Player;
@@ -65,6 +67,12 @@ public class BluemarbleGameServiceImpl implements BluemarbleGameService {
 	public BuildBaseResponse buildBase(int roomId, BuildBaseRequest buildBaseRequest) {
 		GamePlay gamePlay = getValidateGamePlay(roomId);
 		return gamePlay.buildBase(buildBaseRequest);
+	}
+
+	@Override
+	public PayFeeResponse payFee(int roomId, PayFeeRequest payFeeRequest) {
+		GamePlay gamePlay = getValidateGamePlay(roomId);
+		return gamePlay.payPee(payFeeRequest);
 	}
 
 

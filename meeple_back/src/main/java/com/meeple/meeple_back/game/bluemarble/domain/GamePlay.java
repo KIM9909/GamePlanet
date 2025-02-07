@@ -5,9 +5,11 @@ import com.meeple.meeple_back.game.bluemarble.controller.response.BuildBaseRespo
 import com.meeple.meeple_back.game.bluemarble.controller.response.BuyLandResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DiceRollResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DrawCardResponse;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.BuildBaseRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.PayFeeResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuildBaseRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.PayFeeRequest;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
@@ -298,11 +300,40 @@ public class GamePlay {
 		int updatedMoney = player.getBalance();
 
 		tile.addBase();
-
+		// TODO: 통행료 증가시키기 tile.addTollPrice();
 		ActionType nextTurn = getNextTurn();
 
 		return BuildBaseResponse.from(player.getPlayerId(), nextTurn,
 				prevPlayerMoney, updatedMoney, tile);
 
+	}
+
+	/**
+	 * 통행료 지불 하는 기능 ( 상대방 타일에 도착, 플레이어 자금이 충분하면 통행료 지불, 없으면 파산?
+	 *
+	 * @param payFeeRequest - playerId, tileId
+	 * @return PayFeeResponse - private int prevMoney; private int updatedMoney; private int
+	 * tollPrice; private boolean playerBrokenState; private Player paidPlayer; private Player
+	 * receivedPlayer; private String nextAction;
+	 */
+	public PayFeeResponse payPee(PayFeeRequest payFeeRequest) {
+		turnManager.executeTurn();
+		Tile tile = findTileById(payFeeRequest.getTileId());
+		Player paidPlayer = getValidatedPlayer(payFeeRequest.getPlayerId());
+		Player receivedPlayer = getValidatedPlayer(tile.getOwnerId());
+		int tollPrice = tile.getTollPrice();
+		if (tile.getOwnerId() == 0) {
+			throw new IllegalArgumentException("주인없는 땅입니다.");
+		}
+
+		if (tile.getOwnerId() == paidPlayer.getPlayerId()) {
+			throw new IllegalArgumentException("player가 땅의 주인입니다.");
+		}
+
+		if (tollPrice > paidPlayer.getBalance()) {
+			throw new IllegalArgumentException("Player의 잔액이 충분하지 않습니다");
+		}
+		// TODO : 구현 중
+		return null;
 	}
 }

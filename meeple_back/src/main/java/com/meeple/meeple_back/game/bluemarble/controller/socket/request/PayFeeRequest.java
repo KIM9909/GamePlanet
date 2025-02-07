@@ -1,13 +1,13 @@
-package com.meeple.meeple_back.game.bluemarble.controller.socket;
+package com.meeple.meeple_back.game.bluemarble.controller.socket.request;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
 
-@Builder
 @Getter
-public class BuildBaseRequest {
+@Builder
+public class PayFeeRequest {
 
 	@JsonProperty("playerId")
 	private int playerId;
@@ -15,9 +15,9 @@ public class BuildBaseRequest {
 	private int tileId;
 
 	@JsonCreator
-	@Builder
-	public static BuildBaseRequest from(@JsonProperty("playerId") int playerId,
+	public PayFeeRequest(@JsonProperty("playerId") int playerId,
 			@JsonProperty("tileId") int tileId) {
-		return BuildBaseRequest.builder().playerId(playerId).tileId(tileId).build();
+		this.playerId = playerId;
+		this.tileId = tileId;
 	}
 }
