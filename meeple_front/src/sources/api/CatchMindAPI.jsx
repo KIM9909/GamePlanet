@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
-  // baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
+  // baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
+  baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -95,8 +95,8 @@ export const CatchMindAPI = {
       }
 
       const config = {
-        baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
-        // baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
+        // baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
+        baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -165,23 +165,23 @@ export const CatchMindAPI = {
   },
 
   // 방 비밀번호 확인
-  checkRoomPassword: async (roomId, password) => {
-    try {
-      // joinRoom API를 사용해 비밀번호 검증
-      const joinRequest = {
-        roomId: parseInt(roomId),
-        password: password,
-        playerName: localStorage.getItem("userNickname"), // 로그인한 사용자의 닉네임
-      };
+  // checkRoomPassword: async (roomId, password) => {
+  //   try {
+  //     // joinRoom API를 사용해 비밀번호 검증
+  //     const joinRequest = {
+  //       roomId: parseInt(roomId),
+  //       password: password,
+  //       playerName: localStorage.getItem("userNickname"), // 로그인한 사용자의 닉네임
+  //     };
 
-      const response = await API.post("/catch-mind/join-room", joinRequest);
+  //     const response = await API.post("/catch-mind/join-room", joinRequest);
 
-      // response.code가 200이면 비밀번호 일치, 400이면 불일치
-      return { isCorrect: response.code === 200 };
-    } catch (error) {
-      return { isCorrect: false };
-    }
-  },
+  //     // response.code가 200이면 비밀번호 일치, 400이면 불일치
+  //     return { isCorrect: response.code === 200 };
+  //   } catch (error) {
+  //     return { isCorrect: false };
+  //   }
+  // },
 
   // 방 입장 API
   joinRoom: async (roomId, playerName, password = "") => {
@@ -200,8 +200,8 @@ export const CatchMindAPI = {
       }
 
       const config = {
-        baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
-        // baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
+        // baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
+        baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-type": "application/json",
@@ -234,8 +234,8 @@ export const CatchMindAPI = {
       }
 
       const config = {
-        baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
-        // baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
+        // baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
+        baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",

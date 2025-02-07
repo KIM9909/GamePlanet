@@ -1,7 +1,33 @@
-import React from "react";
+import React, { useState, useRef, useCallback } from "react";
 import VideoChat from "./VideoChat";
+import ProfileModal from "../../../user/ProfileModal";
+import { UserSearch } from "lucide-react";
 
-const PlayerCard = ({ userNickname, isCurrentTurn, score }) => {
+const PlayerCard = ({
+  userNickname,
+  isCurrentTurn,
+  score,
+  userLevel = 1,
+  isCurrentUser = false,
+}) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showReportForm, setShowReportForm] = useState(false); // 여기로 state 이동
+  const buttonRef = useRef();
+
+  const getAnchorRect = useCallback(() => {
+    return buttonRef.current?.getBoundingClientRect();
+  }, []);
+
+  const handleReport = () => {
+    setIsModalOpen(false);
+    setShowReportForm(true);
+  };
+
+  const handleReportSubmit = async (formData) => {
+    // 기존 submit 로직
+    setShowReportForm(false);
+  };
+
   return (
     <div
       className={`bg-gray-800 rounded-lg overflow-hidden transition-all ${
@@ -22,10 +48,37 @@ const PlayerCard = ({ userNickname, isCurrentTurn, score }) => {
       </div>
       <div className="p-3 bg-gray-700/90 backdrop-blur-md border-t border-gray-600">
         <div className="flex items-center justify-between">
-          <span className="font-medium text-gray-200">{userNickname}</span>
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-gray-200">{userNickname}</span>
+            {!isCurrentUser && (
+              <button
+                ref={buttonRef}
+                onClick={() => setIsModalOpen((prev) => !prev)}
+                className="p-1 rounded-full hover:bg-gray-600 transition-colors"
+              >
+                <UserSearch className="w-4 h-4 text-gray-400 hover:text-gray-200" />
+              </button>
+            )}
+          </div>
           <span className="text-sm text-blue-400 font-bold">{score}점</span>
         </div>
       </div>
+      {isModalOpen && (
+        <ProfileModal
+          onClose={() => setIsModalOpen(false)}
+          userNickname={userNickname}
+          userLevel={userLevel}
+          getAnchorRect={getAnchorRect}
+          onReport={handleReport} // 여기에 handleReport 전달
+        />
+      )}
+
+      {showReportForm && (
+        <ReportFormModal
+          onClose={() => setShowReportForm(false)}
+          onSubmit={handleReportSubmit}
+        />
+      )}
     </div>
   );
 };
