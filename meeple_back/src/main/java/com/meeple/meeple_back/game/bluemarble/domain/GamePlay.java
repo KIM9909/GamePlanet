@@ -300,7 +300,13 @@ public class GamePlay {
 		int updatedMoney = player.getBalance();
 
 		tile.addBase();
-		// TODO: 통행료 증가시키기 tile.addTollPrice();
+		int priceToIncrease = this.cards.stream()
+				.filter(card -> card.getNumber() == buildBaseRequest.getTileId()
+						&& card instanceof SeedCertificateCard)
+				.mapToInt(card -> ((SeedCertificateCard) card).getHeadquartersUsageFee())
+				.findFirst()
+				.orElseThrow(() -> new IllegalArgumentException("해당 타일 번호와 일치하는 Seed 카드가 없습니다."));
+		tile.increateTollPrice(priceToIncrease);
 		ActionType nextTurn = getNextTurn();
 
 		return BuildBaseResponse.from(player.getPlayerId(), nextTurn,
@@ -316,24 +322,53 @@ public class GamePlay {
 	 * tollPrice; private boolean playerBrokenState; private Player paidPlayer; private Player
 	 * receivedPlayer; private String nextAction;
 	 */
-	public PayFeeResponse payPee(PayFeeRequest payFeeRequest) {
+	public PayFeeResponse payFee(PayFeeRequest payFeeRequest) {
 		turnManager.executeTurn();
+
 		Tile tile = findTileById(payFeeRequest.getTileId());
 		Player paidPlayer = getValidatedPlayer(payFeeRequest.getPlayerId());
+		validateTileOwnership(tile, paidPlayer);
 		Player receivedPlayer = getValidatedPlayer(tile.getOwnerId());
-		int tollPrice = tile.getTollPrice();
-		if (tile.getOwnerId() == 0) {
-			throw new IllegalArgumentException("주인없는 땅입니다.");
-		}
 
-		if (tile.getOwnerId() == paidPlayer.getPlayerId()) {
-			throw new IllegalArgumentException("player가 땅의 주인입니다.");
-		}
+		int tollPrice = tile.getTollPrice();
 
 		if (tollPrice > paidPlayer.getBalance()) {
-			throw new IllegalArgumentException("Player의 잔액이 충분하지 않습니다");
+			return handleInsufficientBalance(paidPlayer, receivedPlayer, tollPrice);
+		} else {
+			return handleSufficientBalance(paidPlayer, receivedPlayer, tollPrice);
 		}
-		// TODO : 구현 중
-		return null;
+	}
+
+	private PayFeeResponse handleInsufficientBalance(Player paidPlayer, Player receivedPlayer,
+			int tollPrice) {
+		final int availablePayment = paidPlayer.getBalance();
+		final int remainingToll = tollPrice - paidPlayer.getBalance();
+		paidPlayer.payMoney(availablePayment);
+		receivedPlayer.addMoney(availablePayment);
+		turnManager.addTurnAction(ActionType.BROKEN);
+		return PayFeeResponse.from(availablePayment, paidPlayer.getBalance(), remainingToll, true,
+				paidPlayer, receivedPlayer, ActionType.BROKEN);
+	}
+
+	private PayFeeResponse handleSufficientBalance(Player paidPlayer, Player receivedPlayer,
+			int tollPrice) {
+		final int previousBalance = paidPlayer.getBalance();
+
+		paidPlayer.payMoney(tollPrice);
+		receivedPlayer.addMoney(tollPrice);
+
+		ActionType nextAction = getNextTurn();
+
+		return PayFeeResponse.from(previousBalance, paidPlayer.getBalance(), tollPrice, false,
+				paidPlayer, receivedPlayer, nextAction);
+	}
+
+	private void validateTileOwnership(Tile tile, Player payer) {
+		if (tile.getOwnerId() == 0) {
+			throw new IllegalArgumentException("주인 없는 땅입니다.");
+		}
+		if (tile.getOwnerId() == payer.getPlayerId()) {
+			throw new IllegalArgumentException("플레이어가 땅의 주인입니다.");
+		}
 	}
 }

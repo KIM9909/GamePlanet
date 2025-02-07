@@ -72,7 +72,7 @@ public class BluemarbleGameServiceImpl implements BluemarbleGameService {
 	@Override
 	public PayFeeResponse payFee(int roomId, PayFeeRequest payFeeRequest) {
 		GamePlay gamePlay = getValidateGamePlay(roomId);
-		return gamePlay.payPee(payFeeRequest);
+		return gamePlay.payFee(payFeeRequest);
 	}
 
 
