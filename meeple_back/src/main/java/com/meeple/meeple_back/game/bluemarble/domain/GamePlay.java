@@ -1,9 +1,11 @@
 package com.meeple.meeple_back.game.bluemarble.domain;
 
 import com.meeple.meeple_back.game.bluemarble.controller.request.DiceRollRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.response.BuildBaseResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.BuyLandResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DiceRollResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DrawCardResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.BuildBaseRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
 import java.util.ArrayDeque;
@@ -260,5 +262,47 @@ public class GamePlay {
 		player.addCardOwned(card);
 		turnManager.addTurnAction(ActionType.USE_CARD);
 		return DrawCardResponse.from(player.getPlayerId(), player, card, getNextTurn());
+	}
+
+	/**
+	 * 기지 건설 ( 땅 도착 -> 자신의 땅 -> 기지 없음 -> 기지 건설)
+	 *
+	 * @param buildBaseRequest -playerId, tileId
+	 * @return BuildBaseResponse - playerId, action, prevMoney, updatedMoney, updatedTile
+	 */
+	public BuildBaseResponse buildBase(BuildBaseRequest buildBaseRequest) {
+		turnManager.executeTurn();
+		Player player = getValidatedPlayer(buildBaseRequest.getPlayerId());
+		Tile tile = findTileById(buildBaseRequest.getTileId());
+
+		if (tile.getOwnerId() != player.getPlayerId()) {
+			throw new IllegalArgumentException("Player의 땅이 아닙니다.");
+		}
+
+		if (tile.isHasBase()) {
+			throw new IllegalArgumentException("이미 기지가 존재합니다");
+		}
+		int baseBuildFee = this.cards.stream()
+				.filter(card -> card.getNumber() == buildBaseRequest.getTileId()
+						&& card instanceof SeedCertificateCard)
+				.mapToInt(card -> ((SeedCertificateCard) card).getBaseConstructionCost())
+				.findFirst()
+				.orElseThrow(() -> new IllegalArgumentException("해당 타일 번호와 일치하는 Seed 카드가 없습니다."));
+
+		if (player.getBalance() < baseBuildFee) {
+			throw new IllegalArgumentException("Player의 자금이 부족합니다");
+		}
+
+		int prevPlayerMoney = player.getBalance();
+		player.payMoney(baseBuildFee);
+		int updatedMoney = player.getBalance();
+
+		tile.addBase();
+
+		ActionType nextTurn = getNextTurn();
+
+		return BuildBaseResponse.from(player.getPlayerId(), nextTurn,
+				prevPlayerMoney, updatedMoney, tile);
+
 	}
 }

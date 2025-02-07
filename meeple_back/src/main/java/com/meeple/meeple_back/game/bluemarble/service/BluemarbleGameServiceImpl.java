@@ -3,9 +3,11 @@ package com.meeple.meeple_back.game.bluemarble.service;
 import com.meeple.meeple_back.common.domain.exception.ResourceNotFoundException;
 import com.meeple.meeple_back.game.bluemarble.controller.port.BluemarbleGameService;
 import com.meeple.meeple_back.game.bluemarble.controller.request.DiceRollRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.response.BuildBaseResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.BuyLandResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DiceRollResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DrawCardResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.BuildBaseRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
 import com.meeple.meeple_back.game.bluemarble.domain.GamePlay;
@@ -56,5 +58,18 @@ public class BluemarbleGameServiceImpl implements BluemarbleGameService {
 		GamePlay gamePlay = bluemarbleGameRepository.findById(roomId)
 				.orElseThrow(() -> new ResourceNotFoundException("GamePlay", roomId));
 		return gamePlay.drawCard(cardDrawRequest);
+	}
+
+	@Override
+	@Transactional
+	public BuildBaseResponse buildBase(int roomId, BuildBaseRequest buildBaseRequest) {
+		GamePlay gamePlay = getValidateGamePlay(roomId);
+		return gamePlay.buildBase(buildBaseRequest);
+	}
+
+
+	private GamePlay getValidateGamePlay(int roomId) {
+		return bluemarbleGameRepository.findById(roomId)
+				.orElseThrow(() -> new ResourceNotFoundException("GamePlay", roomId));
 	}
 }

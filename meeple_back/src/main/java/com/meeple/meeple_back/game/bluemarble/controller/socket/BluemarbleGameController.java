@@ -2,6 +2,8 @@ package com.meeple.meeple_back.game.bluemarble.controller.socket;
 
 import com.meeple.meeple_back.game.bluemarble.controller.port.BluemarbleGameService;
 import com.meeple.meeple_back.game.bluemarble.controller.request.DiceRollRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.response.BuildBaseResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.response.DrawCardResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.SocketBuyLandResponse;
@@ -51,8 +53,21 @@ public class BluemarbleGameController {
 	public void drawCard(@DestinationVariable("roomId") int roomId,
 			@Payload CardDrawRequest cardDrawRequest) {
 		// TODO : 카드 뽑기 구현
-		SocketResponse socketCardDrawResponse = SocketResponse.from("draw-card",
+		SocketResponse<DrawCardResponse> socketCardDrawResponse = SocketResponse.from("draw-card",
 				bluemarbleGameService.drawCard(roomId, cardDrawRequest), "카드를 뽑았습니다.");
 		messagingTemplate.convertAndSend("/topic/room/" + roomId, socketCardDrawResponse);
+	}
+
+	// TODO : 기지 건설 구현
+	@MessageMapping("/{roomId}/build-base")
+	@Operation(summary = "기지 건설", description = "기지를 건설합니다.")
+	public void buildBase(@DestinationVariable("roomId") int roomId,
+			@Payload BuildBaseRequest buildBaseRequest) {
+		// TODO : 기지 건설 구현
+		SocketResponse<BuildBaseResponse> socketBuildBaseResponse = SocketResponse.from(
+				"build-base",
+				bluemarbleGameService.buildBase(roomId, buildBaseRequest), "기지를 건설했습니다.");
+		messagingTemplate.convertAndSend("/topic/room/" + roomId, socketBuildBaseResponse);
+
 	}
 }
