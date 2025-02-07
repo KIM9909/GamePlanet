@@ -4,8 +4,10 @@ import com.meeple.meeple_back.game.bluemarble.controller.port.BluemarbleGameServ
 import com.meeple.meeple_back.game.bluemarble.controller.request.DiceRollRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.response.BuildBaseResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DrawCardResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuildBaseRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.PayFeeRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.SocketBuyLandResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.SocketDiceRollResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.SocketResponse;
@@ -47,7 +49,6 @@ public class BluemarbleGameController {
 		messagingTemplate.convertAndSend("/topic/room/" + roomId, socketBuyLandResponse);
 	}
 
-	// TODO : 카드 뽑기 구현
 	@MessageMapping("/{roomId}/draw-card")
 	@Operation(summary = "카드 뽑기", description = "카드를 뽑습니다.")
 	public void drawCard(@DestinationVariable("roomId") int roomId,
@@ -58,16 +59,28 @@ public class BluemarbleGameController {
 		messagingTemplate.convertAndSend("/topic/room/" + roomId, socketCardDrawResponse);
 	}
 
-	// TODO : 기지 건설 구현
 	@MessageMapping("/{roomId}/build-base")
 	@Operation(summary = "기지 건설", description = "기지를 건설합니다.")
 	public void buildBase(@DestinationVariable("roomId") int roomId,
 			@Payload BuildBaseRequest buildBaseRequest) {
-		// TODO : 기지 건설 구현
 		SocketResponse<BuildBaseResponse> socketBuildBaseResponse = SocketResponse.from(
 				"build-base",
 				bluemarbleGameService.buildBase(roomId, buildBaseRequest), "기지를 건설했습니다.");
 		messagingTemplate.convertAndSend("/topic/room/" + roomId, socketBuildBaseResponse);
 
+	}
+
+	/**
+	 * 통행료 지불 하는 기능
+	 *
+	 * @param roomId
+	 * @param payFeeRequest - playerId, tileId
+	 */
+	@MessageMapping("/{roomId}/pay-fee")
+	@Operation(summary = "통행료 지불", description = "통행료를 지불합니다")
+	public void payFee(@DestinationVariable("roomId") int roomId,
+			@Payload PayFeeRequest payFeeRequest) {
+		SocketResponse<PayFeeResponse> response = SocketResponse.from("pay-fee",
+				bluemarbleGameService.payFee(roomId, payFeeRequest), "통행료를 지불했습니다.");
 	}
 }

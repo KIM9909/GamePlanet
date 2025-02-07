@@ -76,4 +76,5 @@ public class Player {
 	public void addMoney(int toll) {
 		this.balance += toll;
 	}
+
 }

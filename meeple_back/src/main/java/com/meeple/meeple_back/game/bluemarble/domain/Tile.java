@@ -38,4 +38,8 @@ public class Tile {
 	public void addBase() {
 		this.hasBase = true;
 	}
+
+	public void increateTollPrice(int priceToIncrease) {
+		this.price += priceToIncrease;
+	}
 }

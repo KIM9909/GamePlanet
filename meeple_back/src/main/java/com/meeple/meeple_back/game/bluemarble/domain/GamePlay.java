@@ -5,9 +5,11 @@ import com.meeple.meeple_back.game.bluemarble.controller.response.BuildBaseRespo
 import com.meeple.meeple_back.game.bluemarble.controller.response.BuyLandResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DiceRollResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DrawCardResponse;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.BuildBaseRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.PayFeeResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuildBaseRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.PayFeeRequest;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
@@ -298,11 +300,75 @@ public class GamePlay {
 		int updatedMoney = player.getBalance();
 
 		tile.addBase();
-
+		int priceToIncrease = this.cards.stream()
+				.filter(card -> card.getNumber() == buildBaseRequest.getTileId()
+						&& card instanceof SeedCertificateCard)
+				.mapToInt(card -> ((SeedCertificateCard) card).getHeadquartersUsageFee())
+				.findFirst()
+				.orElseThrow(() -> new IllegalArgumentException("해당 타일 번호와 일치하는 Seed 카드가 없습니다."));
+		tile.increateTollPrice(priceToIncrease);
 		ActionType nextTurn = getNextTurn();
 
 		return BuildBaseResponse.from(player.getPlayerId(), nextTurn,
 				prevPlayerMoney, updatedMoney, tile);
 
+	}
+
+	/**
+	 * 통행료 지불 하는 기능 ( 상대방 타일에 도착, 플레이어 자금이 충분하면 통행료 지불, 없으면 파산?
+	 *
+	 * @param payFeeRequest - playerId, tileId
+	 * @return PayFeeResponse - private int prevMoney; private int updatedMoney; private int
+	 * tollPrice; private boolean playerBrokenState; private Player paidPlayer; private Player
+	 * receivedPlayer; private String nextAction;
+	 */
+	public PayFeeResponse payFee(PayFeeRequest payFeeRequest) {
+		turnManager.executeTurn();
+
+		Tile tile = findTileById(payFeeRequest.getTileId());
+		Player paidPlayer = getValidatedPlayer(payFeeRequest.getPlayerId());
+		validateTileOwnership(tile, paidPlayer);
+		Player receivedPlayer = getValidatedPlayer(tile.getOwnerId());
+
+		int tollPrice = tile.getTollPrice();
+
+		if (tollPrice > paidPlayer.getBalance()) {
+			return handleInsufficientBalance(paidPlayer, receivedPlayer, tollPrice);
+		} else {
+			return handleSufficientBalance(paidPlayer, receivedPlayer, tollPrice);
+		}
+	}
+
+	private PayFeeResponse handleInsufficientBalance(Player paidPlayer, Player receivedPlayer,
+			int tollPrice) {
+		final int availablePayment = paidPlayer.getBalance();
+		final int remainingToll = tollPrice - paidPlayer.getBalance();
+		paidPlayer.payMoney(availablePayment);
+		receivedPlayer.addMoney(availablePayment);
+		turnManager.addTurnAction(ActionType.BROKEN);
+		return PayFeeResponse.from(availablePayment, paidPlayer.getBalance(), remainingToll, true,
+				paidPlayer, receivedPlayer, ActionType.BROKEN);
+	}
+
+	private PayFeeResponse handleSufficientBalance(Player paidPlayer, Player receivedPlayer,
+			int tollPrice) {
+		final int previousBalance = paidPlayer.getBalance();
+
+		paidPlayer.payMoney(tollPrice);
+		receivedPlayer.addMoney(tollPrice);
+
+		ActionType nextAction = getNextTurn();
+
+		return PayFeeResponse.from(previousBalance, paidPlayer.getBalance(), tollPrice, false,
+				paidPlayer, receivedPlayer, nextAction);
+	}
+
+	private void validateTileOwnership(Tile tile, Player payer) {
+		if (tile.getOwnerId() == 0) {
+			throw new IllegalArgumentException("주인 없는 땅입니다.");
+		}
+		if (tile.getOwnerId() == payer.getPlayerId()) {
+			throw new IllegalArgumentException("플레이어가 땅의 주인입니다.");
+		}
 	}
 }
