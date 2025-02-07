@@ -3,8 +3,10 @@ package com.meeple.meeple_back.game.bluemarble.controller.socket;
 import com.meeple.meeple_back.game.bluemarble.controller.port.BluemarbleGameService;
 import com.meeple.meeple_back.game.bluemarble.controller.request.DiceRollRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.SocketBuyLandResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.SocketDiceRollResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.response.SocketResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Builder;
@@ -41,5 +43,16 @@ public class BluemarbleGameController {
 		SocketBuyLandResponse socketBuyLandResponse = SocketBuyLandResponse.from("buy-land",
 				bluemarbleGameService.buyLand(roomId, buyLandRequest), "땅을 구매했습니다.");
 		messagingTemplate.convertAndSend("/topic/room/" + roomId, socketBuyLandResponse);
+	}
+
+	// TODO : 카드 뽑기 구현
+	@MessageMapping("/{roomId}/draw-card")
+	@Operation(summary = "카드 뽑기", description = "카드를 뽑습니다.")
+	public void drawCard(@DestinationVariable("roomId") int roomId,
+			@Payload CardDrawRequest cardDrawRequest) {
+		// TODO : 카드 뽑기 구현
+		SocketResponse socketCardDrawResponse = SocketResponse.from("draw-card",
+				bluemarbleGameService.drawCard(roomId, cardDrawRequest), "카드를 뽑았습니다.");
+		messagingTemplate.convertAndSend("/topic/room/" + roomId, socketCardDrawResponse);
 	}
 }

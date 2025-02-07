@@ -3,7 +3,9 @@ package com.meeple.meeple_back.game.bluemarble.domain;
 import com.meeple.meeple_back.game.bluemarble.controller.request.DiceRollRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.response.BuyLandResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DiceRollResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.response.DrawCardResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,6 +68,13 @@ public class GamePlay {
 		return cards;
 	}
 
+	/**
+	 * 특정 카드 번호, card Type으로 카드 찾아서 추가
+	 *
+	 * @param cardNumber 카드 번호
+	 * @param cardType   카드 타입 (SEED_CERTIFICATE_CARD, TELEPATHY_CARD, NEURONS_VALLEY_CARD)
+	 * @return Card
+	 */
 	private Card findAndRemoveCardByNumberAndType(int cardNumber, CardType cardType) {
 		Card card = cards.stream()
 				.filter(c -> c.getNumber() == cardNumber && c.checkType(cardType))
@@ -73,6 +82,13 @@ public class GamePlay {
 				.orElseThrow(() -> new IllegalArgumentException("Card not found"));
 		cards.remove(card);
 		return card;
+	}
+
+	private Tile findTileById(int tileId) {
+		return board.stream()
+				.filter(tile -> tile.getId() == tileId)
+				.findFirst()
+				.orElseThrow(() -> new IllegalArgumentException("Tile not found"));
 	}
 
 	private static List<Tile> createTiles() {
@@ -210,14 +226,39 @@ public class GamePlay {
 		player.addLandOwned(tileId);
 		// 플레이어 카드 소유 추가
 		player.addCardOwned(card);
-		ActionType nextAction;
-		if (turnManager.hasNextTurn()) {
-			nextAction = turnManager.peekTurn();
-		} else {
-			nextAction = ActionType.END;
-		}
+		ActionType nextAction = getNextTurn();
 
 		return BuyLandResponse.of(player.getPlayerId(), ActionType.BUY_LAND.getAction(), prevMoney,
 				currentPlayer.getBalance(), tile, nextAction);
+	}
+
+	private ActionType getNextTurn() {
+		if (turnManager.hasNextTurn()) {
+			return turnManager.peekTurn();
+		} else {
+			return ActionType.END;
+		}
+	}
+
+	/**
+	 * 타일에 해당하는 카드 뽑기 카드 종류 : 텔레파시, 뉴런의 골짜기, 미완
+	 *
+	 * @param cardDrawRequest - playerId, tileId
+	 * @return DrawCardResponse - playerId, action, card
+	 */
+	public DrawCardResponse drawCard(CardDrawRequest cardDrawRequest) {
+		turnManager.executeTurn();
+
+		Player player = getValidatedPlayer(cardDrawRequest.getPlayerId());
+
+		Tile tile = findTileById(cardDrawRequest.getTileId());
+
+		// 카드 뽑아오기
+		Card card = findAndRemoveCardByNumberAndType(tile.getId(),
+				CardType.valueOf(tile.getType().name()));
+
+		player.addCardOwned(card);
+		turnManager.addTurnAction(ActionType.USE_CARD);
+		return DrawCardResponse.from(player.getPlayerId(), player, card, getNextTurn());
 	}
 }
