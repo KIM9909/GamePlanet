@@ -106,7 +106,7 @@ pipeline {
             steps {
                 sh '''
                     docker-compose -p meeple_ci_cd pull
-                    docker-compose -p meeple_ci_cd down --remove-orphans
+                    docker-compose -p meeple_ci_cd down || true
                     docker-compose -p meeple_ci_cd up -d --remove-orphans
                 '''
             }
