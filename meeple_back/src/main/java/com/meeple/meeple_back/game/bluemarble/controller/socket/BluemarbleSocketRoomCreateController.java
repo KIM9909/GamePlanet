@@ -12,11 +12,10 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 @Tag(name = "소켓 대기방(블루마블)")
 @Controller
-@RequestMapping("/game/blue-marble/rooms")
+@MessageMapping("/game/blue-marble/rooms")
 @Builder
 @RequiredArgsConstructor
 public class BluemarbleSocketRoomCreateController {
