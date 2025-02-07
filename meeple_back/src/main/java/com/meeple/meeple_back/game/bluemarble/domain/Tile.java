@@ -34,4 +34,8 @@ public class Tile {
 				.price(price)
 				.build();
 	}
+
+	public void addBase() {
+		this.hasBase = true;
+	}
 }
