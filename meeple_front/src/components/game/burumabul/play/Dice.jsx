@@ -498,10 +498,6 @@ const Dice = ({ onComplete, onClose, roomId }) => {
         dispatch(
           changeDice({ firstDice: firstScore, secondDice: secondScore })
         );
-        // 소켓으로 주사위 결과 전송
-        if (connected) {
-          rollTheDice(firstScore, secondScore);
-        }
 
         onComplete(totalScore);
       }, 1700);

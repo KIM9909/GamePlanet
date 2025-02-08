@@ -11,17 +11,17 @@ const BurumabulPage = () => {
   const roomId = useSelector((state) => state.burumabul.roomId);
   console.log("BurumabulPage received roomId:", roomId);
   const navigate = useNavigate();
-  const userId = useSelector((state) => state.user.userId);
+  const userId = Number(useSelector((state) => state.user.userId));
   const [currentRoomInfo, setCurrentRoomInfo] = useState({});
   // 초기 게임 플레이 데이터
-  const [playData, setPlayData] = useState({});
+  const [playData, setPlayData] = useState(null);
 
   useEffect(() => {
     const getRoomInfo = async () => {
       if (roomId) {
         try {
           const response = await findBurumabulRoom(roomId);
-          setCurrentRoomInfo(response);
+          setCurrentRoomInfo(response || {});
         } catch (error) {
           console.error("방 정보 조회 중 오류 발생 : ", error);
         }
@@ -33,7 +33,7 @@ const BurumabulPage = () => {
   const [isStart, setIsStart] = useState(false);
   const [roomMessage, setRoomMessage] = useState("");
 
-  const { connected, enterWaitingRoom, roomSocketData } =
+  const { connected, enterWaitingRoom, roomSocketData, gamePlaySocketData } =
     useContext(SocketContext);
 
   useEffect(() => {
@@ -48,7 +48,7 @@ const BurumabulPage = () => {
         if (connected && response) {
           const isCreator = response.creator?.playerId === userId;
           const isExistingPlayer = response.players?.some(
-            (player) => player.playerI === userId
+            (player) => player.playerId === userId
           );
           if (!isCreator && !isExistingPlayer) {
             console.log("새로운 플레이어 입장 시도:", {
@@ -68,6 +68,14 @@ const BurumabulPage = () => {
   }, [roomId, connected, userId, enterWaitingRoom]);
 
   useEffect(() => {
+    if (gamePlaySocketData) {
+      console.log("새로운 gamePalySocetData 수신:", gamePlaySocketData);
+      setPlayData(gamePlaySocketData);
+      setIsStart(true);
+    }
+  }, [gamePlaySocketData]);
+
+  useEffect(() => {
     console.log("현재 roomSocketData 상태:", roomSocketData);
     if (roomSocketData) {
       setCurrentRoomInfo((prev) => ({
@@ -79,18 +87,21 @@ const BurumabulPage = () => {
 
   return (
     <>
-      {!isStart ? (
-        <WaitingRoom
-          roomId={roomId}
-          setIsStart={setIsStart}
-          setPlayData={setPlayData}
-        />
-      ) : (
+      {Object.keys(currentRoomInfo).length === 0 ? (
+        <div>Loading...</div>
+      ) : playData && playData.gameStatus === "IN_PROGRESS" ? (
         <BurumabulPlay
           roomId={roomId}
           currentRoomInfo={currentRoomInfo}
           setIsStart={setIsStart}
           playData={playData}
+        />
+      ) : (
+        <WaitingRoom
+          roomId={roomId}
+          roomInfo={currentRoomInfo}
+          setIsStart={setIsStart}
+          setPlayData={setPlayData}
         />
       )}
     </>
