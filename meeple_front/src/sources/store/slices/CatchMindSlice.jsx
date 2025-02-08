@@ -109,6 +109,11 @@ const CatchMindSlice = createSlice({
       }
     },
 
+    // sessionId 업데이트를 위한 리듀서 추가
+    setSessionId: (state, action) => {
+      state.sessionId = action.payload;
+    },
+
     updateGameState: (state, action) => {
       const {
         currentWord,
@@ -124,6 +129,7 @@ const CatchMindSlice = createSlice({
         isPrivate,
         password,
         roomId,
+        sessionId,
       } = action.payload;
 
       // 상태 업데이트
@@ -154,6 +160,8 @@ const CatchMindSlice = createSlice({
           isTurn: player.nickname === currentTurn,
         }));
       }
+
+      if (sessionId !== undefined) state.sessionId = sessionId;
     },
 
     setRoomId: (state, action) => {
@@ -189,6 +197,7 @@ const CatchMindSlice = createSlice({
         score: 0,
         isTurn: false,
       }));
+      // state.sessionId = null;
     },
   },
   extraReducers: (builder) => {
@@ -230,6 +239,7 @@ export const {
   updatePlayerNickname,
   setGameStarted,
   resetGameState,
+  setSessionId,
 } = CatchMindSlice.actions;
 
 export default CatchMindSlice.reducer;

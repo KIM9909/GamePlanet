@@ -15,7 +15,6 @@ const CatchMindListPage = () => {
   const fetchRooms = async () => {
     try {
       const roomDetails = await CatchMindAPI.getRoomList();
-      // 각 방의 players 배열을 정제하여 저장
       const cleanedRooms = roomDetails.map((room) => ({
         ...room,
         players: Array.isArray(room.players)
@@ -31,9 +30,6 @@ const CatchMindListPage = () => {
 
   useEffect(() => {
     fetchRooms();
-    // 2초마다 방 목록 갱신
-    const intervalId = setInterval(fetchRooms, 2000);
-    return () => clearInterval(intervalId);
   }, []);
 
   const handleEnterRoom = async (room) => {
@@ -124,7 +120,7 @@ const CatchMindListPage = () => {
         isOpen={isCreateModalOpen}
         onClose={() => {
           setIsCreateModalOpen(false);
-          fetchRooms();
+          fetchRooms(); // 방 생성 후 목록 갱신
         }}
       />
 
