@@ -33,8 +33,8 @@ const SocketLayout = ({ children }) => {
 
   const roomId = useSelector((state) => state.burumabul.roomId);
   const userId = useSelector((state) => state.user.userId);
-  const token = localStorage.getItem("token").trim() || "";
-  if (!token) throw new Error("인증 토큰이 없습니다.");
+  const rawToken = localStorage.getItem("token");
+  const token = rawToken ? rawToken.trim() : "";
 
   useEffect(() => {
     if (!roomId) {
@@ -311,7 +311,7 @@ const SocketLayout = ({ children }) => {
     },
     [roomId, userId]
   );
-  if (!userId) {
+  if (!userId || !token) {
     return children;
   }
   if (
