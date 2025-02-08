@@ -150,21 +150,29 @@ public class CockroachServiceImpl implements CockroachService {
 
 
         /* 카드 분배 */
-        List<Card> deck = initializeDeck();
+        List<Map<String, Object>> deck = initializeDeck();
 
-        List<Card> publicDeck = new ArrayList<>();
+        List<Map<String, Object>> publicDeck = new ArrayList<>();
 
         publicDeck.addAll(deck.subList(0, 7));
         deck = deck.subList(7, deck.size());
 
-        deck.add(new Card("Joker", false));
-        deck.add(new Card("black", false));
+        Map<String, Object> joker = new HashMap<>();
+        joker.put("type", "Joker");
+        joker.put("isRoyal", false);
+
+        Map<String, Object> black = new HashMap<>();
+        joker.put("type", "black");
+        joker.put("isRoyal", false);
+
+        deck.add(joker);
+        deck.add(black);
 
         Collections.shuffle(deck);
 
-        Map<String, List<Card>> distributedCards = distributeCards(deck, players);
+        Map<String, List<Map<String, Object>>> distributedCards = distributeCards(deck, players);
 
-        Map<String, List<Card>> userTableCards = new HashMap<>();
+        Map<String, List<Map<String, Object>>> userTableCards = new HashMap<>();
         for (String player : players) {
             userTableCards.put(player, new ArrayList<>());
         }
@@ -205,7 +213,7 @@ public class CockroachServiceImpl implements CockroachService {
         Map<String, Object> gameData = (Map<String, Object>) roomInfo.get("gameData");
         Map<String, Object> gameState = (Map<String, Object>) gameData.get("gameState");
 
-        String currentTurn = String.valueOf(gameState.get("gameState"));
+        String currentTurn = String.valueOf(gameState.get("currentTurn"));
 
         // 현재 턴이 아닌 경우 예외 처리
         if (!currentTurn.equals(request.getFrom())) {
@@ -269,7 +277,7 @@ public class CockroachServiceImpl implements CockroachService {
             throw new IllegalArgumentException("방을 찾을 수 없습니다: " + roomId);
         }
 
-        Map<String, List<Card>> playerTables = (Map<String, List<Card>>) roomInfo.get(
+        Map<String, List<Map<String, Object>>> playerTables = (Map<String, List<Map<String, Object>>>) roomInfo.get(
                 "userTableCards");
         if (playerTables == null || !playerTables.containsKey(request.getFrom())) {
             throw new IllegalStateException("플레이어 테이블 정보를 찾을 수 없습니다: "
@@ -282,17 +290,22 @@ public class CockroachServiceImpl implements CockroachService {
                 .isEnd(false)
                 .build();
 
-        List<Card> giveCards = new ArrayList<>();
-        List<Card> publicDeck = (List<Card>) roomInfo.get("publicDeck");
+        List<Map<String, Object>> giveCards = new ArrayList<>();
+        List<Map<String, Object>> publicDeck = (List<Map<String, Object>>) roomInfo.get("publicDeck");
 
         if (request.isCorrect()) {
-            List<Card> table = playerTables.get(request.getFrom());
+            List<Map<String, Object>> table = playerTables.get(request.getFrom());
 
-            table.add(request.getCard());
-            giveCards.add(request.getCard());
+            Map<String, Object> requestedCard = new HashMap<>();
+
+            requestedCard.put("type", request.getCard().getType());
+            requestedCard.put("isRoyal", request.getCard().isRoyal());
+
+            table.add(requestedCard);
+            giveCards.add(requestedCard);
 
             if (request.getCard().isRoyal()) {
-                Card card = publicDeck.get(publicDeck.size() - 1);
+                Map<String, Object> card = publicDeck.get(publicDeck.size() - 1);
                 publicDeck.remove(publicDeck.size() - 1);
 
                 table.add(card);
@@ -308,13 +321,18 @@ public class CockroachServiceImpl implements CockroachService {
             }
 
         } else {
-            List<Card> table = playerTables.get(request.getTo());
+            List<Map<String, Object>> table = playerTables.get(request.getTo());
 
-            table.add(request.getCard());
-            giveCards.add(request.getCard());
+            Map<String, Object> requestedCard = new HashMap<>();
+
+            requestedCard.put("type", request.getCard().getType());
+            requestedCard.put("isRoyal", request.getCard().isRoyal());
+
+            table.add(requestedCard);
+            giveCards.add(requestedCard);
 
             if (request.getCard().isRoyal()) {
-                Card card = publicDeck.get(publicDeck.size() - 1);
+                Map<String, Object> card = publicDeck.get(publicDeck.size() - 1);
                 publicDeck.remove(publicDeck.size() - 1);
 
                 table.add(card);
@@ -346,20 +364,26 @@ public class CockroachServiceImpl implements CockroachService {
         Map<String, Object> roomInfo =
                 (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
 
-        Map<String, List<Card>> playerCards = (Map<String, List<Card>>) roomInfo.get("playerCards");
-        Map<String, List<Card>> userTables =
-                (Map<String, List<Card>>) roomInfo.get("userTableCards");
+        Map<String, List<Map<String, Object>>> playerCards = (Map<String, List<Map<String, Object>>>) roomInfo.get("playerCards");
+        Map<String, List<Map<String, Object>>> userTables =
+                (Map<String, List<Map<String, Object>>>) roomInfo.get("userTableCards");
 
-        List<Card> cards = playerCards.get(request.getUser());
-        List<Card> tables = userTables.get(request.getUser());
+        List<Map<String, Object>> cards = playerCards.get(request.getUser());
+        List<Map<String, Object>> tables = userTables.get(request.getUser());
 
         if (request.isBlack()) {
             for (Card card : request.getCards()) {
                 for (int j = 0; j < cards.size(); j++) {
-                    if (cards.get(j) == card) {
+                    if (cards.get(j).get("type").equals(card.getType())) {
+                        Map<String, Object> tableCard = cards.get(j);
                         cards.remove(j);
-                        tables.add(card);
-                        cards.add(new Card("Black", false));
+                        tables.add(tableCard);
+
+                        Map<String, Object> black = new HashMap<>();
+                        black.put("type", "Black");
+                        black.put("isRoyal", false);
+
+                        cards.add(black);
                         break;
                     }
                 }
@@ -367,10 +391,15 @@ public class CockroachServiceImpl implements CockroachService {
         } else {
             for (Card card : request.getCards()) {
                 for (int j = 0; j < cards.size(); j++) {
-                    if (cards.get(j) == card) {
+                    if (cards.get(j).get("type").equals(card.getType())) {
+                        Map<String, Object> tableCard = cards.get(j);
                         cards.remove(j);
-                        tables.add(card);
-                        cards.add(new Card("Joker", false));
+                        tables.add(tableCard);
+
+                        Map<String, Object> joker = new HashMap<>();
+                        joker.put("type", "Joker");
+                        joker.put("isRoyal", false);
+                        cards.add(joker);
                         break;
                     }
                 }
@@ -534,117 +563,128 @@ public class CockroachServiceImpl implements CockroachService {
         return response;
     }
 
-    @Override
-    public ResponseGuessCard guessCard(String roomId, RequestGuessCard request) {
-        Map<String, Object> roomInfo =
-                (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
-        Map<String, Object> gameData = (Map<String, Object>) roomInfo.get("gameData");
-        GameState gameState = (GameState) gameData.get("gameState");
-
-        // 현재 차례가 아닌 경우
-        if (!gameState.getCardReceiver().equals(request.getFrom())) {
-            throw new IllegalStateException("현재 차례가 아닙니다.");
-        }
-
-        if (request.getAction().equals("PASS")) {
-            // 현재 플레이어를 패스 목록에 추가
-            if (gameState.getPassedPlayers() == null) {
-                gameState.setPassedPlayers(new HashSet<>());
-            }
-            gameState.getPassedPlayers().add(request.getFrom());
-            gameState.setPassCount(gameState.getPassCount() + 1);
-
-            // 다음 플레이어 찾기 (패스하지 않은 플레이어 중에서)
-            List<String> players = (List<String>) roomInfo.get("players");
-            int currentIndex = players.indexOf(request.getFrom());
-            String nextPlayer = null;
-
-            // 패스하지 않은 다음 플레이어 찾기
-            for (int i = 1; i <= players.size(); i++) {
-                int nextIndex = (currentIndex + i) % players.size();
-                String candidate = players.get(nextIndex);
-                if (!gameState.getPassedPlayers().contains(candidate) &&
-                        !candidate.equals(gameState.getCardSender())) {
-                    nextPlayer = candidate;
-                    break;
-                }
-            }
-
-            // 다음 플레이어가 없거나 카드를 준 사람이면 무조건 맞춰야 함
-            if (nextPlayer == null || nextPlayer.equals(gameState.getCardSender())) {
-                gameState.setCurrentPhase("GUESS_ONLY");  // 이제 무조건 맞춰야 함
-                nextPlayer = request.getFrom();  // 현재 플레이어가 맞춰야 함
-            }
-
-            gameState.setCardReceiver(nextPlayer);
-            gameData.put("gameState", gameState);
-            redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
-
-            return ResponseGuessCard.builder()
-                    .nextTurn(nextPlayer)
-                    .isCorrect(false)
-                    .isGameOver(false)
-                    .build();
-        } else {
-            // 참/거짓 판단
-            boolean actualTruth = checkCardTruth(
-                    gameState.getCurrentCard(),
-                    gameState.getClaimedAnimal(),
-                    gameState.isKing()
-            );
-
-            boolean guessedCorrectly = (actualTruth == request.getIsTrue());
-            String losingPlayer = guessedCorrectly ? gameState.getCardSender() : request.getFrom();
-
-            // 카드 처리 및 게임 상태 업데이트
-            Map<String, List<Card>> playerTables = (Map<String, List<Card>>) gameData.get("userTableCards");
-            List<Card> loserTable = playerTables.get(losingPlayer);
-            loserTable.add(gameState.getCurrentCard());
-
-            // 게임 종료 체크
-            String gameOverPlayer = checkGameFinish(losingPlayer, roomInfo);
-            boolean isGameOver = !gameOverPlayer.isEmpty();
-
-            // 다음 턴 설정
-            gameState.setCurrentTurn(losingPlayer);
-            gameState.setCurrentPhase("CHOOSE_PLAYER");
-            gameState.setCurrentCard(null);
-            gameState.setClaimedAnimal(null);
-            gameState.setKing(false);
-            gameState.setCardSender(null);
-            gameState.setCardReceiver(null);
-            gameState.setPassCount(0);
-            gameState.setPassedPlayers(new HashSet<>());
-
-            gameData.put("gameState", gameState);
-            redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
-
-            return ResponseGuessCard.builder()
-                    .nextTurn(losingPlayer)
-                    .isCorrect(guessedCorrectly)
-                    .losingPlayer(losingPlayer)
-                    .isGameOver(isGameOver)
-                    .build();
-        }
-    }
+//    @Override
+//    public ResponseGuessCard guessCard(String roomId, RequestGuessCard request) {
+//        Map<String, Object> roomInfo =
+//                (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+//        Map<String, Object> gameData = (Map<String, Object>) roomInfo.get("gameData");
+//        Map<String, Object> gameState = (Map<String, Object>) gameData.get("gameState");
+//
+//        // 현재 차례가 아닌 경우
+//        if (!gameState.get("cardReceiver").equals(request.getFrom())) {
+//            throw new IllegalStateException("현재 차례가 아닙니다.");
+//        }
+//
+//        if (request.getAction().equals("PASS")) {
+//            // 현재 플레이어를 패스 목록에 추가
+//            if (gameState.get("passedPlayers") == null) {
+//                gameState.put("passedPlayers", new HashSet<>());
+//            }
+//            Set<String> passedPlayers = (Set<String>) gameState.get("passedPlayers");
+//
+//            passedPlayers.add(request.getFrom());
+//
+//            int passCount = (int) gameState.get("passCount") + 1;
+//
+//            gameState.put("passCount", passCount);
+//
+//            // 다음 플레이어 찾기 (패스하지 않은 플레이어 중에서)
+//            List<String> players = (List<String>) roomInfo.get("players");
+//            int currentIndex = players.indexOf(request.getFrom());
+//            String nextPlayer = null;
+//
+//            // 패스하지 않은 다음 플레이어 찾기
+//            for (int i = 1; i <= players.size(); i++) {
+//                int nextIndex = (currentIndex + i) % players.size();
+//                String candidate = players.get(nextIndex);
+//                if (!gameState.getPassedPlayers().contains(candidate) &&
+//                        !candidate.equals(gameState.getCardSender())) {
+//                    nextPlayer = candidate;
+//                    break;
+//                }
+//            }
+//
+//            // 다음 플레이어가 없거나 카드를 준 사람이면 무조건 맞춰야 함
+//            if (nextPlayer == null || nextPlayer.equals(gameState.getCardSender())) {
+//                gameState.setCurrentPhase("GUESS_ONLY");  // 이제 무조건 맞춰야 함
+//                nextPlayer = request.getFrom();  // 현재 플레이어가 맞춰야 함
+//            }
+//
+//            gameState.setCardReceiver(nextPlayer);
+//            gameData.put("gameState", gameState);
+//            redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
+//
+//            return ResponseGuessCard.builder()
+//                    .nextTurn(nextPlayer)
+//                    .isCorrect(false)
+//                    .isGameOver(false)
+//                    .build();
+//        } else {
+//            // 참/거짓 판단
+//            boolean actualTruth = checkCardTruth(
+//                    gameState.getCurrentCard(),
+//                    gameState.getClaimedAnimal(),
+//                    gameState.isKing()
+//            );
+//
+//            boolean guessedCorrectly = (actualTruth == request.getIsTrue());
+//            String losingPlayer = guessedCorrectly ? gameState.getCardSender() : request.getFrom();
+//
+//            // 카드 처리 및 게임 상태 업데이트
+//            Map<String, List<Card>> playerTables = (Map<String, List<Card>>) gameData.get("userTableCards");
+//            List<Card> loserTable = playerTables.get(losingPlayer);
+//            loserTable.add(gameState.getCurrentCard());
+//
+//            // 게임 종료 체크
+//            String gameOverPlayer = checkGameFinish(losingPlayer, roomInfo);
+//            boolean isGameOver = !gameOverPlayer.isEmpty();
+//
+//            // 다음 턴 설정
+//            gameState.setCurrentTurn(losingPlayer);
+//            gameState.setCurrentPhase("CHOOSE_PLAYER");
+//            gameState.setCurrentCard(null);
+//            gameState.setClaimedAnimal(null);
+//            gameState.setKing(false);
+//            gameState.setCardSender(null);
+//            gameState.setCardReceiver(null);
+//            gameState.setPassCount(0);
+//            gameState.setPassedPlayers(new HashSet<>());
+//
+//            gameData.put("gameState", gameState);
+//            redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
+//
+//            return ResponseGuessCard.builder()
+//                    .nextTurn(losingPlayer)
+//                    .isCorrect(guessedCorrectly)
+//                    .losingPlayer(losingPlayer)
+//                    .isGameOver(isGameOver)
+//                    .build();
+//        }
+//    }
 
     /* 카드 초기 설정 */
-    private static List<Card> initializeDeck() {
-        List<Card> deck = new ArrayList<>();
+    private static List<Map<String, Object>> initializeDeck() {
+        List<Map<String, Object>> deck = new ArrayList<>();
 
         for (String type : CARD_TYPES) {
             for (int i = 0; i < 7; i++) {
-                deck.add(new Card(type, false));  // 일반 카드 7장
+                Map<String, Object> card = new HashMap<>();
+                card.put("type", type);
+                card.put("isRoyal", false);
+                deck.add(card);  // 일반 카드 7장
             }
-            deck.add(new Card(type, true));      // 킹 카드 1장
+            Map<String, Object> card = new HashMap<>();
+            card.put("type", type);
+            card.put("isRoyal", true);
+            deck.add(card);      // 킹 카드 1장
         }
 
         Collections.shuffle(deck);
         return deck;
     }
 
-    private Map<String, List<Card>> distributeCards(List<Card> deck, List<String> players) {
-        Map<String, List<Card>> playerCards = new HashMap<>();
+    private Map<String, List<Map<String, Object>>> distributeCards(List<Map<String, Object>> deck, List<String> players) {
+        Map<String, List<Map<String, Object>>> playerCards = new HashMap<>();
         int playerCount = players.size();
         int cardsPerPlayer = deck.size() / playerCount;
         int remainingCards = deck.size() % playerCount; // 나머지 카드 수
@@ -666,17 +706,17 @@ public class CockroachServiceImpl implements CockroachService {
 
     public String checkGameFinish(String userName, Map<String, Object> roomInfo) {
         // 같은 카드가 4장이거나 각 카드별로 1장
-        Map<String, List<Card>> userTableCards =
-                (Map<String, List<Card>>) roomInfo.get("userTableCards");
+        Map<String, List<Map<String, Object>>> userTableCards =
+                (Map<String, List<Map<String, Object>>>) roomInfo.get("userTableCards");
 
         boolean isFinished = false;
 
-        List<Card> userTable = userTableCards.get(userName);
+        List<Map<String, Object>> userTable = userTableCards.get(userName);
         Map<String, Integer> cardCount = new HashMap<>();
-        for (Card card : userTable) {
-            cardCount.put(card.getType(), cardCount.getOrDefault(card.getType(), 0) + 1);
+        for (Map<String, Object> card : userTable) {
+            cardCount.put((String) card.get("type"), cardCount.getOrDefault(card.get("type"), 0) + 1);
 
-            if (cardCount.get(card.getType()) >= 4) {
+            if (cardCount.get(card.get("type")) >= 4) {
                 isFinished = true;
                 break;
             }
@@ -685,8 +725,8 @@ public class CockroachServiceImpl implements CockroachService {
         Set<String> allCardTypes = new HashSet<>(List.of(CARD_TYPES));
         Set<String> playerCardTypes = new HashSet<>();
 
-        for (Card card : userTable) {
-            playerCardTypes.add(card.getType());
+        for (Map<String, Object> card : userTable) {
+            playerCardTypes.add((String) card.get("type"));
         }
 
         if (playerCardTypes.containsAll(allCardTypes)) {
