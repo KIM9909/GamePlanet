@@ -15,7 +15,6 @@ public class BuildBaseRequest {
 	private int tileId;
 
 	@JsonCreator
-	@Builder
 	public static BuildBaseRequest from(@JsonProperty("playerId") int playerId,
 			@JsonProperty("tileId") int tileId) {
 		return BuildBaseRequest.builder().playerId(playerId).tileId(tileId).build();

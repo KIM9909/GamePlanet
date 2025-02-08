@@ -32,7 +32,7 @@ public class Tile {
 		this.hasBase = true;
 	}
 
-	public void increateTollPrice(int priceToIncrease) {
-		this.price += priceToIncrease;
+	public void updateTollPrice(int newTollPrice) {
+		this.tollPrice = newTollPrice;
 	}
 }

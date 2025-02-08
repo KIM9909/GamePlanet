@@ -14,6 +14,10 @@ public abstract class Card {
 	private CardType type;
 	private String description;
 
+	public Card() {
+
+	}
+
 	public boolean checkType(CardType type) {
 		if (Objects.isNull(this.type)) {
 			return false;
