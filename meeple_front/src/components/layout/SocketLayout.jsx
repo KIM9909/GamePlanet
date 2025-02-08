@@ -22,6 +22,15 @@ const SocketLayout = ({ children }) => {
   const [currentPlayerSocketIndex, setCurrentPlayerSocketIndex] =
     useState(null);
 
+  // 몇 번째 라운드인지
+  const [socketCurrentRound, setSocketCurrentRound] = useState(null);
+
+  // 보드 정보
+  const [socketBoard, setSocketBoard] = useState(null);
+
+  // 카드 정보
+  const [socketCard, setSocketCard] = useState(null);
+
   // 게임 공지 메시지
   const [gameSocketNotifi, setGameSocketNotifi] = useState({});
 
@@ -88,6 +97,9 @@ const SocketLayout = ({ children }) => {
               setGamePlaySocketData(receivedData.data);
               setGameSocketNotifi(receivedData.message);
               setCurrentPlayerSocketIndex(receivedData.data.currentPlayerIndex);
+              setSocketCurrentRound(receivedData.data.round);
+              setSocketBoard(receivedData.data.board);
+              setSocketCard(receivedData.data.cards);
             } else if (receivedData.type === "game-play") {
               if (receivedData.buyLandResponse) {
                 setBuyLandSocketData(receivedData.buyLandResponse);
@@ -150,7 +162,7 @@ const SocketLayout = ({ children }) => {
       setError("게임 대기방에 참가 중 오류가 발생했습니다. ");
     }
   }, [roomId, userId]);
-
+  // TODO: 해야해!!
   // 대기방 채팅
   const chatWaitingRoom = useCallback(
     (message) => {
@@ -171,7 +183,7 @@ const SocketLayout = ({ children }) => {
     },
     [roomId]
   );
-
+  // TODO: 해야해!!
   // 비밀 대기방 참가
   const enterSecretWaitingRoom = useCallback(
     (password) => {
@@ -192,7 +204,7 @@ const SocketLayout = ({ children }) => {
     },
     [roomId, userId]
   );
-
+  // TODO: 해야해!!
   // 대기방 업데이트
   const updateWaitingRoom = useCallback(
     (roomData) => {
@@ -212,7 +224,7 @@ const SocketLayout = ({ children }) => {
     },
     [roomId]
   );
-  //Todo
+  // TODO: 해야해!!
   // 대기방 비밀번호 변경
   const changePassword = useCallback(
     (password) => {
@@ -275,6 +287,7 @@ const SocketLayout = ({ children }) => {
     [roomId, userId]
   );
 
+  // TODO: 해야해!!
   // 부루마불 주사위 굴리기
   const rollDice = useCallback(
     (diceResult) => {
@@ -283,6 +296,7 @@ const SocketLayout = ({ children }) => {
         return;
       }
       try {
+        console.log("주사위 굴리기");
         stompClientRef.current.publish({
           destination: `/app/game/blue-marble/game-plays/${roomId}/roll-dice`,
           body: JSON.stringify(diceResult),
@@ -296,6 +310,7 @@ const SocketLayout = ({ children }) => {
     [roomId, userId]
   );
 
+  // TODO: 해야해!!
   // 부루마불 땅 구매
   const buyLand = useCallback(
     (buyInfo) => {
