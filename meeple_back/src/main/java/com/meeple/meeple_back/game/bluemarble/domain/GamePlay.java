@@ -145,25 +145,24 @@ public class GamePlay {
 
 		// 주사위 굴려서 도착한 땅에 따라서 이벤트 추가
 		int currentPosition = response.getNextPosition();
-		processTileEvent(currentPlayer, currentPosition);
-		DiceRollResponse diceRollResponse = DiceRollResponse.from(response, ActionType.BUY_LAND);
-		// 땅에 도착했을 때 이벤트 추가
-		return diceRollResponse;
+		ActionType nextAction = processTileEvent(currentPlayer, currentPosition);
+		return DiceRollResponse.from(response, nextAction);
 	}
 
-	private void processTileEvent(Player currentPlayer, int currentPosition) {
+	private ActionType processTileEvent(Player currentPlayer, int currentPosition) {
 		Tile currentTile = board.stream()
 				.filter(tile -> tile.getId() == currentPosition)
 				.findFirst()
 				.orElseThrow(() -> new IllegalArgumentException("Tile not found"));
 		// 행성에 도착할 경우.
 		if (TileType.SEED_CERTIFICATE_CARD == currentTile.getType()) {
-			processLandingOnPlanetEvent(currentPlayer, currentTile);
+			return processLandingOnPlanetEvent(currentPlayer, currentTile);
 		}
 		// TODO: 특수카드일 경우 처리
 		if (TileType.NEURONS_VALLEY_CARD == currentTile.getType()) {
 
 		}
+		return ActionType.END;
 	}
 
 	/**
@@ -172,16 +171,17 @@ public class GamePlay {
 	 * @param currentPlayer - 현재 플레이어
 	 * @param currentTile   - 현재 타일
 	 */
-	private void processLandingOnPlanetEvent(Player currentPlayer, Tile currentTile) {
+	private ActionType processLandingOnPlanetEvent(Player currentPlayer, Tile currentTile) {
 		// 땅 구매할지 물어보도록 액션 추가
 		if (currentTile.getOwnerId() == 0 && currentPlayer.getBalance() >= currentTile.getPrice()) {
-			turnManager.addTurnAction(ActionType.BUY_LAND);
+			return ActionType.BUY_LAND;
 		}
 		// 통행료 지불 하도록 액션 추가
 		if (currentTile.getOwnerId() != 0
 				&& currentTile.getOwnerId() != currentPlayer.getPlayerId()) {
-			turnManager.addTurnAction(ActionType.PAY_TOLL);
+			return ActionType.PAY_TOLL;
 		}
+		return ActionType.ROLL_DICE;
 	}
 
 	/**
