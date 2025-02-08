@@ -23,7 +23,7 @@ export const createBurumabulRoom = async (userId, roomData) => {
   try {
     console.log("Request payload:", roomData);
     const response = await axios.post(
-      `${BURUMABUL_API_BASE_URL}/${userId}`,
+      `${BURUMABUL_API_BASE_URL}/${userId}/create`,
       roomData
     );
     return response.data;

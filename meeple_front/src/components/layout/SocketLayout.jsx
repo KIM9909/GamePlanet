@@ -139,7 +139,7 @@ const SocketLayout = ({ children }) => {
 
     try {
       stompClientRef.current.publish({
-        destination: `/app/${roomId}/user/${userId}/join`,
+        destination: `/app/game/blue-marble/rooms/${roomId}/user/${userId}/join`,
       });
       console.log(userId);
       console.log("게임 대기방에 참가 요청");
@@ -200,7 +200,7 @@ const SocketLayout = ({ children }) => {
       }
       try {
         stompClientRef.current.publish({
-          destination: `/app/game/blue-marble/${roomId}/update`,
+          destination: `/app/game/blue-marble/rooms/${roomId}/update`,
           body: JSON.stringify(roomData),
         });
       } catch (error) {
@@ -239,7 +239,7 @@ const SocketLayout = ({ children }) => {
     }
     try {
       stompClientRef.current.publish({
-        destination: `/app/${roomId}/user/${userId}/delete`,
+        destination: `/app/game/blue-marble/rooms/${roomId}/user/${userId}/delete`,
       });
       console.log("게임 대기방 / 게임 나가기");
     } catch (error) {
@@ -261,7 +261,7 @@ const SocketLayout = ({ children }) => {
           players: playInfo.players,
         };
         stompClientRef.current.publish({
-          destination: `/app/create`,
+          destination: `/app/game/blue-marble/game-plays/create`,
           body: JSON.stringify(formattedPlayInfo),
         });
         console.log("게임 플레이 생성에 성공했습니다.");
@@ -282,7 +282,7 @@ const SocketLayout = ({ children }) => {
       }
       try {
         stompClientRef.current.publish({
-          destination: `/app/${roomId}/roll-dice`,
+          destination: `/app/game/blue-marble/game-plays/${roomId}/roll-dice`,
           body: JSON.stringify(diceResult),
         });
         console.log("주사위 굴리기에 성공했습니다.");
@@ -315,7 +315,11 @@ const SocketLayout = ({ children }) => {
     [roomId, userId]
   );
 
-  if (location.pathname !== "/") {
+  if (
+    location.pathname !== "/" &&
+    !location.pathname.match(/^\/catch-mind\/[\w-]+$/) &&
+    !location.pathname.match(/^\/game\/cockroach\/[\w-]+$/)
+  ) {
     return (
       <SocketContext.Provider
         value={{
