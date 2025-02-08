@@ -96,8 +96,11 @@ const ProfileModal = ({
       // 닉네임으로 유저 검색
       const response = await fetch(
         `${
-          import.meta.env.VITE_LOCAL_API_BASE_URL
+          import.meta.env.VITE_API_BASE_URL
         }/friend/search?userNickName=${userNickname}`
+        // `${
+        //   import.meta.env.VITE_LOCAL_API_BASE_URL
+        // }/friend/search?userNickName=${userNickname}`
       );
       const data = await response.json();
 
@@ -142,8 +145,11 @@ const ProfileModal = ({
     try {
       const searchResponse = await fetch(
         `${
-          import.meta.env.VITE_LOCAL_API_BASE_URL
+          import.meta.env.VITE_API_BASE_URL
         }/friend/search?userNickName=${userNickname}`
+        // `${
+        //   import.meta.env.VITE_LOCAL_API_BASE_URL
+        // }/friend/search?userNickName=${userNickname}`
       );
       const searchData = await searchResponse.json();
 
@@ -155,7 +161,8 @@ const ProfileModal = ({
         };
 
         const response = await axios.post(
-          `${import.meta.env.VITE_LOCAL_API_BASE_URL}/report`,
+          `${import.meta.env.VITE_API_BASE_URL}/report`,
+          // `${import.meta.env.VITE_LOCAL_API_BASE_URL}/report`,
           reportData
         );
 
