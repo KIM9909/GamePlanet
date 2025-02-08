@@ -7,17 +7,21 @@ import com.meeple.meeple_back.game.bluemarble.controller.response.BuildBaseRespo
 import com.meeple.meeple_back.game.bluemarble.controller.response.BuyLandResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DiceRollResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DrawCardResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.response.GamePlayResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.PayFeeResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuildBaseRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.PayFeeRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.TurnEndRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
 import com.meeple.meeple_back.game.bluemarble.domain.GamePlay;
 import com.meeple.meeple_back.game.bluemarble.domain.GamePlayCreate;
 import com.meeple.meeple_back.game.bluemarble.domain.Player;
 import com.meeple.meeple_back.game.bluemarble.service.port.BluemarbleGameRepository;
 import com.meeple.meeple_back.user.service.UserService;
 import java.util.List;
+import java.util.logging.Logger;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,16 +30,20 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class BluemarbleGameServiceImpl implements BluemarbleGameService {
 
+	private static Logger logger = Logger.getLogger(BluemarbleGameServiceImpl.class.getName());
+
 	private final BluemarbleGameRepository bluemarbleGameRepository;
 	private final UserService userService;
 
 	@Override
 	@Transactional
-	public GamePlay create(GamePlayCreate gamePlayCreate) {
+	public GamePlayResponse create(GamePlayCreate gamePlayCreate) {
 		List<Player> players = gamePlayCreate.getPlayerIds().stream()
 				.map(id -> Player.init(userService.findById(id)))
 				.toList();
-		return bluemarbleGameRepository.save(GamePlay.from(gamePlayCreate, players));
+		GamePlay gamePlay = bluemarbleGameRepository.save(GamePlay.from(gamePlayCreate, players));
+		logger.info("GamePlay created: " + gamePlay);
+		return GamePlayResponse.from(gamePlay);
 	}
 
 	@Override
@@ -70,9 +78,16 @@ public class BluemarbleGameServiceImpl implements BluemarbleGameService {
 	}
 
 	@Override
+	@Transactional
 	public PayFeeResponse payFee(int roomId, PayFeeRequest payFeeRequest) {
 		GamePlay gamePlay = getValidateGamePlay(roomId);
 		return gamePlay.payFee(payFeeRequest);
+	}
+
+	@Override
+	@Transactional
+	public TurnEndResponse turnEnd(int roomId, TurnEndRequest turnEndRequest) {
+		return null;
 	}
 
 

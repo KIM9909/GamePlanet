@@ -8,9 +8,11 @@ import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuildBas
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.PayFeeRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.TurnEndRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.SocketBuyLandResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.SocketDiceRollResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.SocketResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Builder;
@@ -82,5 +84,31 @@ public class BluemarbleGameController {
 			@Payload PayFeeRequest payFeeRequest) {
 		SocketResponse<PayFeeResponse> response = SocketResponse.from("pay-fee",
 				bluemarbleGameService.payFee(roomId, payFeeRequest), "통행료를 지불했습니다.");
+		messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
+	}
+
+	/**
+	 * 주사위 더블인경우 다음 액션은 주사위 던지기.
+	 * <p>
+	 * 턴을 종료하고 종료 조건 판별 턴 종료 1. 4명이 게임할 경우 1
+	 * <p>
+	 * 말판에 우주기지 6개를 먼저 건설한 여행자가 승리합니다. (2명이 게임할 경우 우주기지 10개, 3명이 게임할경우 우주기지 8개를 먼저 건설한 여행자가 승리합니다.)
+	 * <p>
+	 * 1. 4명이 게임할 경우 2
+	 * <p>
+	 * 2명이 파산을 하게되면 게임이 즉시 끝나고 보유한 재산이 많은 여행자가 승리합니다.
+	 * <p>
+	 * (증서, 우주기지, 보유한 현금의 합)
+	 *
+	 * @param roomId
+	 * @param turnEndRequest -
+	 */
+	@MessageMapping("/{roomId}/turn-end")
+	@Operation(summary = "턴을 끝내는 기능", description = "턴을 끝냅니다.")
+	public void turnEnd(@DestinationVariable("roomId") int roomId,
+			@Payload TurnEndRequest turnEndRequest) {
+		SocketResponse<TurnEndResponse> response = SocketResponse.from("turn-end",
+				bluemarbleGameService.turnEnd(roomId, turnEndRequest), "턴을 종료합니다");
+		messagingTemplate.convertAndSend("/topic/room" + roomId, response);
 	}
 }

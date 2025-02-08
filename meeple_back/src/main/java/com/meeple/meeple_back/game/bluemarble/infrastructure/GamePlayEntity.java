@@ -1,9 +1,11 @@
 package com.meeple.meeple_back.game.bluemarble.infrastructure;
 
 
+import com.meeple.meeple_back.game.bluemarble.domain.Card;
 import com.meeple.meeple_back.game.bluemarble.domain.GamePlay;
 import com.meeple.meeple_back.game.bluemarble.domain.Player;
 import com.meeple.meeple_back.game.bluemarble.domain.Tile;
+import com.meeple.meeple_back.game.bluemarble.domain.TurnManager;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,13 +23,13 @@ public class GamePlayEntity {
 
 	@Id
 	private int gamePlayId;
-
 	private int currentPlayerIndex;
 	private List<Player> players;
 	private String gameStatus;
 	private int round;
 	private List<Tile> board;
-
+	private List<Card> cards;
+	private TurnManager turnManager;
 
 	public static GamePlayEntity from(GamePlay gamePlay) {
 		return GamePlayEntity.builder()
@@ -37,6 +39,7 @@ public class GamePlayEntity {
 				.gameStatus(gamePlay.getGameStatus())
 				.round(gamePlay.getRound())
 				.board(gamePlay.getBoard())
+				.cards(gamePlay.getCards())
 				.build();
 	}
 
@@ -48,6 +51,7 @@ public class GamePlayEntity {
 				.gameStatus(gamePlayEntity.getGameStatus())
 				.round(gamePlayEntity.getRound())
 				.board(gamePlayEntity.getBoard())
+				.cards(gamePlayEntity.getCards())
 				.build();
 	}
 }
