@@ -347,6 +347,7 @@ const SocketLayout = ({ children }) => {
       </SocketContext.Provider>
     );
   }
+  return children;
 };
 
 export default SocketLayout;
