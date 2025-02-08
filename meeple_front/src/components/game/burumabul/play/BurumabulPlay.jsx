@@ -7,6 +7,7 @@ import DiceImage from "../../../../assets/burumabul_images/Dice.png";
 import PlayerVideo from "../../../../components/game/burumabul/play/PlayerVideo";
 import { useDispatch, useSelector } from "react-redux";
 import { SocketContext } from "../../../layout/SocketLayout";
+import QuestBuyLand from "./burumabul_Modal/QuestBuyLand";
 
 const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
   console.log("부루마불 플레이 현재 방 정보 :", currentRoomInfo);
@@ -19,6 +20,9 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     createBurumabulPlay,
     gamePlaySocketData,
     gameSocketNotifi,
+    socketBoard,
+    socketCards,
+    socketRollNext,
     socketFirstDice,
     socketSecondDice,
     socketCurrentRound,
@@ -30,10 +34,14 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
 
   // 게임 데이터
   const [currentPlayData, setCurrentPlayData] = useState(playData);
+  const [board, setBoard] = useState(null);
+  const [cards, setCards] = useState(null);
 
   useEffect(() => {
     setCurrentPlayData(playData);
-  }, [playData]);
+    setBoard(socketBoard);
+    setCards(socketCards);
+  }, [playData, socketBoard, socketCards]);
 
   const [playerBases, setPlayerBases] = useState(
     Array(currentPlayData?.players.length).fill([])
@@ -64,12 +72,24 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
   const [secondDice, setSecondDice] = useState(null);
   const totalDice = Number(firstDice) + Number(secondDice);
   const [isDouble, setIsDouble] = useState(null);
+  const [nextAction, setNextAction] = useState(null);
 
   useEffect(() => {
     setFirstDice(socketFirstDice);
     setSecondDice(socketSecondDice);
     setIsDouble(socketDouble);
-  }, [socketFirstDice, socketSecondDice, socketDouble]);
+    setNextAction(socketRollNext);
+  }, [socketFirstDice, socketSecondDice, socketDouble, socketRollNext]);
+
+  const [showBuyLand, setShowBuyLand] = useState(false);
+  const [isBuyLand, setIsBuyLand] = useState(false);
+  const [showCardId, setShowCardId] = useState(null);
+
+  useEffect(() => {
+    if (nextAction && nextAction === "BUY_LAND") {
+      setShowBuyLand(true);
+    }
+  }, [nextAction]);
 
   // 현재 라운드
   const [currentRound, setCurrentRound] = useState(null);
@@ -155,6 +175,9 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
               onBasesInfo={handlePlayerBasesRef}
               gameData={currentPlayData}
               roomId={roomId}
+              setShowBuyLand={setShowBuyLand}
+              isBuyLand={isBuyLand}
+              setShowCardId={setShowCardId}
             />
           </div>
 
@@ -238,6 +261,14 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
           </div>
         </div>
       </div>
+      {showBuyLand && showCardId && (
+        <QuestBuyLand
+          setIsBuyLand={setIsBuyLand}
+          onClose={() => setShowBuyLand(false)}
+          cardId={showCardId}
+          cardInfo={cards?.[showCardId]}
+        />
+      )}
 
       {!isSidebarOpen && (
         <div className="fixed left-0 top-1/2 transform -translate-y-1/2 z-50">

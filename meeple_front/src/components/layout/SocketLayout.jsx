@@ -47,13 +47,19 @@ const SocketLayout = ({ children }) => {
   const [socketBoard, setSocketBoard] = useState(null);
 
   // 카드 정보
-  const [socketCard, setSocketCard] = useState(null);
+  const [socketCards, setSocketCards] = useState(null);
 
   // 게임 공지 메시지
   const [gameSocketNotifi, setGameSocketNotifi] = useState({});
 
   // 땅 구매 후 정보
   const [buyLandSocketData, setBuyLandSocketData] = useState({});
+
+  // 유저 업데이트 정보
+  const [socketUserUpdate, setSocketUserUpdate] = useState(null);
+
+  // 타일 업데이트 정보
+  const [socketTileUpdate, setSocketTileUpdate] = useState(null);
 
   const location = useLocation();
 
@@ -74,8 +80,8 @@ const SocketLayout = ({ children }) => {
     const stompClient = new Client({
       webSocketFactory: () => {
         console.log("🌍 SockJS WebSocket 팩토리 실행됨!");
-        // return new SockJS(`${import.meta.env.VITE_SOCKET_LOCAL_API_BASE_URL}`);
-        return new SockJS(`${import.meta.env.VITE_SOCKET_API_BASE_URL}`);
+        return new SockJS(`${import.meta.env.VITE_SOCKET_LOCAL_API_BASE_URL}`);
+        // return new SockJS(`${import.meta.env.VITE_SOCKET_API_BASE_URL}`);
       },
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
@@ -114,12 +120,12 @@ const SocketLayout = ({ children }) => {
               setCurrentPlayerSocketIndex(receivedData.data.currentPlayerIndex);
               setSocketCurrentRound(receivedData.data.round);
               setSocketBoard(receivedData.data.board);
-              setSocketCard(receivedData.data.cards);
-            } else if (receivedData.type === "game-play") {
-              if (receivedData.buyLandResponse) {
-                setBuyLandSocketData(receivedData.buyLandResponse);
-                setGameSocketNotifi(receivedData.message);
-              }
+              setSocketCards(receivedData.data.cards);
+            } else if (receivedData.type === "buy-land") {
+              setBuyLandSocketData(receivedData.buyLandResponse);
+              setSocketUserUpdate(receivedData.buyLandResponse.updatedPlayer);
+              setSocketTileUpdate(receivedData.buyLandResponse.updatedTile);
+              setGameSocketNotifi(receivedData.message);
             } else if (receivedData.type === "roll-dice") {
               setRollDiceSocketData(receivedData.diceRollResponse);
               setSocketFirstDice(receivedData.diceRollResponse.firstDice);
@@ -328,7 +334,6 @@ const SocketLayout = ({ children }) => {
     }
   });
 
-  // TODO: 해야해!!
   // 부루마불 주사위 굴리기
   const rollDice = useCallback(
     (diceResult) => {
@@ -360,6 +365,7 @@ const SocketLayout = ({ children }) => {
         return;
       }
       try {
+        console.log("땅 구매 정보", buyInfo);
         stompClientRef.current.publish({
           destination: `/app/game/blue-marble/game-plays/${roomId}/buy-land`,
           body: JSON.stringify(buyInfo),
@@ -400,8 +406,10 @@ const SocketLayout = ({ children }) => {
           socketDouble,
           socketCurrentRound,
           socketBoard,
-          socketCard,
+          socketCards,
           socketRollNext,
+          socketUserUpdate,
+          socketTileUpdate,
           enterWaitingRoom,
           chatWaitingRoom,
           changePassword,
