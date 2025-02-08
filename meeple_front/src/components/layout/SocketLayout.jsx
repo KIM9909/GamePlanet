@@ -22,6 +22,24 @@ const SocketLayout = ({ children }) => {
   const [currentPlayerSocketIndex, setCurrentPlayerSocketIndex] =
     useState(null);
 
+  // 주사위 던지는지 안 던지는 지
+  const [socketRoll, setSocektRoll] = useState(null);
+
+  // 주사위 굴린 후 정보
+  const [rollDiceSocketData, setRollDiceSocketData] = useState({});
+
+  // 주사위 굴린 후 다음 행동
+  const [socketRollNext, setSocketRollNext] = useState(null);
+
+  // 첫 번째 주사위 결과
+  const [socketFirstDice, setSocketFirstDice] = useState(null);
+
+  // 두 번째 주사위 결과
+  const [socketSecondDice, setSocketSecondDice] = useState(null);
+
+  // 주사위가 더블인지 아닌지
+  const [socketDouble, setSocketDouble] = useState(null);
+
   // 몇 번째 라운드인지
   const [socketCurrentRound, setSocketCurrentRound] = useState(null);
 
@@ -33,9 +51,6 @@ const SocketLayout = ({ children }) => {
 
   // 게임 공지 메시지
   const [gameSocketNotifi, setGameSocketNotifi] = useState({});
-
-  // 주사위 굴린 후 정보
-  const [rollDiceSocketData, setRollDiceSocketData] = useState({});
 
   // 땅 구매 후 정보
   const [buyLandSocketData, setBuyLandSocketData] = useState({});
@@ -104,10 +119,17 @@ const SocketLayout = ({ children }) => {
               if (receivedData.buyLandResponse) {
                 setBuyLandSocketData(receivedData.buyLandResponse);
                 setGameSocketNotifi(receivedData.message);
-              } else if (receivedData.rollDiceResponse) {
-                setRollDiceSocketData(receivedData.rollDiceResponse);
-                setGameSocketNotifi(receivedData.message);
               }
+            } else if (receivedData.type === "roll-dice") {
+              setRollDiceSocketData(receivedData.diceRollResponse);
+              setSocketFirstDice(receivedData.diceRollResponse.firstDice);
+              setSocketSecondDice(receivedData.diceRollResponse.secondDice);
+              setSocketDouble(receivedData.diceRollResponse.double);
+              setSocketRollNext(receivedData.diceRollResponse.nextAction);
+              setGameSocketNotifi(receivedData.message);
+            } else if (receivedData.type === "just-roll-dice") {
+              setSocektRoll(receivedData.data);
+              setGameSocketNotifi(receivedData.message);
             }
             console.log("구독 성공:");
           });
@@ -287,6 +309,25 @@ const SocketLayout = ({ children }) => {
     [roomId, userId]
   );
 
+  // 주사위 던졌다는 알림
+  const roll = useCallback((rollInfo) => {
+    if (!stompClientRef.current?.connected) {
+      console.warn("웹소켓에 연결되어 있지 않습니다.");
+      return;
+    }
+    try {
+      console.log("주사위를 굴렸다는 알림");
+      stompClientRef.current.publish({
+        destination: `app/game/blue-marble/game-plays/${roomId}/just-roll-dice`,
+        body: JSON.stringify(rollInfo),
+      });
+      console.log("주사위를 굴렸다는 알림");
+    } catch (error) {
+      console.error("주사위 굴렸다는 알림 실패: ", error);
+      setError("주사위 굴리기 알림에 실패함");
+    }
+  });
+
   // TODO: 해야해!!
   // 부루마불 주사위 굴리기
   const rollDice = useCallback(
@@ -304,7 +345,7 @@ const SocketLayout = ({ children }) => {
         console.log("주사위 굴리기에 성공했습니다.");
       } catch (error) {
         console.error("주사위 굴리기에 실패했습니다. ", error);
-        setError("주사위 굴리기에 성공했습니다.");
+        setError("주사위 굴리기에 실패했습니다.");
       }
     },
     [roomId, userId]
@@ -352,6 +393,15 @@ const SocketLayout = ({ children }) => {
           currentPlayerSocketIndex,
           rollDiceSocketData,
           buyLandSocketData,
+          roll,
+          socketRoll,
+          socketFirstDice,
+          socketSecondDice,
+          socketDouble,
+          socketCurrentRound,
+          socketBoard,
+          socketCard,
+          socketRollNext,
           enterWaitingRoom,
           chatWaitingRoom,
           changePassword,

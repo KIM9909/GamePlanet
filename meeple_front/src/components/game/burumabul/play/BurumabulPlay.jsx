@@ -19,11 +19,14 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     createBurumabulPlay,
     gamePlaySocketData,
     gameSocketNotifi,
+    socketFirstDice,
+    socketSecondDice,
+    socketCurrentRound,
+    socketDouble,
     rollDiceSocketData,
     buyLandSocketData,
+    roll,
   } = socketContext;
-  const firstDice = useSelector((state) => state.burumabul.firstDice);
-  const secondDice = useSelector((state) => state.burumabul.secondDice);
 
   // 게임 데이터
   const [currentPlayData, setCurrentPlayData] = useState(playData);
@@ -32,10 +35,15 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     setCurrentPlayData(playData);
   }, [playData]);
 
+  const [playerBases, setPlayerBases] = useState(
+    Array(currentPlayData?.players.length).fill([])
+  );
+
   useEffect(() => {
     if (gamePlaySocketData) {
       console.log("새로운 gamePlaySocekData 수신:", gamePlaySocketData);
       setCurrentPlayData(gamePlaySocketData);
+      setPlayerBases(Array(gamePlaySocketData.players.length).fill([]));
     }
   }, [gamePlaySocketData]);
 
@@ -45,10 +53,29 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   const [rollDice, setRollDice] = useState(null);
-  const [playerBases, setPlayerBases] = useState([]);
+
   const handleRollDiceRef = useCallback((rollDiceFn) => {
     setRollDice(() => rollDiceFn);
   }, []);
+
+  // 주사위 결과
+
+  const [firstDice, setFirstDice] = useState(null);
+  const [secondDice, setSecondDice] = useState(null);
+  const totalDice = Number(firstDice) + Number(secondDice);
+  const [isDouble, setIsDouble] = useState(null);
+
+  useEffect(() => {
+    setFirstDice(socketFirstDice);
+    setSecondDice(socketSecondDice);
+    setIsDouble(socketDouble);
+  }, [socketFirstDice, socketSecondDice, socketDouble]);
+
+  // 현재 라운드
+  const [currentRound, setCurrentRound] = useState(null);
+  useEffect(() => {
+    setCurrentRound(socketCurrentRound);
+  }, [socketCurrentRound]);
 
   const handlePlayerBasesRef = useCallback((getBases) => {
     console.log("플레이어 베이스 정보 : ", getBases);
@@ -73,10 +100,6 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     currentPlayData?.players?.[currentPlayData?.currentPlayerIndex];
   console.log("현재 플레이어: ", currentPlayer);
   const playerInfoList = currentPlayData.players;
-
-  console.log("==================");
-  console.log(firstDice);
-  console.log(secondDice);
 
   return (
     <>
@@ -113,9 +136,11 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
       <div className="bg-white h-12">
         <div>
           주사위 결과 : 첫 번째{firstDice} + 두 번째{secondDice} = 총 점수 :
-          {firstDice + secondDice}
+          {totalDice}
         </div>
+        {isDouble && <div>더블입니다!!</div>}
         <div>{gameSocketNotifi}</div>
+        <div>현재 라운드 : {currentRound}</div>
       </div>
       <div
         className={`transition-all duration-300 ease-in-out ${
