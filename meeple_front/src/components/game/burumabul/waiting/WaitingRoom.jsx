@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import background from "../../../../assets/burumabul_images/waitingroom.gif";
 import PlayerCard from "./PlayerCard";
@@ -10,106 +10,118 @@ import PutBurumabulRoom from "../PutBurumabulRoom";
 import PlayerAlertModal from "./PlayerAlertModal";
 import { createPortal } from "react-dom";
 import { fetchFriendList } from "../../../../sources/api/FriendApi";
+import { findBurumabulRoom } from "../../../../sources/api/BurumabulRoomAPI";
+import { SocketContext } from "../../../layout/SocketLayout";
 
 // 백엔드 연결 필요
-const WaitingRoom = () => {
+const WaitingRoom = ({ roomId, setIsStart, setPlayData }) => {
+  console.log(roomId);
   const userId = Number(useSelector((state) => state.user.userId));
-
-  const navigate = useNavigate();
-  const location = useLocation();
-  const roomInfo = location.state?.roomInfo;
-
-  const [friendList, setFriendList] = useState(null);
-
-  useEffect(() => {
-    try {
-      const response = fetchFriendList(userId);
-      setFriendList(response);
-    } catch (error) {
-      console.log("친구 목록 로드 중 에러");
-    }
-  }, []);
-  console.log(roomInfo);
-
-  // const roomInfo = {
-  //   roomId: 1,
-  //   roomName: "보드찌개 시작해볼까!",
-  //   createTime: "2025-02-02T18:14:34.803Z",
-  //   creator: {
-  //     playerId: 13,
-  //     playerName: "성수컨님",
-  //     position: 0,
-  //     balance: 0,
-  //     seedCertificateCardOwned: ["string"],
-  //   },
-  //   maxPlayers: 4,
-  //   players: [
-  //     {
-  //       playerId: 1,
-  //       playerName: "성수컨님",
-  //       position: 0,
-  //       balance: 0,
-  //       seedCertificateCardOwned: ["string"],
-  //     },
-  //     {
-  //       playerId: 2,
-  //       playerName: "희준찌개",
-  //       position: 0,
-  //       balance: 0,
-  //       seedCertificateCardOwned: ["string"],
-  //     },
-  //     {
-  //       playerId: 3,
-  //       playerName: "짼 팀장",
-  //       position: 0,
-  //       balance: 0,
-  //       seedCertificateCardOwned: ["string"],
-  //     },
-  //     {
-  //       playerId: 4,
-  //       playerName: "현범 프님",
-  //       position: 0,
-  //       balance: 0,
-  //       seedCertificateCardOwned: ["string"],
-  //     },
-  //   ],
-  //   gameStart: false,
-  //   private: true,
-  // };
-
-  const playersInfo = roomInfo.players;
-  const roomName = roomInfo.roomName;
-  const creatorId = Number(roomInfo.creator.playerId);
-
-  const creatorName = roomInfo.creator.playerName;
-  const isPrivate = roomInfo.private;
-  const maxPlayers = roomInfo.maxPlayers;
-  const playerLen = roomInfo.players.length;
+  const [currentRoomInfo, setCurrnetRoomInfo] = useState({});
+  const {
+    connected,
+    roomSocketData,
+    leaveGame,
+    createBurumabulPlay,
+    gmaePlaySocketData,
+  } = useContext(SocketContext);
 
   const [showPutRoomModal, setShowPutRoomModal] = useState(false);
+  const [showAlertModal, setShowAlertModal] = useState(false);
+  const [friendList, setFriendList] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  console.log("소켓 데이터", SocketContext);
+
+  useEffect(() => {
+    const getFriendList = async () => {
+      if (roomId) {
+        try {
+          const response = await fetchFriendList(userId);
+          setFriendList(response);
+        } catch (error) {
+          console.log("친구 목록 로드 중 에러");
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    getFriendList();
+  }, []);
+
+  useEffect(() => {
+    const getRoomInfo = async () => {
+      if (roomId) {
+        try {
+          const response = await findBurumabulRoom(roomId);
+          setCurrnetRoomInfo(response);
+        } catch (error) {
+          console.error("방 정보 조회 중 오류 발생 : ", error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    getRoomInfo();
+  }, [roomId]);
+
+  useEffect(() => {
+    if (connected && roomSocketData) {
+      setCurrnetRoomInfo((prev) => ({
+        ...prev,
+        ...roomSocketData,
+      }));
+    }
+  }, [connected, roomSocketData]);
+
+  if (loading) {
+    return <div>Loading Room Informangition</div>;
+  }
+
+  console.log(currentRoomInfo);
+
+  const playersInfo = currentRoomInfo.players;
+  const roomName = currentRoomInfo.roomName;
+  const creatorId = Number(currentRoomInfo.creator.playerId);
+
+  const isPrivate = currentRoomInfo.private;
+  const maxPlayers = currentRoomInfo.maxPlayers;
+  const playerLen = currentRoomInfo.players.length;
 
   const handlePutRoom = () => {
     setShowPutRoomModal(true);
   };
 
-  const [showAlertModal, setShowAlertModal] = useState(false);
-
   const handleAlertModal = () => {
     setShowAlertModal(true);
   };
 
-  const goToGame = async () => {
-    if (roomInfo) {
+  //
+  const goToGame = () => {
+    if (connected && roomId && playersInfo) {
       try {
-        await navigate(`/game/burumabul/start/${roomInfo.roomId}`, {
-          state: { roomId: roomInfo.roomId },
-        });
+        const playerList = playersInfo.map((player) => player.playerId);
+        const playInfo = {
+          gamePlayId: roomId,
+          players: playerList,
+        };
+        console.log("게임 생성 시도", playInfo);
+        createBurumabulPlay(playInfo);
+        setPlayData(gmaePlaySocketData);
+        setIsStart(true);
       } catch (error) {
-        console.error("게임 방 이동 중 오류 발생 :", error);
+        console.error("부루마불 플레이 생성 실패 :", error);
       }
     }
   };
 
+  const leaveTheRoom = () => {
+    if (connected) {
+      leaveGame();
+      navigate("/home");
+    }
+  };
   return (
     <>
       <style>{`
@@ -163,9 +175,9 @@ const WaitingRoom = () => {
             <div className="w-full flex flex-row justify-between my-10 px-10">
               <button
                 className="relative overflow-hidden text-lg font-semibold text-white mx-10 bg-gradient-to-r from-red-400 to-red-500 border-2 border-red-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
-                onClick={() => navigate("/home")}
+                onClick={leaveTheRoom}
               >
-                방 나가기
+                방 나가기 {roomMessage}
               </button>
               {userId && creatorId && Number(userId) === Number(creatorId) ? (
                 <div>
@@ -207,7 +219,7 @@ const WaitingRoom = () => {
 
               {showPutRoomModal && (
                 <PutBurumabulRoom
-                  originRoomData={roomInfo}
+                  originRoomData={currentRoomInfo}
                   onClose={() => setShowPutRoomModal(false)}
                 />
               )}

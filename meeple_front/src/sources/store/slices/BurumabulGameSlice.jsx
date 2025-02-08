@@ -1,6 +1,7 @@
 import { createSlice, current } from "@reduxjs/toolkit";
 
 const initialState = {
+  roomId: null,
   gamePlayId: null,
   currentPlayerIndex: 0,
   players: [],
@@ -34,6 +35,10 @@ const burumabulGameSlice = createSlice({
   name: "burumabul",
   initialState: loadStateBurumabul(),
   reducers: {
+    // 방 id 업데이트
+    setRoomId: (state, action) => {
+      state.roomId = action.payload;
+    },
     // 게임 설정
     setGameData: (state, action) => {
       return { ...state, ...action.payload };
@@ -140,6 +145,7 @@ const burumabulGameSlice = createSlice({
 });
 
 export const {
+  setRoomId,
   setGameData,
   addPlayer,
   removePlayer,

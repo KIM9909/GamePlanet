@@ -26,9 +26,6 @@ const useFriendSocket = () => {
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
-      debug: (str) => {
-        console.log("STOMP Debug:", str); // 디버깅을 위한 로그 추가
-      },
     });
 
     stompClient.onConnect = () => {

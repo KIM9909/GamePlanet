@@ -13,7 +13,6 @@ import {
   nextRound,
   changeDice,
 } from "../../../../sources/store/slices/BurumabulGameSlice";
-// 소켓 사용
 
 import {
   Canvas,
@@ -72,7 +71,7 @@ import telepathyCard from "../../../../assets/burumabul_images/telepathycard.png
 import neuronsCard from "../../../../assets/burumabul_images/neuronscard.png";
 import BlueRobot from "./BlueRobot";
 import SpaceBase from "./SpaceBase";
-import useBurumabulSocket from "../../../../hooks/useBurumabulSocket";
+import useBurumabulSocket from "../../../../hooks/useBurumabulPlaySocket";
 import { color } from "framer-motion";
 import { depth } from "three/tsl";
 
