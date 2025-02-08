@@ -21,7 +21,6 @@ import com.meeple.meeple_back.game.bluemarble.domain.Player;
 import com.meeple.meeple_back.game.bluemarble.service.port.BluemarbleGameRepository;
 import com.meeple.meeple_back.user.service.UserService;
 import java.util.List;
-import java.util.logging.Logger;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,72 +29,74 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class BluemarbleGameServiceImpl implements BluemarbleGameService {
 
-	private static Logger logger = Logger.getLogger(BluemarbleGameServiceImpl.class.getName());
 
-	private final BluemarbleGameRepository bluemarbleGameRepository;
-	private final UserService userService;
+    private final BluemarbleGameRepository bluemarbleGameRepository;
+    private final UserService userService;
 
-	@Override
-	@Transactional
-	public GamePlayResponse create(GamePlayCreate gamePlayCreate) {
-		List<Player> players = gamePlayCreate.getPlayerIds().stream()
-				.map(id -> Player.init(userService.findById(id)))
-				.toList();
-		GamePlay gamePlay = bluemarbleGameRepository.save(GamePlay.from(gamePlayCreate, players));
-		logger.info("GamePlay created: " + gamePlay);
-		return GamePlayResponse.from(gamePlay);
-	}
+    @Override
+    @Transactional
+    public GamePlayResponse create(GamePlayCreate gamePlayCreate) {
+        List<Player> players = gamePlayCreate.getPlayerIds().stream()
+                .map(id -> Player.init(userService.findById(id)))
+                .toList();
+        GamePlay gamePlay = bluemarbleGameRepository.save(GamePlay.from(gamePlayCreate, players));
+        return GamePlayResponse.from(gamePlay);
+    }
 
-	@Override
-	public DiceRollResponse rollDice(int roomId, DiceRollRequest diceRollRequest) {
-		GamePlay gamePlay = bluemarbleGameRepository.findById(roomId)
-				.orElseThrow(() -> new ResourceNotFoundException("GamePlay", roomId));
-		gamePlay.rollDices(diceRollRequest);
-		bluemarbleGameRepository.save(gamePlay);
-		return gamePlay.rollDices(diceRollRequest);
-	}
+    @Override
+    public DiceRollResponse rollDice(int roomId, DiceRollRequest diceRollRequest) {
+        GamePlay gamePlay = bluemarbleGameRepository.findById(roomId)
+                .orElseThrow(() -> new ResourceNotFoundException("GamePlay", roomId));
+        DiceRollResponse diceRollResponse = gamePlay.rollDices(diceRollRequest);
+        bluemarbleGameRepository.save(gamePlay);
+        return diceRollResponse;
+    }
 
-	@Override
-	public BuyLandResponse buyLand(int roomId, BuyLandRequest buyLandRequest) {
-		GamePlay gamePlay = bluemarbleGameRepository.findById(roomId)
-				.orElseThrow(() -> new ResourceNotFoundException("GamePlay", roomId));
-		BuyLandResponse response = gamePlay.buyLand(buyLandRequest);
-		bluemarbleGameRepository.save(gamePlay);
-		return response;
-	}
+    @Override
+    public BuyLandResponse buyLand(int roomId, BuyLandRequest buyLandRequest) {
+        GamePlay gamePlay = bluemarbleGameRepository.findById(roomId)
+                .orElseThrow(() -> new ResourceNotFoundException("GamePlay", roomId));
+        BuyLandResponse response = gamePlay.buyLand(buyLandRequest);
+        bluemarbleGameRepository.save(gamePlay);
+        return response;
+    }
 
-	@Override
-	public DrawCardResponse drawCard(int roomId, CardDrawRequest cardDrawRequest) {
-		GamePlay gamePlay = bluemarbleGameRepository.findById(roomId)
-				.orElseThrow(() -> new ResourceNotFoundException("GamePlay", roomId));
-		return gamePlay.drawCard(cardDrawRequest);
-	}
+    @Override
+    public DrawCardResponse drawCard(int roomId, CardDrawRequest cardDrawRequest) {
+        GamePlay gamePlay = bluemarbleGameRepository.findById(roomId)
+                .orElseThrow(() -> new ResourceNotFoundException("GamePlay", roomId));
+        DrawCardResponse response = gamePlay.drawCard(cardDrawRequest);
+        bluemarbleGameRepository.save(gamePlay);
+        return response;
+    }
 
-	@Override
-	@Transactional
-	public BuildBaseResponse buildBase(int roomId, BuildBaseRequest buildBaseRequest) {
-		GamePlay gamePlay = getValidateGamePlay(roomId);
-		BuildBaseResponse buildBaseResponse = gamePlay.buildBase(buildBaseRequest);
-		bluemarbleGameRepository.save(gamePlay);
-		return buildBaseResponse;
-	}
+    @Override
+    @Transactional
+    public BuildBaseResponse buildBase(int roomId, BuildBaseRequest buildBaseRequest) {
+        GamePlay gamePlay = getValidateGamePlay(roomId);
+        BuildBaseResponse buildBaseResponse = gamePlay.buildBase(buildBaseRequest);
+        bluemarbleGameRepository.save(gamePlay);
+        return buildBaseResponse;
+    }
 
-	@Override
-	@Transactional
-	public PayFeeResponse payFee(int roomId, PayFeeRequest payFeeRequest) {
-		GamePlay gamePlay = getValidateGamePlay(roomId);
-		return gamePlay.payFee(payFeeRequest);
-	}
+    @Override
+    @Transactional
+    public PayFeeResponse payFee(int roomId, PayFeeRequest payFeeRequest) {
+        GamePlay gamePlay = getValidateGamePlay(roomId);
+        PayFeeResponse payFeeResponse = gamePlay.payFee(payFeeRequest);
+        bluemarbleGameRepository.save(gamePlay);
+        return payFeeResponse;
+    }
 
-	@Override
-	@Transactional
-	public TurnEndResponse turnEnd(int roomId, TurnEndRequest turnEndRequest) {
-		return null;
-	}
+    @Override
+    @Transactional
+    public TurnEndResponse turnEnd(int roomId, TurnEndRequest turnEndRequest) {
+        return null;
+    }
 
 
-	private GamePlay getValidateGamePlay(int roomId) {
-		return bluemarbleGameRepository.findById(roomId)
-				.orElseThrow(() -> new ResourceNotFoundException("GamePlay", roomId));
-	}
+    private GamePlay getValidateGamePlay(int roomId) {
+        return bluemarbleGameRepository.findById(roomId)
+                .orElseThrow(() -> new ResourceNotFoundException("GamePlay", roomId));
+    }
 }
