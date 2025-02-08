@@ -10,12 +10,13 @@ import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandR
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.PayFeeRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.PayFeeResponse;
+import lombok.Builder;
+import lombok.Getter;
+
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import lombok.Builder;
-import lombok.Getter;
 
 @Getter
 @Builder
@@ -44,12 +45,10 @@ public class GamePlay {
 				.build();
 	}
 
-	// TODO : 턴 시작 구현하기
 	private static List<Card> createCards() {
 		List<Card> cards = new ArrayList<>();
 
-		// 37개의 예시 데이터를 for문을 통해 생성하여 ArrayList에 추가
-		for (int i = 1; i <= 37; i++) {
+		for (int i = 0; i <= 37; i++) {
 			SeedCertificateCard card = new SeedCertificateCard(
 					i,
 					i,// id
@@ -98,7 +97,7 @@ public class GamePlay {
 	private static List<Tile> createTiles() {
 		List<Tile> tiles = new ArrayList<>();
 
-		for (int i = 1; i <= 40; i++) {
+		for (int i = 0; i <= 40; i++) {
 			Tile tile = new Tile(
 					i,                                        // id
 					"Tile " + i,                              // name
@@ -326,7 +325,7 @@ public class GamePlay {
 	}
 
 	private PayFeeResponse handleInsufficientBalance(Player paidPlayer, Player receivedPlayer,
-			int tollPrice) {
+	                                                 int tollPrice) {
 		final int availablePayment = paidPlayer.getBalance();
 		final int remainingToll = tollPrice - paidPlayer.getBalance();
 		paidPlayer.payMoney(availablePayment);
@@ -337,7 +336,7 @@ public class GamePlay {
 	}
 
 	private PayFeeResponse handleSufficientBalance(Player paidPlayer, Player receivedPlayer,
-			int tollPrice) {
+	                                               int tollPrice) {
 		final int previousBalance = paidPlayer.getBalance();
 
 		paidPlayer.payMoney(tollPrice);

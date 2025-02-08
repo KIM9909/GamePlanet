@@ -8,16 +8,16 @@ import lombok.Getter;
 @Builder
 public class SocketDiceRollResponse {
 
-	private String type;
-	private DiceRollResponse diceRollResponse;
-	private String message;
+    private String type;
+    private DiceRollResponse diceRollResponse;
+    private String message;
 
-	public static SocketDiceRollResponse from(String type, DiceRollResponse diceRollResponse,
-			String message) {
-		return SocketDiceRollResponse.builder()
-				.type(type)
-				.diceRollResponse(diceRollResponse)
-				.message(message)
-				.build();
-	}
+    public static SocketDiceRollResponse from(String type, DiceRollResponse diceRollResponse,
+                                              String message) {
+        return SocketDiceRollResponse.builder()
+                .type(type)
+                .diceRollResponse(diceRollResponse)
+                .message(message)
+                .build();
+    }
 }
