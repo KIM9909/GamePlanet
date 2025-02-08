@@ -74,4 +74,11 @@ public class Player {
 		this.balance += toll;
 	}
 
+
+	public Card getCardOwnedByTileId(int tileId) {
+		return cardOwned.stream()
+				.filter(card -> card.getNumber() == tileId)
+				.findFirst()
+				.orElseThrow(() -> new IllegalArgumentException("Card not found"));
+	}
 }

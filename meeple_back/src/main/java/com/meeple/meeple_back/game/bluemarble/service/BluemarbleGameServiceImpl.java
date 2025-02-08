@@ -75,7 +75,9 @@ public class BluemarbleGameServiceImpl implements BluemarbleGameService {
 	@Transactional
 	public BuildBaseResponse buildBase(int roomId, BuildBaseRequest buildBaseRequest) {
 		GamePlay gamePlay = getValidateGamePlay(roomId);
-		return gamePlay.buildBase(buildBaseRequest);
+		BuildBaseResponse buildBaseResponse = gamePlay.buildBase(buildBaseRequest);
+		bluemarbleGameRepository.save(gamePlay);
+		return buildBaseResponse;
 	}
 
 	@Override

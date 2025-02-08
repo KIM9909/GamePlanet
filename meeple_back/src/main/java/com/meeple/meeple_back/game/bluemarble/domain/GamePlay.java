@@ -224,7 +224,7 @@ public class GamePlay {
 		currentPlayer.addLandOwned(tileId);
 		// 플레이어 카드 소유 추가
 		currentPlayer.addCardOwned(card);
-		
+
 		return BuyLandResponse.of(currentPlayer.getPlayerId(), prevMoney,
 				currentPlayer.getBalance(),
 				currentPlayer, tile, ActionType.END);
@@ -262,12 +262,13 @@ public class GamePlay {
 
 	/**
 	 * 기지 건설 ( 땅 도착 -> 자신의 땅 -> 기지 없음 -> 기지 건설)
+	 * <p>
+	 * 기지 통행료 업데이트, 기지 건설 비용 지불
 	 *
 	 * @param buildBaseRequest -playerId, tileId
 	 * @return BuildBaseResponse - playerId, action, prevMoney, updatedMoney, updatedTile
 	 */
 	public BuildBaseResponse buildBase(BuildBaseRequest buildBaseRequest) {
-		turnManager.executeTurn();
 		Player player = getValidatedPlayer(buildBaseRequest.getPlayerId());
 		Tile tile = findTileById(buildBaseRequest.getTileId());
 
@@ -278,12 +279,11 @@ public class GamePlay {
 		if (tile.isHasBase()) {
 			throw new IllegalArgumentException("이미 기지가 존재합니다");
 		}
-		int baseBuildFee = this.cards.stream()
-				.filter(card -> card.getNumber() == buildBaseRequest.getTileId()
-						&& card instanceof SeedCertificateCard)
-				.mapToInt(card -> ((SeedCertificateCard) card).getBaseConstructionCost())
-				.findFirst()
-				.orElseThrow(() -> new IllegalArgumentException("해당 타일 번호와 일치하는 Seed 카드가 없습니다."));
+		SeedCertificateCard card = (SeedCertificateCard) player.getCardOwnedByTileId(
+				buildBaseRequest.getTileId());
+
+		int baseBuildFee = card.getBaseConstructionCost();
+		int headquarterUsageFee = card.getHeadquartersUsageFee();
 
 		if (player.getBalance() < baseBuildFee) {
 			throw new IllegalArgumentException("Player의 자금이 부족합니다");
@@ -294,18 +294,10 @@ public class GamePlay {
 		int updatedMoney = player.getBalance();
 
 		tile.addBase();
-		int priceToIncrease = this.cards.stream()
-				.filter(card -> card.getNumber() == buildBaseRequest.getTileId()
-						&& card instanceof SeedCertificateCard)
-				.mapToInt(card -> ((SeedCertificateCard) card).getHeadquartersUsageFee())
-				.findFirst()
-				.orElseThrow(() -> new IllegalArgumentException("해당 타일 번호와 일치하는 Seed 카드가 없습니다."));
-		tile.increateTollPrice(priceToIncrease);
-		ActionType nextTurn = getNextTurn();
+		tile.updateTollPrice(headquarterUsageFee);
 
-		return BuildBaseResponse.from(player.getPlayerId(), nextTurn,
-				prevPlayerMoney, updatedMoney, tile);
-
+		return BuildBaseResponse.from(player.getPlayerId(), prevPlayerMoney, updatedMoney, player,
+				tile, ActionType.END);
 	}
 
 	/**
