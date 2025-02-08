@@ -3,14 +3,10 @@ import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
-import { RiPassPendingFill } from "react-icons/ri";
-import { body } from "framer-motion/client";
 
 export const SocketContext = React.createContext();
 
 const SocketLayout = ({ children }) => {
-  const location = useLocation();
-
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState(null);
   // 대기방 정보
@@ -31,11 +27,12 @@ const SocketLayout = ({ children }) => {
   // 땅 구매 후 정보
   const [buyLandSocketData, setBuyLandSocketData] = useState({});
 
+  const location = useLocation();
+
   const stompClientRef = useRef(null);
 
   const roomId = useSelector((state) => state.burumabul.roomId);
   const userId = useSelector((state) => state.user.userId);
-  if (!userId) throw new Error("사용자 ID 가 없습니다.");
   const token = localStorage.getItem("token").trim() || "";
   if (!token) throw new Error("인증 토큰이 없습니다.");
 
@@ -314,11 +311,13 @@ const SocketLayout = ({ children }) => {
     },
     [roomId, userId]
   );
-
+  if (!userId) {
+    return children;
+  }
   if (
-    location.pathname !== "/" &&
-    !location.pathname.match(/^\/catch-mind\/[\w-]+$/) &&
-    !location.pathname.match(/^\/game\/cockroach\/[\w-]+$/)
+    userId &&
+    (location.pathname === "/burumabul/room-list" ||
+      location.pathname.match(/^\/game\/burumabul(\/[\w-]+)+$/))
   ) {
     return (
       <SocketContext.Provider

@@ -83,11 +83,11 @@ const WaitingRoom = ({ roomId, setIsStart, setPlayData }) => {
 
   const playersInfo = currentRoomInfo.players;
   const roomName = currentRoomInfo.roomName;
-  const creatorId = Number(currentRoomInfo.creator.playerId);
+  const creatorId = Number(currentRoomInfo.creator?.playerId);
 
   const isPrivate = currentRoomInfo.private;
   const maxPlayers = currentRoomInfo.maxPlayers;
-  const playerLen = currentRoomInfo.players.length;
+  const playerLen = currentRoomInfo.players?.length;
 
   const handlePutRoom = () => {
     setShowPutRoomModal(true);
@@ -177,7 +177,7 @@ const WaitingRoom = ({ roomId, setIsStart, setPlayData }) => {
                 className="relative overflow-hidden text-lg font-semibold text-white mx-10 bg-gradient-to-r from-red-400 to-red-500 border-2 border-red-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
                 onClick={leaveTheRoom}
               >
-                방 나가기 {roomMessage}
+                방 나가기
               </button>
               {userId && creatorId && Number(userId) === Number(creatorId) ? (
                 <div>
