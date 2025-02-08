@@ -1,16 +1,26 @@
 import { useEffect, useRef, useState } from "react";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
+import { useDispatch, useSelector } from "react-redux";
+import { addFriendRequest } from "../sources/store/slices/FriendSlice";
 
-const useFriendSocket = (userId, onFriendRequestReceived) => {
+const useFriendSocket = () => {
   const [connected, setConnected] = useState(false);
   const stompClientRef = useRef(null);
+  const [responseSocket, setResponseSocket] = useState("");
 
+  const friendsRequsets = useSelector((state) => state.friend.friendRequests);
+  const userId = useSelector((state) => state.user.userId);
+  const dispatch = useDispatch();
   useEffect(() => {
     if (!userId) return;
 
     // WebSocket 연결
-    const socket = new SockJS("http://boardjjigae.duckdns.org/ws");
+    // const socket = new SockJS(
+    //   `${import.meta.env.VITE_SOCKET_LOCAL_API_BASE_URL}`
+    // ); // 로컬 서버 소켓 통신
+    const socket = new SockJS(`${import.meta.env.VITE_SOCKET_API_BASE_URL}`); // 배포 서버 소켓 통신
+    console.log(socket);
     const stompClient = new Client({
       webSocketFactory: () => socket,
       reconnectDelay: 5000,
@@ -23,12 +33,14 @@ const useFriendSocket = (userId, onFriendRequestReceived) => {
       setConnected(true);
 
       // 친구 요청 알림 구독
-      stompClient.subscribe(`/topic/friend/${userId}`, (message) => {
-        const receivedData = JSON.parse(message.body);
+      stompClient.subscribe(`/topic/user/${userId}`, (message) => {
+        const receivedData = message.body;
+        console.log("원본 메시지:", message);
+        console.log("메시지 헤더:", message.headers);
+        console.log("메시지 바디:", message.body);
         console.log("친구 요청 알림 수신 : ", receivedData);
-        if (onFriendRequestReceived) {
-          onFriendRequestReceived(receivedData);
-        }
+        setResponseSocket(receivedData);
+        console.log(receivedData);
       });
     };
 
@@ -36,45 +48,23 @@ const useFriendSocket = (userId, onFriendRequestReceived) => {
       console.error("X WebSocket Error", frame.headers["message"]);
     };
 
-    stompClient.activate;
+    stompClient.activate();
     stompClientRef.current = stompClient;
 
     return () => {
       // 컴포넌트 언마운트 시 연결 해제
-      if (stompClientRef.current) {
+      if (stompClientRef.current && stompClientRef.current.connected) {
         stompClientRef.current.deactivate();
         setConnected(false);
       }
     };
-  }, [userId, onFriendRequestReceived]);
+  }, [userId]);
 
-  // 친구 요청 보내기
-  const sendFriendRequest = (targetUserId) => {
-    if (stompClientRef.current && stompClientRef.current.connected) {
-      stompClientRef.current.publish({
-        destination: "/app/request-friend",
-        body: JSON.stringify({
-          userId,
-          friendId: targetUserId,
-        }),
-      });
-    } else {
-      console.error("STOMP client is not connected");
-    }
-  };
-
-  const processFriendRequest = (friendId, action) => {
-    if (stompClientRef.current && stompClientRef.current.connected) {
-      stompClientRef.current.publish({
-        destination: "/app/process-request",
-        body: JSON.stringify({
-          friendId,
-          requestId: userId, // 요청을 승인 or 거절하는 사용자
-          requirements: action, // "ACCEPT" 또는 "DENY"
-        }),
-      });
-    } else {
-      console.error("STOMP client");
-    }
+  return {
+    connected,
+    responseSocket,
+    stompClientRef,
   };
 };
+
+export default useFriendSocket;

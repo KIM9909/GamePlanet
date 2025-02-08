@@ -1,5 +1,6 @@
 package com.meeple.meeple_back.game.catchmind.controller;
 
+import com.meeple.meeple_back.game.catchmind.model.GameResultDTO;
 import com.meeple.meeple_back.game.catchmind.model.request.*;
 import com.meeple.meeple_back.game.catchmind.model.response.*;
 import com.meeple.meeple_back.game.catchmind.service.CatchMindService;
@@ -11,7 +12,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,20 +42,29 @@ public class CatchMindController {
     @PostMapping("/create-room")
     public ResponseEntity<ResponseCreateRoom> createRoom(
             @RequestBody RequestCreateRoom request
-            ) {
+    ) {
         ResponseCreateRoom response = catchMindService.createRoom(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @Operation(summary = "게임 방 참가", description = "기존 캐치마인드 게임 방에 참가합니다.")
-    @PostMapping("/join-room")
-    public ResponseEntity<ResponseJoinRoom> joinRoom(
+//    @Operation(summary = "게임 방 참가", description = "기존 캐치마인드 게임 방에 참가합니다.")
+//    @PostMapping("/join-room")
+//    public ResponseEntity<ResponseJoinRoom> joinRoom(
+//            @RequestBody RequestJoinRoom request
+//            ) {
+//        ResponseJoinRoom response = catchMindService.joinRoom(request);
+//
+//        return ResponseEntity.status(HttpStatus.OK).body(response);
+//    }
+
+    @MessageMapping("/join-room")
+    public void joinRoom(
             @RequestBody RequestJoinRoom request
-            ) {
+    ) {
         ResponseJoinRoom response = catchMindService.joinRoom(request);
 
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        messagingTemplate.convertAndSend("/topic/catch-mind/" + request.getRoomId(), response);
     }
 
     @MessageMapping("/update-room/{roomId}")
@@ -75,8 +84,10 @@ public class CatchMindController {
                             schema = @Schema(implementation = List.class)))
     })
     @GetMapping
-    public ResponseEntity<List<String>> roomList() {
-        List<String> response = catchMindService.getList();
+    public ResponseEntity<List<Map<String, Object>>> roomList() {
+        List<Map<String, Object>> response = catchMindService.getList();
+
+        System.out.println(response);
 
         return ResponseEntity.ok(response);
     }
@@ -130,29 +141,31 @@ public class CatchMindController {
         messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, request);
     }
 
-    @Operation(summary = "퀴즈 요청", description = "퀴즈 요청 WebSocket을 확인합니다.")
-    @GetMapping("/ws/request-quiz/{roomId}")
-    public ResponseEntity<String> requestQuiz(
-            @Parameter(description = "퀴즈를 요청할 방 ID", required = true)
-            @PathVariable String roomId) {
-        return ResponseEntity
-                .ok("WebSocket 요청을 ws://localhost:8090/ws/game/request-quiz/" + roomId + " 로 보내세요.");
-    }
-    @MessageMapping("/request-quiz/{roomId}")
-    public void requestQuizSocket(
-            @DestinationVariable String roomId
-    ) {
-        ResponseQuiz response = catchMindService.requestQuiz(roomId);
-
-        messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
-    }
+//    @Operation(summary = "퀴즈 요청", description = "퀴즈 요청 WebSocket을 확인합니다.")
+//    @GetMapping("/ws/request-quiz/{roomId}")
+//    public ResponseEntity<String> requestQuiz(
+//            @Parameter(description = "퀴즈를 요청할 방 ID", required = true)
+//            @PathVariable String roomId) {
+//        return ResponseEntity
+//                .ok("WebSocket 요청을 ws://localhost:8090/ws/game/request-quiz/" + roomId + " 로 보내세요.");
+//    }
+//    @MessageMapping("/request-quiz/{roomId}")
+//    public void requestQuizSocket(
+//            @DestinationVariable String roomId
+//    ) {
+//        ResponseQuiz response = catchMindService.requestQuiz(roomId);
+//
+//        messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
+//    }
 
     @MessageMapping("/chat/{roomId}")
     public void handleMessage(
             @DestinationVariable String roomId,
             @RequestBody RequestSendMessage request
-            ) {
-        catchMindService.sendMessage(roomId, request);
+    ) {
+        ResponseSendMessage response = catchMindService.sendMessage(roomId, request);
+
+        messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
     }
 
     @Operation(summary = "게임 결과 요청", description = "게임 결과 WebSocket 요청을 확인합니다.")
@@ -163,14 +176,15 @@ public class CatchMindController {
         return ResponseEntity
                 .ok("WebSocket 요청을 ws://localhost:8090/ws/game/game-result/" + roomId + " 로 보내세요.");
     }
-    @MessageMapping("/game-result/{roomId}")
-    public void gameResultSocket(
-            @DestinationVariable String roomId
-    ) {
-        List<ResponseGameResult> response = catchMindService.gameResult(roomId);
 
-        messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
-    }
+//    @MessageMapping("/game-result/{roomId}")
+//    public void gameResultSocket(
+//            @DestinationVariable String roomId
+//    ) {
+//        List<GameResultDTO> response = catchMindService.gameResult(roomId);
+//
+//        messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
+//    }
 
     @Operation(summary = "투표 요청", description = "투표 WebSocket 요청을 확인합니다.")
     @GetMapping("/ws/send-vote/{roomId}")
@@ -212,6 +226,40 @@ public class CatchMindController {
             @RequestBody RequestVoteResult request
     ) {
         ResponseVoteResult response = catchMindService.voteResult(roomId, request);
+        messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
+    }
+
+//    @Operation(summary = "게임 방 나가기 (WebSocket)", description = "플레이어가 게임 방을 나갑니다.")
+//    @PostMapping("/exit-room/{roomId}")
+//    public ResponseEntity<String> exitRoom(
+//            @Parameter(description = "나갈 방 ID", required = true)
+//            @PathVariable String roomId,
+//            @RequestBody String userNickname
+//    ) {
+//        return ResponseEntity.ok("WebSocket 요청을 ws://localhost:8090/ws/game/exit-room/{roomId} 로 보내세요.");
+//    }
+
+    @MessageMapping("/exit-room/{roomId}")
+    public void exitRoomSocket(
+            @DestinationVariable String roomId,
+            @RequestParam String userName
+    ) {
+        ResponseExitCatchmindRoom response = catchMindService.exitRoom(roomId, userName);
+
+        messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
+    }
+
+    @MessageMapping("/time-out/{roomId}")
+    private void timeOutSocket(
+            @DestinationVariable String roomId
+    ) {
+        System.out.println("호출됨");
+        System.out.println("호출됨");
+        System.out.println("호출됨");
+        System.out.println("호출됨");
+        System.out.println("호출됨");
+        ResponseTimeOut response = catchMindService.quizTimeOut(roomId);
+
         messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
     }
 }

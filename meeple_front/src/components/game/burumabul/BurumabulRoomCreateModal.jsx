@@ -2,24 +2,50 @@ import React, { useState } from "react";
 import { FaRegEye } from "react-icons/fa";
 import { FaRegEyeSlash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { createBurumabulRoom } from "../../../sources/api/BurumabulRoomAPI";
+import { useDispatch, useSelector } from "react-redux";
+import { setRoomId } from "../../../sources/store/slices/BurumabulGameSlice";
 
 const BurumabulRoomCreateModal = ({ onClose }) => {
-  const [roomTitle, setRoomTitle] = useState("");
-  const [playerNum, setPlayerNum] = useState(2);
-  const [isPrivate, setIsPrivate] = useState(false);
-  const [password, setPassword] = useState("");
+  const userId = useSelector((state) => state.user.userId);
   const [showPassword, setShowPassword] = useState(false);
 
+  const initialRoomData = {
+    roomName: "",
+    isPrivate: false,
+    password: "",
+    maxPlayers: 2,
+  };
+  const [roomData, setRoomData] = useState(initialRoomData);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    try {
+      console.log(roomData);
+      const response = await createBurumabulRoom(userId, roomData);
+      const roomId = response.roomId;
+      dispatch(setRoomId(roomId));
+      navigate(`/game/burumabul/start/${roomId}`);
+    } catch (error) {
+      console.error("방 생성 중 오류 발생 : ", error);
+    }
   };
 
   const handlePassword = (e) => {
     let value = e.target.value.replace(/[^0-9]/g, ""); // 숫자만 입력 가능
     if (value.length > 8) value = value.slice(0, 8); // 최대 8자리 제한
-    setPassword(value);
+    setRoomData((prevData) => ({
+      ...prevData,
+      password: value,
+    }));
+  };
+
+  const handleCancel = () => {
+    setRoomData(initialRoomData); // roomData 초기화
+    onClose();
   };
 
   return (
@@ -40,8 +66,11 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
               <hr className="w-80 border-t-2 border-gray-400 my-2" />
               <input
                 type="text"
+                value={roomData.roomName}
                 className="w-72 h-8 pl-3 pr-3 mx-3 min-w-0 rounded-lg bg-slate-400 outline-1 -outline-offset-1 outline-black has-[input:focus-within]:outline-2 has-[input:focus-within]:-outline-offset-2 has-[input:focus-within]:outline-slate-600"
-                onChange={(e) => setRoomTitle(e.target.value)}
+                onChange={(e) =>
+                  setRoomData({ ...roomData, roomName: e.target.value })
+                }
                 required
               />
             </div>
@@ -56,19 +85,34 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
               </label>
               <div>
                 <button
-                  className={`bg-slate-500 mx-2 text-white w-14 rounded ${
-                    isPrivate ? "bg-green-500" : "bg-slate-500"
+                  className={`bg-green-500 mx-2 text-white w-14 rounded ${
+                    roomData.isPrivate ? "bg-green-500" : "bg-slate-500"
                   }`}
-                  onClick={() => setIsPrivate(true)}
+                  value={roomData.isPrivate}
+                  onClick={() =>
+                    setRoomData((prevData) => ({
+                      ...prevData,
+                      isPrivate: true,
+                      // private: true,
+                    }))
+                  }
                   type="button"
                 >
                   YES
                 </button>
                 <button
                   className={`"bg-red-500" mx-2 text-white w-14 rounded ${
-                    isPrivate ? "bg-slate-500" : "bg-red-500"
+                    roomData.isPrivate ? "bg-slate-500" : "bg-red-500"
                   }`}
-                  onClick={() => setIsPrivate(false)}
+                  value={roomData.isPrivate}
+                  onClick={() =>
+                    setRoomData((prevData) => ({
+                      ...prevData,
+                      isPrivate: false,
+                      password: "",
+                      // private: false,
+                    }))
+                  }
                   type="button"
                 >
                   NO
@@ -77,7 +121,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
             </div>
             {/* 비밀방이면 비밀번호 설정 */}
             <div>
-              {isPrivate && (
+              {roomData.isPrivate && (
                 <div className="flex flex-col items-center my-3">
                   <label className="text-lg" htmlFor="password">
                     비밀번호 설정(숫자 8자리)
@@ -88,7 +132,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
                       type={showPassword ? "text" : "password"}
                       className="w-40 bg-slate-400 h-8 rounded-lg pl-3 pr-10"
                       placeholder="비밀번호를 입력하세요..."
-                      value={password}
+                      value={roomData.password}
                       onChange={handlePassword}
                       required
                     />
@@ -114,27 +158,45 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
               <div className="my-1">
                 <button
                   className={`bg-blue-200 text-gray-500 w-14 rounded mx-2 ${
-                    playerNum === 2 ? "bg-blue-400" : "bg-blue-200"
+                    roomData.maxPlayers === 2 ? "bg-blue-400" : "bg-blue-200"
                   }`}
-                  onClick={() => setPlayerNum(2)}
+                  value={roomData.maxPlayers}
+                  onClick={() =>
+                    setRoomData((prevData) => ({
+                      ...prevData,
+                      maxPlayers: Number(2),
+                    }))
+                  }
                   type="button"
                 >
                   2인
                 </button>
                 <button
                   className={`bg-blue-200 text-gray-500 w-14 rounded mx-2 ${
-                    playerNum === 3 ? "bg-blue-400" : "bg-blue-200"
+                    roomData.maxPlayers === 3 ? "bg-blue-400" : "bg-blue-200"
                   }`}
-                  onClick={() => setPlayerNum(3)}
+                  value={roomData.maxPlayers}
+                  onClick={() =>
+                    setRoomData((prevData) => ({
+                      ...prevData,
+                      maxPlayers: Number(3),
+                    }))
+                  }
                   type="button"
                 >
                   3인
                 </button>
                 <button
                   className={`bg-blue-200 text-gray-500 w-14 rounded mx-2 ${
-                    playerNum === 4 ? "bg-blue-400" : "bg-blue-200"
+                    roomData.maxPlayers === 4 ? "bg-blue-400" : "bg-blue-200"
                   }`}
-                  onClick={() => setPlayerNum(4)}
+                  value={roomData.maxPlayers}
+                  onClick={() =>
+                    setRoomData((prevData) => ({
+                      ...prevData,
+                      maxPlayers: Number(4),
+                    }))
+                  }
                   type="button"
                 >
                   4인
@@ -145,14 +207,14 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
             <div className="flex flex-row justify-evenly my-3">
               <button
                 className="bg-red-500 rounded-lg text-white w-24"
-                onClick={onClose}
+                onClick={handleCancel}
               >
                 취소
               </button>
               {/* 일단 생성 누르면 부루마불 대기방으로 */}
               <button
                 className="bg-green-500 rounded-lg text-white w-24"
-                onClick={() => navigate("/game/burumabul/waitingroom")}
+                onClick={handleSubmit}
                 type="submit"
               >
                 생성

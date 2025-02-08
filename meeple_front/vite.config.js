@@ -14,9 +14,10 @@ export default defineConfig({
         target: "http://localhost:8090",
         ws: true,
       },
-      "/api": {                       // 추가
-        target: "http://localhost:8090" // API 프록시
-      }
+      "/api": {
+        // 추가
+        target: "http://localhost:8090", // API 프록시
+      },
     },
   },
 });

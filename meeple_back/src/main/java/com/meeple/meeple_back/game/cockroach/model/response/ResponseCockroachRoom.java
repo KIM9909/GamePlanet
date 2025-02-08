@@ -1,13 +1,17 @@
 package com.meeple.meeple_back.game.cockroach.model.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Map;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ResponseCockroachRoom {
     @Schema(description = "상태코드", example = "200", required = true)
     private int code;

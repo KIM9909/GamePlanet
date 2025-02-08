@@ -1,19 +1,46 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import BatCard from "../../../assets/image/cockroachpoker/BatCard.svg";
 import CockroachCard from "../../../assets/image/cockroachpoker/CockroachCard.svg";
 import RatCard from "../../../assets/image/cockroachpoker/RatCard.svg";
 import ScorpionCard from "../../../assets/image/cockroachpoker/ScorpionCard.svg";
 import ToadCard from "../../../assets/image/cockroachpoker/ToadCard.svg";
 import CockroachPokerLogo from "../../../assets/image/cockroachpoker/cockroachpoker.svg";
+import UpdateRoomModal from "./modal/UpdateRoomModal";
 
 const GameStartScreen = ({
   playerCount,
   onStart,
-  roomTitle = "바퀴벌레 포커",
+  roomTitle,
+  maxPeople,
+  isCreator,
+  onUpdateRoom,
+  gameData,
+  players,
+  roomData,
+  stompClient,
 }) => {
-  console.log("GameStartScreen roomTitle:", roomTitle); // 전달받은 값 확인
+  const [isUpdateModalOpen, setUpdateModalOpen] = useState(false);
+  useEffect(() => {
+    console.log("GameStartScreen props:", {
+      playerCount,
+      roomTitle,
+      maxPeople,
+      isCreator,
+    });
+  }, [playerCount, roomTitle, maxPeople, isCreator]);
+  const canStartGame = playerCount >= 2;
+
+  const handleUpdateRoom = async (updateData) => {
+    if (stompClient) {
+      stompClient.publish({
+        destination: `/app/game/update-room/${roomData.roomId}`,
+        body: JSON.stringify(updateData),
+      });
+    }
+  };
+
   return (
-    <div className="relative w-full h-[800px] max-w-[1600px] mx-auto bg-gray-800/95 rounded-3xl flex items-center justify-center overflow-hidden">
+    <div className="relative w-full h-[800px] max-w-[1600px] mx-auto bg-gray-700/10 rounded-3xl flex items-center justify-center">
       {/* 메인 로고 배경 */}
       <div className="absolute inset-0 opacity-30">
         <img
@@ -74,7 +101,7 @@ const GameStartScreen = ({
             className="text-5xl font-bold text-white mb-2 animate-glow
               bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-transparent bg-clip-text"
           >
-            {roomTitle}
+            {roomTitle || "바퀴벌레 포커"}
           </h2>
           <div className="flex justify-center gap-4 mb-6">
             <img
@@ -95,9 +122,21 @@ const GameStartScreen = ({
               alt="Rat"
             />
           </div>
-          <p className="text-2xl text-yellow-400 font-semibold animate-pulse">
-            {playerCount}명이 입장하셨습니다
-          </p>
+          <div className="mb-6">
+            <h3 className="text-2xl font-semibold text-white mb-2">
+              참가자 목록
+            </h3>
+            <div className="bg-gray-800/50 rounded-lg p-4">
+              {players?.map((player, index) => (
+                <div key={index} className="text-white mb-2 last:mb-0">
+                  {player} {player === roomData?.creator && "(방장)"}
+                </div>
+              ))}
+            </div>
+            <div className="text-gray-400 mt-2">
+              {playerCount}/{maxPeople} 명
+            </div>
+          </div>
           <div className="space-y-2 text-gray-300">
             <p className="text-lg hover:text-blue-300 transition-colors duration-300">
               거짓말과 심리전으로 가득한
@@ -108,16 +147,57 @@ const GameStartScreen = ({
           </div>
         </div>
 
-        <button
-          onClick={onStart}
-          className="group px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-800 
-              text-white text-xl rounded-xl animate-shimmer bg-[length:200%_100%]
-              hover:shadow-[0_0_20px_rgba(37,99,235,0.5)]
-              transition-all duration-300 transform hover:scale-105"
-        >
-          <span>게임 시작</span>
-        </button>
+        <div className="space-y-4">
+          {isCreator ? (
+            <button
+              onClick={onStart}
+              disabled={!canStartGame}
+              className={`w-full px-8 py-3 text-xl font-medium rounded-lg transition-colors
+                ${
+                  canStartGame
+                    ? "bg-blue-500 hover:bg-blue-600 text-white"
+                    : "bg-gray-400 cursor-not-allowed text-gray-200"
+                }`}
+            >
+              {!canStartGame
+                ? `최소 2명이 필요합니다 (현재: ${playerCount}명)`
+                : "게임 시작"}
+            </button>
+          ) : (
+            <div className="text-gray-300 text-xl">
+              방장이 게임을 시작하기를 기다리는 중...
+            </div>
+          )}
+
+          {isCreator && (
+            <button
+              onClick={() => setUpdateModalOpen(true)}
+              className="w-full px-8 py-3 text-xl font-medium rounded-lg 
+                bg-purple-500 hover:bg-purple-600 text-white transition-colors"
+            >
+              방 설정 변경
+            </button>
+          )}
+        </div>
       </div>
+
+      <UpdateRoomModal
+        isOpen={isUpdateModalOpen}
+        onClose={() => setUpdateModalOpen(false)}
+        onUpdateRoom={(updateData) => {
+          if (stompClient) {
+            stompClient.publish({
+              destination: `/app/game/update-room/${roomData.roomId}`,
+              body: JSON.stringify(updateData),
+            });
+          }
+        }}
+        initialData={{
+          roomTitle: roomData?.roomTitle,
+          maxPeople: roomData?.maxPeople,
+          password: roomData?.password,
+        }}
+      />
     </div>
   );
 };

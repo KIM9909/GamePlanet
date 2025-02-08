@@ -6,7 +6,7 @@ const TopLayout = ({ children }) => {
   const location = useLocation();
   const showNavbar =
     location.pathname !== "/" &&
-    !location.pathname.match(/^\/game\/burumabul\/[\w-]+$/) &&
+    !location.pathname.match(/^\/game\/burumabul\/[\w-]+(\/\d+)?$/) &&
     !location.pathname.match(/^\/catch-mind\/[\w-]+$/) &&
     !location.pathname.match(/^\/game\/cockroach\/[\w-]+$/);
 

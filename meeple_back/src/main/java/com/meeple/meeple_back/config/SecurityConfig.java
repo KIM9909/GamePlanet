@@ -89,6 +89,7 @@ public class SecurityConfig {
 				"ws://localhost:5173",
 				"wss://localhost:5173",
 				"http://boardjjigae.duckdns.org",
+				"https://boardjjigae.duckdns.org",
 				"ws://boardjjigae.duckdns.org",
 				"wss://boardjjigae.duckdns.org"
 		));

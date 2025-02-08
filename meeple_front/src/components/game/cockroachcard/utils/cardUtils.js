@@ -1,0 +1,58 @@
+// cardUtils.js
+export const ANIMAL_ORDER = [
+  "Bat", "Rat", "Fly", "Cockroach", "Scorpion", "Toad", "Stinkbug", "Joker", "Black"
+ ];
+ 
+ export const getSelectableAnimals = () => {
+  return ANIMAL_ORDER.slice(0, -2); // Joker, Black 제외
+ };
+ 
+ export const sortCards = (cards) => {
+  return [...cards].sort((a, b) => {
+    const typeA = a.type.replace("King", "");
+    const typeB = b.type.replace("King", "");
+    if (typeA === typeB) return a.type.includes("King") ? 1 : -1;
+    return ANIMAL_ORDER.indexOf(typeA) - ANIMAL_ORDER.indexOf(typeB);
+  });
+ };
+ 
+ export const sortPenaltyGroups = (groups) => {
+  return Object.values(groups).sort((a, b) => {
+    const typeA = a.type.replace("King", "");
+    const typeB = b.type.replace("King", "");
+    return ANIMAL_ORDER.indexOf(typeA) - ANIMAL_ORDER.indexOf(typeB);
+  });
+ };
+ 
+ export const getKoreanName = (type) => {
+  const nameMap = {
+    Bat: "박쥐", Rat: "쥐", Fly: "파리", 
+    Cockroach: "바퀴벌레", Scorpion: "전갈",
+    Toad: "두꺼비", Stinkbug: "노린재",
+    Joker: "조커", Black: "블랙"
+  };
+  
+  if (type.startsWith("King")) {
+    return `${nameMap[type.replace("King", "")]}:킹`;
+  }
+  return nameMap[type] || type;
+ };
+ 
+ export const getCardInfo = (card, showFront = false) => {
+  if (!card) return null;
+  if (typeof card === 'object' && 'type' in card) {
+    return { type: card.type, isBack: !showFront, isRoyal: card.royal };
+  }
+  const isKingCard = card.startsWith('King');
+  const baseType = isKingCard ? card.replace('King', '') : card;
+  return { type: baseType, isBack: !showFront, isRoyal: isKingCard };
+ };
+ 
+ export const normalizeCardData = (card) => {
+  if (!card) return null;
+  return {
+    type: card.type,
+    royal: card.royal || card.isRoyal,
+    isRoyal: card.royal || card.isRoyal
+  };
+ };

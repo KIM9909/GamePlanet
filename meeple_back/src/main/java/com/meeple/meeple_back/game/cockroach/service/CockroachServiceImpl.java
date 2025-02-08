@@ -44,7 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
 @AllArgsConstructor
 public class CockroachServiceImpl implements CockroachService {
 
-    private static final String ROOM_KEY = "GAME_ROOMS";
+    private static final String ROOM_KEY = "COCKROACH_GAME_ROOMS";
     private static final String[] CARD_TYPES = {"Bat", "Rat", "Fly",
             "Cockroach", "Scorpion", "Toad", "Stinkbug"};
 
@@ -90,6 +90,7 @@ public class CockroachServiceImpl implements CockroachService {
         Map<String, Object> roomInfo =
                 (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
 
+ 
         if (!request.getRoomTitle().equals(roomInfo.get("roomTitle"))) {
             roomInfo.put("roomTitle", request.getRoomTitle());
         }
@@ -102,7 +103,7 @@ public class CockroachServiceImpl implements CockroachService {
             roomInfo.put("password", request.getPassword());
         }
 
-        if (request.getMaxPeople() != Integer.parseInt(String.valueOf(roomInfo.get("password")))) {
+        if (request.getMaxPeople() != Integer.parseInt(String.valueOf(roomInfo.get("maxPeople")))) {
             roomInfo.put("maxPeople", request.getMaxPeople());
         }
 
@@ -176,15 +177,15 @@ public class CockroachServiceImpl implements CockroachService {
         gameData.put("isGameStart", true);
 
         // GameState 객체 생성 및 초기화
-        GameState gameState = new GameState();
-        gameState.setCurrentTurn(players.get(0));
-        gameState.setCurrentPhase("CHOOSE_PLAYER");
-        gameState.setCurrentCard(null);
-        gameState.setClaimedAnimal(null);
-        gameState.setKing(false);
-        gameState.setCardSender(null);
-        gameState.setCardReceiver(null);
-        gameState.setPassCount(0);
+        Map<String, Object> gameState = new HashMap<>();
+        gameState.put("currentTurn", players.get(0));
+        gameState.put("currentPhase", "CHOOSE_PLAYER");
+        gameState.put("currentCard", null);
+        gameState.put("claimedAnimal", null);
+        gameState.put("isKing", false);
+        gameState.put("cardSender", null);
+        gameState.put("passedPlayer", null);
+        gameState.put("passCount", 0);
 
         gameData.put("gameState", gameState);
         redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
@@ -202,21 +203,23 @@ public class CockroachServiceImpl implements CockroachService {
         Map<String, Object> roomInfo =
                 (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
         Map<String, Object> gameData = (Map<String, Object>) roomInfo.get("gameData");
-        GameState gameState = (GameState) gameData.get("gameState");
+        Map<String, Object> gameState = (Map<String, Object>) gameData.get("gameState");
+
+        String currentTurn = String.valueOf(gameState.get("gameState"));
 
         // 현재 턴이 아닌 경우 예외 처리
-        if (!gameState.getCurrentTurn().equals(request.getFrom())) {
+        if (!currentTurn.equals(request.getFrom())) {
             throw new IllegalStateException("현재 턴이 아닙니다.");
         }
 
         // 카드 이동 처리
-        Map<String, List<Card>> playerCards = (Map<String, List<Card>>) gameData.get("playerCards");
-        List<Card> fromCards = playerCards.get(request.getFrom());
+        Map<String, List<Map<String, Object>>> playerCards = (Map<String, List<Map<String, Object>>>) gameData.get("playerCards");
+        List<Map<String, Object>> fromCards = playerCards.get(request.getFrom());
 
         // 카드 찾아서 제거
         boolean cardFound = false;
         for (int i = 0; i < fromCards.size(); i++) {
-            if (fromCards.get(i).getType().equals(request.getCard().getType())) {
+            if (fromCards.get(i).get("type").equals(request.getCard().getType())) {
                 fromCards.remove(i);
                 cardFound = true;
                 break;
@@ -228,14 +231,18 @@ public class CockroachServiceImpl implements CockroachService {
         }
 
         // 게임 상태 업데이트
-        gameState.setCurrentCard(request.getCard());
-        gameState.setClaimedAnimal(request.getAnimal());
-        gameState.setKing(request.isKing());
-        gameState.setCardSender(request.getFrom());
-        gameState.setCardReceiver(request.getTo());
-        gameState.setCurrentPhase("GUESS_OR_FORWARD");
-        gameState.setPassCount(0);
-        gameState.setPassedPlayers(new HashSet<>());
+        Map<String, Object> card = new HashMap<>();
+        card.put("type", request.getCard().getType());
+        card.put("isRoyal", request.getCard().isRoyal());
+        gameState.put("currentCard", card);
+        gameState.put("claimedAnimal", request.getAnimal());
+        gameState.put("isKing", request.isKing());
+        gameState.put("cardSender", request.getFrom());
+        gameState.put("cardReceiver", request.getTo());
+        gameState.put("currentPhase", "GUESS_OR_FORWARD");
+        gameState.put("passCount", 0);
+        gameState.put("passedPlayers", new HashSet<>());
+
 
         // Redis 업데이트
         playerCards.put(request.getFrom(), fromCards);
@@ -426,8 +433,12 @@ public class CockroachServiceImpl implements CockroachService {
         }
 
         roomInfo.put("player", userList);
+        if (userList.size() == 0) {
+            redisTemplate.opsForHash().delete(ROOM_KEY, roomId);
+        } else {
+            redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
+        }
 
-        redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
 
         ResponseExitRoom response = ResponseExitRoom.builder()
                 .players(userList)

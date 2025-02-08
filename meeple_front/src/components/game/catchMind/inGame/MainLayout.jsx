@@ -1,153 +1,139 @@
-/*
-1. 전체 게임 화면 레이아웃 구성
-2. WebSocket 연결 관리
-3. 게임 상태 관리 (시작, 종료, 라운드 변경 등)
-4. Socket.io 이벤트 핸들러
-5. 참가자 상태 관리
-6. 현재 라운드 표시
-7. 제한 시간 타이머
-8. 제시어 표시 (출제자에게만)
-*/
-
-/**
- * 캐치마인드 게임의 메인 레이아웃 컴포넌트
- * 게임 화면, 플레이어 비디오, 채팅 등을 포함한 전체 UI 구성
- */
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback, useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
+import { useParams } from "react-router-dom";
+import { Timer, Users, Lock, LogOut, Flag } from "lucide-react";
 import Canvas from "./Canvas";
 import ChatBox from "./ChatBox";
 import PlayerCard from "./PlayerCard";
-import { Timer, Pencil, Eraser, Trash2, Users, Lock } from "lucide-react";
-import { updatePlayerNickname } from "../../../../sources/store/slices/CatchMindSlice";
+import CatchMindUpdateRoomModal from "./CatchMindUpdateRoomModal";
+import {
+  updatePlayers,
+  resetGameState,
+} from "../../../../sources/store/slices/CatchMindSlice";
 import { fetchProfile } from "../../../../sources/store/slices/ProfileSlice";
-import { useParams } from "react-router-dom";
-import { useState } from "react";
-import API from "../../../../sources/api/CatchMindAPI";
+import { CatchMindAPI } from "../../../../sources/api/CatchMindAPI";
+import useCatchSocket from "../../../../hooks/useCatchSocket";
 
-/**
- * 게임 정보를 표시하는 컴포넌트
- * 현재 라운드, 남은 시간, 제시어 정보를 표시
- */
-const GameInfo = ({ round, timer, word, roomInfo }) => {
-  return (
-    <div className="flex items-center justify-between px-6 py-3 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-t-lg border-b border-gray-700">
-      {/* 방 제목 추가 */}
-      <div className="flex items-center gap-2">
-        <h2 className="text-xl font-bold">{roomInfo?.roomTitle}</h2>
-        {roomInfo?.isPrivate && <Lock className="w-4 h-4 text-gray-400" />}
-      </div>
-
-      {/* 게임 정보 */}
-      <div className="flex items-center gap-6">
-        {/* 라운드 정보 */}
-        <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full">
-          <Users className="w-5 h-5 text-blue-400" />
-          <span className="text-lg font-medium text-gray-100">
-            Round {round}/{roomInfo?.quizCount || 10}
-          </span>
-        </div>
-
-        {/* 타이머 */}
-        <div className="flex items-center gap-2">
-          <Timer className="w-5 h-5 text-blue-400" />
-          <span className="text-2xl font-bold text-gray-100">
-            {timer || roomInfo?.timeLimit}초
-          </span>
-        </div>
-
-        {/* 제시어 표시 */}
-        {word && (
-          <div className="px-4 py-1 bg-blue-500/10 rounded-full border border-blue-400/20">
-            <span className="text-lg font-medium text-blue-100">
-              제시어: {word}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* 현재 참가자 수 표시 */}
-      <div className="flex items-center gap-2 text-gray-300">
-        <Users className="w-4 h-4" />
-        <span>
-          {roomInfo?.players?.length || 0}/{roomInfo?.maxPeople}
-        </span>
-      </div>
-    </div>
-  );
-};
-
-/**
- * 그리기 도구 컴포넌트
- * 색상 선택, 선 굵기 조절, 지우개, 전체 지우기 기능 제공
- */
-const DrawingTools = () => {
-  return (
-    <div className="flex items-center justify-center gap-6 py-3 px-6 bg-gray-800 border-t border-gray-700 rounded-b-lg">
-      {/* 펜 도구 (색상 선택 & 선 굵기) */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Pencil className="w-4 h-4 text-blue-400" />
-          <input
-            type="color"
-            className="w-8 h-8 rounded cursor-pointer bg-gray-700 border border-gray-600"
-          />
-        </div>
-        <select className="px-3 py-1.5 border border-gray-600 rounded-lg bg-gray-700 text-gray-200">
-          <option>1px</option>
-          <option>2px</option>
-          <option>4px</option>
-          <option>8px</option>
-        </select>
-      </div>
-      <div className="h-6 w-px bg-gray-600" />
-      {/* 지우기 도구 */}
-      <div className="flex items-center gap-3">
-        <button className="flex items-center gap-2 px-4 py-1.5 bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600 transition-colors border border-gray-600">
-          <Eraser className="w-4 h-4" />
-          지우개
-        </button>
-        <button className="flex items-center gap-2 px-4 py-1.5 bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600 transition-colors border border-gray-600">
-          <Trash2 className="w-4 h-4" />
-          전체 지우기
-        </button>
-      </div>
-    </div>
-  );
-};
-
-/**
- * 캐치마인드 게임의 메인 레이아웃 컴포넌트
- * 게임 화면, 플레이어 비디오, 채팅 등을 포함한 전체 UI 구성
- */
 const MainLayout = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
-
-  // Redux 상태 가져오기
-  const gameState = useSelector((state) => state.catchmind);
-  const userId = useSelector((state) => state.user.userId);
-  const profileData = useSelector((state) => state.profile.profileData);
-  const currentPlayer = gameState.players.find((p) => p.isTurn);
-
   const { roomId } = useParams();
   const [roomInfo, setRoomInfo] = useState(null);
+  const [isInitialJoin, setIsInitialJoin] = useState(true);
+  const [isExiting, setIsExiting] = useState(false);
+  const gameState = useSelector((state) => state.catchmind);
+  const profileData = useSelector((state) => state.profile.profileData);
+  const userId = useSelector((state) => state.user.userId);
 
-  // 방 정보 가져오기
+  // creator 체크를 redux store 기반으로 수정
+  const isCreator = gameState.creator === profileData?.userNickname;
+
+  // useCatchSocket hook 사용
+  const { sendMessage, client, joinRoom } = useCatchSocket(roomId);
+
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+
+  // 드로잉 도구 상태 관리
+  const [selectedColor, setSelectedColor] = useState("#000000");
+  const [selectedWidth, setSelectedWidth] = useState(2);
+  const [isEraser, setIsEraser] = useState(false);
+  const [clearCanvas, setClearCanvas] = useState(null);
+
+  // 현재 턴인 플레이어 찾기
+  const currentPlayer = useSelector((state) =>
+    state.catchmind.players.find((p) => p.isTurn)
+  );
+
+  // 현재 유저가 출제자인지 확인
+  const isCurrentUserDrawer = useMemo(() => {
+    return currentPlayer?.nickname === profileData?.userNickname;
+  }, [currentPlayer?.nickname, profileData?.userNickname]);
+
+  const getCurrentUserNickname = useCallback(() => {
+    return profileData?.userNickname || "Player 1";
+  }, [profileData?.userNickname]);
+
+  // 방 나가기 처리
+  const handleExitRoom = useCallback(async () => {
+    if (!roomId || !profileData?.userNickname || isExiting || !client) return;
+
+    try {
+      setIsExiting(true);
+      console.log("[ExitRoom] Starting exit process");
+
+      dispatch(resetGameState());
+
+      client.publish({
+        destination: `/app/exit-room/${roomId}`,
+        body: profileData.userNickname,
+        headers: { "content-type": "text/plain" },
+      });
+
+      setTimeout(() => {
+        setIsExiting(false);
+        console.log("[ExitRoom] Navigating to lobby");
+        navigate("/catch-mind");
+      }, 500);
+    } catch (error) {
+      console.error("[ExitRoom] Error during exit:", error);
+      setIsExiting(false);
+    }
+  }, [
+    roomId,
+    profileData?.userNickname,
+    client,
+    navigate,
+    isExiting,
+    dispatch,
+  ]);
+
+  // WebSocket을 통한 방 업데이트 구독
   useEffect(() => {
-    const fetchRoomInfo = async () => {
-      try {
-        const response = await API.get(`/api/catch-mind/rooms/${roomId}`);
-        console.log("방 정보 response:", response); // 데이터 확인
-        setRoomInfo(response);
-      } catch (error) {
-        console.error("방 정보 가져오기 실패:", error);
+    if (roomId) {
+      sendMessage({
+        destination: `/topic/catch-mind/${roomId}`,
+        subscribe: true,
+        callback: (message) => {
+          try {
+            const data = JSON.parse(message.body);
+
+            // 플레이어 목록 업데이트
+            if (data.players) {
+              const players = data.players.map((player, index) => ({
+                id: index + 1,
+                nickname: player,
+                score: 0,
+                isTurn: index === 0,
+                isCurrentUser: player === profileData?.userNickname,
+              }));
+              dispatch(updatePlayers({ players }));
+              setRoomInfo((prev) => ({ ...prev, players: data.players }));
+            }
+
+            // 방 정보 업데이트 처리
+            if (data.type === "updateRoom" && data.roomInfo) {
+              setRoomInfo((prev) => ({
+                ...prev,
+                ...data.roomInfo,
+              }));
+            }
+          } catch (error) {
+            console.error("메시지 파싱 오류:", error);
+          }
+        },
+      });
+    }
+  }, [roomId, dispatch, profileData?.userNickname, sendMessage]);
+
+  // 컴포넌트 언마운트시 정리
+  useEffect(() => {
+    return () => {
+      if (isExiting) {
+        console.log("[ExitRoom] Component cleanup initiated");
       }
     };
-
-    if (roomId) {
-      fetchRoomInfo();
-    }
-  }, [roomId]);
+  }, [isExiting]);
 
   // 프로필 정보 가져오기
   useEffect(() => {
@@ -156,70 +142,309 @@ const MainLayout = () => {
     }
   }, [userId, dispatch]);
 
-  // 프로필 정보로 플레이어 닉네임 업데이트
+  // 방 정보 가져오기
   useEffect(() => {
-    if (profileData?.userNickname) {
-      dispatch(
-        updatePlayerNickname({
-          playerId: 1, // 첫 번째 플레이어를 현재 유저로 설정
-          nickname: profileData.userNickname,
-        })
-      );
+    const fetchRoomInfo = async () => {
+      try {
+        const response = await CatchMindAPI.getRoomList();
+        const currentRoom = response.find(
+          (room) => room.roomId === parseInt(roomId)
+        );
+
+        if (currentRoom) {
+          const cleanedRoom = {
+            ...currentRoom,
+            players: Array.isArray(currentRoom.players)
+              ? [...new Set(currentRoom.players.filter(Boolean))]
+              : [],
+          };
+
+          setRoomInfo((prev) => {
+            if (JSON.stringify(prev) !== JSON.stringify(cleanedRoom)) {
+              return cleanedRoom;
+            }
+            return prev;
+          });
+
+          const currentUserNickname = getCurrentUserNickname();
+          const players = cleanedRoom.players.map((player, index) => ({
+            id: index + 1,
+            nickname: player,
+            score: currentRoom.gameInfo?.playerScore?.[player] || 0,
+            isTurn: currentRoom.gameInfo?.currentTurn
+              ? player === currentRoom.gameInfo.currentTurn
+              : index === 0,
+            isCurrentUser: player === currentUserNickname,
+          }));
+
+          if (JSON.stringify(gameState.players) !== JSON.stringify(players)) {
+            dispatch(updatePlayers({ players }));
+          }
+        }
+      } catch (error) {
+        console.error("방 정보 가져오기 실패:", error);
+      }
+    };
+  }, [
+    roomId,
+    profileData?.userNickname,
+    isExiting,
+    dispatch,
+    getCurrentUserNickname,
+  ]);
+
+  // 최초 방 입장 처리
+  useEffect(() => {
+    const handleInitialJoin = async () => {
+      if (!isInitialJoin || !profileData?.userNickname || !roomId) return;
+
+      try {
+        const joinData = await CatchMindAPI.joinRoom(
+          roomId,
+          profileData.userNickname,
+          roomInfo?.password || ""
+        );
+
+        if (joinRoom && typeof joinRoom === "function") {
+          joinRoom(joinData);
+          setIsInitialJoin(false);
+        }
+      } catch (error) {
+        console.error("방 입장 처리 실패:", error);
+      }
+    };
+
+    handleInitialJoin();
+
+    return () => {
+      dispatch(resetGameState());
+    };
+  }, [
+    roomId,
+    profileData?.userNickname,
+    roomInfo?.password,
+    isInitialJoin,
+    dispatch,
+  ]);
+
+  // 게임 시작 처리 함수
+  const handleStartGame = useCallback(async () => {
+    if (!roomId || !client) return;
+
+    try {
+      console.log("[StartGame] 게임 시작 요청 전송");
+      dispatch(resetGameState());
+
+      client.publish({
+        destination: `/app/start-game/${roomId}`,
+        body: "",
+        headers: {
+          "content-type": "text/plain",
+        },
+      });
+    } catch (error) {
+      console.error("[StartGame] 게임 시작 요청 실패:", error);
     }
-  }, [profileData, dispatch]);
+  }, [roomId, client, dispatch]);
+
+  // 제시어 가져오기
+  const currentWord = useMemo(() => {
+    if (!gameState.isGameStarted) {
+      return "";
+    }
+
+    const isDrawer = currentPlayer?.nickname === profileData?.userNickname;
+    return isDrawer ? gameState.currentWord || "준비중..." : "???";
+  }, [
+    gameState.isGameStarted,
+    gameState.currentWord,
+    currentPlayer?.nickname,
+    profileData?.userNickname,
+  ]);
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-900 to-gray-800">
       <div className="flex-1 p-4">
         <div className="h-full flex flex-col bg-gray-800 rounded-lg border border-gray-700 shadow-lg">
           <GameInfo
-            round={gameState.currentRound}
-            timer={gameState.timeLimit}
-            word={
-              currentPlayer?.nickname === gameState.players[0].nickname
-                ? gameState.currentWord
-                : "???"
-            }
-            roomInfo={roomInfo}
+            round={gameState?.currentRound || 1}
+            word={currentWord}
+            roomInfo={{
+              roomId: roomId,
+              roomTitle: gameState.roomTitle,
+              isPrivate: gameState.isPrivate,
+              timeLimit: gameState.timeLimit,
+              maxPeople: gameState.maxPeople,
+              quizCount: gameState.quizCount,
+              players: gameState.players.map((p) => p.nickname),
+              isGameStarted: gameState.isGameStarted,
+            }}
+            handleExitRoom={handleExitRoom}
+            handleStartGame={handleStartGame}
+            isCreator={isCreator}
+            client={client}
+            isCurrentUserDrawer={isCurrentUserDrawer}
           />
-          {/* 캔버스 영역 */}
           <div className="flex-1 p-6">
             <div className="h-full bg-white rounded-xl border border-gray-200">
               <Canvas />
             </div>
           </div>
-          <DrawingTools />
         </div>
       </div>
 
-      {/* 오른쪽 - 플레이어 & 채팅 영역 */}
       <div className="w-1/3 flex flex-col gap-4 p-4 border-l border-gray-700">
-        {/* 플레이어 카드 그리드 */}
         <div className="grid grid-cols-2 gap-3">
-          {gameState.players.map((player) => (
+          {gameState?.players?.map((player) => (
             <PlayerCard
               key={player.id}
               userId={player.id}
-              userNickname={player.nickname || `Player ${player.id}`}
+              userNickname={player.nickname}
               isCurrentTurn={player.isTurn}
               score={player.score}
+              isCurrentUser={player.isCurrentUser}
             />
           ))}
         </div>
 
-        {/* 채팅 영역 */}
         <div className="flex-1 bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
           <ChatBox
-            roomId={gameState.roomId}
-            currentUser={
-              gameState.players[0].nickname ||
-              profileData?.userNickname ||
-              "Player 1"
-            }
-            correctAnswer={gameState.currentWord}
+            roomId={roomId}
+            currentUser={getCurrentUserNickname()}
+            correctAnswer={gameState?.currentWord || ""}
           />
         </div>
       </div>
+    </div>
+  );
+};
+
+const GameInfo = ({
+  round,
+  word,
+  roomInfo,
+  handleExitRoom,
+  handleStartGame,
+  isCreator,
+  client,
+  isCurrentUserDrawer,
+}) => {
+  const [timeLeft, setTimeLeft] = useState(roomInfo?.timeLimit || 90);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+
+  useEffect(() => {
+    let timer;
+
+    if (roomInfo?.isGameStarted) {
+      timer = setInterval(() => {
+        setTimeLeft((prevTime) => {
+          if (prevTime <= 0) {
+            if (client && isCurrentUserDrawer) {
+              console.log("출제자가 타임아웃 요청을 보냅니다.");
+              client.publish({
+                destination: `/app/time-out/${roomInfo.roomId}`,
+                body: "",
+                headers: { "content-type": "text/plain" },
+              });
+            }
+            return roomInfo?.timeLimit || 90;
+          }
+          return prevTime - 1;
+        });
+      }, 1000);
+    } else {
+      setTimeLeft(roomInfo?.timeLimit || 90);
+    }
+
+    return () => {
+      if (timer) {
+        clearInterval(timer);
+      }
+    };
+  }, [
+    roomInfo?.isGameStarted,
+    roomInfo?.timeLimit,
+    roomInfo?.roomId,
+    client,
+    isCurrentUserDrawer,
+  ]);
+
+  useEffect(() => {
+    if (roomInfo?.isGameStarted) {
+      setTimeLeft(roomInfo?.timeLimit || 90);
+    }
+  }, [word, roomInfo?.timeLimit]);
+
+  return (
+    <div className="flex items-center justify-between px-8 py-4 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-t-lg border-b border-gray-700">
+      <div className="flex items-center space-x-2 min-w-[200px]">
+        <h2 className="text-xl font-bold truncate">{roomInfo?.roomTitle}</h2>
+        {roomInfo?.isPrivate && (
+          <Lock className="w-4 h-4 text-gray-400 flex-shrink-0" />
+        )}
+      </div>
+
+      <div className="flex items-center justify-center space-x-6 flex-1 mx-4">
+        {/* 방장이고 게임이 시작되지 않았을 때 버튼들 표시 */}
+        {isCreator && !roomInfo?.isGameStarted && (
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={handleStartGame}
+              className="px-6 py-2 bg-green-600 hover:bg-green-700 rounded-full transition-colors flex items-center space-x-2"
+            >
+              <span>게임 시작</span>
+            </button>
+            <button
+              onClick={() => setIsUpdateModalOpen(true)}
+              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-full transition-colors flex items-center space-x-2"
+            >
+              <span>방 정보 수정</span>
+            </button>
+          </div>
+        )}
+
+        <div className="flex items-center space-x-2 bg-gray-700/50 px-4 py-2 rounded-full">
+          <Flag className="w-4 h-4 text-blue-400" />
+          <span className="font-medium">
+            Round {round}/{roomInfo?.quizCount || 10}
+          </span>
+        </div>
+
+        <div className="flex items-center space-x-2 bg-gray-700/50 px-4 py-2 rounded-full">
+          <Timer className="w-4 h-4 text-blue-400" />
+          <span className="font-medium">{timeLeft}초</span>
+        </div>
+
+        {word && (
+          <div className="px-6 py-2 bg-blue-500/20 rounded-full border border-blue-400/30">
+            <span className="font-medium text-blue-100">제시어: {word}</span>
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center space-x-4 min-w-[200px] justify-end">
+        <div className="flex items-center space-x-2 bg-gray-700/50 px-3 py-1.5 rounded-full">
+          <Users className="w-4 h-4 text-blue-400" />
+          <span className="text-gray-200">
+            {roomInfo?.players?.length || 0}/{roomInfo?.maxPeople}
+          </span>
+        </div>
+        <button
+          onClick={handleExitRoom}
+          className="flex items-center space-x-2 px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
+        >
+          <LogOut className="w-4 h-4" />
+          <span>나가기</span>
+        </button>
+      </div>
+
+      {/* 방 정보 수정 모달 */}
+      <CatchMindUpdateRoomModal
+        isOpen={isUpdateModalOpen}
+        onClose={() => setIsUpdateModalOpen(false)}
+        roomInfo={roomInfo}
+        client={client}
+      />
     </div>
   );
 };

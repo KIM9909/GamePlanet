@@ -9,8 +9,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,18 +21,14 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/game")
+@AllArgsConstructor
 @Tag(name = "Cockroach Game", description = "바퀴벌레 게임 방 생성 및 관리 API")
 public class CockroachController {
 
     private final CockroachService cockroachService;
     private final GameRoomService gameRoomService;
+    private final SimpMessageSendingOperations messagingTemplate;
 
-    @Autowired
-    public CockroachController(CockroachService cockroachService,
-        GameRoomService gameRoomService) {
-        this.cockroachService = cockroachService;
-        this.gameRoomService = gameRoomService;
-    }
 
     @Operation(summary = "게임 방 생성", description = "새로운 바퀴벌레 게임 방을 생성합니다.")
     @ApiResponses(value = {
@@ -43,19 +42,20 @@ public class CockroachController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "게임 방 참가", description = "특정 바퀴벌레 게임 방에 플레이어가 참가합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "방 참가 성공"),
-            @ApiResponse(responseCode = "404", description = "방을 찾을 수 없음")
-    })
-    @PostMapping("/join-room")
-    public ResponseEntity<ResponseCockroachRoom> joinRoom(
-        @RequestParam String roomId,
-        @RequestParam String playerName,
-        @RequestParam String password) {
-        ResponseCockroachRoom response = gameRoomService.addPlayer(roomId, playerName, password);
-        return ResponseEntity.ok(response);
-    }
+//    @Operation(summary = "게임 방 참가", description = "특정 바퀴벌레 게임 방에 플레이어가 참가합니다.")
+//    @ApiResponses(value = {
+//            @ApiResponse(responseCode = "200", description = "방 참가 성공"),
+//            @ApiResponse(responseCode = "404", description = "방을 찾을 수 없음")
+//    })
+//    @MessageMapping("/join-room")
+//    public void joinRoom(
+//        @RequestParam String roomId,
+//        @RequestParam String playerName,
+//        @RequestParam String password) {
+//        ResponseCockroachRoom response = gameRoomService.addPlayer(roomId, playerName, password);
+//
+//        messagingTemplate.convertAndSend("/topic/game/" + roomId, response);
+//    }
 
     @Operation(summary = "게임 데이터 업데이트", description = "게임 방의 특정 데이터를 업데이트합니다.")
     @ApiResponses(value = {
@@ -64,9 +64,9 @@ public class CockroachController {
     })
     @PostMapping("/update-data")
     public ResponseEntity<String> updateGameData(
-        @RequestParam String roomId,
-        @RequestParam String key,
-        @RequestParam Object value) {
+            @RequestParam String roomId,
+            @RequestParam String key,
+            @RequestParam Object value) {
         gameRoomService.updateGameData(roomId, key, value);
 
         return ResponseEntity.ok("Game data updated for room: " + roomId);
@@ -98,7 +98,7 @@ public class CockroachController {
             @ApiResponse(responseCode = "200", description = "방 목록 조회 성공")
     })
     @GetMapping("/rooms")
-    public List<String> getAllRooms() {
+    public List<Map<String, Object>> getAllRooms() {
         return gameRoomService.getAllRooms();
     }
 }

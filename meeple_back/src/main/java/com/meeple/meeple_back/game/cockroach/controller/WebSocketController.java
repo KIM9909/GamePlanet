@@ -3,9 +3,11 @@ package com.meeple.meeple_back.game.cockroach.controller;
 import com.meeple.meeple_back.game.cockroach.model.request.*;
 import com.meeple.meeple_back.game.cockroach.model.response.*;
 import com.meeple.meeple_back.game.cockroach.service.CockroachService;
+import com.meeple.meeple_back.game.cockroach.service.GameRoomService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -15,16 +17,19 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Tag(name = "WebSocket Game", description = "WebSocket을 이용한 바퀴벌레 게임 관련 API")
+@AllArgsConstructor
 public class WebSocketController {
 
+    private final GameRoomService gameRoomService;
     private final CockroachService cockroachService;
     private final SimpMessageSendingOperations messagingTemplate;
 
-    @Autowired
-    public WebSocketController(CockroachService cockroachService,
-        SimpMessageSendingOperations messagingTemplate) {
-        this.cockroachService = cockroachService;
-        this.messagingTemplate = messagingTemplate;
+    @MessageMapping("/game/join-room")
+    public void joinRoom(
+            @RequestBody RequestJoinRoom request) {
+        ResponseCockroachRoom response = gameRoomService.addPlayer(request);
+
+        messagingTemplate.convertAndSend("/topic/game/" + request.getRoomId(), response);
     }
 
     // WebSocket API를 Swagger에서 확인할 수 있도록 REST API 엔드포인트 추가
@@ -39,8 +44,8 @@ public class WebSocketController {
     }
     @MessageMapping("/game/chat/{roomId}")
     public void handleMessage(
-        @DestinationVariable String roomId,
-        @RequestBody RequestSendMessage request) {
+            @DestinationVariable String roomId,
+            @RequestBody RequestSendMessage request) {
         if (roomId == null || roomId.isEmpty()) {
             throw new IllegalArgumentException("유효하지 않은 roomId 입니다.");
         }
@@ -51,7 +56,7 @@ public class WebSocketController {
 
         // 받은 메시지를 콘솔에 출력 (디버깅용)
         System.out.println("Received message in room " + roomId + ": "
-            + request.getMessage());
+                + request.getMessage());
 
         cockroachService.sendMessage(roomId, request);
     }
@@ -77,7 +82,7 @@ public class WebSocketController {
     }
     @MessageMapping("/game/start-game/{roomId}")
     public void startGameSocket(
-        @DestinationVariable String roomId
+            @DestinationVariable String roomId
     ) {
         System.out.println("게임 시작 호출");
         ResponseStartGame response = cockroachService.startGame(roomId);
@@ -97,8 +102,8 @@ public class WebSocketController {
 
     @MessageMapping("/game/give-card/{roomId}")
     public void giveCardSocket(
-        @DestinationVariable String roomId,
-        @RequestBody RequestGiveCard request
+            @DestinationVariable String roomId,
+            @RequestBody RequestGiveCard request
     ) {
         ResponseGiveCard response = cockroachService.giveCard(roomId, request);
 
@@ -124,8 +129,8 @@ public class WebSocketController {
     }
     @MessageMapping("/game/single-card/{roomId}")
     public void singleCardSocket(
-        @DestinationVariable String roomId,
-        @RequestBody RequestSingleCard request
+            @DestinationVariable String roomId,
+            @RequestBody RequestSingleCard request
     ) {
         ResponseCheckCard response = cockroachService.singleCard(roomId, request);
 
@@ -151,8 +156,8 @@ public class WebSocketController {
     }
     @MessageMapping("/game/multi-card/{roomId}")
     public void multiCardSocket(
-        @DestinationVariable String roomId,
-        @RequestBody RequestMultiCard request
+            @DestinationVariable String roomId,
+            @RequestBody RequestMultiCard request
     ) {
         ResponseMultiCard response = cockroachService.multiCard(roomId, request);
 
@@ -171,7 +176,7 @@ public class WebSocketController {
     @MessageMapping("/game/exit-room/{roomId}")
     public void exitRoomSocket(
             @DestinationVariable String roomId,
-            @PathVariable String userNickname
+            @RequestParam String userNickname
     ) {
         ResponseExitRoom response = cockroachService.exitRoom(roomId, userNickname);
         messagingTemplate.convertAndSend("/topic/game/" + roomId, response);
