@@ -4,8 +4,10 @@ import com.meeple.meeple_back.game.bluemarble.domain.GamePlay;
 import com.meeple.meeple_back.game.bluemarble.service.port.BluemarbleGameRepository;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class BlueMarbleGameRepositoryImpl implements BluemarbleGameRepository {
@@ -14,13 +16,18 @@ public class BlueMarbleGameRepositoryImpl implements BluemarbleGameRepository {
 
 	@Override
 	public GamePlay save(GamePlay gamePlay) {
+		GamePlayEntity gamePlayEntity = GamePlayEntity.from(gamePlay);
+
+		bluemarbleGameRedisRepository.save(gamePlayEntity);
 		return GamePlayEntity.toGamePlay(
-				bluemarbleGameRedisRepository.save(GamePlayEntity.from(gamePlay)));
+				gamePlayEntity);
 	}
 
 	@Override
-	public Optional<GamePlay> findById(int roomId) {
+	public Optional<GamePlay> findById(Integer playerId) {
+		GamePlayEntity gamePlayEntity = bluemarbleGameRedisRepository.findById(playerId)
+				.orElseThrow();
 		return Optional.ofNullable(GamePlayEntity.toGamePlay(
-				bluemarbleGameRedisRepository.findById(roomId).orElseThrow()));
+				gamePlayEntity));
 	}
 }
