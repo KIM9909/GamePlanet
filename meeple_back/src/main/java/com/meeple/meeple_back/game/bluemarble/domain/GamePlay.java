@@ -146,8 +146,7 @@ public class GamePlay {
 		// 주사위 굴려서 도착한 땅에 따라서 이벤트 추가
 		int currentPosition = response.getNextPosition();
 		processTileEvent(currentPlayer, currentPosition);
-		DiceRollResponse diceRollResponse = DiceRollResponse.from(response,
-				turnManager.peekTurn());
+		DiceRollResponse diceRollResponse = DiceRollResponse.from(response, ActionType.BUY_LAND);
 		// 땅에 도착했을 때 이벤트 추가
 		return diceRollResponse;
 	}
