@@ -12,9 +12,12 @@ import com.meeple.meeple_back.game.cockroach.model.entity.Room;
 import com.meeple.meeple_back.game.cockroach.repository.ChatMessageRespository;
 import com.meeple.meeple_back.game.cockroach.repository.RoomRepository;
 import com.meeple.meeple_back.game.game.model.Game;
+import com.meeple.meeple_back.game.openVidu.service.OpenViduService;
 import com.meeple.meeple_back.game.repo.GameRepository;
 import com.meeple.meeple_back.user.model.User;
 import com.meeple.meeple_back.user.repository.UserRepository;
+import io.openvidu.java.client.OpenViduHttpException;
+import io.openvidu.java.client.OpenViduJavaClientException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -36,6 +39,7 @@ public class CatchMindServiceImpl implements CatchMindService {
     private final GameRepository gameRepository;
     private final QuizRepository quizRepository;
     private final UserRepository userRepository;
+    private final OpenViduService openViduService;
 
     /* 게임방 로직 */
     @Override
@@ -56,6 +60,15 @@ public class CatchMindServiceImpl implements CatchMindService {
                 .build();
 
         Room savedRoom = roomRepository.save(room);
+
+        try {
+            String sessionId = openViduService.createSession();
+            roomInfo.put("sessionId", sessionId);
+        } catch (OpenViduJavaClientException e) {
+            throw new RuntimeException("OpenVidu JavaClientError 발생"+ e);
+        } catch (OpenViduHttpException e) {
+            throw new RuntimeException("OpenVidu HttpException 발생"+ e);
+        }
 
         roomInfo.put("roomId", savedRoom.getRoomId());
         roomInfo.put("players", players);
