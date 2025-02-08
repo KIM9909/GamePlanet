@@ -1,18 +1,13 @@
-import React, { useEffect, useState, useRef, Suspense, useMemo } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  Suspense,
+  useMemo,
+  useContext,
+} from "react";
 import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  setGameData,
-  addPlayer,
-  removePlayer,
-  movePlayer,
-  handleDiceRoll,
-  updateMinusBalance,
-  updatePlusBalance,
-  nextTurn,
-  nextRound,
-  changeDice,
-} from "../../../../sources/store/slices/BurumabulGameSlice";
 
 import {
   Canvas,
@@ -74,6 +69,7 @@ import SpaceBase from "./SpaceBase";
 import useBurumabulSocket from "../../../../hooks/useBurumabulPlaySocket";
 import { color } from "framer-motion";
 import { depth } from "three/tsl";
+import { SocketContext } from "../../../layout/SocketLayout";
 
 const Cell = ({
   position,
@@ -189,16 +185,30 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
     "수성",
     "금성",
   ];
-  const dispatch = useDispatch();
-  const [positions, setPositions] = useState([]);
-  const [cellSizes, setCellSizes] = useState([]);
 
-  const size = 11; // 각 변의 칸 수
-  const totalCells = size * 4 - 4; // 전체 칸 개수
-  const cells = Array.from({ length: totalCells }, (_, i) => i); // 칸 번호
-  // const [currentPosition, setCurrentPosition] = useState(0); // 현재 말 위치
-  const [isFirstMove, setIsFirstMove] = useState(true);
-  const [showModal, setShowModal] = useState(false);
+  const dispatch = useDispatch();
+  // 소켓에서 받아오는 정보들
+  const { connected, rollDice, buyLand, currentPlayerSocketIndex } =
+    useContext(SocketContext);
+  const [playData, setPlayData] = useState(gameData);
+
+  useEffect(() => {
+    setPlayData(gameData);
+  }, [gameData]);
+
+  const players = playData.players;
+  const numPlayers = players.length;
+
+  // 현재 플레이어는 인덱스 번호로
+  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(
+    currentPlayerSocketIndex
+  );
+
+  useEffect(() => {
+    setCurrentPlayerIndex(currentPlayerSocketIndex);
+  }, [currentPlayerSocketIndex]);
+
+  const currentPlayer = players[currentPlayerIndex];
 
   // 주사위 버튼을 눌렀는지 안 눌렀는지 추적
   useEffect(() => {
@@ -207,13 +217,36 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
     }
   }, [onRollDice]);
 
-  // // 말 이동 함수
-  // const moveToken = () => {
-  //   setCurrentPosition((prev) => {
-  //     setIsFirstMove(false);
-  //     return (prev + 1) % totalCells;
-  //   });
-  // };
+  const firstDice = useSelector((state) => state.burumabul.firstDice);
+  const secondDice = useSelector((state) => state.burumabul.secondDice);
+  const isDouble = firstDice === secondDice;
+
+  const [positions, setPositions] = useState([]);
+  const [cellSizes, setCellSizes] = useState([]);
+
+  const size = 11; // 각 변의 칸 수
+  const totalCells = size * 4 - 4; // 전체 칸 개수
+  const cells = Array.from({ length: totalCells }, (_, i) => i); // 칸 번호
+  // const [currentPosition, setCurrentPosition] = useState(0); // 현재 말 위치
+
+  const [showModal, setShowModal] = useState(false);
+  const currentPosition = useSelector((state) => state.burumabul.prevPosition);
+
+  useEffect(() => {
+    if (onRollDice && firstDice !== null && secondDice !== null) {
+      try {
+        const diceInfo = {
+          playerId: currentPlayer.playerId,
+          firstDice: firstDice,
+          secondDice: secondDice,
+          wasDouble: isDouble,
+        };
+        rollDice(diceInfo);
+      } catch (error) {
+        console.error("주사위 굴리기에 실패했습니다.", error);
+      }
+    }
+  }, [onRollDice, firstDice, secondDice]);
 
   // 카메라 위치 초기화하기 위한..
   const orbitControlsRef = useRef();
@@ -380,14 +413,6 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
     ));
   };
 
-  const players = useSelector((state) => state.burumabul.players);
-  const currentPosition = useSelector((state) => state.burumabul.prevPosition);
-  const numPlayers = players.length;
-
-  // 현재 플레이어는 인덱스 번호로
-  const currentPlayerIndex = useSelector(
-    (state) => state.burumabul.currentPlayerIndex
-  );
   // 플레이어 위치 초기화
   const [playersPositions, setPlayersPositions] = useState(
     Array(numPlayers).fill(0)

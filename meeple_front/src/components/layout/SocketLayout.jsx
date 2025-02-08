@@ -18,6 +18,10 @@ const SocketLayout = ({ children }) => {
   // 게임 정보
   const [gamePlaySocketData, setGamePlaySocketData] = useState({});
 
+  // 지금 플레이어는 누군지
+  const [currentPlayerSocketIndex, setCurrentPlayerSocketIndex] =
+    useState(null);
+
   // 게임 공지 메시지
   const [gameSocketNotifi, setGameSocketNotifi] = useState({});
 
@@ -81,8 +85,9 @@ const SocketLayout = ({ children }) => {
               setRoomSocketData(receivedData.roomResponse);
               setRoomNotifi(receivedData.message);
             } else if (receivedData.type === "create") {
-              setGamePlaySocketData(receivedData.gamePlay);
+              setGamePlaySocketData(receivedData.data);
               setGameSocketNotifi(receivedData.message);
+              setCurrentPlayerSocketIndex(receivedData.data.currentPlayerIndex);
             } else if (receivedData.type === "game-play") {
               if (receivedData.buyLandResponse) {
                 setBuyLandSocketData(receivedData.buyLandResponse);
@@ -207,7 +212,7 @@ const SocketLayout = ({ children }) => {
     },
     [roomId]
   );
-
+  //Todo
   // 대기방 비밀번호 변경
   const changePassword = useCallback(
     (password) => {
@@ -329,6 +334,7 @@ const SocketLayout = ({ children }) => {
           chatMessage,
           gamePlaySocketData,
           gameSocketNotifi,
+          currentPlayerSocketIndex,
           rollDiceSocketData,
           buyLandSocketData,
           enterWaitingRoom,
