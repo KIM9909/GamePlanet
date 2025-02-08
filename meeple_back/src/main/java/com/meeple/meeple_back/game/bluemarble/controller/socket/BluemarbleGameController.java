@@ -7,6 +7,7 @@ import com.meeple.meeple_back.game.bluemarble.controller.response.DrawCardRespon
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuildBaseRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.DiceRollBroadcastRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.PayFeeRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.TurnEndRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.SocketBuyLandResponse;
@@ -110,5 +111,14 @@ public class BluemarbleGameController {
 		SocketResponse<TurnEndResponse> response = SocketResponse.from("turn-end",
 				bluemarbleGameService.turnEnd(roomId, turnEndRequest), "턴을 종료합니다");
 		messagingTemplate.convertAndSend("/topic/room" + roomId, response);
+	}
+
+	@MessageMapping("/{roomId}/just-roll-dice")
+	@Operation(summary = "주사위 굴리기 방송", description = "주사위 굴리는걸 방송하는 기능")
+	public void justRollDice(@DestinationVariable("roomId") int roomId,
+			@Payload DiceRollBroadcastRequest request) {
+		SocketResponse response = SocketResponse.from("just-roll-dice", request,
+				"주사위를 굴립니다.");
+		messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
 	}
 }
