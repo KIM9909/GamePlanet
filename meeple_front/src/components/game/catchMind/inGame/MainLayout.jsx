@@ -2,16 +2,7 @@ import React, { useEffect, useCallback, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
-import {
-  Timer,
-  Pencil,
-  Eraser,
-  Trash2,
-  Users,
-  Lock,
-  LogOut,
-  Flag,
-} from "lucide-react";
+import { Timer, Users, Lock, LogOut, Flag } from "lucide-react";
 import Canvas from "./Canvas";
 import ChatBox from "./ChatBox";
 import PlayerCard from "./PlayerCard";
