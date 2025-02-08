@@ -1,7 +1,7 @@
 import React, { useEffect, useContext } from "react";
 import { LockKeyhole } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setRoomId } from "../../../sources/store/slices/BurumabulGameSlice";
 import { SocketContext } from "../../layout/SocketLayout";
 
@@ -10,7 +10,7 @@ const BurumabulRoomListCard = ({ roomInfo }) => {
   const roomId = roomInfo.roomId;
   console.log(roomId);
   const dispatch = useDispatch();
-  const { connected } = useContext(SocketContext);
+  const userId = useSelector((state) => state.user.userId);
 
   const goToGeneralWaitingRoom = async (roomId) => {
     dispatch(setRoomId(roomInfo.roomId));
