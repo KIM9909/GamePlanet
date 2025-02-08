@@ -26,7 +26,7 @@ public class GamePlayEntity {
 	private List<Tile> board;
 	private List<Card> cards;
 	private TurnManager turnManager;
-	
+
 
 	public GamePlayEntity() {
 
@@ -68,6 +68,7 @@ public class GamePlayEntity {
 				.round(gamePlayEntity.getRound())
 				.board(gamePlayEntity.getBoard())
 				.cards(gamePlayEntity.getCards())
+				.turnManager(gamePlayEntity.getTurnManager())
 				.build();
 	}
 }

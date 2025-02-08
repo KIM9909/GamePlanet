@@ -41,14 +41,14 @@ public class BluemarbleRoomServiceImpl implements BluemarbleRoomService {
 				.build();
 		bluemarbleRoomRepository.save(roomEntity);
 
-		Player newPlayer = new Player(userService.findById(userId));
+		Player newPlayer = Player.init(userService.findById(userId));
 		List<Player> players = new ArrayList<>();
 		players.add(newPlayer);
 
 		Room room = Room.builder().roomId(roomEntity.getRoomId()).roomName(roomEntity.getRoomName())
 				.createTime(roomEntity.getCreateTime()).isPrivate(roomCreate.isPrivate())
 				.password(passwordEncoder.encode(roomCreate.getPassword())).isGameStart(false)
-				.creator(new Player(userService.findById(userId)))
+				.creator(Player.init(userService.findById(userId)))
 				.maxPlayers(roomCreate.getMaxPlayers()).players(players).build();
 		bluemarbleRoomRepository.save(room);
 		return room;
@@ -60,7 +60,7 @@ public class BluemarbleRoomServiceImpl implements BluemarbleRoomService {
 	public Room join(int roomId, long userId) {
 		Room room = bluemarbleRoomRepository.findById(roomId)
 				.orElseThrow(() -> new ResourceNotFoundException("Room", roomId));
-		room = room.addPlayer(new Player(userService.findById(userId)));
+		room = room.addPlayer(Player.init(userService.findById(userId)));
 		bluemarbleRoomRepository.save(room);
 		return room;
 	}
@@ -134,7 +134,7 @@ public class BluemarbleRoomServiceImpl implements BluemarbleRoomService {
 			throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
 		}
 		room = room.addPlayer(
-				new Player(userService.findById(userId)));
+				Player.init(userService.findById(userId)));
 		bluemarbleRoomRepository.save(room);
 		return room;
 	}

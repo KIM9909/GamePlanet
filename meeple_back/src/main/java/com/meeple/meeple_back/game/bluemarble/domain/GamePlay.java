@@ -107,7 +107,7 @@ public class GamePlay {
 					false,                                    // hasBase (기본값: 없음)
 					TileType.SEED_CERTIFICATE_CARD,
 					"image:url",                                   // price (예시로 i에 따라 증가),
-					100 + i * 10
+					1 + i * 10
 			);
 			tiles.add(tile);
 		}
@@ -191,10 +191,8 @@ public class GamePlay {
 	 * @return BuyLandResponse - playerId, action, prevMoney, updatedMoney, updatedTile
 	 */
 	public BuyLandResponse buyLand(BuyLandRequest buyLandRequest) {
-//		turnManager.executeTurn();
 		int tileId = buyLandRequest.getTileId();
-		Player player = findPlayerById(buyLandRequest.getPlayerId())
-				.orElseThrow(() -> new IllegalArgumentException("Player not found"));
+		Player currentPlayer = getValidatedPlayer(buyLandRequest.getPlayerId());
 		Tile tile = board.stream()
 				.filter(t -> t.getId() == tileId)
 				.findFirst()
@@ -208,9 +206,6 @@ public class GamePlay {
 			throw new IllegalArgumentException("Tile is not a seed certificate card");
 		}
 
-		//현재 플레이어 찾기
-		Player currentPlayer = findPlayerById(buyLandRequest.getPlayerId())
-				.orElseThrow(() -> new IllegalArgumentException("Player not found"));
 		// 원래 금액
 		int prevMoney = currentPlayer.getBalance();
 
@@ -226,13 +221,13 @@ public class GamePlay {
 				card.getBaseConstructionCost());
 
 		// 플레이어 땅 소유 추가
-		player.addLandOwned(tileId);
+		currentPlayer.addLandOwned(tileId);
 		// 플레이어 카드 소유 추가
-		player.addCardOwned(card);
-		ActionType nextAction = getNextTurn();
+		currentPlayer.addCardOwned(card);
 
-		return BuyLandResponse.of(player.getPlayerId(), ActionType.BUY_LAND.getAction(), prevMoney,
-				currentPlayer.getBalance(), tile, nextAction);
+		return BuyLandResponse.of(currentPlayer.getPlayerId(), ActionType.BUY_LAND.getAction(),
+				prevMoney,
+				currentPlayer.getBalance(), tile, ActionType.ROLL_DICE);
 	}
 
 	private ActionType getNextTurn() {

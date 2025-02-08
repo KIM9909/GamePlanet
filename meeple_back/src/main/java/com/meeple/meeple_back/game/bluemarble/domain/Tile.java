@@ -21,18 +21,11 @@ public class Tile {
 	private int price;
 
 
-	public Tile update(int ownerId, int tollPrice,
+	public void update(int ownerId, int tollPrice,
 			int price) {
-		return Tile.builder()
-				.id(this.id)
-				.name(this.name)
-				.ownerId(ownerId)
-				.tollPrice(tollPrice)
-				.hasBase(this.hasBase)
-				.type(this.type)
-				.imageUrl(this.imageUrl)
-				.price(price)
-				.build();
+		this.ownerId = ownerId;
+		this.tollPrice = tollPrice;
+		this.price = price;
 	}
 
 	public void addBase() {
