@@ -8,12 +8,12 @@ import com.meeple.meeple_back.game.bluemarble.controller.response.BuyLandRespons
 import com.meeple.meeple_back.game.bluemarble.controller.response.DiceRollResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DrawCardResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.GamePlayResponse;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.PayFeeResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuildBaseRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.PayFeeRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.TurnEndRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.response.PayFeeResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
 import com.meeple.meeple_back.game.bluemarble.domain.GamePlay;
 import com.meeple.meeple_back.game.bluemarble.domain.GamePlayCreate;

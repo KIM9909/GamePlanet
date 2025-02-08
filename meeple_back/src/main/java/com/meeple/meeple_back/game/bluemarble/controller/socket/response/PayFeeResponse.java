@@ -1,4 +1,4 @@
-package com.meeple.meeple_back.game.bluemarble.controller.socket;
+package com.meeple.meeple_back.game.bluemarble.controller.socket.response;
 
 import com.meeple.meeple_back.game.bluemarble.domain.ActionType;
 import com.meeple.meeple_back.game.bluemarble.domain.Player;
@@ -19,7 +19,7 @@ public class PayFeeResponse {
 	private Player paidPlayer;
 	private Player receivedPlayer;
 	private String nextAction;
-	
+
 	public static PayFeeResponse from(int prevMoney, int updatedMoney, int tollPrice,
 			boolean playerBrokenState, Player paidPlayer, Player receivedPlayer,
 			ActionType nextAction) {
