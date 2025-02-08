@@ -224,10 +224,10 @@ public class GamePlay {
 		currentPlayer.addLandOwned(tileId);
 		// 플레이어 카드 소유 추가
 		currentPlayer.addCardOwned(card);
-
-		return BuyLandResponse.of(currentPlayer.getPlayerId(), ActionType.BUY_LAND.getAction(),
-				prevMoney,
-				currentPlayer.getBalance(), tile, ActionType.ROLL_DICE);
+		
+		return BuyLandResponse.of(currentPlayer.getPlayerId(), prevMoney,
+				currentPlayer.getBalance(),
+				currentPlayer, tile, ActionType.END);
 	}
 
 	private ActionType getNextTurn() {

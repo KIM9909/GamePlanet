@@ -59,8 +59,9 @@ public class BluemarbleGameServiceImpl implements BluemarbleGameService {
 	public BuyLandResponse buyLand(int roomId, BuyLandRequest buyLandRequest) {
 		GamePlay gamePlay = bluemarbleGameRepository.findById(roomId)
 				.orElseThrow(() -> new ResourceNotFoundException("GamePlay", roomId));
-
-		return gamePlay.buyLand(buyLandRequest);
+		BuyLandResponse response = gamePlay.buyLand(buyLandRequest);
+		bluemarbleGameRepository.save(gamePlay);
+		return response;
 	}
 
 	@Override
