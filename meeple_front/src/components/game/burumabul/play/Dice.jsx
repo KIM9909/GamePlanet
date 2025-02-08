@@ -8,7 +8,7 @@ import {
 import { setFriends } from "../../../../sources/store/slices/FriendSlice";
 import { useDispatch } from "react-redux";
 import { changeDice } from "../../../../sources/store/slices/BurumabulGameSlice";
-import useBurumabulSocket from "../../../../hooks/useBurumabulSocket";
+import useBurumabulSocket from "../../../../hooks/useBurumabulPlaySocket";
 
 const Dice = ({ onComplete, onClose, roomId }) => {
   const canvasRef = useRef(null);
