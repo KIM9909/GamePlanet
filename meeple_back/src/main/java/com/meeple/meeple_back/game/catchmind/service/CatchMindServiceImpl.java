@@ -91,6 +91,7 @@ public class CatchMindServiceImpl implements CatchMindService {
                 .creator(request.getCreator())
                 .isPrivate(request.isPrivate())
                 .password(request.getPassword())
+                .sessionId((String) roomInfo.getOrDefault("sessionId", ""))
                 .build();
 
         return response;
