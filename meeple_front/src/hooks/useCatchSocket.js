@@ -369,6 +369,7 @@ const useCatchSocket = (roomId) => {
                       isPrivate: data.roomInfo.isPrivate,
                       password: data.roomInfo.password,
                       roomId: data.roomInfo.roomId,
+                      sessionId: data.roomInfo.sessionId,
                     })
                   );
 

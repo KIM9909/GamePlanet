@@ -1,356 +1,312 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { OpenVidu } from "openvidu-browser";
-import { VideoAPI } from "../../../../sources/api/CatchMindAPI";
-import { Camera, CameraOff, Mic, MicOff } from "lucide-react";
-import { useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import axios from "axios";
+import PlayerCard from "./PlayerCard";
+import { Mic, MicOff, Video, VideoOff } from "lucide-react";
 
-const VideoChat = ({ nickname }) => {
-  const { roomId } = useParams();
+const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
   const [session, setSession] = useState(null);
   const [publisher, setPublisher] = useState(null);
   const [subscribers, setSubscribers] = useState([]);
-  const [isMicOn, setIsMicOn] = useState(true);
-  const [isCameraOn, setIsCameraOn] = useState(true);
-  const [error, setError] = useState(null);
-  const [isInitializing, setIsInitializing] = useState(false);
+  const [connectionError, setConnectionError] = useState(null);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [players, setPlayers] = useState([]);
+  const [audioEnabled, setAudioEnabled] = useState(true);
+  const [videoEnabled, setVideoEnabled] = useState(true);
+  const tokenRef = useRef(null);
 
-  const currentUser = useSelector((state) => state.profile.profileData);
-  const isCurrentUser = currentUser?.userNickname === nickname;
-
-  const publisherRef = useRef(null);
-  const subscribersRef = useRef(null);
-  const sessionRef = useRef(null);
-  const publisherObjRef = useRef(null);
-  const retryCountRef = useRef(0);
-  const retryTimeoutRef = useRef(null);
-  const isConnectedRef = useRef(false);
-
-  // Publisher 설정
-  const getPublisherOptions = () => ({
-    audioSource: undefined,
-    videoSource: undefined,
-    publishAudio: true,
-    publishVideo: true,
-    resolution: "640x480",
-    frameRate: 30,
-    insertMode: "APPEND",
-    mirror: false,
-    videoSimulcast: false,
-    NetworkQualityLevels: true,
-  });
-
-  // 스트림 생성 핸들러
-  const handleStreamCreated = async (session, event, mounted) => {
-    if (!mounted) return;
-
-    try {
-      const connectionData = JSON.parse(event.stream.connection.data);
-      const streamNickname = connectionData.clientData;
-
-      if (streamNickname === nickname) return;
-
-      console.log(`Subscribing to stream from ${streamNickname}`);
-      const subscriber = session.subscribe(
-        event.stream,
-        subscribersRef.current
-      );
-
-      subscriber.on("videoElementCreated", (e) => {
-        const videoElement = e.element;
-        videoElement.classList.add("w-full", "h-full", "object-cover");
-
-        videoElement.addEventListener("loadedmetadata", () => {
-          console.log(`Video metadata loaded for ${streamNickname}`);
-        });
-
-        videoElement.addEventListener("playing", () => {
-          console.log(`Video started playing for ${streamNickname}`);
-        });
-      });
-
-      subscriber.on("streamPlaying", () => {
-        console.log(`Stream is playing for ${streamNickname}`);
-      });
-
-      subscriber.on("streamPlayingFailed", (error) => {
-        console.error(`Stream playing failed for ${streamNickname}:`, error);
-        try {
-          subscriber.stream?.disposeWebRtcPeer();
-          session.subscribe(event.stream, subscribersRef.current);
-        } catch (retryError) {
-          console.error("Error during stream resubscription:", retryError);
-        }
-      });
-
-      setSubscribers((prev) => [...prev, subscriber]);
-    } catch (error) {
-      console.error("Error in streamCreated handler:", error);
+  // 오디오 상태 토글
+  const toggleAudio = () => {
+    if (publisher) {
+      publisher.publishAudio(!audioEnabled);
+      setAudioEnabled(!audioEnabled);
     }
   };
 
-  // 세션 정리
-  const cleanupSession = async () => {
-    console.log("Cleaning up session...");
-    try {
-      if (subscribers.length > 0) {
-        subscribers.forEach((subscriber) => {
-          try {
-            if (subscriber.stream) {
-              subscriber.stream.disposeWebRtcPeer();
-            }
-          } catch (error) {
-            console.warn("Error disposing subscriber:", error);
-          }
-        });
-      }
-
-      if (publisherObjRef.current) {
-        try {
-          if (publisherObjRef.current.stream) {
-            publisherObjRef.current.stream.disposeWebRtcPeer();
-          }
-          publisherObjRef.current = null;
-        } catch (error) {
-          console.warn("Error disposing publisher:", error);
-        }
-      }
-
-      if (sessionRef.current && isConnectedRef.current) {
-        try {
-          await sessionRef.current.disconnect();
-          console.log("Session disconnected successfully");
-        } catch (error) {
-          console.warn("Error disconnecting session:", error);
-        }
-      }
-    } catch (error) {
-      console.error("Error during cleanup:", error);
-    } finally {
-      sessionRef.current = null;
-      isConnectedRef.current = false;
-      setSession(null);
-      setPublisher(null);
-      setSubscribers([]);
+  // 비디오 상태 토글
+  const toggleVideo = () => {
+    if (publisher) {
+      publisher.publishVideo(!videoEnabled);
+      setVideoEnabled(!videoEnabled);
     }
   };
 
-  // 마이크 토글
-  const toggleMic = useCallback(() => {
-    if (!publisher || !isCurrentUser) return;
-    try {
-      const newMicState = !isMicOn;
-      publisher.publishAudio(newMicState);
-      setIsMicOn(newMicState);
-    } catch (error) {
-      console.error("Error toggling mic:", error);
-    }
-  }, [publisher, isCurrentUser, isMicOn]);
-
-  // 카메라 토글
-  const toggleCamera = useCallback(() => {
-    if (!publisher || !isCurrentUser || !session) return;
-    try {
-      const newCameraState = !isCameraOn;
-      publisher.publishVideo(newCameraState);
-      setIsCameraOn(newCameraState);
-
-      if (publisherRef.current) {
-        const videoElements =
-          publisherRef.current.getElementsByTagName("video");
-        if (videoElements.length > 0) {
-          videoElements[0].style.display = newCameraState ? "block" : "none";
+  // Media Control Button 컴포넌트
+  const MediaControlButton = ({ onClick, enabled, Icon, DisabledIcon }) => (
+    <button
+      onClick={onClick}
+      className={`p-1.5 rounded-full transition-all duration-200 backdrop-blur-md
+        ${
+          enabled
+            ? "bg-white/10 hover:bg-white/20 text-white shadow-lg"
+            : "bg-red-500/20 hover:bg-red-500/30 text-red-500 shadow-lg"
         }
-      }
-    } catch (error) {
-      console.error("Error toggling camera:", error);
-    }
-  }, [publisher, isCurrentUser, session, isCameraOn]);
+        group flex items-center justify-center
+        hover:scale-110 active:scale-95
+        border ${enabled ? "border-white/20" : "border-red-500/30"}
+      `}
+    >
+      <div className="transition-transform duration-200 group-hover:scale-110">
+        {enabled ? <Icon size={16} /> : <DisabledIcon size={16} />}
+      </div>
+    </button>
+  );
 
-  // 메인 초기화 효과
+  // players 상태 업데이트 함수
+  const updatePlayers = (publisher, subscribers) => {
+    const allPlayers = [];
+
+    // 현재 사용자(publisher) 추가
+    if (publisher) {
+      allPlayers.push({
+        stream: publisher.stream,
+        nickname: nickname,
+        isCurrentUser: true,
+        score: 0,
+        isCurrentTurn: false,
+        audioEnabled: audioEnabled,
+        videoEnabled: videoEnabled,
+      });
+    }
+
+    // 다른 참가자들(subscribers) 추가
+    subscribers.forEach((subscriber) => {
+      const connectionData = JSON.parse(subscriber.stream.connection.data);
+      allPlayers.push({
+        stream: subscriber.stream,
+        nickname: connectionData.clientData,
+        isCurrentUser: false,
+        score: 0,
+        isCurrentTurn: false,
+        audioEnabled: subscriber.stream.audioActive,
+        videoEnabled: subscriber.stream.videoActive,
+      });
+    });
+
+    setPlayers(allPlayers);
+  };
+
   useEffect(() => {
-    let mounted = true;
+    console.log("Subscribers 상태 변경:", {
+      count: subscribers.length,
+      subscribers: subscribers.map((sub) => ({
+        connectionId: sub.stream.connection.connectionId,
+        streamId: sub.stream.streamId,
+        connectionData: JSON.parse(sub.stream.connection.data),
+      })),
+    });
 
-    const initializeSession = async () => {
-      if (isInitializing) return;
+    updatePlayers(publisher, subscribers);
+  }, [subscribers, publisher, audioEnabled, videoEnabled]);
 
-      setIsInitializing(true);
-      setError(null);
+  useEffect(() => {
+    if (!sessionId || !nickname || !isCurrentUser || isConnecting) {
+      return;
+    }
 
+    const OV = new OpenVidu();
+    let currentSession = null;
+
+    const connectToSession = async () => {
       try {
-        await cleanupSession();
+        setIsConnecting(true);
+        console.log("Initializing session with ID:", sessionId);
+        currentSession = OV.initSession();
+        setSession(currentSession);
 
-        console.log("Initializing OpenVidu session...");
-        const OV = new OpenVidu();
+        currentSession.on("streamCreated", (event) => {
+          console.log("New stream created", event.stream.connection.data);
+          const connectionData = JSON.parse(event.stream.connection.data);
 
-        OV.setAdvancedConfiguration({
-          forceMediaReconnectionAfterNetworkDrop: true,
-          timeoutInterval: 30000,
-          backoffPeriod: 1000,
-          retryOnFailure: 3,
-          iceServers: [
-            { urls: ["stun:stun.l.google.com:19302"] },
-            { urls: ["stun:stun1.l.google.com:19302"] },
-          ],
-        });
+          if (connectionData.clientData !== nickname) {
+            console.log("구독 시도:", {
+              streamId: event.stream.streamId,
+              connectionData: connectionData,
+            });
 
-        const session = OV.initSession();
-        sessionRef.current = session;
+            const subscriber = currentSession.subscribe(
+              event.stream,
+              undefined
+            );
 
-        if (!mounted) return;
-        setSession(session);
-
-        // 이벤트 리스너 설정
-        session.on("streamCreated", (event) =>
-          handleStreamCreated(session, event, mounted)
-        );
-
-        session.on("streamDestroyed", (event) => {
-          if (!mounted) return;
-          console.log("Stream destroyed:", event.stream.streamId);
-          setSubscribers((prev) =>
-            prev.filter((sub) => sub.stream.streamId !== event.stream.streamId)
-          );
-        });
-
-        session.on("sessionDisconnected", () => {
-          if (!mounted) return;
-          console.log("Session disconnected");
-          isConnectedRef.current = false;
-          cleanupSession();
-        });
-
-        session.on("exception", (exception) => {
-          console.warn("Session exception:", exception);
-        });
-
-        // 토큰 생성 및 연결
-        console.log("Generating token...");
-        const tokenResponse = await VideoAPI.generateToken(roomId);
-
-        console.log("Connecting to session...");
-        await session.connect(tokenResponse.token, { clientData: nickname });
-        console.log("Connected to session");
-        isConnectedRef.current = true;
-
-        // Publisher 초기화
-        console.log("Initializing publisher...");
-        const publisher = OV.initPublisher(
-          publisherRef.current,
-          getPublisherOptions()
-        );
-
-        publisherObjRef.current = publisher;
-
-        publisher.on("videoElementCreated", (event) => {
-          const videoElement = event.element;
-          videoElement.classList.add("w-full", "h-full", "object-cover");
-
-          videoElement.addEventListener("loadedmetadata", () => {
-            console.log("Publisher video metadata loaded");
-          });
-
-          videoElement.addEventListener("playing", () => {
-            console.log("Publisher video started playing");
-          });
-        });
-
-        publisher.on("streamPropertyChanged", (event) => {
-          if (event.changedProperty === "videoActive" && !event.newValue) {
-            console.warn("Publisher video quality degraded");
+            setSubscribers((prev) => {
+              const exists = prev.find(
+                (sub) =>
+                  sub.stream.connection.connectionId ===
+                  subscriber.stream.connection.connectionId
+              );
+              return exists ? prev : [...prev, subscriber];
+            });
           }
         });
 
-        await session.publish(publisher);
-        console.log("Publisher started");
+        currentSession.on("streamDestroyed", (event) => {
+          console.log("Stream destroyed", {
+            connectionData: event.stream.connection.data,
+            streamId: event.stream.streamId,
+          });
 
-        if (mounted) {
-          setPublisher(publisher);
-          retryCountRef.current = 0;
-        }
-      } catch (error) {
-        console.error("Error initializing session:", error);
-        setError("비디오 연결에 실패했습니다.");
-
-        if (retryCountRef.current < 3) {
-          retryCountRef.current += 1;
-          console.log(
-            `Retrying initialization (attempt ${
-              retryCountRef.current + 1
-            }/3)...`
+          setSubscribers((prev) =>
+            prev.filter(
+              (sub) =>
+                sub.stream.connection.connectionId !==
+                event.stream.connection.connectionId
+            )
           );
-          retryTimeoutRef.current = setTimeout(() => {
-            if (mounted) {
-              setIsInitializing(false);
-              initializeSession();
+        });
+
+        currentSession.on("sessionDisconnected", () => {
+          console.log("Session disconnected, clearing subscribers");
+          setSubscribers([]);
+          setIsConnecting(false);
+          tokenRef.current = null;
+        });
+
+        if (!tokenRef.current) {
+          const response = await axios.post(
+            `${
+              import.meta.env.VITE_API_BASE_URL
+            }/api/video/generate-token/${sessionId}`,
+            {},
+            {
+              headers: { "Content-Type": "application/json" },
+              timeout: 10000,
             }
-          }, 2000);
-        } else {
-          setError(
-            "연결 재시도 횟수를 초과했습니다. 페이지를 새로고침해주세요."
           );
+
+          if (!response.data?.token) {
+            throw new Error("No token received from server");
+          }
+
+          tokenRef.current = response.data.token;
         }
+
+        await currentSession.connect(tokenRef.current, {
+          clientData: nickname,
+        });
+
+        const newPublisher = await OV.initPublisher(undefined, {
+          audioSource: undefined,
+          videoSource: undefined,
+          publishAudio: audioEnabled,
+          publishVideo: videoEnabled,
+          resolution: "640x480",
+          frameRate: 15,
+          insertMode: "APPEND",
+          mirror: false,
+        });
+
+        await currentSession.publish(newPublisher);
+        setPublisher(newPublisher);
+      } catch (error) {
+        console.error("Error in video chat connection:", error);
+        setConnectionError(
+          error.response?.status === 500
+            ? "서버 오류가 발생했습니다."
+            : `연결 오류: ${error.message}`
+        );
+        tokenRef.current = null;
       } finally {
-        if (mounted) {
-          setIsInitializing(false);
-        }
+        setIsConnecting(false);
       }
     };
 
-    if (nickname && roomId) {
-      initializeSession();
-    }
+    connectToSession();
 
     return () => {
-      mounted = false;
-      if (retryTimeoutRef.current) {
-        clearTimeout(retryTimeoutRef.current);
+      if (currentSession) {
+        try {
+          console.log("Cleaning up video session...");
+          if (publisher) {
+            currentSession.unpublish(publisher);
+          }
+          subscribers.forEach((subscriber) => {
+            currentSession.unsubscribe(subscriber);
+          });
+          currentSession.disconnect();
+          setSubscribers([]);
+          setIsConnecting(false);
+          tokenRef.current = null;
+          setSession(null);
+          setPublisher(null);
+        } catch (error) {
+          console.error("Error during cleanup:", error);
+        }
       }
-      cleanupSession();
     };
-  }, [nickname, roomId]);
+  }, [sessionId, nickname, isCurrentUser]);
+
+  if (connectionError) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-gray-900 text-white">
+        <p className="text-sm text-red-400">{connectionError}</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="relative w-full h-full bg-gray-900">
-      {!isCameraOn && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-          <div className="text-gray-400 text-lg">카메라 OFF</div>
-        </div>
-      )}
-
-      <div ref={publisherRef} className="absolute inset-0" />
-      <div ref={subscribersRef} className="absolute inset-0" />
-
-      {isCurrentUser && (
-        <div className="absolute bottom-2 right-2 flex gap-2 z-20">
-          <button
-            onClick={toggleMic}
-            className="p-1.5 bg-gray-800/80 rounded-full hover:bg-gray-700/80 transition-colors"
-          >
-            {isMicOn ? (
-              <Mic className="w-4 h-4 text-white" />
-            ) : (
-              <MicOff className="w-4 h-4 text-red-500" />
+    <div className="grid grid-cols-2 gap-3">
+      {players.map((player) => (
+        <PlayerCard
+          key={player.stream.connection?.connectionId || player.nickname}
+          userNickname={player.nickname}
+          isCurrentTurn={player.isCurrentTurn}
+          score={player.score}
+          isCurrentUser={player.isCurrentUser}
+          sessionId={sessionId}
+        >
+          <div className="relative w-full h-full group">
+            <video
+              autoPlay
+              ref={(video) => {
+                if (video) video.srcObject = player.stream.getMediaStream();
+              }}
+              className={`w-full h-full object-cover rounded-lg ${
+                !player.videoEnabled ? "hidden" : ""
+              }`}
+            />
+            {!player.videoEnabled && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-800 rounded-lg">
+                <div className="text-white text-lg">카메라 꺼짐</div>
+              </div>
             )}
-          </button>
-          <button
-            onClick={toggleCamera}
-            className="p-1.5 bg-gray-800/80 rounded-full hover:bg-gray-700/80 transition-colors"
-          >
-            {isCameraOn ? (
-              <Camera className="w-4 h-4 text-white" />
-            ) : (
-              <CameraOff className="w-4 h-4 text-red-500" />
-            )}
-          </button>
-        </div>
-      )}
 
-      {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-900/90 z-30">
-          <p className="text-red-500 text-sm">{error}</p>
-        </div>
-      )}
+            {/* 미디어 상태 표시 */}
+            <div className="absolute bottom-2 left-2 flex items-center space-x-2">
+              <div className="bg-black/50 px-2 py-1 rounded text-white">
+                {player.isCurrentUser
+                  ? `나 (${player.nickname})`
+                  : player.nickname}
+              </div>
+              {!player.audioEnabled && (
+                <div className="bg-red-500/80 p-1 rounded-full">
+                  <MicOff size={16} className="text-white" />
+                </div>
+              )}
+            </div>
+
+            {/* 미디어 컨트롤 버튼 (현재 사용자만) */}
+            {player.isCurrentUser && (
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                <div className="flex gap-3 bg-black/20 backdrop-blur-md p-1.5 rounded-full">
+                  <MediaControlButton
+                    onClick={toggleAudio}
+                    enabled={audioEnabled}
+                    Icon={Mic}
+                    DisabledIcon={MicOff}
+                  />
+                  <MediaControlButton
+                    onClick={toggleVideo}
+                    enabled={videoEnabled}
+                    Icon={Video}
+                    DisabledIcon={VideoOff}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </PlayerCard>
+      ))}
     </div>
   );
 };

@@ -33,7 +33,7 @@ API.interceptors.request.use(
 // 응답 인터셉터 개선
 API.interceptors.response.use(
   (response) => {
-    // HTML 응답 체크를 더 엄격하게
+    // HTML 응답 체크를 더 엄격하게 함
     if (
       response.data &&
       typeof response.data === "string" &&

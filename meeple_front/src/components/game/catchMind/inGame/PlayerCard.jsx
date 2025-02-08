@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from "react";
-import VideoChat from "./VideoChat";
 import ProfileModal from "../../../user/ProfileModal";
 import { UserSearch } from "lucide-react";
+import ReportFormModal from "../../../user/ReportFormModal";
 
 const PlayerCard = ({
   userNickname,
@@ -9,9 +9,11 @@ const PlayerCard = ({
   score,
   userLevel = 1,
   isCurrentUser = false,
+  sessionId,
+  children,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [showReportForm, setShowReportForm] = useState(false); // 여기로 state 이동
+  const [showReportForm, setShowReportForm] = useState(false);
   const buttonRef = useRef();
 
   const getAnchorRect = useCallback(() => {
@@ -37,9 +39,7 @@ const PlayerCard = ({
       }`}
     >
       <div className="w-full pt-[56.25%] relative">
-        <div className="absolute inset-0 overflow-hidden">
-          <VideoChat nickname={userNickname} />
-        </div>
+        <div className="absolute inset-0 overflow-hidden">{children}</div>
         {isCurrentTurn && (
           <div className="absolute top-2 right-2 px-2 py-1 bg-blue-500 text-white text-xs font-medium rounded-full shadow-md z-50">
             출제자
@@ -69,7 +69,7 @@ const PlayerCard = ({
           userNickname={userNickname}
           userLevel={userLevel}
           getAnchorRect={getAnchorRect}
-          onReport={handleReport} // 여기에 handleReport 전달
+          onReport={handleReport}
         />
       )}
 
