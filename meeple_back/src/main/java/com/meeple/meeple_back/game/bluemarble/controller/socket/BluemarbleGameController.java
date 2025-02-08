@@ -7,8 +7,10 @@ import com.meeple.meeple_back.game.bluemarble.controller.response.DrawCardRespon
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuildBaseRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.DiceRollBroadcastRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.PayFeeRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.TurnEndRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.response.PayFeeResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.SocketBuyLandResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.SocketDiceRollResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.SocketResponse;
@@ -39,7 +41,7 @@ public class BluemarbleGameController {
 			@Payload DiceRollRequest diceRollRequest) {
 		SocketDiceRollResponse socketDiceRollResponse = SocketDiceRollResponse.from("roll-dice",
 				bluemarbleGameService.rollDice(roomId, diceRollRequest), "주사위를 굴렸습니다.");
-		messagingTemplate.convertAndSend("/topic/room/" + roomId, socketDiceRollResponse);
+		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, socketDiceRollResponse);
 	}
 
 	@MessageMapping("/{roomId}/buy-land")
@@ -48,7 +50,7 @@ public class BluemarbleGameController {
 			@Payload BuyLandRequest buyLandRequest) {
 		SocketBuyLandResponse socketBuyLandResponse = SocketBuyLandResponse.from("buy-land",
 				bluemarbleGameService.buyLand(roomId, buyLandRequest), "땅을 구매했습니다.");
-		messagingTemplate.convertAndSend("/topic/room/" + roomId, socketBuyLandResponse);
+		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, socketBuyLandResponse);
 	}
 
 	@MessageMapping("/{roomId}/draw-card")
@@ -58,7 +60,7 @@ public class BluemarbleGameController {
 		// TODO : 카드 뽑기 구현
 		SocketResponse<DrawCardResponse> socketCardDrawResponse = SocketResponse.from("draw-card",
 				bluemarbleGameService.drawCard(roomId, cardDrawRequest), "카드를 뽑았습니다.");
-		messagingTemplate.convertAndSend("/topic/room/" + roomId, socketCardDrawResponse);
+		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, socketCardDrawResponse);
 	}
 
 	@MessageMapping("/{roomId}/build-base")
@@ -68,7 +70,7 @@ public class BluemarbleGameController {
 		SocketResponse<BuildBaseResponse> socketBuildBaseResponse = SocketResponse.from(
 				"build-base",
 				bluemarbleGameService.buildBase(roomId, buildBaseRequest), "기지를 건설했습니다.");
-		messagingTemplate.convertAndSend("/topic/room/" + roomId, socketBuildBaseResponse);
+		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, socketBuildBaseResponse);
 
 	}
 
@@ -84,7 +86,7 @@ public class BluemarbleGameController {
 			@Payload PayFeeRequest payFeeRequest) {
 		SocketResponse<PayFeeResponse> response = SocketResponse.from("pay-fee",
 				bluemarbleGameService.payFee(roomId, payFeeRequest), "통행료를 지불했습니다.");
-		messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
+		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, response);
 	}
 
 	/**
@@ -109,6 +111,15 @@ public class BluemarbleGameController {
 			@Payload TurnEndRequest turnEndRequest) {
 		SocketResponse<TurnEndResponse> response = SocketResponse.from("turn-end",
 				bluemarbleGameService.turnEnd(roomId, turnEndRequest), "턴을 종료합니다");
-		messagingTemplate.convertAndSend("/topic/room" + roomId, response);
+		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, response);
+	}
+
+	@MessageMapping("/{roomId}/just-roll-dice")
+	@Operation(summary = "주사위 굴리기 방송", description = "주사위 굴리는걸 방송하는 기능")
+	public void justRollDice(@DestinationVariable("roomId") int roomId,
+			@Payload DiceRollBroadcastRequest request) {
+		SocketResponse response = SocketResponse.from("just-roll-dice", request,
+				"주사위를 굴립니다.");
+		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, response);
 	}
 }

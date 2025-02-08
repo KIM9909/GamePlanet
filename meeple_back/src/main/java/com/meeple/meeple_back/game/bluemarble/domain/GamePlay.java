@@ -5,11 +5,11 @@ import com.meeple.meeple_back.game.bluemarble.controller.response.BuildBaseRespo
 import com.meeple.meeple_back.game.bluemarble.controller.response.BuyLandResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DiceRollResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DrawCardResponse;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.PayFeeResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuildBaseRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.PayFeeRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.response.PayFeeResponse;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
@@ -145,25 +145,24 @@ public class GamePlay {
 
 		// 주사위 굴려서 도착한 땅에 따라서 이벤트 추가
 		int currentPosition = response.getNextPosition();
-		processTileEvent(currentPlayer, currentPosition);
-		DiceRollResponse diceRollResponse = DiceRollResponse.from(response, ActionType.BUY_LAND);
-		// 땅에 도착했을 때 이벤트 추가
-		return diceRollResponse;
+		ActionType nextAction = processTileEvent(currentPlayer, currentPosition);
+		return DiceRollResponse.from(response, nextAction);
 	}
 
-	private void processTileEvent(Player currentPlayer, int currentPosition) {
+	private ActionType processTileEvent(Player currentPlayer, int currentPosition) {
 		Tile currentTile = board.stream()
 				.filter(tile -> tile.getId() == currentPosition)
 				.findFirst()
 				.orElseThrow(() -> new IllegalArgumentException("Tile not found"));
 		// 행성에 도착할 경우.
 		if (TileType.SEED_CERTIFICATE_CARD == currentTile.getType()) {
-			processLandingOnPlanetEvent(currentPlayer, currentTile);
+			return processLandingOnPlanetEvent(currentPlayer, currentTile);
 		}
 		// TODO: 특수카드일 경우 처리
 		if (TileType.NEURONS_VALLEY_CARD == currentTile.getType()) {
 
 		}
+		return ActionType.END;
 	}
 
 	/**
@@ -172,16 +171,17 @@ public class GamePlay {
 	 * @param currentPlayer - 현재 플레이어
 	 * @param currentTile   - 현재 타일
 	 */
-	private void processLandingOnPlanetEvent(Player currentPlayer, Tile currentTile) {
+	private ActionType processLandingOnPlanetEvent(Player currentPlayer, Tile currentTile) {
 		// 땅 구매할지 물어보도록 액션 추가
 		if (currentTile.getOwnerId() == 0 && currentPlayer.getBalance() >= currentTile.getPrice()) {
-			turnManager.addTurnAction(ActionType.BUY_LAND);
+			return ActionType.BUY_LAND;
 		}
 		// 통행료 지불 하도록 액션 추가
 		if (currentTile.getOwnerId() != 0
 				&& currentTile.getOwnerId() != currentPlayer.getPlayerId()) {
-			turnManager.addTurnAction(ActionType.PAY_TOLL);
+			return ActionType.PAY_TOLL;
 		}
+		return ActionType.ROLL_DICE;
 	}
 
 	/**
@@ -224,7 +224,7 @@ public class GamePlay {
 		currentPlayer.addLandOwned(tileId);
 		// 플레이어 카드 소유 추가
 		currentPlayer.addCardOwned(card);
-		
+
 		return BuyLandResponse.of(currentPlayer.getPlayerId(), prevMoney,
 				currentPlayer.getBalance(),
 				currentPlayer, tile, ActionType.END);
@@ -262,12 +262,13 @@ public class GamePlay {
 
 	/**
 	 * 기지 건설 ( 땅 도착 -> 자신의 땅 -> 기지 없음 -> 기지 건설)
+	 * <p>
+	 * 기지 통행료 업데이트, 기지 건설 비용 지불
 	 *
 	 * @param buildBaseRequest -playerId, tileId
 	 * @return BuildBaseResponse - playerId, action, prevMoney, updatedMoney, updatedTile
 	 */
 	public BuildBaseResponse buildBase(BuildBaseRequest buildBaseRequest) {
-		turnManager.executeTurn();
 		Player player = getValidatedPlayer(buildBaseRequest.getPlayerId());
 		Tile tile = findTileById(buildBaseRequest.getTileId());
 
@@ -278,12 +279,11 @@ public class GamePlay {
 		if (tile.isHasBase()) {
 			throw new IllegalArgumentException("이미 기지가 존재합니다");
 		}
-		int baseBuildFee = this.cards.stream()
-				.filter(card -> card.getNumber() == buildBaseRequest.getTileId()
-						&& card instanceof SeedCertificateCard)
-				.mapToInt(card -> ((SeedCertificateCard) card).getBaseConstructionCost())
-				.findFirst()
-				.orElseThrow(() -> new IllegalArgumentException("해당 타일 번호와 일치하는 Seed 카드가 없습니다."));
+		SeedCertificateCard card = (SeedCertificateCard) player.getCardOwnedByTileId(
+				buildBaseRequest.getTileId());
+
+		int baseBuildFee = card.getBaseConstructionCost();
+		int headquarterUsageFee = card.getHeadquartersUsageFee();
 
 		if (player.getBalance() < baseBuildFee) {
 			throw new IllegalArgumentException("Player의 자금이 부족합니다");
@@ -294,18 +294,10 @@ public class GamePlay {
 		int updatedMoney = player.getBalance();
 
 		tile.addBase();
-		int priceToIncrease = this.cards.stream()
-				.filter(card -> card.getNumber() == buildBaseRequest.getTileId()
-						&& card instanceof SeedCertificateCard)
-				.mapToInt(card -> ((SeedCertificateCard) card).getHeadquartersUsageFee())
-				.findFirst()
-				.orElseThrow(() -> new IllegalArgumentException("해당 타일 번호와 일치하는 Seed 카드가 없습니다."));
-		tile.increateTollPrice(priceToIncrease);
-		ActionType nextTurn = getNextTurn();
+		tile.updateTollPrice(headquarterUsageFee);
 
-		return BuildBaseResponse.from(player.getPlayerId(), nextTurn,
-				prevPlayerMoney, updatedMoney, tile);
-
+		return BuildBaseResponse.from(player.getPlayerId(), prevPlayerMoney, updatedMoney, player,
+				tile, ActionType.END);
 	}
 
 	/**

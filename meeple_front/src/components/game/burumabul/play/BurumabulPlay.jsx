@@ -10,60 +10,43 @@ import { SocketContext } from "../../../layout/SocketLayout";
 
 const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
   console.log("부루마불 플레이 현재 방 정보 :", currentRoomInfo);
-  console.log(roomId);
+
   // 소켓 사용
   const socketContext = useContext(SocketContext);
   const {
     connected,
     roomSocketData,
     createBurumabulPlay,
-    gamePlaySocekData,
-    gameSockeNotifi,
+    gamePlaySocketData,
+    gameSocketNotifi,
     rollDiceSocketData,
     buyLandSocketData,
   } = socketContext;
+  const firstDice = useSelector((state) => state.burumabul.firstDice);
+  const secondDice = useSelector((state) => state.burumabul.secondDice);
 
   // 게임 데이터
   const [currentPlayData, setCurrentPlayData] = useState(playData);
 
-  const roomInfo = currentRoomInfo;
-  const dispatch = useDispatch();
+  useEffect(() => {
+    setCurrentPlayData(playData);
+  }, [playData]);
 
   useEffect(() => {
-    if (gamePlaySocekData) {
-      console.log("새로운 gamePlaySocekData 수신:", gamePlaySocekData);
-      setCurrentPlayData(gamePlaySocekData);
+    if (gamePlaySocketData) {
+      console.log("새로운 gamePlaySocekData 수신:", gamePlaySocketData);
+      setCurrentPlayData(gamePlaySocketData);
     }
-  }, [gamePlaySocekData]);
+  }, [gamePlaySocketData]);
 
-  if (!roomInfo?.players) {
-    return <div>게임 정보를 불러오는 중</div>;
-  }
+  const roomInfo = currentRoomInfo;
 
-  if (!playData) {
-    return <div>게임을 초기화하는 중</div>;
-  }
-
-  const currentPlayer =
-    currentPlayData?.players?.[currentPlayData?.currentPlayerIndex];
-  console.log("현재 플레이어: ", currentPlayer);
-  const playerInfoList = currentPlayData.players;
-  const firstDice = useSelector((state) => state.burumabul.firstDice);
-  const secondDice = useSelector((state) => state.burumabul.secondDice);
-
-  console.log("==================");
-  console.log(firstDice);
-  console.log(secondDice);
-
+  const dispatch = useDispatch();
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  // const [playerCount, setPlayerCount] = useState()
+
   const [rollDice, setRollDice] = useState(null);
   const [playerBases, setPlayerBases] = useState([]);
   const handleRollDiceRef = useCallback((rollDiceFn) => {
-    // if (!connected) {
-    //   alert("서버와 연결이 끊어졌습니다.");
-    //   return;
-    // }
     setRollDice(() => rollDiceFn);
   }, []);
 
@@ -75,6 +58,25 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen);
   };
+
+  const loadingMessage = !currentRoomInfo?.players ? (
+    <div>게임 정보를 불러오는 중</div>
+  ) : !currentPlayData || Object.keys(currentPlayData).length === 0 ? (
+    <div>게임을 초기화하는 중</div>
+  ) : null;
+
+  if (loadingMessage) {
+    return <>{loadingMessage}</>;
+  }
+
+  const currentPlayer =
+    currentPlayData?.players?.[currentPlayData?.currentPlayerIndex];
+  console.log("현재 플레이어: ", currentPlayer);
+  const playerInfoList = currentPlayData.players;
+
+  console.log("==================");
+  console.log(firstDice);
+  console.log(secondDice);
 
   return (
     <>
@@ -109,12 +111,11 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
       </div>
       {/* Main Content 영역 */}
       <div className="bg-white h-12">
-        {!connected && (
-          <div>
-            주사위 결과 : 첫 번째{firstDice} + 두 번째{secondDice} = 총 점수 :
-            {firstDice + secondDice}
-          </div>
-        )}
+        <div>
+          주사위 결과 : 첫 번째{firstDice} + 두 번째{secondDice} = 총 점수 :
+          {firstDice + secondDice}
+        </div>
+        <div>{gameSocketNotifi}</div>
       </div>
       <div
         className={`transition-all duration-300 ease-in-out ${
@@ -137,15 +138,15 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
               <div className="h-[60%] w-full border-2 overflow-y-auto thin-scrollbar max-h-[70vh]">
                 <h2 className="text-lg text-center my-2">현재 플레이어: </h2>
                 <div className="mx-2">
-                  {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-3">
                     {playerInfoList.map((player, index) => (
                       <PlayerVideo key={index} playerInfo={player} />
                     ))}
-                  </div> */}
+                  </div>
                 </div>
                 <div className="border-2 m-3 rounded-lg">
                   <h2 className="text-center m-3">플레이어 순위</h2>
-                  {/* <div className="mb-3 mx-2">
+                  <div className="mb-3 mx-2">
                     {playerInfoList.map((player, index) => (
                       <div
                         key={index}
@@ -156,7 +157,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
                         <p>~~~~~ 만 마불</p>
                       </div>
                     ))}
-                  </div> */}
+                  </div>
                 </div>
               </div>
 
@@ -187,23 +188,25 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
                   </div>
                 </div>
                 <div className="flex flex-row justify-center items-center">
-                  <button
-                    className="flex flex-row justify-center items-center"
-                    onClick={() => rollDice && rollDice()}
-                  >
-                    <div className="flex-shrink-0 border-2 border-white text-white rounded-lg p-2 w-44 h-12 bg-teal-400 flex items-center justify-between whitespace-nowrap min-w-0">
-                      <p
-                        className="flex-shrink-0 ml-2"
-                        style={{
-                          textShadow:
-                            "-1px 0px black, 0px 1px black, 1px 0px black, 0px -1px black",
-                        }}
-                      >
-                        주사위 굴리기
-                      </p>
-                      <img className="w-12 h-12" src={DiceImage} alt="Dice" />
-                    </div>
-                  </button>
+                  {
+                    <button
+                      className="flex flex-row justify-center items-center"
+                      onClick={() => rollDice && rollDice()}
+                    >
+                      <div className="flex-shrink-0 border-2 border-white text-white rounded-lg p-2 w-44 h-12 bg-teal-400 flex items-center justify-between whitespace-nowrap min-w-0">
+                        <p
+                          className="flex-shrink-0 ml-2"
+                          style={{
+                            textShadow:
+                              "-1px 0px black, 0px 1px black, 1px 0px black, 0px -1px black",
+                          }}
+                        >
+                          주사위 굴리기
+                        </p>
+                        <img className="w-12 h-12" src={DiceImage} alt="Dice" />
+                      </div>
+                    </button>
+                  }
                 </div>
               </div>
             </div>

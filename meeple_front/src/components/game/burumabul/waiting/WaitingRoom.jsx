@@ -14,16 +14,19 @@ import { findBurumabulRoom } from "../../../../sources/api/BurumabulRoomAPI";
 import { SocketContext } from "../../../layout/SocketLayout";
 
 // 백엔드 연결 필요
-const WaitingRoom = ({ roomId, setIsStart, setPlayData }) => {
+const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
   console.log(roomId);
+  useEffect(() => {
+    setCurrnetRoomInfo(roomInfo);
+  }, [roomInfo]);
   const userId = Number(useSelector((state) => state.user.userId));
-  const [currentRoomInfo, setCurrnetRoomInfo] = useState({});
+  const [currentRoomInfo, setCurrnetRoomInfo] = useState(roomInfo);
   const {
     connected,
     roomSocketData,
     leaveGame,
     createBurumabulPlay,
-    gmaePlaySocketData,
+    gamePlaySocketData,
   } = useContext(SocketContext);
 
   const [showPutRoomModal, setShowPutRoomModal] = useState(false);
@@ -48,7 +51,7 @@ const WaitingRoom = ({ roomId, setIsStart, setPlayData }) => {
       }
     };
     getFriendList();
-  }, []);
+  }, [roomId]);
 
   useEffect(() => {
     const getRoomInfo = async () => {
@@ -108,7 +111,7 @@ const WaitingRoom = ({ roomId, setIsStart, setPlayData }) => {
         };
         console.log("게임 생성 시도", playInfo);
         createBurumabulPlay(playInfo);
-        setPlayData(gmaePlaySocketData);
+        setPlayData(gamePlaySocketData);
         setIsStart(true);
       } catch (error) {
         console.error("부루마불 플레이 생성 실패 :", error);
