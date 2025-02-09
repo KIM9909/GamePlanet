@@ -394,7 +394,14 @@ public class CatchMindServiceImpl implements CatchMindService {
             List<String> quizList = (List<String>) gameInfo.get("quizList");
 
             if (quizList.isEmpty()) {
-                playerScore.put(request.getSender(), currentScore + 30);
+                int finalScore = currentScore + 30;
+                playerScore.put(request.getSender(), finalScore);
+
+                // Redis에 업데이트된 점수 저장
+                gameInfo.put("playerScore", playerScore);
+                roomInfo.put("gameInfo", gameInfo);
+                redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
+
                 List<GameResultDTO> gameResult = gameResult(roomId);
 
                 MessageDTO responseMessage = MessageDTO.builder()
@@ -429,7 +436,7 @@ public class CatchMindServiceImpl implements CatchMindService {
 
                 ResponseSendMessage response = ResponseSendMessage.builder()
                         .type("message")
-                        .message(messageDTO)
+//                        .message(messageDTO)
                         .build();
 
                 return response;

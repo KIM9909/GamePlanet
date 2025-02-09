@@ -3,6 +3,7 @@ import { OpenVidu } from "openvidu-browser";
 import axios from "axios";
 import PlayerCard from "./PlayerCard";
 import { Mic, MicOff, Video, VideoOff } from "lucide-react";
+import { useSelector } from "react-redux";
 
 const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
   const [session, setSession] = useState(null);
@@ -14,6 +15,8 @@ const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [videoEnabled, setVideoEnabled] = useState(true);
   const tokenRef = useRef(null);
+
+  const gameStatePlayers = useSelector((state) => state.catchmind.players);
 
   // 오디오 상태 토글
   const toggleAudio = () => {
@@ -55,36 +58,56 @@ const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
   // players 상태 업데이트 함수
   const updatePlayers = (publisher, subscribers) => {
     const allPlayers = [];
+    const addedNicknames = new Set(); // 이미 추가된 닉네임을 추적
 
     // 현재 사용자(publisher) 추가
     if (publisher) {
+      const currentPlayerState = gameStatePlayers.find(
+        (p) => p.nickname === nickname
+      );
       allPlayers.push({
         stream: publisher.stream,
         nickname: nickname,
         isCurrentUser: true,
-        score: 0,
-        isCurrentTurn: false,
+        score: currentPlayerState?.score || 0, // Redux store에서 점수 가져오기
+        isCurrentTurn: currentPlayerState?.isTurn || false,
         audioEnabled: audioEnabled,
         videoEnabled: videoEnabled,
       });
+      addedNicknames.add(nickname);
     }
 
-    // 다른 참가자들(subscribers) 추가
+    // 다른 참가자들(subscribers) 추가 - 중복 닉네임 체크
     subscribers.forEach((subscriber) => {
       const connectionData = JSON.parse(subscriber.stream.connection.data);
-      allPlayers.push({
-        stream: subscriber.stream,
-        nickname: connectionData.clientData,
-        isCurrentUser: false,
-        score: 0,
-        isCurrentTurn: false,
-        audioEnabled: subscriber.stream.audioActive,
-        videoEnabled: subscriber.stream.videoActive,
-      });
+      const playerNickname = connectionData.clientData;
+      const playerState = gameStatePlayers.find(
+        (p) => p.nickname === connectionData.clientData
+      );
+
+      // 이미 추가된 닉네임이 아닌 경우에만 추가
+      if (!addedNicknames.has(playerNickname)) {
+        allPlayers.push({
+          stream: subscriber.stream,
+          nickname: connectionData.clientData,
+          isCurrentUser: false,
+          score: playerState?.score || 0, // Redux store에서 점수 가져오기
+          isCurrentTurn: playerState?.isTurn || false,
+          audioEnabled: subscriber.stream.audioActive,
+          videoEnabled: subscriber.stream.videoActive,
+        });
+        addedNicknames.add(playerNickname);
+      }
     });
 
     setPlayers(allPlayers);
   };
+
+  useEffect(() => {
+    if (publisher || subscribers.length > 0) {
+      updatePlayers(publisher, subscribers);
+    }
+  }, [gameStatePlayers, publisher, subscribers]);
 
   useEffect(() => {
     console.log("Subscribers 상태 변경:", {
@@ -167,6 +190,9 @@ const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
             `${
               import.meta.env.VITE_API_BASE_URL
             }/api/video/generate-token/${sessionId}`,
+            // `${
+            //   import.meta.env.VITE_LOCAL_API_BASE_URL
+            // }/api/video/generate-token/${sessionId}`,
             {},
             {
               headers: { "Content-Type": "application/json" },
@@ -186,14 +212,23 @@ const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
         });
 
         const newPublisher = await OV.initPublisher(undefined, {
-          audioSource: undefined,
-          videoSource: undefined,
+          audioSource: undefined, // 기본 마이크 사용
+          videoSource: undefined, // 기본 카메라 사용
           publishAudio: audioEnabled,
           publishVideo: videoEnabled,
           resolution: "640x480",
           frameRate: 15,
           insertMode: "APPEND",
           mirror: false,
+          publisherProperties: {
+            mediaConstraints: {
+              audio: {
+                echoCancellation: true, // 에코 캔슬레이션 활성화
+                noiseSuppression: true, // 노이즈 제거 활성화
+                autoGainControl: true, // 자동 게인 컨트롤 활성화
+              },
+            },
+          },
         });
 
         await currentSession.publish(newPublisher);
@@ -259,7 +294,10 @@ const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
             <video
               autoPlay
               ref={(video) => {
-                if (video) video.srcObject = player.stream.getMediaStream();
+                if (video) {
+                  video.srcObject = player.stream.getMediaStream();
+                  video.muted = player.isCurrentUser; // 자신의 비디오는 음소거
+                }
               }}
               className={`w-full h-full object-cover rounded-lg ${
                 !player.videoEnabled ? "hidden" : ""

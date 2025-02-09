@@ -253,11 +253,6 @@ public class CatchMindController {
     private void timeOutSocket(
             @DestinationVariable String roomId
     ) {
-        System.out.println("호출됨");
-        System.out.println("호출됨");
-        System.out.println("호출됨");
-        System.out.println("호출됨");
-        System.out.println("호출됨");
         ResponseTimeOut response = catchMindService.quizTimeOut(roomId);
 
         messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
