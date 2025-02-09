@@ -154,7 +154,7 @@ const CatchMindSlice = createSlice({
       if (roomId !== undefined) state.roomId = roomId;
 
       // 턴 업데이트
-      if (currentTurn) {
+      if (currentTurn && state.players.length > 0) {
         state.players = state.players.map((player) => ({
           ...player,
           isTurn: player.nickname === currentTurn,
@@ -187,17 +187,21 @@ const CatchMindSlice = createSlice({
 
     // 게임 상태 초기화 리듀서 추가
     resetGameState: (state) => {
+      const existingPlayers = [...state.players]; // 기존 플레이어 정보 보존
+
+      // 게임 상태 초기화
       state.currentWord = null;
       state.currentRound = 1;
       state.isGameStarted = false;
       state.quizCategory = null;
       state.remainQuizCount = 0;
-      state.players = state.players.map((player) => ({
+
+      // 플레이어 정보는 유지하되 점수와 턴만 초기화
+      state.players = existingPlayers.map((player) => ({
         ...player,
         score: 0,
         isTurn: false,
       }));
-      // state.sessionId = null;
     },
   },
   extraReducers: (builder) => {

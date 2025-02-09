@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../sources/store/slices/UserSlice";
 import { useNavigate } from "react-router-dom";
 import Twinkle from "../../assets/images/decorate_twinkle.png";
+import { Bell, Menu, X } from "lucide-react";
 
 import EunSoo from "../../assets/images/pixel_character/pixel-eunsoo.png";
 import HeeJun from "../../assets/images/pixel_character/pixel-heejun.png";
@@ -12,19 +13,19 @@ import JaeEun from "../../assets/images/pixel_character/pixel-jaeeun.png";
 import JinHyuk from "../../assets/images/pixel_character/pixel-jinhyuk.png";
 import SungHyun from "../../assets/images/pixel_character/pixel-sunghyun.png";
 import useFriendSocket from "../../hooks/useFriendSocket";
-import { Bell } from "lucide-react";
 import NotificationList from "../notification/NotificationList";
 
 const TopNavbar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [selectedCharacter, setSelectedCharacter] = useState(null);
+  const [popupPosition, setPopupPosition] = useState({ left: 0, top: 0 });
+  const characterRefs = useRef([]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navbarRef = useRef(null);
   const { token } = useSelector((state) => state.user);
 
   const userId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
-
-  const userID = useSelector((state) => state.user.userId);
   const { connected, responseSocket, stompClitenRef } = useFriendSocket();
   const [notificationList, setNotificationList] = useState([]);
   const [isShowNotifi, setIsShowNotifi] = useState(false);
@@ -33,58 +34,6 @@ const TopNavbar = () => {
   );
 
   const notificationRef = useRef(null);
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        notificationRef.current &&
-        !notificationRef.current.contains(event.target)
-      ) {
-        setIsShowNotifi(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  });
-
-  useEffect(() => {
-    if (connected) {
-      console.log("소켓 연결 성공");
-    } else {
-      console.error("소켓 연결 에러");
-      // 재연결 시도
-      const reconnectSocket = async () => {
-        if (stompClitenRef.current) {
-          try {
-            await stompClitenRef.current.active();
-          } catch (error) {
-            console.error("재연결 실패:", error);
-          }
-        }
-      };
-      reconnectSocket();
-    }
-  }, [connected]);
-
-  useEffect(() => {
-    if (responseSocket) {
-      console.log("새로운 소켓 응답:", responseSocket, typeof responseSocket);
-      setNotificationList((prevList) => {
-        const updatedList = [...prevList, responseSocket];
-        console.log("업데이트 된 알림 목록:", updatedList);
-        return updatedList;
-      });
-      setNotificationCount((prevCount) => prevCount + 1);
-    }
-    console.log(notificationList);
-  }, [responseSocket]);
-
-  const showNotifi = () => {
-    setIsShowNotifi(true);
-  };
-
-  useEffect(() => {
-    setNotificationCount(notificationList.length);
-  }, [notificationList]);
 
   const characterInfo = {
     0: {
@@ -100,35 +49,92 @@ const TopNavbar = () => {
     2: {
       name: "진혁",
       role: "Front-end",
-      description: "감각있는 프론트엔드 개발자자",
+      description: "감각있는 프론트엔드 개발자",
     },
     3: {
       name: "홍범",
       role: "Full-stack",
-      description: "다재다능 풀스택 개발자자",
+      description: "다재다능 풀스택 개발자",
     },
     4: {
       name: "재은",
       role: "Back-end",
       description: "계산적인 백엔드 개발자",
     },
-    5: {
-      name: "성현",
-      role: "Back-end",
-      description: "로보트 백엔드 개발자",
-    },
+    5: { name: "성현", role: "Back-end", description: "로보트 백엔드 개발자" },
   };
 
+  // 외부 클릭 감지 핸들러
   useEffect(() => {
     const handleClickOutside = (event) => {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target)
+      ) {
+        setIsShowNotifi(false);
+      }
       if (navbarRef.current && !navbarRef.current.contains(event.target)) {
         setSelectedCharacter(null);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // 캐릭터 선택시 팝업 위치 계산
+  useEffect(() => {
+    if (
+      selectedCharacter !== null &&
+      characterRefs.current[selectedCharacter]
+    ) {
+      const characterRect =
+        characterRefs.current[selectedCharacter].getBoundingClientRect();
+      const navbarRect = navbarRef.current.getBoundingClientRect();
+
+      setPopupPosition({
+        left: characterRect.left + characterRect.width / 2,
+        top: characterRect.bottom - navbarRect.top + 10,
+      });
+    }
+  }, [selectedCharacter]);
+
+  // 소켓 연결 관리
+  useEffect(() => {
+    if (connected) {
+      console.log("소켓 연결 성공");
+    } else {
+      console.error("소켓 연결 에러");
+      const reconnectSocket = async () => {
+        if (stompClitenRef.current) {
+          try {
+            await stompClitenRef.current.active();
+          } catch (error) {
+            console.error("재연결 실패:", error);
+          }
+        }
+      };
+      reconnectSocket();
+    }
+  }, [connected]);
+
+  // 알림 처리
+  useEffect(() => {
+    if (responseSocket) {
+      setNotificationList((prevList) => {
+        const updatedList = [...prevList, responseSocket];
+        return updatedList;
+      });
+      setNotificationCount((prev) => prev + 1);
+    }
+  }, [responseSocket]);
+
+  useEffect(() => {
+    setNotificationCount(notificationList.length);
+  }, [notificationList]);
+
+  const showNotifi = () => {
+    setIsShowNotifi(true);
+  };
 
   const handleLogout = () => {
     dispatch(logout());
@@ -136,14 +142,16 @@ const TopNavbar = () => {
   };
 
   return (
-    <>
-      <nav
-        ref={navbarRef}
-        className="bg-gradient-to-r from-gray-800 to-gray-800 text-white p-1 shadow-lg relative"
-      >
-        <div className="container mx-auto flex justify-between items-center">
+    <nav
+      ref={navbarRef}
+      className="bg-gradient-to-r from-gray-800 to-gray-800 text-white p-1 shadow-lg relative"
+    >
+      <div className="container mx-auto px-4">
+        {/* Desktop Navigation */}
+        <div className="hidden lg:flex justify-between items-center">
+          {/* Logo */}
           <div className="flex-1">
-            <div className="flex">
+            <div className="flex items-center">
               <Link
                 to="/home"
                 className="text-[38px] font-bold transition-all duration-300 hover:text-cyan-300"
@@ -156,16 +164,18 @@ const TopNavbar = () => {
                 GAME PLANET
               </Link>
               <span className="ml-3 w-[60px]">
-                <img src={Twinkle} alt="반짝이" />
+                <img src={Twinkle} alt="반짝이" className="w-full h-full" />
               </span>
             </div>
           </div>
 
-          <div className="flex-1 flex justify-center space-x-9 mx-2">
+          {/* Character Icons */}
+          <div className="flex-1 flex justify-center space-x-9">
             {[EunSoo, HeeJun, JinHyuk, HongBeom, JaeEun, SungHyun].map(
               (character, index) => (
                 <div
                   key={index}
+                  ref={(el) => (characterRefs.current[index] = el)}
                   className="w-12 h-12 cursor-pointer relative"
                   style={{
                     textShadow:
@@ -178,21 +188,6 @@ const TopNavbar = () => {
                     )
                   }
                 >
-                  <style>
-                    {`
-                    @keyframes jump {
-                      0%, 100% { transform: translateY(0); }
-                      50% { transform: translateY(-15px); } 
-                    }
-                    .jump-animation {
-                      animation: jump 0.5s ease-in-out;
-                    }
-                    @keyframes popup {
-                      0% { opacity: 0; transform: translateY(-10px); }
-                      100% { opacity: 1; transform: translateY(0); }
-                    }
-                  `}
-                  </style>
                   <img
                     src={character}
                     alt={`Character ${index + 1}`}
@@ -208,6 +203,7 @@ const TopNavbar = () => {
             )}
           </div>
 
+          {/* Navigation Links */}
           <div className="flex items-center space-x-6">
             <div className="relative" ref={notificationRef}>
               <Bell
@@ -219,47 +215,101 @@ const TopNavbar = () => {
               />
               {notificationList.length > 0 && (
                 <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold ">
+                  <span className="text-white text-xs font-bold">
                     {notificationCount > 99 ? "99+" : notificationList.length}
                   </span>
                 </div>
               )}
             </div>
-            {isShowNotifi && (
-              <NotificationList
-                notiList={notificationList}
-                setNotiList={setNotificationList}
-              />
-            )}
             <Link
               to={`/profile/${userId}`}
-              className="text-2xl font-semibold tracking-wide hover:text-cyan-300 transition-colors duration-300
-                     relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-cyan-300 
-                     after:left-0 after:-bottom-1 hover:after:w-full after:transition-all after:duration-300"
+              className="text-2xl font-semibold hover:text-cyan-300 transition-all duration-300"
             >
               PROFILE
             </Link>
             <button
               onClick={handleLogout}
-              className="text-2xl font-semibold tracking-wide text-red-400 hover:text-red-300 transition-colors duration-300
-                     relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-red-300 
-                     after:left-0 after:-bottom-1 hover:after:w-full after:transition-all after:duration-300"
+              className="text-2xl font-semibold text-red-400 hover:text-red-300 transition-all duration-300"
             >
               LOGOUT
             </button>
           </div>
         </div>
-      </nav>
 
+        {/* Mobile Navigation */}
+        <div className="lg:hidden flex justify-between items-center">
+          {/* Mobile Logo */}
+          <Link to="/home" className="text-2xl font-bold">
+            GAME PLANET
+          </Link>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2"
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="lg:hidden absolute top-full left-0 right-0 bg-gray-800 z-50 shadow-lg">
+            <div className="px-4 py-2 space-y-4">
+              {/* Mobile Character Grid */}
+              <div className="grid grid-cols-3 gap-4 py-4">
+                {[EunSoo, HeeJun, JinHyuk, HongBeom, JaeEun, SungHyun].map(
+                  (character, index) => (
+                    <div key={index} className="flex flex-col items-center">
+                      <img
+                        src={character}
+                        alt={`Character ${index + 1}`}
+                        className="w-12 h-12"
+                        onMouseEnter={(e) => {
+                          e.currentTarget.classList.remove("jump-animation");
+                          void e.currentTarget.offsetWidth;
+                          e.currentTarget.classList.add("jump-animation");
+                        }}
+                      />
+                      <span className="text-sm mt-1">
+                        {characterInfo[index].name}
+                      </span>
+                    </div>
+                  )
+                )}
+              </div>
+
+              {/* Mobile Navigation Links */}
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center justify-between">
+                  <span>알림</span>
+                  <Bell size={20} onClick={showNotifi} />
+                </div>
+                <Link to={`/profile/${userId}`} className="block py-2">
+                  PROFILE
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="block py-2 text-red-400"
+                >
+                  LOGOUT
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Character Info Popup */}
       {selectedCharacter !== null && (
         <div
-          className="absolute z-50"
+          className="absolute z-50 hidden lg:block w-48"
           style={{
-            left: `${selectedCharacter * 5.25 + 36.7}rem`, // 5.25rem은 캐릭터 간격, 36.7rem은 초기 왼쪽 여백
-            top: "4.5rem", // navbar 아래 위치
+            left: `${popupPosition.left - 96}px`, // 96px is half of w-48 (192px)
+            top: `${popupPosition.top}px`,
           }}
         >
-          <div className="animate-[popup_0.3s_ease-out] bg-cyan-900 text-white p-4 rounded-lg shadow-lg w-48">
+          <div className="animate-[popup_0.3s_ease-out] bg-cyan-900 text-white p-4 rounded-lg shadow-lg">
             <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-cyan-900 transform rotate-45" />
             <div className="relative">
               <p className="font-bold text-lg">
@@ -275,7 +325,32 @@ const TopNavbar = () => {
           </div>
         </div>
       )}
-    </>
+
+      {/* Notifications */}
+      {isShowNotifi && (
+        <NotificationList
+          notiList={notificationList}
+          setNotiList={setNotificationList}
+        />
+      )}
+
+      {/* Animations */}
+      <style>
+        {`
+          @keyframes jump {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+          }
+          .jump-animation {
+            animation: jump 0.5s ease-in-out;
+          }
+          @keyframes popup {
+            0% { opacity: 0; transform: translateY(-10px); }
+            100% { opacity: 1; transform: translateY(0); }
+          }
+        `}
+      </style>
+    </nav>
   );
 };
 
