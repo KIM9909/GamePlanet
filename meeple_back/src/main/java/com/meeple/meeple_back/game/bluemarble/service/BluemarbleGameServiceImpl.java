@@ -32,7 +32,7 @@ public class BluemarbleGameServiceImpl implements BluemarbleGameService {
 		List<Player> players = gamePlayCreate.getPlayerIds().stream()
 				.map(id -> Player.init(userService.findById(id)))
 				.toList();
-		GamePlay gamePlay = bluemarbleGameRepository.save(GamePlay.from(gamePlayCreate, players));
+		GamePlay gamePlay = bluemarbleGameRepository.save(GamePlay.init(gamePlayCreate, players));
 		return GamePlayResponse.from(gamePlay);
 	}
 

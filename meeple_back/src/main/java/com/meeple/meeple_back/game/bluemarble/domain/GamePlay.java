@@ -13,7 +13,6 @@ import com.meeple.meeple_back.game.bluemarble.controller.socket.response.PayFeeR
 import lombok.Builder;
 import lombok.Getter;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -32,7 +31,7 @@ public class GamePlay {
 	private TurnManager turnManager;
 
 	@Builder
-	public static GamePlay from(GamePlayCreate gamePlayCreate, List<Player> players) {
+	public static GamePlay init(GamePlayCreate gamePlayCreate, List<Player> players) {
 		return GamePlay.builder()
 				.gamePlayId(gamePlayCreate.getGamePlayId())
 				.currentPlayerIndex(0)
@@ -41,7 +40,7 @@ public class GamePlay {
 				.round(1)
 				.board(createTiles())
 				.cards(createCards())
-				.turnManager(new TurnManager(new ArrayDeque<>()))
+				.turnManager(TurnManager.init(players))
 				.build();
 	}
 
@@ -125,23 +124,19 @@ public class GamePlay {
 	}
 
 	/**
-	 * 더블이면 주사위 한번더 던지기
-	 *
-	 * @param response
+	 * 더블이면 더블 Count ++
 	 */
 	private void processDoubleRoll(DiceRollResult response) {
 		if (response.isDouble()) {
-			turnManager.addTurnAction(ActionType.ROLL_DICE);
+			turnManager.checkDouble();
 		}
 	}
 
 	public DiceRollResponse rollDices(DiceRollRequest diceRollRequest) {
 		Player currentPlayer = getValidatedPlayer(diceRollRequest.getPlayerId());
 		DiceRollResult response = currentPlayer.rollDices(diceRollRequest);
-		// TODO 1 : 더블인 경우 주사위 한번더 던지기
 		processDoubleRoll(response);
 
-		// 주사위 굴려서 도착한 땅에 따라서 이벤트 추가
 		int currentPosition = response.getNextPosition();
 		ActionType nextAction = processTileEvent(currentPlayer, currentPosition);
 		// TODO 2 : 턴 종료 조건 판별
@@ -248,13 +243,6 @@ public class GamePlay {
 				currentPlayer, tile, ActionType.END);
 	}
 
-	private ActionType getNextTurn() {
-		if (turnManager.hasNextTurn()) {
-			return turnManager.peekTurn();
-		} else {
-			return ActionType.END;
-		}
-	}
 
 	/**
 	 * 타일에 해당하는 카드 뽑기 카드 종류 : 텔레파시, 뉴런의 골짜기, 미완
@@ -263,7 +251,6 @@ public class GamePlay {
 	 * @return DrawCardResponse - playerId, action, card
 	 */
 	public DrawCardResponse drawCard(CardDrawRequest cardDrawRequest) {
-		turnManager.executeTurn();
 
 		Player player = getValidatedPlayer(cardDrawRequest.getPlayerId());
 
@@ -274,8 +261,7 @@ public class GamePlay {
 				CardType.valueOf(tile.getType().name()));
 
 		player.addCardOwned(card);
-		turnManager.addTurnAction(ActionType.USE_CARD);
-		return DrawCardResponse.from(player.getPlayerId(), player, card, getNextTurn());
+		return DrawCardResponse.from(player.getPlayerId(), player, card, ActionType.USE_CARD);
 	}
 
 	/**
@@ -327,8 +313,6 @@ public class GamePlay {
 	 * receivedPlayer; private String nextAction;
 	 */
 	public PayFeeResponse payFee(PayFeeRequest payFeeRequest) {
-		turnManager.executeTurn();
-
 		Tile tile = findTileById(payFeeRequest.getTileId());
 		Player paidPlayer = getValidatedPlayer(payFeeRequest.getPlayerId());
 		validateTileOwnership(tile, paidPlayer);
@@ -349,7 +333,6 @@ public class GamePlay {
 		final int remainingToll = tollPrice - paidPlayer.getBalance();
 		paidPlayer.payMoney(availablePayment);
 		receivedPlayer.addMoney(availablePayment);
-		turnManager.addTurnAction(ActionType.BROKEN);
 		return PayFeeResponse.from(availablePayment, paidPlayer.getBalance(), remainingToll, true,
 				paidPlayer, receivedPlayer, ActionType.BROKEN);
 	}
@@ -361,10 +344,9 @@ public class GamePlay {
 		paidPlayer.payMoney(tollPrice);
 		receivedPlayer.addMoney(tollPrice);
 
-		ActionType nextAction = getNextTurn();
 
 		return PayFeeResponse.from(previousBalance, paidPlayer.getBalance(), tollPrice, false,
-				paidPlayer, receivedPlayer, nextAction);
+				paidPlayer, receivedPlayer, ActionType.CHECK_END);
 	}
 
 	private void validateTileOwnership(Tile tile, Player payer) {
