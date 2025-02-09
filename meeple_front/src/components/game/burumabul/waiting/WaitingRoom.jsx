@@ -37,6 +37,18 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
 
   console.log("소켓 데이터", SocketContext);
 
+  const playersInfo = currentRoomInfo.players;
+  const [roomName, setRoomName] = useState(currentRoomInfo?.roomName);
+  const [maxPlayers, setMaxPlayers] = useState(currentRoomInfo?.maxPlayers);
+  const [playerLen, setPlayerLen] = useState(currentRoomInfo?.players?.length);
+  const creatorId = Number(currentRoomInfo?.creator?.playerId);
+  const isPrivate = currentRoomInfo.private;
+
+  useEffect(() => {
+    setRoomName(roomSocketData.roomName);
+    setMaxPlayers(roomSocketData.maxPlayers);
+  }, [roomSocketData]);
+
   useEffect(() => {
     const getFriendList = async () => {
       if (roomId) {
@@ -83,14 +95,6 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
   }
 
   console.log(currentRoomInfo);
-
-  const playersInfo = currentRoomInfo.players;
-  const roomName = currentRoomInfo.roomName;
-  const creatorId = Number(currentRoomInfo.creator?.playerId);
-
-  const isPrivate = currentRoomInfo.private;
-  const maxPlayers = currentRoomInfo.maxPlayers;
-  const playerLen = currentRoomInfo.players?.length;
 
   const handlePutRoom = () => {
     setShowPutRoomModal(true);

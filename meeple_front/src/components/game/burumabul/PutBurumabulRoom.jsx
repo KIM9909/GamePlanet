@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { FaRegEye } from "react-icons/fa";
 import { FaRegEyeSlash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { putBurumabulRoom } from "../../../sources/api/BurumabulRoomAPI";
+import { SocketContext } from "../../layout/SocketLayout";
 
 const PutBurumabulRoom = ({ onClose, originRoomData }) => {
   console.log(originRoomData);
@@ -10,24 +11,22 @@ const PutBurumabulRoom = ({ onClose, originRoomData }) => {
   const currentPlayers = Number(originData.players.length);
   const [roomData, setRoomData] = useState({
     roomName: originData.roomName,
-    private: originData.private,
+    isPrivate: originData.private,
+    isGameStart: false,
     maxPlayers: originData.maxPlayers,
   });
 
-  const navigate = useNavigate();
-
+  const { connected, updateWaitingRoom } = useContext(SocketContext);
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    try {
-      console.log(roomData);
-      const response = await putBurumabulRoom(roomData, originRoomData.roomId);
-      const roomId = response.roomId;
-      navigate(`/game/burumabul/waitingroom/${roomId}`, {
-        state: { roomInfo: response },
-      });
-    } catch (error) {
-      console.error("방 생성 중 오류 발생 : ", error);
+    if (connected) {
+      try {
+        updateWaitingRoom(roomData);
+        onClose();
+      } catch (error) {
+        console.error("방 정보 변경 중 에러 :", error);
+      }
     }
   };
 
