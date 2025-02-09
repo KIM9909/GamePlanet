@@ -13,11 +13,13 @@ import {
   resetUpdateSuccess,
   clearError,
   setDeleteModalOpen,
+  updateProfile,
 } from "../../sources/store/slices/ProfileSlice";
 import MyAward from "./MyAward";
 import MyFavoriteGame from "./MyFavoriteGame";
 import MyCustomRequest from "./MyCustomRequest";
 import MyInformation from "./MyInformation";
+import ProfileBio from "./ProfileBio";
 
 const ProfilePage = () => {
   // URL 파라미터에서 userId를 추출하고 Redux dispatch 함수 가져오기
@@ -60,6 +62,7 @@ const ProfilePage = () => {
         userName: profile.userName,
         userNickname: profile.userNickname,
         userBirthday: formatDateForInput(profile.userBirthday),
+        userBio: profile.userBio,
       });
     }
   }, [profile]);
@@ -101,18 +104,35 @@ const ProfilePage = () => {
               <div className="flex-1">
                 <div className="flex flex-col space-y-1">
                   <div className="flex items-center gap-4 mt-5">
-                    <h1 className="text-[28px] font-bold text-white mb-5">
+                    <h1 className="text-[28px] font-bold text-white mb-3">
                       {profile.userNickname}
                     </h1>
-                    <span className="text-cyan-400 text-md px-3 py-0.5 bg-cyan-950 rounded-full mb-3">
+                    <span className="text-cyan-400 text-md px-3 py-0.5 bg-cyan-950 rounded-full mb-2">
                       Lv.{profile.userLevel}
                     </span>
                   </div>
-                  <p className="text-zinc-300 text-base">
-                    안녕하세요 보드찌개 먹고 싶어요
-                  </p>
-                  <div className="text-zinc-300 text-base font-medium">
-                    <div>15승 / 5무 / 0패</div>
+                  <div>
+                    <div>
+                      <ProfileBio
+                        initialBio={profile?.userBio}
+                        onSave={async (newBio) => {
+                          try {
+                            await dispatch(
+                              updateProfile({
+                                userId,
+                                data: { userBio: newBio },
+                              })
+                            ).unwrap();
+                          } catch (error) {
+                            console.error("자기소개 업데이트 실패:", error);
+                            alert("자기소개 업데이트에 실패했습니다.");
+                          }
+                        }}
+                      />
+                      <div className="text-zinc-300 text-base font-medium mt-2">
+                        <div>15승 / 5무 / 0패</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -122,11 +142,10 @@ const ProfilePage = () => {
 
         {/* 마이페이지 네비게이션 */}
         <div className="mb-8">
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             {[
               { name: "내 정보", id: "info" },
               { name: "내 업적", id: "achievements" },
-              { name: "내 게임", id: "games" },
               { name: "내 요청", id: "requests" },
             ].map((item, index) => (
               <button
@@ -149,8 +168,6 @@ const ProfilePage = () => {
         <div className="bg-zinc-800 rounded-xl p-6 shadow-lg">
           {activeTab === "info" && <MyInformation />} {/* 내 정보 */}
           {activeTab === "achievements" && <MyAward />} {/* 내가 받은 상 */}
-          {activeTab === "games" && <MyFavoriteGame />}{" "}
-          {/* 내가 좋아하는 게임 */}
           {activeTab === "requests" && <MyCustomRequest />}{" "}
           {/* 내가 요청한 커스텀 게임 */}
         </div>

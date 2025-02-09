@@ -465,12 +465,12 @@ const useCatchSocket = (roomId) => {
                     if (clientRef.current) {
                       try {
                         fetch(
-                          // `${
-                          //   import.meta.env.VITE_API_BASE_URL
-                          // }/catch-mind/delete-room?roomId=${roomId}`,
                           `${
-                            import.meta.env.VITE_LOCAL_API_BASE_URL
+                            import.meta.env.VITE_API_BASE_URL
                           }/catch-mind/delete-room?roomId=${roomId}`,
+                          // `${
+                          //   import.meta.env.VITE_LOCAL_API_BASE_URL
+                          // }/catch-mind/delete-room?roomId=${roomId}`,
                           { method: "DELETE" }
                         )
                           .then(() => console.log("Room deletion request sent"))

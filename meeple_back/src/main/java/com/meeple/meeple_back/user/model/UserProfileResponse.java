@@ -17,4 +17,5 @@ public class UserProfileResponse {
     private String userTier;
     private int userLevel;
     private LocalDateTime userCreatedAt;
+    private String userBio;
 }

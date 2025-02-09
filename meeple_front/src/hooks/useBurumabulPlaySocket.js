@@ -27,10 +27,10 @@ const useBurumabulPlaySocket = (roomId) => {
       return;
     }
 
-    const socket = new SockJS(
-      `${import.meta.env.VITE_SOCKET_LOCAL_API_BASE_URL}`
-    ); // 로컬 서버 소켓 통신 URL
-    // const socket = new SockJS(`${import.meta.env.VITE_SOCKET_API_BASE_URL}`); // 배포 서버 소켓 통신 URL
+    // const socket = new SockJS(
+    //   `${import.meta.env.VITE_SOCKET_LOCAL_API_BASE_URL}`
+    // ); // 로컬 서버 소켓 통신 URL
+    const socket = new SockJS(`${import.meta.env.VITE_SOCKET_API_BASE_URL}`); // 배포 서버 소켓 통신 URL
     const stompClient = new Client({
       webSocketFactory: () => socket,
       reconnectDelay: 5000,
