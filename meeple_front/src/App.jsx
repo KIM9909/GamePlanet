@@ -17,7 +17,7 @@ import CatchMindPage from "./pages/game/CatchMindPage";
 import FriendModalLayout from "./components/layout/FriendModalLayout";
 import CatchMindListPage from "./components/game/catchMind/roomList/CatchMindListPage";
 import CockroachRoom from "./components/game/cockroachcard/CockroachRoom";
-import BurumabulRoomListPage from "./pages/game/burumabul/BurumabulRoomListPaage";
+import BurumabulRoomListPage from "./pages/game/burumabul/BurumabulRoomListPage";
 import SocketLayout from "./components/layout/SocketLayout";
 
 function App() {

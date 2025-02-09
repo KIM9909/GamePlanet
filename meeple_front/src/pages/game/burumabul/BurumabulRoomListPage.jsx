@@ -134,7 +134,7 @@ const BurumabulRoomList = () => {
 
       {roomList.length > 0 ? (
         <div className="bg-yellow-300 rounded-lg w-[60%] h-[70vh] overflow-y-auto p-4">
-          <div className="my-6 flex flex-wrap justify-center gap-4 ">
+          <div className="my-6 flex flex-col items-center justify-center mx-auto gap-4 ">
             {visibleRooms.map((roomInfo, index) => {
               if (index === visibleRooms.length - 1) {
                 return (
