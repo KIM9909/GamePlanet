@@ -7,8 +7,15 @@ import { SocketContext } from "../../layout/SocketLayout";
 import { createPortal } from "react-dom";
 import EnterSecretRoom from "../../game/burumabul/play/burumabul_Modal/EnterSecretRoom";
 import { CircleX } from "lucide-react";
+import WrongPasswordModal from "./play/burumabul_Modal/WrongPasswordModal";
 const BurumabulRoomListCard = ({ roomInfo }) => {
-  const { enterSecretWaitingRoom, roomSocketData } = useContext(SocketContext);
+  const {
+    enterSecretWaitingRoom,
+    roomSocketData,
+    socketStatus,
+    setSocketStatus,
+  } = useContext(SocketContext);
+  console.log("socketStatus 값:", socketStatus);
   const navigate = useNavigate();
   const roomId = roomInfo.roomId;
   console.log(roomId);
@@ -26,8 +33,7 @@ const BurumabulRoomListCard = ({ roomInfo }) => {
   const goToSecretWaitingRoom = async (roomId) => {
     dispatch(setRoomId(roomInfo.roomId));
     setPasswordModal(true);
-
-    setEnterPassword("");
+    setEnterPassword(null);
   };
 
   useEffect(() => {
@@ -37,10 +43,16 @@ const BurumabulRoomListCard = ({ roomInfo }) => {
   }, [enterPassword]);
 
   useEffect(() => {
+    console.log("socketStatus 값:", socketStatus);
+    if (socketStatus && socketStatus === 500) {
+      setErrorMessage(true);
+    }
+    setSocketStatus(null);
+  }, [socketStatus]);
+
+  useEffect(() => {
     if (roomSocketData && roomSocketData.roomId === roomId) {
       navigate(`/game/burumabul/start/${roomId}`);
-    } else if (roomSocketData?.error) {
-      setErrorMessage(true);
     }
   }, [roomSocketData]);
 
@@ -91,19 +103,13 @@ const BurumabulRoomListCard = ({ roomInfo }) => {
           </div>,
           document.body
         )}
-      {errorMessage && (
-        <div className="fixed inset-0 z-50 w-full text-center flex items-center justify-center">
-          <div className="bg-white w-96 h-96 p-6 flex flex-col justify-center items-center border-2 rounded-lg shadow-lg relative">
-            <button
-              className="absolute top-3 right-3 text-gray-500"
-              onClick={() => setErrorMessage(false)}
-            >
-              <CircleX size={28} strokeWidth={2.75} />
-            </button>
-            <div>비밀번호가 틀렸습니다.</div>
-          </div>
-        </div>
-      )}
+      {errorMessage &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex flex-row justify-center items-center ">
+            <WrongPasswordModal onClose={() => setErrorMessage(false)} />
+          </div>,
+          document.body
+        )}
     </>
   );
 };

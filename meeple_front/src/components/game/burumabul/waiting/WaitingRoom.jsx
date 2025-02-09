@@ -13,6 +13,7 @@ import { fetchFriendList } from "../../../../sources/api/FriendApi";
 import { findBurumabulRoom } from "../../../../sources/api/BurumabulRoomAPI";
 import { SocketContext } from "../../../layout/SocketLayout";
 import ChangePasswordModal from "../play/burumabul_Modal/ChangePasswordModal";
+import WaitingChat from "../play/burumabul_Modal/WaitingChat";
 
 // 백엔드 연결 필요
 const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
@@ -159,7 +160,7 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
         className="h-screen w-full bg-cover bg-center relative flex justify-center items-center"
         style={{ backgroundImage: `url(${background}` }}
       >
-        <div className="h-[600px] w-[1000px] bg-white bg-opacity-70 rounded-lg flex flex-col justify-start items-center">
+        <div className="h-[600px] w-[880px] bg-white bg-opacity-70 rounded-lg flex flex-col justify-start items-center">
           {/* 친구 검색해서 친구 추가 */}
           <div className="mt-5">
             <FriendSearch friendList={friendList} />
@@ -260,6 +261,9 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
               {/* <button className="mx-3">게임 준비</button> */}
             </div>
           </div>
+        </div>
+        <div className="w-[250px] bg-white ">
+          <WaitingChat roomId={roomId} players={playersInfo} />
         </div>
       </div>
 
