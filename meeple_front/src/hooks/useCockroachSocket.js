@@ -1,6 +1,9 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
+import { useDispatch } from "react-redux";
+import { setGameData, updateGameState } from "../sources/store/slices/CockroachSlice";
+
 
 // WebSocket URL constants
 export const WS_ENDPOINTS = {
@@ -23,6 +26,7 @@ export const WS_ENDPOINTS = {
 };
 
 const useCockroachSocket = (roomId) => {
+  const dispatch = useDispatch();
   const clientRef = useRef(null);
   const [messages, setMessages] = useState([]);
   const [rooms, setRooms] = useState([]);
@@ -32,16 +36,55 @@ const useCockroachSocket = (roomId) => {
   const subscriptionsRef = useRef(new Map());
   const isGameStartedRef = useRef(false);
 
+  const handleGameMessage = useCallback((response) => {
+    console.log("게임 메시지 처리 시작:", response);
+    
+    if (response.type === 'GIVE_CARD') {
+      // 카드 전달 시에는 게임 상태 유지
+      dispatch(updateGameState({
+        ...response.gameState,
+        isGameStart: true  // 강제로 true 유지
+      }));
+      return;
+    }
+  
+
+    // gameState만 업데이트하는 경우
+    if (response.gameData) {
+      const updatedGameData = {
+        ...response.gameData,
+        isGameStart: true,  // 게임 중에는 항상 true
+        gameState: {
+          ...response.gameData.gameState,
+          isGameStart: true
+        }
+      };
+      dispatch(setGameData(updatedGameData));
+      console.log("게임 데이터 업데이트 완료:", updatedGameData);
+    }
+  }, [dispatch]);
+
   const connect = useCallback(() => {
     if (isConnecting.current) return;
     isConnecting.current = true;
 
     const client = new Client({
-      webSocketFactory: () =>
-        new SockJS(
-          // `${import.meta.env.VITE_SOCKET_LOCAL_API_BASE_URL}`),
-          `${import.meta.env.VITE_SOCKET_API_BASE_URL}`
-        ),
+      webSocketFactory: () => {
+        const socket = new SockJS(
+          `${import.meta.env.VITE_SOCKET_LOCAL_API_BASE_URL}`
+        );
+
+        socket.onclose = () => {
+          console.log("웹소켓 연결이 끊겼습니다.");
+          // 연결이 끊겼을 때 자동 재연결 시도
+          setTimeout(() => {
+            connect();  // initializeWebSocket 대신 connect 함수 사용
+          }, 1000);
+        };
+
+
+        return socket;
+      },
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
@@ -53,11 +96,11 @@ const useCockroachSocket = (roomId) => {
       setStompClient(client);
       isConnecting.current = false;
 
-      // 게임 메시지 구독
       // 구독 설정
       const setupSubscriptions = () => {
         // 방 목록 화면
         if (roomId === "rooms") {
+          console.log("방 목록 구독 시작");
           const roomsSubscription = client.subscribe(
             WS_ENDPOINTS.SUBSCRIBE_ROOMS,
             (message) => {
@@ -66,6 +109,11 @@ const useCockroachSocket = (roomId) => {
             }
           );
           subscriptionsRef.current.set("rooms", roomsSubscription);
+          
+          client.publish({
+            destination: "/app/game/rooms",
+            body: JSON.stringify({}),
+          });
           return;
         }
 
@@ -75,21 +123,17 @@ const useCockroachSocket = (roomId) => {
             WS_ENDPOINTS.SUBSCRIBE_GAME(roomId),
             (message) => {
               const response = JSON.parse(message.body);
-              console.log("게임 메시지 수신:", response);
-              if (response.gameData?.isGameStart) {
-                isGameStartedRef.current = true;
-              }
+              handleGameMessage(response);
             }
           );
           subscriptionsRef.current.set("game", gameSubscription);
         }
 
-        // 채팅 메시지 구독
+        // 채팅 메시지 구독 유지
         if (!subscriptionsRef.current.has("chat")) {
           const chatSubscription = client.subscribe(
             WS_ENDPOINTS.SUBSCRIBE_CHAT(roomId),
             (message) => {
-              console.log("채팅 메시지 수신:", message.body);
               const newMessage = JSON.parse(message.body);
               setMessages((prev) => [...prev, newMessage]);
             }
@@ -107,19 +151,19 @@ const useCockroachSocket = (roomId) => {
       setStompClient(null);
       isConnecting.current = false;
 
+      // 게임 중에만 자동 재연결
       if (isGameStartedRef.current) {
-        console.log("Game is in progress - attempting to reconnect");
         setTimeout(() => connect(), 1000);
       }
     };
 
     client.onWebSocketError = (error) => {
-      console.error("웹소켓 에러 :", error);
+      console.error("웹소켓 에러:", error);
     };
 
     clientRef.current = client;
     client.activate();
-  }, [roomId]);
+  }, [roomId, handleGameMessage]);
 
   const sendMessage = useCallback(
     (type, data) => {
@@ -186,7 +230,9 @@ const useCockroachSocket = (roomId) => {
     connected,
     messages,
     stompClient,
+    rooms,
     ...gameActions,
   };
 };
+
 export default useCockroachSocket;
