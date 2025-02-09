@@ -1,10 +1,12 @@
 package com.meeple.meeple_back.game.bluemarble.controller.socket.response;
 
 import lombok.Builder;
+import lombok.Data;
 import lombok.Getter;
 
 @Getter
 @Builder
+@Data
 public class SocketResponse<T> {
 
 	private String type;

@@ -1,7 +1,7 @@
 package com.meeple.meeple_back.game.bluemarble.domain;
 
-import com.meeple.meeple_back.game.bluemarble.controller.socket.response.StartTurnResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -27,6 +27,7 @@ import java.util.logging.Logger;
  * <p>
  * 리턴하는거 -> 게임 끝남 (다음 액션 : 승자 정보 가져오기) , 다음 턴 - 해당 플레이어가 파산한 경우(파산한 플레이어, 다음턴 플레이어, 턴 정보 리턴, 다음 액션: ROLL_DICE), 주사위 더블인 경우(주사위 더블인 플레이어 주기, 다음 액션 : ROLL_DICE)
  */
+@Getter
 public class TurnManager {
 	private static Logger logger = Logger.getLogger(TurnManager.class.getName());
 	private int initialPlayerCount;
@@ -58,11 +59,8 @@ public class TurnManager {
 		return new TurnManager(new ArrayList<>(players));
 	}
 
-	public StartTurnResponse startTurn() {
-		return StartTurnResponse.from(players.get(0), round, turnCount, checkDoubleState());
-	}
 
-	private boolean checkDoubleState() {
+	public boolean checkDoubleState() {
 		return doubleCount >= 1;
 	}
 
@@ -92,7 +90,7 @@ public class TurnManager {
 
 		cycleCurrentPlayer();
 		logger.info("Current Player : " + players);
-		return TurnEndResponse.nextTurn(null, getCurrentPlayer(), turnCount, round, ActionType.ROLL_DICE);
+		return TurnEndResponse.nextTurn(null, getCurrentPlayer(), turnCount, round, ActionType.START_TURN);
 	}
 
 	private TurnEndResponse handleBankruptCurrentPlayer(List<Tile> board) {
@@ -100,7 +98,7 @@ public class TurnManager {
 		if (checkWinnerByPlayerSize()) {
 			return TurnEndResponse.gameEnd(determineWinner(board));
 		}
-		return TurnEndResponse.nextTurn(removed, getCurrentPlayer(), turnCount, round, ActionType.ROLL_DICE);
+		return TurnEndResponse.nextTurn(removed, getCurrentPlayer(), turnCount, round, ActionType.START_TURN);
 	}
 
 	/**
@@ -112,6 +110,7 @@ public class TurnManager {
 	 * @return
 	 */
 	private boolean checkWinnerByPlayerSize() {
+
 		if (initialPlayerCount == 4) {
 			return players.size() <= 2;
 		} else if (initialPlayerCount == 3) {
