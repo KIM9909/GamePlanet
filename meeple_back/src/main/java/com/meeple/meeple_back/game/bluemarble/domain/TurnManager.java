@@ -3,10 +3,10 @@ package com.meeple.meeple_back.game.bluemarble.domain;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.StartTurnResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
 
-import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Queue;
+import java.util.logging.Logger;
 
 /**
  * 턴 관리 클래스. 플레이어 순서를 관리하고, 더블 카운트, 현재 라운드를 관리한다.
@@ -28,8 +28,9 @@ import java.util.Queue;
  * 리턴하는거 -> 게임 끝남 (다음 액션 : 승자 정보 가져오기) , 다음 턴 - 해당 플레이어가 파산한 경우(파산한 플레이어, 다음턴 플레이어, 턴 정보 리턴, 다음 액션: ROLL_DICE), 주사위 더블인 경우(주사위 더블인 플레이어 주기, 다음 액션 : ROLL_DICE)
  */
 public class TurnManager {
+	private static Logger logger = Logger.getLogger(TurnManager.class.getName());
 	private int initialPlayerCount;
-	private Queue<Player> players;
+	private List<Player> players;
 	private double doubleCount;
 	private int round;
 	private int turnCount;
@@ -37,7 +38,7 @@ public class TurnManager {
 	public TurnManager() {
 	}
 
-	public TurnManager(Queue<Player> players, double doubleCount, int round, int turnCount) {
+	public TurnManager(List<Player> players, double doubleCount, int round, int turnCount) {
 		this.players = players;
 		this.doubleCount = doubleCount;
 		this.round = round;
@@ -45,7 +46,7 @@ public class TurnManager {
 		this.initialPlayerCount = players.size();
 	}
 
-	private TurnManager(Queue<Player> players) {
+	private TurnManager(List<Player> players) {
 		this.players = players;
 		this.doubleCount = 0;
 		this.round = 1;
@@ -54,11 +55,11 @@ public class TurnManager {
 	}
 
 	public static TurnManager init(List<Player> players) {
-		return new TurnManager(new ArrayDeque<>(players));
+		return new TurnManager(new ArrayList<>(players));
 	}
 
 	public StartTurnResponse startTurn() {
-		return StartTurnResponse.from(players.peek(), round, turnCount, checkDoubleState());
+		return StartTurnResponse.from(players.get(0), round, turnCount, checkDoubleState());
 	}
 
 	private boolean checkDoubleState() {
@@ -90,7 +91,7 @@ public class TurnManager {
 		}
 
 		cycleCurrentPlayer();
-
+		logger.info("Current Player : " + players);
 		return TurnEndResponse.nextTurn(null, getCurrentPlayer(), turnCount, round, ActionType.ROLL_DICE);
 	}
 
@@ -163,23 +164,23 @@ public class TurnManager {
 
 	private void incrementTurn() {
 		turnCount++;
-		if (turnCount >= players.size()) {
+		if (turnCount > players.size()) {
 			turnCount = 1;
 			round++;
 		}
 	}
 
 	private void cycleCurrentPlayer() {
-		Player currentPlayer = players.poll();
-		players.offer(currentPlayer);
+		Player currentPlayer = players.remove(0);
+		players.add(currentPlayer);
 	}
 
 	private Player removeCurrentPlayer() {
-		return players.poll();
+		return players.remove(0);
 	}
 
 	private boolean isCurrentPlayerBankrupt() {
-		return players.peek().isBankrupt();
+		return players.get(0).isBankrupt();
 	}
 
 	private boolean rolledDouble() {
@@ -193,6 +194,6 @@ public class TurnManager {
 	}
 
 	private Player getCurrentPlayer() {
-		return players.peek();
+		return players.get(0);
 	}
 }
