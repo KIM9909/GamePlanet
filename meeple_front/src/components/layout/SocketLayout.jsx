@@ -13,7 +13,7 @@ const SocketLayout = ({ children }) => {
   const [roomSocketData, setRoomSocketData] = useState({});
   const [roomNotifi, setRoomNotifi] = useState("");
   // 채팅
-  const [chatMessage, setChatMessages] = useState({});
+  const [chatMessage, setChatMessage] = useState({});
 
   // 게임 정보
   const [gamePlaySocketData, setGamePlaySocketData] = useState({});
@@ -116,7 +116,7 @@ const SocketLayout = ({ children }) => {
             const receivedData = JSON.parse(message.body);
             console.log("부루마불 서버로부터 받은 응답 : ", receivedData);
             if (receivedData.type === "chat") {
-              setChatMessages(receivedData);
+              setChatMessage(receivedData);
             } else if (receivedData.type === "room") {
               setRoomSocketData(receivedData.roomResponse);
               setRoomNotifi(receivedData.message);
@@ -216,7 +216,10 @@ const SocketLayout = ({ children }) => {
       try {
         stompClientRef.current.publish({
           destination: `/app/game/blue-marble/rooms/${roomId}/sendMessage`,
-          body: JSON.stringify({ type: "chat", content: message }),
+          body: JSON.stringify(message), // 이미 JSON.stringify된 메시지
+          headers: {
+            "content-type": "application/json;charset=UTF-8",
+          },
         });
         console.log("게임 대기방에 채팅 메시지 전송");
       } catch (error) {
@@ -448,6 +451,7 @@ const SocketLayout = ({ children }) => {
           socketTileUpdate,
           buildBaseSocketData,
           socketStatus,
+          setSocketStatus,
           enterWaitingRoom,
           chatWaitingRoom,
           changePassword,

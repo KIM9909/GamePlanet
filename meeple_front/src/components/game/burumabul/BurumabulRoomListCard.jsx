@@ -9,8 +9,12 @@ import EnterSecretRoom from "../../game/burumabul/play/burumabul_Modal/EnterSecr
 import { CircleX } from "lucide-react";
 import WrongPasswordModal from "./play/burumabul_Modal/WrongPasswordModal";
 const BurumabulRoomListCard = ({ roomInfo }) => {
-  const { enterSecretWaitingRoom, roomSocketData, socketStatus } =
-    useContext(SocketContext);
+  const {
+    enterSecretWaitingRoom,
+    roomSocketData,
+    socketStatus,
+    setSocketStatus,
+  } = useContext(SocketContext);
   console.log("socketStatus 값:", socketStatus);
   const navigate = useNavigate();
   const roomId = roomInfo.roomId;
@@ -29,8 +33,7 @@ const BurumabulRoomListCard = ({ roomInfo }) => {
   const goToSecretWaitingRoom = async (roomId) => {
     dispatch(setRoomId(roomInfo.roomId));
     setPasswordModal(true);
-
-    setEnterPassword("");
+    setEnterPassword(null);
   };
 
   useEffect(() => {
@@ -44,6 +47,7 @@ const BurumabulRoomListCard = ({ roomInfo }) => {
     if (socketStatus && socketStatus === 500) {
       setErrorMessage(true);
     }
+    setSocketStatus(null);
   }, [socketStatus]);
 
   useEffect(() => {
