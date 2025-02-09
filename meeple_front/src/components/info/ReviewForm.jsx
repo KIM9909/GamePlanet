@@ -1,36 +1,70 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
 import { FaStar } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { GameInfoAPI } from '../../sources/api/GameInfoAPI';
 
-const ReviewForm = () => {
+const ReviewForm = ({ initialData, onSuccess }) => {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [content, setContent] = useState('');
-  const gameId = useParams();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const { gameId } = useParams();
   const { token } = useSelector((state) => state.user);
   const userId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
+  
+  const isEditing = !!initialData;
+
+  useEffect(() => {
+    if (initialData) {
+      setRating(initialData.gameReviewStar || 0);
+      setContent(initialData.gameReviewContent || '');
+    }
+  }, [initialData]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    if (!rating) {
+      alert('별점을 선택해주세요.');
+      return;
+    }
+
+    if (!content.trim()) {
+      alert('리뷰 내용을 입력해주세요.');
+      return;
+    }
+
+    const reviewData = {
+      gameReviewStar: rating,
+      gameReviewContent: content,
+      gameInfoId: gameId,
+      userId: userId,
+    };
+
     try {
-      const response = await axios.post('/api/reviews', {
-        gameReviewStar:rating,
-        gameReviewContent:content,
-        gameInfoId:gameId,
-        userId:userId,
-      });
+      setIsSubmitting(true);
       
-      if (response.status === 200) {
-        alert('리뷰가 성공적으로 저장되었습니다.');
+      if (isEditing) {
+        await GameInfoAPI.updateReview(initialData.gameReviewId, reviewData);
+        alert('리뷰가 성공적으로 수정되었습니다.');
+      } else {
+        await GameInfoAPI.createReview(reviewData);
+        alert('리뷰가 성공적으로 등록되었습니다.');
+        // 새 리뷰 작성 후 폼 초기화
         setRating(0);
         setContent('');
+      }
+
+      if (onSuccess) {
+        onSuccess();
       }
     } catch (error) {
       console.error('리뷰 저장 중 오류 발생:', error);
       alert('리뷰 저장에 실패했습니다.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -73,19 +107,23 @@ const ReviewForm = () => {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           required
+          disabled={isSubmitting}
           className="w-full min-h-[150px] p-3 border border-gray-300 rounded-lg 
                      focus:outline-none focus:ring-2 focus:ring-blue-500 
-                     focus:border-transparent resize-y"
+                     focus:border-transparent resize-y
+                     disabled:bg-gray-100 disabled:cursor-not-allowed"
         />
       </div>
       
       <button 
         type="submit"
+        disabled={isSubmitting}
         className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg
                    hover:bg-blue-700 transition-colors duration-200
-                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                   disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        리뷰 등록
+        {isSubmitting ? '저장 중...' : isEditing ? '리뷰 수정' : '리뷰 등록'}
       </button>
     </form>
   );
