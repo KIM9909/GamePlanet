@@ -41,15 +41,20 @@ const ActiveCardArea = ({
 
   // 추측 버튼 클릭 핸들러
   const handleGuessClick = () => {
-    if (isPassing) return;
-    setCardVisible(false);
+    if (isPassing) {
+      console.log("패스 진행중!")
+      return};
     setShowGuessModal(true);
+    setTimeout(()=> setCardVisible(false), 100);
   };
 
   // 카드 정보 계산
   const getCardInfo = () => {
     const activeCard = currentCard || selectedCard;
-    if (!activeCard) return null;
+    if (!activeCard) {
+      console.log("Active Card 가 없습니다!");
+      
+      return null};
 
     // 카드 타입 정규화
     let cardType = activeCard.type;
@@ -61,14 +66,18 @@ const ActiveCardArea = ({
       isRoyal = true;
     }
 
-    return {
+    const cardInfo = {
       type: cardType,
       isBack: !shouldShowFront(),
       isRoyal: isRoyal
     };
+
+    console.log("Card info" , cardInfo);
+    return cardInfo
   };
 
   const cardInfo = getCardInfo();
+  const showButtons = cardReceiver === currentUser && currentCard
 
   return (
     <div className="absolute top-[60%] right-4 w-72 active-card-area">
@@ -101,7 +110,7 @@ const ActiveCardArea = ({
           {cardSender && cardReceiver ? `${cardSender} → ${cardReceiver}` : ""}
         </div>
 
-        {cardReceiver === currentUser && (
+        {showButtons && (
           <div className="flex justify-center gap-4 mt-4">
             {!isPassing && (
               <button

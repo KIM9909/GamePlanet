@@ -20,19 +20,15 @@ const useFriendSocket = () => {
     //   `${import.meta.env.VITE_SOCKET_LOCAL_API_BASE_URL}`
     // ); // 로컬 서버 소켓 통신
     const socket = new SockJS(`${import.meta.env.VITE_SOCKET_API_BASE_URL}`); // 배포 서버 소켓 통신
-    console.log(socket);
     const stompClient = new Client({
       webSocketFactory: () => socket,
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
-      debug: (str) => {
-        console.log("STOMP Debug:", str); // 디버깅을 위한 로그 추가
-      },
+
     });
 
     stompClient.onConnect = () => {
-      console.log("WebSocket Connected");
       setConnected(true);
 
       // 친구 요청 알림 구독

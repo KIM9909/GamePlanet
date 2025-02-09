@@ -55,22 +55,23 @@ const GameBoard = ({ onStartGame, gameData, currentUser, roomId }) => {
   const profileData = useSelector((state) => state.profile.profileData);
   const userNickname = profileData?.userNickname;
 
+  // 디버깅을 위한 useEffect
   useEffect(() => {
     console.log("GameData structure:", {
       fullData: gameData,
       gameState: gameData?.gameState,
       playerCards: gameData?.playerCards,
-      nestedGameData: gameData?.gameData
+      nestedGameData: gameData?.gameData,
     });
   }, [gameData]);  // gameData가 변경될 때마다 로그 출력
 
 
   // 남은 플레이어 계산
   const remainingPlayers = useMemo(() => {
-    if (!gameData?.players || !gameData?.gameData?.gameState) return [];
+    if (!gameData?.players || !gameData?.gameState) return [];
 
-    const { cardSender, passedPlayers = [] } = gameData.gameData.gameState;
-
+    const { cardSender, passedPlayers = [] } = gameData.gameState;
+    
     return gameData.players.filter(
       (player) => player !== cardSender && !passedPlayers.includes(player)
     );
@@ -99,7 +100,7 @@ const GameBoard = ({ onStartGame, gameData, currentUser, roomId }) => {
       // 게임 종료 후에 상태 초기화
       setTimeout(() => {
         const updatedGameState = {
-          ...gameData.gameData.gameState,
+          ...gameData.gameState,
           currentCard: null,
           cardSender: null,
           cardReceiver: null,
@@ -113,7 +114,7 @@ const GameBoard = ({ onStartGame, gameData, currentUser, roomId }) => {
           setReduxGameData({
             ...gameData,
             gameData: {
-              ...gameData.gameData,
+              ...gameData,
               gameState: updatedGameState,
             },
           })
@@ -176,7 +177,7 @@ const GameBoard = ({ onStartGame, gameData, currentUser, roomId }) => {
 
   const determineLoser = (guess) => {
     const { cardSender, cardReceiver, currentCard, claimedAnimal, isKing } =
-      gameData.gameData.gameState;
+      gameData.gameState;
 
     // 블랙이라고 추측했는데 아닐 경우
     if (guess === "Black" && currentCard.type !== "Black") {
@@ -218,90 +219,96 @@ const GameBoard = ({ onStartGame, gameData, currentUser, roomId }) => {
   };
 
   const handleGuess = async (guess) => {
-    const currentCard = normalizeCardData(
-      gameData.gameData.gameState.currentCard
-    );
-    const currentLoser = determineLoser(guess);
-
-    // 게임 결과 서버에 전송
-    await sendMessage({
-      type: "SINGLE_CARD",
-      data: {
-        from: currentUser,
-        to: currentLoser,
-        card: currentCard,
-        correct: false,
-      },
-    });
-
-    // 블랙/조커 처리
-    if (currentCard.type === "Black" || currentCard.type === "Joker") {
-      setPenaltyCardCount(currentCard.type === "Black" ? 2 : 1);
-      setCurrentLoser(currentLoser);
-      setShowPenaltyCardModal(true);
-      setShowGuessModal(false);
-      return;
-    }
-
-    // 일반/왕카드 처리
-    let updatedTableCards = addCardToTable(
-      [...(gameData.gameData.userTableCards[currentLoser] || [])],
-      currentCard
-    );
-
-    let updatedGameData = { ...gameData };
-
-    // 왕카드 추가 패널티
-    if (currentCard.royal) {
-      const openCard =
-        gameData.gameData.publicDeck[gameData.gameData.publicDeck.length - 1];
-      if (openCard) {
+    try {
+      const { cardSender, cardReceiver, currentCard } = gameData.gameState;
+      
+      const currentLoser = determineLoser(guess);
+  
+      // 1. 첫 번째 패널티 카드 전송
         await sendMessage({
           type: "SINGLE_CARD",
           data: {
             from: currentUser,
             to: currentLoser,
-            card: openCard,
-            correct: false,
-          },
+            card: currentCard,
+            isCorrect: false  // correct가 아닌 isCorrect로 변경
+          }
         });
-
-        updatedTableCards = addCardToTable(updatedTableCards, openCard);
-        updatedGameData.gameData.publicDeck =
-          gameData.gameData.publicDeck.slice(0, -1);
+  
+      // 2. 블랙/조커 카드 특수 처리
+      if (currentCard.type === "Black" || currentCard.type === "Joker") {
+        setPenaltyCardCount(currentCard.type === "Black" ? 2 : 1);
+        setCurrentLoser(currentLoser);
+        setShowPenaltyCardModal(true);
+        setShowGuessModal(false);
+        return;
       }
-    }
-
-    // 게임 상태 업데이트
-    updatedGameData.gameData = {
-      ...updatedGameData.gameData,
-      gameState: {
-        currentCard: null,
-        cardSender: null,
-        cardReceiver: null,
-        claimedAnimal: null,
-        isKing: false,
-        passedPlayers: [],
-        passCount: 0,
-      },
-      userTableCards: {
-        ...updatedGameData.gameData.userTableCards,
-        [currentLoser]: updatedTableCards,
-      },
-    };
-
-    dispatch(setReduxGameData(updatedGameData));
-
-    // 게임 종료 체크
-    const gameFinishResult = checkGameFinish(currentLoser, updatedTableCards);
-    if (gameFinishResult.isFinished) {
+  
+      // 3. 일반/왕카드 처리를 위한 테이블 카드 업데이트
+      let updatedTableCards = addCardToTable(
+        [...(gameData.userTableCards[currentLoser] || [])],
+        currentCard
+      );
+  
+      let updatedGameData = { ...gameData };
+  
+      // 4. 왕카드 추가 패널티 처리
+      if (currentCard.royal) {
+        const openCard = gameData.publicDeck[gameData.publicDeck.length - 1];
+        if (openCard) {
+          // 추가 패널티 카드 전송
+          await sendMessage({
+            type: "SINGLE_CARD",
+            data: {
+              from: currentUser,
+              to: currentLoser,
+              card: openCard,
+              correct: false
+            }
+          });
+  
+          // 테이블 카드와 공개 덱 업데이트
+          updatedTableCards = addCardToTable(updatedTableCards, openCard);
+          updatedGameData.publicDeck = gameData.publicDeck.slice(0, -1);
+        }
+      }
+  
+      // 5. 전체 게임 상태 업데이트
+      updatedGameData = {
+        ...updatedGameData,
+        gameState: {
+          currentCard: null,
+          cardSender: null,
+          cardReceiver: null,
+          claimedAnimal: null,
+          isKing: false,
+          passedPlayers: [],
+          passCount: 0
+        },
+        userTableCards: {
+          ...updatedGameData.userTableCards,
+          [currentLoser]: updatedTableCards
+        }
+      };
+  
+      dispatch(setReduxGameData(updatedGameData));
+  
+      // 6. 게임 종료 조건 체크
+      const gameFinishResult = checkGameFinish(currentLoser, updatedTableCards);
+      if (gameFinishResult.isFinished) {
+        setShowGuessModal(false);
+        setGameEndInfo(gameFinishResult);
+        setShowGameEndModal(true);
+        return;
+      }
+  
       setShowGuessModal(false);
-      setGameEndInfo(gameFinishResult);
-      setShowGameEndModal(true);
-      return;
+    } catch (error) {
+      console.error("Guess handling failed:", error);
+      // 에러 발생 시 모달 상태 초기화
+      setShowGuessModal(false);
+      setShowPenaltyCardModal(false);
     }
-
-    setShowGuessModal(false);
   };
 
   const handleGiveCard = (claimData) => {
@@ -318,7 +325,7 @@ const GameBoard = ({ onStartGame, gameData, currentUser, roomId }) => {
       },
       animal: claimData.animal,
       king: claimData.king,
-      nagative: claimData.nagative,
+      negative: claimData.negative,
     };
 
     // gameData 구조 체크
@@ -352,14 +359,11 @@ const GameBoard = ({ onStartGame, gameData, currentUser, roomId }) => {
     dispatch(
       setReduxGameData({
         ...gameData,
-        playerCards: {
-          ...gameData.playerCards,
-          [currentUser]: gameData.playerCards[currentUser].filter(
-            (card) => card.cardId !== selectedCard.cardId
-          ),
-        },
+        gameState: updatedGameState,
+        playerCards: updatedPlayerCards
       })
     );
+
     // 웹소켓 전송
     socketClient.giveCard(giveCardData)
       .then(() => {
@@ -446,11 +450,11 @@ const GameBoard = ({ onStartGame, gameData, currentUser, roomId }) => {
 
       // 핸드에서 카드 제거 & 테이블에 카드 추가
       const updatedHand = removeCardsFromHand(
-        gameData.gameData.playerCards[currentLoser],
+        gameData.playerCards[currentLoser],
         selectedCards
       );
       const updatedTableCards = addCardsToTable(
-        gameData.gameData.userTableCards[currentLoser],
+        gameData.userTableCards[currentLoser],
         selectedCards
       );
 
@@ -459,13 +463,13 @@ const GameBoard = ({ onStartGame, gameData, currentUser, roomId }) => {
         setReduxGameData({
           ...gameData,
           gameData: {
-            ...gameData.gameData,
+            ...gameData,
             playerCards: {
-              ...gameData.gameData.playerCards,
+              ...gameData.playerCards,
               [currentLoser]: updatedHand,
             },
             userTableCards: {
-              ...gameData.gameData.userTableCards,
+              ...gameData.userTableCards,
               [currentLoser]: updatedTableCards,
             },
           },
@@ -501,31 +505,70 @@ const GameBoard = ({ onStartGame, gameData, currentUser, roomId }) => {
     setSelectedPlayer(playerNickname);
     setShowGiveCardModal(true);
   };
+  const handlePass = async () => {
+    try {
+      // 1. 남은 플레이어 체크
+      if (remainingPlayers.length === 0) {
+        console.log("마지막 플레이어는 무조건 맞춰야 합니다!");
+        setShowGuessModal(true);
+        return;
+      }
 
-  const handlePass = () => {
-    if (remainingPlayers.length === 0) {
-      console.log("마지막 플레이어는 무조건 맞춰야 합니다!");
-      setShowGuessModal(true);
-      return;
+      
+      const currentGameState = gameData?.gameState;
+      const normalizedCurrentCard = normalizeCardData(currentGameState?.currentCard);
+      
+      // 2. 로컬 상태 업데이트
+      setIsPassing(true);
+      setSelectedCard(normalizedCurrentCard);
+
+      setShowGiveCardModal(true);
+      setShowGuessModal(false);
+  
+      // 3. 패스한 플레이어 목록 업데이트
+      const updatedPassedPlayers = [...(currentGameState.passedPlayers || []), currentUser];
+      const updatedPassCount = (currentGameState?.passCount || 0) + 1;
+
+      // 4. 게임 상태 업데이트를 서버에 전송
+      await sendMessage({
+        type: "UPDATE_ROOM",
+        data: {
+          gameState: {
+            ...currentGameState,
+            passedPlayers: updatedPassedPlayers,
+            passCount: updatedPassCount
+          }
+        }
+      });
+  
+      // Redux 상태 업데이트 수정
+      dispatch(
+        setReduxGameData({
+          ...gameData,
+          gameState: {
+            ...currentGameState,
+            passedPlayers: updatedPassedPlayers,
+            passCount: updatedPassCount
+          }
+        })
+      );
+      
+      setShowGiveCardModal(true);
+  
+    } catch (error) {
+      console.error("패스 실패!", error);
+      setIsPassing(false); // 에러 발생 시 passing 상태 초기화
     }
-
-    const currentGameState = gameData.gameData.gameState;
-    const normalizedCurrentCard = normalizeCardData(
-      currentGameState.currentCard
-    );
-
-    setIsPassing(true);
-    setSelectedCard(normalizedCurrentCard); // 정규화된 카드 정보 사용
-
-    setPassedPlayers([...(currentGameState.passedPlayers || []), currentUser]);
-
-    setPassCount((prev) => prev + 1);
   };
 
   // 4. UI 상태 관리------------------------------------------------------------------------
   const handleModalClose = () => {
     setShowGiveCardModal(false);
     setSelectedPlayer(null);
+    // PASS 모드였다면 isPassing도 초기화
+    if (isPassing) {
+      setIsPassing(false);
+    }
   };
 
   const getOpponentCardCount = useCallback(
@@ -539,7 +582,6 @@ const GameBoard = ({ onStartGame, gameData, currentUser, roomId }) => {
   // 5. 상태 관리 Effects------------------------------------------------------------------------
   useEffect(() => {
     if (gameData?.gameState?.currentTurn) {
-      // gameData.gameData 대신 gameData 직접 접근
       const isCurrentTurn = gameData.gameState.currentTurn === currentUser;
       setIsMyTurn(isCurrentTurn);
 
@@ -583,7 +625,7 @@ const GameBoard = ({ onStartGame, gameData, currentUser, roomId }) => {
   }, [gameData, currentUser]);
   console.log("상대방", opponents);
   console.log("플레이어들", gameData?.playerCards);
-
+  
   if (!gameData) {
     return (
       <div className="relative w-full h-[800px] max-w-[1600px] mx-auto bg-gray-700/10 rounded-3xl flex items-center justify-center">
@@ -709,17 +751,17 @@ const GameBoard = ({ onStartGame, gameData, currentUser, roomId }) => {
         currentPlayer={currentUser}
       />
 
-      {showGuessModal && gameData?.gameData?.gameState && (
+      {showGuessModal && (
         <GuessCardModal
           isOpen={showGuessModal}
           onClose={() => setShowGuessModal(false)}
           onSubmit={handleGuess}
-          currentCard={gameData.gameData.gameState.currentCard}
-          claimedAnimal={gameData.gameData.gameState.claimedAnimal}
-          isKing={gameData.gameData.gameState.isKing}
-          from={gameData.gameData.gameState.cardSender}
-          to={gameData.gameData.gameState.cardReceiver}
-          isNegative={gameData.gameData.gameState.isNegative}
+          currentCard={gameData?.gameState.currentCard}
+          claimedAnimal={gameData?.gameState.claimedAnimal}
+          isKing={gameData?.gameState.isKing}
+          from={gameData?.gameState.cardSender}
+          to={gameData?.gameState.cardReceiver}
+          isNegative={gameData?.gameState.isNegative}
         />
       )}
 
@@ -730,8 +772,8 @@ const GameBoard = ({ onStartGame, gameData, currentUser, roomId }) => {
           handCards={playerCards[currentLoser] || []}
           onSubmit={handlePenaltyCardSelect}
           count={penaltyCardCount}
-          claimedAnimal={gameData.gameData.gameState.currentClaimedAnimal}
-          isKing={gameData.gameData.gameState.currentClaimedKing}
+          claimedAnimal={gameData.gameState.currentClaimedAnimal}
+          isKing={gameData.gameState.currentClaimedKing}
           sendMessage={sendMessage}
           currentUser={currentUser}
           currentLoser={currentLoser}

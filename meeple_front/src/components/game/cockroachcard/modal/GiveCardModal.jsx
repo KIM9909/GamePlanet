@@ -8,12 +8,11 @@ const GiveCardModal = ({
   selectedPlayer,
   onSubmit,
   currentPlayer,
-  mode = "GIVE",
+  isPassing = false
 }) => {
   const [isKing, setIsKing] = useState(false);
   const [claimedAnimal, setClaimedAnimal] = useState(selectedCard?.type || "");
   const [isNegative, setIsNegative] = useState(false);
-  const isPassMode = mode === "PASS";
 
   useEffect(() => {
     if (selectedCard) {
@@ -27,7 +26,7 @@ const GiveCardModal = ({
     onSubmit({
       king: isKing, // isKing -> king
       animal: claimedAnimal,
-      nagative: isNegative, 
+      negative: isNegative, 
       to: selectedPlayer, 
       from: currentPlayer, 
     });
@@ -36,8 +35,9 @@ const GiveCardModal = ({
   if (!isOpen) return null;
 
   const handleBackgroundClick = (e) => {
-    if (!isPassMode && e.target === e.currentTarget) onClose();
+    if (!isPassing && e.target === e.currentTarget) onClose();
   };
+
 
   return (
     <div
@@ -46,7 +46,7 @@ const GiveCardModal = ({
     >
       <div className="bg-gray-800 rounded-lg p-6 w-96 space-y-6">
         <h2 className="text-xl font-bold text-white text-center">
-          {isPassMode ? "카드 전달하기" : "카드 보내기"}
+          {isPassing ? "카드 전달하기" : "카드 보내기"}
         </h2>
 
         <div className="space-y-2">
@@ -113,13 +113,13 @@ const GiveCardModal = ({
             onClick={onClose}
             className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
           >
-            {isPassMode ? "다른 플레이어 선택" : "취소"}
+            {isPassing ? "다른 플레이어 선택" : "취소"}
           </button>
           <button
             onClick={handleSubmit}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500"
           >
-            {isPassMode ? "전달" : "확인"}
+            {isPassing ? "전달" : "확인"}
           </button>
         </div>
       </div>
