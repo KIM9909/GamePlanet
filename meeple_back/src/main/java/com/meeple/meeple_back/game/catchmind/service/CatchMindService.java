@@ -35,5 +35,7 @@ public interface CatchMindService {
     ResponseExitCatchmindRoom exitRoom(String roomId, String userName);
 
     ResponseTimeOut quizTimeOut(String roomId);
+
+    ResponseCatchMindReady readyRoom(String roomId, RequestCatchMindReady request);
 }
 

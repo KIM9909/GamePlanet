@@ -262,4 +262,14 @@ public class CatchMindController {
 
         messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
     }
+
+    @MessageMapping("/ready/{roomId}")
+    private void readySocket(
+            @DestinationVariable String roomId,
+            @RequestBody RequestCatchMindReady request
+    ) {
+        ResponseCatchMindReady response = catchMindService.readyRoom(roomId, request);
+
+        messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, response);
+    }
 }
