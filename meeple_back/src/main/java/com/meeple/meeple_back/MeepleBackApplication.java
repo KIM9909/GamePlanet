@@ -13,6 +13,7 @@ public class MeepleBackApplication {
     }
 
     @Bean
+
     public ModelMapper getModelMapper() {
         return new ModelMapper();
     }
