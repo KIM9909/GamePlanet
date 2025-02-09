@@ -64,6 +64,9 @@ const SocketLayout = ({ children }) => {
   // 기지 건설 후 정보
   const [buildBaseSocketData, setBuildBaseSocketData] = useState(null);
 
+  // 틀린 비밀번호 입력 시
+  const [socketStatus, setSocketStatus] = useState(null);
+
   const location = useLocation();
 
   const stompClientRef = useRef(null);
@@ -145,6 +148,9 @@ const SocketLayout = ({ children }) => {
               setBuildBaseSocketData(receivedData.data);
               setGameSocketNotifi(receivedData.message);
               setSocketNext(receivedData.data.nextAction);
+            }
+            if (receivedData.status) {
+              setSocketStatus(receivedData.status);
             }
             console.log("구독 성공:");
           });
@@ -441,6 +447,7 @@ const SocketLayout = ({ children }) => {
           socketUserUpdate,
           socketTileUpdate,
           buildBaseSocketData,
+          socketStatus,
           enterWaitingRoom,
           chatWaitingRoom,
           changePassword,
