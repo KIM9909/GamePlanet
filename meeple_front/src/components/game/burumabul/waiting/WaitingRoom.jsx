@@ -12,15 +12,23 @@ import { createPortal } from "react-dom";
 import { fetchFriendList } from "../../../../sources/api/FriendApi";
 import { findBurumabulRoom } from "../../../../sources/api/BurumabulRoomAPI";
 import { SocketContext } from "../../../layout/SocketLayout";
+import ChangePasswordModal from "../play/burumabul_Modal/ChangePasswordModal";
 
 // 백엔드 연결 필요
 const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
   console.log(roomId);
-  useEffect(() => {
-    setCurrnetRoomInfo(roomInfo);
-  }, [roomInfo]);
+
   const userId = Number(useSelector((state) => state.user.userId));
-  const [currentRoomInfo, setCurrnetRoomInfo] = useState(roomInfo);
+  const [currentRoomInfo, setCurrentRoomInfo] = useState(roomInfo);
+  useEffect(() => {
+    if (roomInfo && Object.keys(roomInfo).length > 0) {
+      setCurrentRoomInfo(roomInfo);
+      setRoomName(roomInfo.roomName);
+      setMaxPlayers(roomInfo.maxPlayers);
+      setPlayerLen(roomInfo.players.length);
+    }
+  }, [roomInfo]);
+
   const {
     connected,
     roomSocketData,
@@ -31,6 +39,7 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
 
   const [showPutRoomModal, setShowPutRoomModal] = useState(false);
   const [showAlertModal, setShowAlertModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [friendList, setFriendList] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -38,10 +47,10 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
   console.log("소켓 데이터", SocketContext);
 
   const playersInfo = currentRoomInfo.players;
-  const [roomName, setRoomName] = useState(currentRoomInfo?.roomName);
-  const [maxPlayers, setMaxPlayers] = useState(currentRoomInfo?.maxPlayers);
-  const [playerLen, setPlayerLen] = useState(currentRoomInfo?.players?.length);
-  const creatorId = Number(currentRoomInfo?.creator?.playerId);
+  const [roomName, setRoomName] = useState(currentRoomInfo.roomName);
+  const [maxPlayers, setMaxPlayers] = useState(currentRoomInfo.maxPlayers);
+  const [playerLen, setPlayerLen] = useState(currentRoomInfo.players.length);
+  const creatorId = Number(currentRoomInfo.creator.playerId);
   const isPrivate = currentRoomInfo.private;
 
   useEffect(() => {
@@ -70,7 +79,7 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
       if (roomId) {
         try {
           const response = await findBurumabulRoom(roomId);
-          setCurrnetRoomInfo(response);
+          setCurrentRoomInfo(response);
         } catch (error) {
           console.error("방 정보 조회 중 오류 발생 : ", error);
         } finally {
@@ -83,10 +92,14 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
 
   useEffect(() => {
     if (connected && roomSocketData) {
-      setCurrnetRoomInfo((prev) => ({
+      setCurrentRoomInfo((prev) => ({
         ...prev,
         ...roomSocketData,
       }));
+
+      if (roomSocketData.roomName) setRoomName(roomSocketData.roomName);
+      if (roomSocketData.maxPlayers) setMaxPlayers(roomSocketData.maxPlayers);
+      if (roomSocketData.players) setPlayerLen(roomSocketData.players.length);
     }
   }, [connected, roomSocketData]);
 
@@ -102,6 +115,10 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
 
   const handleAlertModal = () => {
     setShowAlertModal(true);
+  };
+
+  const showChangePassword = () => {
+    setShowPasswordModal(true);
   };
 
   //
@@ -190,6 +207,14 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
                 <div>
                   {Number(maxPlayers) === Number(playerLen) ? (
                     <div className="flex flex-row">
+                      {isPrivate && (
+                        <button
+                          className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-fuchsia-200 to-fuchsia-400 border-2 border-fuchsia-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
+                          onClick={showChangePassword}
+                        >
+                          비밀번호 변경
+                        </button>
+                      )}
                       <button
                         className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-yellow-200 to-yellow-500 border-2 border-yellow-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
                         onClick={handlePutRoom}
@@ -205,6 +230,14 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
                     </div>
                   ) : (
                     <div className="flex flex-row">
+                      {isPrivate && (
+                        <button
+                          onClick={showChangePassword}
+                          className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-fuchsia-200 to-fuchsia-400 border-2 border-fuchsia-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
+                        >
+                          비밀번호 변경
+                        </button>
+                      )}
                       <button
                         className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-yellow-200 to-yellow-500 border-2 border-yellow-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
                         onClick={handlePutRoom}
@@ -224,29 +257,38 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
                 <div>게임준비</div>
               )}
 
-              {showPutRoomModal && (
-                <PutBurumabulRoom
-                  originRoomData={currentRoomInfo}
-                  onClose={() => setShowPutRoomModal(false)}
-                />
-              )}
-
-              {showAlertModal &&
-                createPortal(
-                  <div className="fixed inset-0 z-50 flex flex-row justify-center items-center ">
-                    <PlayerAlertModal
-                      className=""
-                      onClose={() => setShowAlertModal(false)}
-                    />
-                  </div>,
-                  document.body
-                )}
-
               {/* <button className="mx-3">게임 준비</button> */}
             </div>
           </div>
         </div>
       </div>
+
+      {showPutRoomModal && (
+        <PutBurumabulRoom
+          originRoomData={currentRoomInfo}
+          onClose={() => setShowPutRoomModal(false)}
+        />
+      )}
+
+      {showAlertModal &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex flex-row justify-center items-center ">
+            <PlayerAlertModal onClose={() => setShowAlertModal(false)} />
+          </div>,
+          document.body
+        )}
+
+      {isPrivate &&
+        showPasswordModal &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex flex-row justify-center items-center">
+            <ChangePasswordModal
+              onClick={showChangePassword}
+              onClose={() => setShowPasswordModal(false)}
+            />
+          </div>,
+          document.body
+        )}
     </>
   );
 };

@@ -241,7 +241,7 @@ const SocketLayout = ({ children }) => {
     },
     [roomId, userId]
   );
-  // TODO: 해야해!!
+
   // 대기방 업데이트
   const updateWaitingRoom = useCallback(
     (roomData) => {
@@ -261,7 +261,7 @@ const SocketLayout = ({ children }) => {
     },
     [roomId]
   );
-  // TODO: 해야해!!
+
   // 대기방 비밀번호 변경
   const changePassword = useCallback(
     (password) => {
