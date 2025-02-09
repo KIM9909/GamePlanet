@@ -67,9 +67,13 @@ export const GameInfoAPI = {
   
   // 리뷰 목록과 평균 별점 조회
   // `${GAMEINFO_API_BASE_URL}/review`
-  getReviews: async (gameId) => {
+  getReviews: async (gameInfoId) => {
     try {
-      const response = await axios.get(`${GAMEINFO_API_BASE_URL}/reivew?gameInfoId=${gameId}`);
+      const response = await axios.get(`${GAMEINFO_API_BASE_URL}/reivew,`,
+        {},
+        {params :{
+          gameInfoId:gameInfoId
+        }});
       return response.data;
     } catch (error) {
       throw error;
@@ -100,9 +104,14 @@ export const GameInfoAPI = {
 
   // 리뷰 삭제
   // `${GAMEINFO_API_BASE_URL}/${gameInfoId}`
-  deleteReview: async (gameId, reviewId) => {
+  deleteReview: async (gameInfoId, reviewId) => {
     try {
-      const response = await axios.delete(`${GAMEINFO_API_BASE_URL}/review/${reviewId}?gameInfoId=${gameId}`);
+      const response = await axios.delete(`${GAMEINFO_API_BASE_URL}/review/${reviewId}`,
+        {},
+        {params :{
+          gameInfoId:gameInfoId
+        }}
+      );
       return response.data;
     } catch (error) {
       throw error;
