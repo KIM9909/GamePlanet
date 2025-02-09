@@ -2,10 +2,14 @@ import React from 'react';
 import { FaStar } from 'react-icons/fa';
 
 const ReviewItem = ({
+  gameReviewId,
   gameReviewStar, 
   gameReviewContent,
   gameInfoId,
-  userId
+  userId,
+  isAuthor,
+  onEditClick,
+  onDeleteClick
 }) => {
   return (
     <div className="w-full p-4 border rounded-lg mb-4 shadow-sm">
@@ -22,9 +26,29 @@ const ReviewItem = ({
             />
           ))}
         </div>
-        <span className="text-gray-600 text-sm">
-          작성자: {userId}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-gray-600 text-sm">
+            작성자: {userId}
+          </span>
+          {isAuthor && (
+            <div className="flex gap-2">
+              <button
+                onClick={onEditClick}
+                className="px-3 py-1 text-sm text-blue-600 hover:text-blue-700
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+              >
+                수정
+              </button>
+              <button
+                onClick={onDeleteClick}
+                className="px-3 py-1 text-sm text-red-600 hover:text-red-700
+                         focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
+              >
+                삭제
+              </button>
+            </div>
+          )}
+        </div>
       </div>
       <div className="text-gray-700 whitespace-pre-wrap">
         {gameReviewContent}
@@ -32,5 +56,6 @@ const ReviewItem = ({
     </div>
   );
 };
+
 
 export default ReviewItem;
