@@ -136,15 +136,15 @@ public class GamePlay {
 	}
 
 	public DiceRollResponse rollDices(DiceRollRequest diceRollRequest) {
-		// turnManager.executeTurn();
 		Player currentPlayer = getValidatedPlayer(diceRollRequest.getPlayerId());
 		DiceRollResult response = currentPlayer.rollDices(diceRollRequest);
-		// 더블인 경우 주사위 한번더 던지기
+		// TODO 1 : 더블인 경우 주사위 한번더 던지기
 		processDoubleRoll(response);
 
 		// 주사위 굴려서 도착한 땅에 따라서 이벤트 추가
 		int currentPosition = response.getNextPosition();
 		ActionType nextAction = processTileEvent(currentPlayer, currentPosition);
+		// TODO 2 : 턴 종료 조건 판별
 		return DiceRollResponse.from(response, nextAction);
 	}
 
@@ -157,30 +157,49 @@ public class GamePlay {
 		if (TileType.SEED_CERTIFICATE_CARD == currentTile.getType()) {
 			return processLandingOnPlanetEvent(currentPlayer, currentTile);
 		}
-		// TODO: 특수카드일 경우 처리
+		// TODO 3: 특수카드일 경우 처리
 		if (TileType.NEURONS_VALLEY_CARD == currentTile.getType()) {
 
 		}
+
 		return ActionType.END;
 	}
 
 	/**
-	 * 땅에 도착했을 때 이벤트 처리 1. 땅이 비어있으면 구매할지 물어보기 2. 땅이 다른 플레이어 소유이면 통행료 지불
+	 * 땅에 도착했을 때 이벤트 처리 1. 땅이 비어있으면 구매할지 물어보기 2. 땅이 다른 플레이어 소유이면 통행료 지불 3. 땅이 자신의 땅이면 기지 건설할지 물어보기
 	 *
 	 * @param currentPlayer - 현재 플레이어
 	 * @param currentTile   - 현재 타일
+	 *                      <p>
+	 *                      return - 다음 액션
 	 */
 	private ActionType processLandingOnPlanetEvent(Player currentPlayer, Tile currentTile) {
-		// 땅 구매할지 물어보도록 액션 추가
-		if (currentTile.getOwnerId() == 0 && currentPlayer.getBalance() >= currentTile.getPrice()) {
-			return ActionType.BUY_LAND;
+		// 기지 구매할지 물어보도록 액션 추가
+		final int EMPTY_TILE_OWNER_NUMBER = 0;
+
+		if (currentTile.getOwnerId() == currentPlayer.getPlayerId() && !currentTile.isHasBase()) {
+			return ActionType.DO_YOU_WANT_TO_BUILD_THE_BASE;
 		}
+
+		// 땅 살건지 물어보는 액션 추가
+		if (currentTile.getOwnerId() == EMPTY_TILE_OWNER_NUMBER && currentPlayer.getBalance() >= currentTile.getPrice()) {
+			return ActionType.DO_YOU_WANT_TO_BUY_THE_LAND;
+		}
+
 		// 통행료 지불 하도록 액션 추가
-		if (currentTile.getOwnerId() != 0
+		if (currentTile.getOwnerId() != EMPTY_TILE_OWNER_NUMBER
 				&& currentTile.getOwnerId() != currentPlayer.getPlayerId()) {
-			return ActionType.PAY_TOLL;
+			return determineBrokenOnPayFee(currentPlayer, currentTile);
 		}
+		// 턴 끝났는지 확인
 		return ActionType.ROLL_DICE;
+	}
+
+	private ActionType determineBrokenOnPayFee(Player player, Tile currentTile) {
+		if (player.getBalance() < currentTile.getTollPrice()) {
+			return ActionType.BROKEN;
+		}
+		return ActionType.PAY_TOLL;
 	}
 
 	/**

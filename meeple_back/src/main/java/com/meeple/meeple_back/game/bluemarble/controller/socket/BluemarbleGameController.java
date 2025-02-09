@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -22,7 +24,7 @@ import org.springframework.stereotype.Controller;
 @RequiredArgsConstructor
 @MessageMapping("/game/blue-marble/game-plays")
 public class BluemarbleGameController {
-
+	private final Logger logger = LoggerFactory.getLogger(BluemarbleGameController.class);
 	private final SimpMessageSendingOperations messagingTemplate;
 	private final BluemarbleGameService bluemarbleGameService;
 
@@ -32,6 +34,7 @@ public class BluemarbleGameController {
 	                     @Payload DiceRollRequest diceRollRequest) {
 		SocketDiceRollResponse socketDiceRollResponse = SocketDiceRollResponse.from("roll-dice",
 				bluemarbleGameService.rollDice(roomId, diceRollRequest), "주사위를 굴렸습니다.");
+		logger.info("socketDiceRollResponse : {}", socketDiceRollResponse);
 		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, socketDiceRollResponse);
 	}
 
@@ -109,7 +112,7 @@ public class BluemarbleGameController {
 	@Operation(summary = "주사위 굴리기 방송", description = "주사위 굴리는걸 방송하는 기능")
 	public void justRollDice(@DestinationVariable("roomId") int roomId,
 	                         @Payload DiceRollBroadcastRequest request) {
-		SocketResponse response = SocketResponse.from("just-roll-dice", request,
+		SocketResponse<DiceRollBroadcastRequest> response = SocketResponse.from("just-roll-dice", request,
 				"주사위를 굴립니다.");
 		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, response);
 	}
