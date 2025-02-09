@@ -220,7 +220,7 @@ const SocketLayout = ({ children }) => {
     },
     [roomId]
   );
-  // TODO: 해야해!!
+
   // 비밀 대기방 참가
   const enterSecretWaitingRoom = useCallback(
     (password) => {
