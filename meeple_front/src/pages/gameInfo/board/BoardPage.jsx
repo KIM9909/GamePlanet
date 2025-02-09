@@ -1,120 +1,106 @@
+import ArticleItem from "../../../components/info/ArticleItem"
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { GameInfoAPI } from '../../../sources/api/GameInfoAPI';
 
 const BoardPage = () => {
   const { gameId } = useParams();
   const navigate = useNavigate();
-  const [articles, setArticles] = useState([]);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    const fetchArticles = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`https://boardjjigae.duckdns.org/api/game-info/community?gameInfoId=${gameId}`);
-        setArticles(response.data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchArticles = async () => {
+    try {
+      setLoading(true);
+      //테스트용 코드
+      const response = await GameInfoAPI.getCommunityPosts(7);
+      // const response = await GameInfoAPI.getCommunityPosts(gameId);
+      setData(response);
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchArticles();
   }, [gameId]);
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-  };
+  if (loading) return <div>로딩중...</div>;
+  if (error) return <div>에러가 발생했습니다.</div>;
+  if (!data) return <div>데이터가 없습니다.</div>;
 
-  if (loading) return <div className="text-center p-8">로딩중...</div>;
-  if (error) return <div className="text-center p-8 text-red-500">에러가 발생했습니다: {error}</div>;
-
-  const totalPages = Math.ceil(articles.length / itemsPerPage);
-  const currentArticles = articles.slice(
+  const totalPages = Math.ceil(data.length / itemsPerPage);
+  const currentArticles = data.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">게시판</h1>
-        <button
-          onClick={() => navigate(`/game/${gameId}/board/write`)}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          글쓰기
-        </button>
-      </div>
-
-      {/* 게시글 목록 테이블 */}
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-50 border-b">
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">번호</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">제목</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">작성자</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">작성일</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">조회수</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentArticles.map((article, index) => (
-              <tr 
-                key={article.gameCommunityId} 
-                className="border-b hover:bg-gray-50 cursor-pointer"
-                onClick={() => navigate(`/game/${gameId}/board/detail/${article.gameCommunityId}`)}
+      <h1 className="text-2xl font-bold mb-6">Community</h1>
+      <section>
+        <section className="grid grid-cols-12 gap-4 border-b-2 pb-2 font-medium">
+          <span className="col-span-6 text-center">제목</span>
+          <span className="col-span-2 text-center">작성자</span>
+          <span className="col-span-2 text-center">작성일</span>
+          <span className="col-span-2 text-center">조회수</span>
+        </section>
+        <section>
+          {currentArticles.map((item) => (
+            <ArticleItem
+              key={item.gameCommunityId}
+              content={item.gameCommunityContent}
+              createdAt={item.createAt}
+              createdBy={item.user}
+              comments={item.commentList}
+            />
+          ))}
+        </section>
+        <section className="mt-4 flex justify-between items-center">
+          <div className="flex gap-2">
+            <button 
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50"
+            >
+              이전
+            </button>
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => handlePageChange(i + 1)}
+                className={`px-3 py-1 border rounded 
+                  ${currentPage === i + 1 ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'}`}
               >
-                <td className="px-6 py-4 text-sm">{articles.length - ((currentPage - 1) * itemsPerPage + index)}</td>
-                <td className="px-6 py-4 text-sm">
-                  {article.title}
-                  {article.commentList?.length > 0 && 
-                    <span className="ml-2 text-blue-500">[{article.commentList.length}]</span>
-                  }
-                </td>
-                <td className="px-6 py-4 text-sm">{article.user.nickname}</td>
-                <td className="px-6 py-4 text-sm">{formatDate(article.createdAt)}</td>
-                <td className="px-6 py-4 text-sm">{article.viewCount}</td>
-              </tr>
+                {i + 1}
+              </button>
             ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* 페이지네이션 */}
-      <div className="flex justify-center mt-6 gap-2">
-        <button
-          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-          className="px-3 py-1 border rounded disabled:opacity-50"
-        >
-          이전
-        </button>
-        {[...Array(totalPages)].map((_, i) => (
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50"
+            >
+              다음
+            </button>
+          </div>
           <button
-            key={i + 1}
-            onClick={() => setCurrentPage(i + 1)}
-            className={`px-3 py-1 border rounded 
-              ${currentPage === i + 1 ? 'bg-blue-500 text-white' : ''}`}
+            onClick={() => navigate(`/game/${gameId}/board/write`)}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
-            {i + 1}
+            글쓰기
           </button>
-        ))}
-        <button
-          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-          disabled={currentPage === totalPages}
-          className="px-3 py-1 border rounded disabled:opacity-50"
-        >
-          다음
-        </button>
-      </div>
+        </section>
+      </section>
     </div>
   );
 };
