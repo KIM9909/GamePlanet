@@ -3,16 +3,18 @@ package com.meeple.meeple_back.game.bluemarble.controller.socket.response;
 import com.meeple.meeple_back.game.bluemarble.domain.ActionType;
 import com.meeple.meeple_back.game.bluemarble.domain.Player;
 import lombok.Builder;
+import lombok.Data;
 import lombok.Getter;
 
 @Getter
 @Builder
+@Data
 public class TurnEndResponse {
 	private final boolean turnEnd;
 	private final Player winner;
 	private final Player removedPlayer;
 	private final Player nextPlayer;
-	private final int turnCount;
+	private final int currentPlayerIndex;
 	private final int round;
 	private final String nextAction;
 
@@ -21,7 +23,7 @@ public class TurnEndResponse {
 		this.winner = winner;
 		this.removedPlayer = removedPlayer;
 		this.nextPlayer = nextPlayer;
-		this.turnCount = turnCount;
+		this.currentPlayerIndex = turnCount - 1;
 		this.round = round;
 		this.nextAction = nextAction;
 	}
