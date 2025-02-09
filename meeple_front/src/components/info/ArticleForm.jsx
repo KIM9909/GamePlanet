@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useSelector } from 'react-redux';
 
-const ArticleForm = ({ initialData, onSubmit, isEditing }) => {
+
+const ArticleForm = ({ gameId,initialData, onSubmit, isEditing, isSubmitting: externalIsSubmitting }) => {
+  const { token } = useSelector((state) => state.user);
+  const userId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
+  
   const [formData, setFormData] = useState({
     title: '',
-    content: ''
+    gameCommunityContent: '',
+    userId: userId,
+    gameInfoId: gameId
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -12,10 +18,17 @@ const ArticleForm = ({ initialData, onSubmit, isEditing }) => {
     if (initialData) {
       setFormData({
         title: initialData.title || '',
-        content: initialData.content || ''
+        content: initialData.content || '',
+        userId: userId
       });
     }
-  }, [initialData]);
+  }, [initialData, userId]);
+
+  useEffect(() => {
+    if (externalIsSubmitting !== undefined) {
+      setIsSubmitting(externalIsSubmitting);
+    }
+  }, [externalIsSubmitting]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -32,17 +45,26 @@ const ArticleForm = ({ initialData, onSubmit, isEditing }) => {
       return;
     }
 
+    // 로그인 안한 사용자 필터링
+
+    if (!userId) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       await onSubmit(formData);
       if (!isEditing) {
-        setFormData({ title: '', content: '' }); // 새 글 작성 후 폼 초기화
+        setFormData({ title: '', content: '', userId });
       }
     } catch (error) {
       console.error('저장 중 오류 발생:', error);
       alert('저장에 실패했습니다.');
     } finally {
-      setIsSubmitting(false);
+      if (externalIsSubmitting === undefined) {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -59,6 +81,7 @@ const ArticleForm = ({ initialData, onSubmit, isEditing }) => {
                      focus:outline-none focus:ring-2 focus:ring-blue-500 
                      focus:border-transparent"
           maxLength={100}
+          disabled={isSubmitting}
         />
       </div>
 
@@ -70,7 +93,9 @@ const ArticleForm = ({ initialData, onSubmit, isEditing }) => {
           placeholder="내용을 입력하세요"
           className="w-full h-96 px-4 py-2 border border-gray-300 rounded-lg 
                      focus:outline-none focus:ring-2 focus:ring-blue-500 
-                     focus:border-transparent resize-none"
+                     focus:border-transparent resize-none
+                     disabled:bg-gray-100 disabled:cursor-not-allowed"
+          disabled={isSubmitting}
         />
       </div>
 

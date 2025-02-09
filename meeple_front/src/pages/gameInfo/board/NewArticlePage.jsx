@@ -1,23 +1,27 @@
-import { useNavigate,useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useState } from 'react';
-import axios from 'axios';
 import BoardHeader from "../../../components/info/BoardHeader";
 import ArticleForm from "../../../components/info/ArticleForm";
+import { GameInfoAPI } from '../../../sources/api/GameInfoAPI';
 
 const NewArticlePage = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const {gameId}=useParams()
+  
+  // 테스트 용
+  const gameId=7
+  // const { gameId } = useParams();
 
   const handleSubmit = async (formData) => {
     try {
       setIsSubmitting(true);
-      const response = await axios.post('/game-info/community', formData);
+      await GameInfoAPI.createCommunityPost({
+        ...formData,
+        gameInfoId: gameId
+      });
       
-      if (response.status === 200) {
-        // 저장 성공 시 게시글 목록으로 이동
-        navigate(`game/${gameId}/board`);
-      }
+      alert('게시글이 등록되었습니다.');
+      navigate(`/game/${gameId}/board`);
     } catch (error) {
       console.error('게시글 저장 실패:', error);
       throw error;
@@ -33,8 +37,10 @@ const NewArticlePage = () => {
       </section>
       <section>
         <ArticleForm 
+          gameId={gameId}
           onSubmit={handleSubmit}
           isEditing={false}
+          isSubmitting={isSubmitting}
         />
       </section>
     </div>
