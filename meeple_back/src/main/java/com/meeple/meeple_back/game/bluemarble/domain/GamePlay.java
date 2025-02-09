@@ -5,11 +5,9 @@ import com.meeple.meeple_back.game.bluemarble.controller.response.BuildBaseRespo
 import com.meeple.meeple_back.game.bluemarble.controller.response.BuyLandResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DiceRollResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DrawCardResponse;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuildBaseRequest;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.request.PayFeeRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.*;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.PayFeeResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -157,7 +155,7 @@ public class GamePlay {
 
 		}
 
-		return ActionType.END;
+		return ActionType.CHECK_END;
 	}
 
 	/**
@@ -240,7 +238,7 @@ public class GamePlay {
 
 		return BuyLandResponse.of(currentPlayer.getPlayerId(), prevMoney,
 				currentPlayer.getBalance(),
-				currentPlayer, tile, ActionType.END);
+				currentPlayer, tile, ActionType.CHECK_END);
 	}
 
 
@@ -301,7 +299,7 @@ public class GamePlay {
 		tile.updateTollPrice(headquarterUsageFee);
 
 		return BuildBaseResponse.from(player.getPlayerId(), prevPlayerMoney, updatedMoney, player,
-				tile, ActionType.END);
+				tile, ActionType.CHECK_END);
 	}
 
 	/**
@@ -356,5 +354,15 @@ public class GamePlay {
 		if (tile.getOwnerId() == payer.getPlayerId()) {
 			throw new IllegalArgumentException("플레이어가 땅의 주인입니다.");
 		}
+	}
+
+	/**
+	 * 턴 종료, 게임 종료 조건 확인, 게임 결과 리턴.
+	 *
+	 * @param turnEndRequest
+	 * @return
+	 */
+	public TurnEndResponse turnEnd(TurnEndRequest turnEndRequest) {
+		return turnManager.endTurn(board);
 	}
 }

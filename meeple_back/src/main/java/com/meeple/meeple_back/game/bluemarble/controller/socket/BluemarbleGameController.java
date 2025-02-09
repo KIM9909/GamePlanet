@@ -99,7 +99,7 @@ public class BluemarbleGameController {
 	 * @param roomId
 	 * @param turnEndRequest -
 	 */
-	@MessageMapping("/{roomId}/turn-end")
+	@MessageMapping("/{roomId}/check-end")
 	@Operation(summary = "턴을 끝내는 기능", description = "턴을 끝냅니다.")
 	public void turnEnd(@DestinationVariable("roomId") int roomId,
 	                    @Payload TurnEndRequest turnEndRequest) {
