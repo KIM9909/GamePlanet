@@ -28,8 +28,8 @@ const SocketLayout = ({ children }) => {
   // 주사위 굴린 후 정보
   const [rollDiceSocketData, setRollDiceSocketData] = useState({});
 
-  // 주사위 굴린 후 다음 행동
-  const [socketRollNext, setSocketRollNext] = useState(null);
+  //  다음 행동
+  const [socketNext, setSocketNext] = useState(null);
 
   // 첫 번째 주사위 결과
   const [socketFirstDice, setSocketFirstDice] = useState(null);
@@ -60,6 +60,9 @@ const SocketLayout = ({ children }) => {
 
   // 타일 업데이트 정보
   const [socketTileUpdate, setSocketTileUpdate] = useState(null);
+
+  // 기지 건설 후 정보
+  const [buildBaseSocketData, setBuildBaseSocketData] = useState(null);
 
   const location = useLocation();
 
@@ -125,17 +128,23 @@ const SocketLayout = ({ children }) => {
               setBuyLandSocketData(receivedData.buyLandResponse);
               setSocketUserUpdate(receivedData.buyLandResponse.updatedPlayer);
               setSocketTileUpdate(receivedData.buyLandResponse.updatedTile);
+              setSocketNext(receivedData.buyLandResponse.nextAction);
               setGameSocketNotifi(receivedData.message);
             } else if (receivedData.type === "roll-dice") {
               setRollDiceSocketData(receivedData.diceRollResponse);
               setSocketFirstDice(receivedData.diceRollResponse.firstDice);
               setSocketSecondDice(receivedData.diceRollResponse.secondDice);
               setSocketDouble(receivedData.diceRollResponse.double);
-              setSocketRollNext(receivedData.diceRollResponse.nextAction);
+              setSocketNext(receivedData.diceRollResponse.nextAction);
               setGameSocketNotifi(receivedData.message);
             } else if (receivedData.type === "just-roll-dice") {
               setSocektRoll(receivedData.data);
+
               setGameSocketNotifi(receivedData.message);
+            } else if (receivedData.type === "build-base") {
+              setBuildBaseSocketData(receivedData.data);
+              setGameSocketNotifi(receivedData.message);
+              setSocketNext(receivedData.data.nextAction);
             }
             console.log("구독 성공:");
           });
@@ -356,7 +365,6 @@ const SocketLayout = ({ children }) => {
     [roomId, userId]
   );
 
-  // TODO: 해야해!!
   // 부루마불 땅 구매
   const buyLand = useCallback(
     (buyInfo) => {
@@ -378,6 +386,28 @@ const SocketLayout = ({ children }) => {
     },
     [roomId, userId]
   );
+
+  const buildBase = useCallback(
+    (buildInfo) => {
+      if (!stompClientRef.current?.connected) {
+        console.warn("웹소켓에 연결되어있지 않습니다.");
+        return;
+      }
+      try {
+        console.log("기지 건설 정보", buildInfo);
+        stompClientRef.current.publish({
+          destination: `/app/game/blue-marble/game-plays/${roomId}/build-base`,
+          body: JSON.stringify(buildInfo),
+        });
+        console.log("기지 건설에 성공했습니다.");
+      } catch (error) {
+        console.error("기지 건설에 실패했습니다.", error);
+        setError("기지 건설에 실패했습니다.");
+      }
+    },
+    [roomId, userId]
+  );
+
   if (!userId || !token) {
     return children;
   }
@@ -407,9 +437,10 @@ const SocketLayout = ({ children }) => {
           socketCurrentRound,
           socketBoard,
           socketCards,
-          socketRollNext,
+          socketNext,
           socketUserUpdate,
           socketTileUpdate,
+          buildBaseSocketData,
           enterWaitingRoom,
           chatWaitingRoom,
           changePassword,
@@ -419,6 +450,7 @@ const SocketLayout = ({ children }) => {
           rollDice,
           createBurumabulPlay,
           updateWaitingRoom,
+          buildBase,
         }}
       >
         {children}

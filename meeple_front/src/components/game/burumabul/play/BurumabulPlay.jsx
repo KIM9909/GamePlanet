@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState, useContext } from "react";
 import TravelMap from "../play/TravelMap";
-
+import { createPortal } from "react-dom";
 import GameSidebar from "../../../sidebar/GameSidebar";
 import { Menu, X } from "lucide-react";
 import DiceImage from "../../../../assets/burumabul_images/Dice.png";
@@ -8,10 +8,11 @@ import PlayerVideo from "../../../../components/game/burumabul/play/PlayerVideo"
 import { useDispatch, useSelector } from "react-redux";
 import { SocketContext } from "../../../layout/SocketLayout";
 import QuestBuyLand from "./burumabul_Modal/QuestBuyLand";
+import QuestBuildBase from "./burumabul_Modal/QuestBuildBase.";
 
 const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
   console.log("부루마불 플레이 현재 방 정보 :", currentRoomInfo);
-
+  const userId = useSelector((state) => state.user.userId);
   // 소켓 사용
   const socketContext = useContext(SocketContext);
   const {
@@ -19,14 +20,17 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     roomSocketData,
     createBurumabulPlay,
     gamePlaySocketData,
+    currentPlayerSocketIndex,
     gameSocketNotifi,
     socketBoard,
     socketCards,
-    socketRollNext,
+    socketNext,
     socketFirstDice,
     socketSecondDice,
     socketCurrentRound,
     socketDouble,
+    socketTileUpdate,
+    socketUserUpdate,
     rollDiceSocketData,
     buyLandSocketData,
     roll,
@@ -34,14 +38,30 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
 
   // 게임 데이터
   const [currentPlayData, setCurrentPlayData] = useState(playData);
+  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(
+    currentPlayerSocketIndex
+  );
   const [board, setBoard] = useState(null);
   const [cards, setCards] = useState(null);
+  const [players, setPlayers] = useState(currentPlayData?.players || []);
+
+  const currentPlayer = players?.[currentPlayData?.currentPlayerIndex];
+  console.log("현재 플레이어: ", currentPlayer);
+  const playerInfoList = currentPlayData.players;
+
+  const myInfo = players?.find((player) => player.playerId === userId);
+  const myColorIndex = players?.findIndex(
+    (player) => Number(player.playerId) === Number(userId)
+  );
+  console.log(players);
+  const colors = ["#FF3EA5", "#7695FF", "#00FF9C", "#EBF400"];
 
   useEffect(() => {
     setCurrentPlayData(playData);
     setBoard(socketBoard);
     setCards(socketCards);
-  }, [playData, socketBoard, socketCards]);
+    setCurrentPlayerIndex(currentPlayerSocketIndex);
+  }, [playData, socketBoard, socketCards, currentPlayerSocketIndex]);
 
   const [playerBases, setPlayerBases] = useState(
     Array(currentPlayData?.players.length).fill([])
@@ -51,6 +71,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     if (gamePlaySocketData) {
       console.log("새로운 gamePlaySocekData 수신:", gamePlaySocketData);
       setCurrentPlayData(gamePlaySocketData);
+      setPlayers(gamePlaySocketData.players);
       setPlayerBases(Array(gamePlaySocketData.players.length).fill([]));
     }
   }, [gamePlaySocketData]);
@@ -78,16 +99,21 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     setFirstDice(socketFirstDice);
     setSecondDice(socketSecondDice);
     setIsDouble(socketDouble);
-    setNextAction(socketRollNext);
-  }, [socketFirstDice, socketSecondDice, socketDouble, socketRollNext]);
+    setNextAction(socketNext);
+  }, [socketFirstDice, socketSecondDice, socketDouble, socketNext]);
 
   const [showBuyLand, setShowBuyLand] = useState(false);
+  const [showBuildBase, setShowBuildBase] = useState(false);
   const [isBuyLand, setIsBuyLand] = useState(false);
+  const [isBuildBase, setIsBuildBase] = useState(false);
   const [showCardId, setShowCardId] = useState(null);
 
   useEffect(() => {
-    if (nextAction && nextAction === "BUY_LAND") {
+    if (nextAction && nextAction === "DO_YOU_WANT_TO_BUY_THE_LAND") {
       setShowBuyLand(true);
+    }
+    if (nextAction && nextAction === "DO_YOU_WANT_TO_BUILD_THE_BASE") {
+      setShowBuildBase(true);
     }
   }, [nextAction]);
 
@@ -96,6 +122,61 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
   useEffect(() => {
     setCurrentRound(socketCurrentRound);
   }, [socketCurrentRound]);
+
+  useEffect(() => {
+    if (buyLandSocketData) {
+      const { updatedPlayer, updatedTile } = buyLandSocketData;
+
+      // 플레이어 정보 업데이트
+      if (updatedPlayer) {
+        setPlayers((prevPlayers) => {
+          const newPlayers =
+            prevPlayers?.map((player) =>
+              player.playerId === updatedPlayer.playerId
+                ? {
+                    ...player,
+                    balance: updatedPlayer.balance,
+                    cardOwned: updatedPlayer.cardOwned || [],
+                    landOwned: updatedPlayer.landOwned || [],
+                    position: updatedPlayer.position,
+                  }
+                : player
+            ) || [];
+          console.log("Player update:", newPlayers);
+          return newPlayers;
+        });
+      }
+
+      // 보드(타일) 정보 업데이트
+      if (updatedTile) {
+        setBoard((prevBoard) => {
+          const newBoard =
+            prevBoard?.map((tile) =>
+              tile.id === updatedTile.id
+                ? {
+                    ...tile,
+                    ownerId: updatedTile.ownerId,
+                    hasBase: updatedTile.hasBase,
+                    tollPrice: updatedTile.tollPrice,
+                  }
+                : tile
+            ) || [];
+          console.log("Board update:", newBoard);
+          return newBoard;
+        });
+      }
+    }
+  }, [buyLandSocketData]);
+
+  // 상태 변화를 모니터링하기 위한 별도의 useEffect
+  useEffect(() => {
+    if (buyLandSocketData) {
+      console.log("상태 업데이트 확인:");
+      console.log("Updated Players:", players);
+      console.log("Updated Cards:", cards);
+      console.log("Updated Board:", board);
+    }
+  }, [players, board, cards, buyLandSocketData]);
 
   const handlePlayerBasesRef = useCallback((getBases) => {
     console.log("플레이어 베이스 정보 : ", getBases);
@@ -116,10 +197,12 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     return <>{loadingMessage}</>;
   }
 
-  const currentPlayer =
-    currentPlayData?.players?.[currentPlayData?.currentPlayerIndex];
-  console.log("현재 플레이어: ", currentPlayer);
-  const playerInfoList = currentPlayData.players;
+  console.log("currentPlayerIndex:", currentPlayerIndex);
+  console.log("myColorIndex:", myColorIndex);
+  console.log("rollDice 존재 여부:", !!rollDice);
+  console.log("현재 게임 데이터", currentPlayData);
+  console.log("현재 타일(보드 정보)", board);
+  console.log("현재 카드 정보", cards);
 
   return (
     <>
@@ -178,6 +261,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
               setShowBuyLand={setShowBuyLand}
               isBuyLand={isBuyLand}
               setShowCardId={setShowCardId}
+              setShowBuildBase={setShowBuildBase}
             />
           </div>
 
@@ -201,8 +285,10 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
                         className="flex justify-around overflow-hidden text-ellipsis"
                       >
                         <p>순위</p>
-                        <p>player {index + 1}. : 누구누구</p>
-                        <p>~~~~~ 만 마불</p>
+                        <p>
+                          player {index + 1}. : {player.playerName}
+                        </p>
+                        <p>{player.balance}마불</p>
                       </div>
                     ))}
                   </div>
@@ -210,65 +296,87 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
               </div>
 
               {/* 내 정보 칸 */}
-              <div className="h-[40%] w-full border-2">
+              <div
+                className="h-[40%] w-full border-2"
+                style={{ backgroundColor: colors[myColorIndex] }}
+              >
                 <div className="h-[78%] mt-3">
-                  <h1 className="text-center">플레이어 이름 정보</h1>
+                  <h1 className="text-center">내 정보</h1>
                   <div>
                     <div>
-                      내 기지 :{" "}
-                      {playerBases.map((playerBase, playerIndex) => (
-                        <div key={playerIndex}>
-                          <p>플레이어 {playerIndex + 1} : </p>
-                          {playerBases.length > 0 ? (
-                            playerBase.map((city, cityIndex) => (
-                              <p key={cityIndex} className="ml-4">
-                                {city}
-                              </p>
-                            ))
-                          ) : (
-                            <p className="ml-4 text-gray-500">
-                              기지가 없습니다.
-                            </p>
-                          )}
+                      내 기지 :
+                      {myInfo?.cardOwned?.map((playerCard, cardIndex) => (
+                        <div key={cardIndex}>
+                          <p>{playerCard.name}</p>
                         </div>
                       ))}
                     </div>
                   </div>
                 </div>
                 <div className="flex flex-row justify-center items-center">
-                  {
-                    <button
-                      className="flex flex-row justify-center items-center"
-                      onClick={() => rollDice && rollDice()}
-                    >
-                      <div className="flex-shrink-0 border-2 border-white text-white rounded-lg p-2 w-44 h-12 bg-teal-400 flex items-center justify-between whitespace-nowrap min-w-0">
-                        <p
-                          className="flex-shrink-0 ml-2"
-                          style={{
-                            textShadow:
-                              "-1px 0px black, 0px 1px black, 1px 0px black, 0px -1px black",
-                          }}
-                        >
-                          주사위 굴리기
-                        </p>
-                        <img className="w-12 h-12" src={DiceImage} alt="Dice" />
-                      </div>
-                    </button>
-                  }
+                  {currentPlayerIndex !== null &&
+                    currentPlayerIndex !== undefined &&
+                    currentPlayerIndex === myColorIndex && (
+                      <button
+                        className="flex flex-row justify-center items-center"
+                        onClick={() => rollDice && rollDice()}
+                      >
+                        <div className="flex-shrink-0 border-2 border-white text-white rounded-lg p-2 w-44 h-12 bg-teal-400 flex items-center justify-between whitespace-nowrap min-w-0">
+                          <p
+                            className="flex-shrink-0 ml-2"
+                            style={{
+                              textShadow:
+                                "-1px 0px black, 0px 1px black, 1px 0px black, 0px -1px black",
+                            }}
+                          >
+                            주사위 굴리기
+                          </p>
+                          <img
+                            className="w-12 h-12"
+                            src={DiceImage}
+                            alt="Dice"
+                          />
+                        </div>
+                      </button>
+                    )}
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-      {showBuyLand && showCardId && (
-        <QuestBuyLand
-          setIsBuyLand={setIsBuyLand}
-          onClose={() => setShowBuyLand(false)}
-          cardId={showCardId}
-          cardInfo={cards?.[showCardId]}
-        />
-      )}
+      {showBuyLand &&
+        showCardId &&
+        currentPlayerIndex !== null &&
+        currentPlayerIndex !== undefined &&
+        currentPlayerIndex === myColorIndex &&
+        createPortal(
+          <div className="fixed inset-0 z-50 w-full text-center flex items-center justify-center">
+            <QuestBuyLand
+              setIsBuyLand={setIsBuyLand}
+              onClose={() => setShowBuyLand(false)}
+              cardId={showCardId}
+              cardInfo={cards?.[showCardId]}
+            />
+          </div>,
+          document.body
+        )}
+
+      {showBuildBase &&
+        showCardId &&
+        currentPlayerIndex !== null &&
+        currentPlayerIndex !== undefined &&
+        currentPlayerIndex === myColorIndex &&
+        createPortal(
+          <div className="fixed inset-0 z-50 w-full text-center flex items-center justify-center">
+            <QuestBuildBase
+              setIsBuildBase={setIsBuildBase}
+              onClose={() => setShowBuildBase(false)}
+              cardId={showCardId}
+              cardInfo={cards?.[showCardId]}
+            />
+          </div>
+        )}
 
       {!isSidebarOpen && (
         <div className="fixed left-0 top-1/2 transform -translate-y-1/2 z-50">
