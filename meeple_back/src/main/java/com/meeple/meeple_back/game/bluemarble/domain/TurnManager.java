@@ -92,7 +92,7 @@ public class TurnManager {
 
 		cycleCurrentPlayer();
 		logger.info("Current Player : " + players);
-		return TurnEndResponse.nextTurn(null, getCurrentPlayer(), turnCount, round, ActionType.ROLL_DICE);
+		return TurnEndResponse.nextTurn(null, getCurrentPlayer(), turnCount, round, ActionType.START_TURN);
 	}
 
 	private TurnEndResponse handleBankruptCurrentPlayer(List<Tile> board) {
@@ -100,7 +100,7 @@ public class TurnManager {
 		if (checkWinnerByPlayerSize()) {
 			return TurnEndResponse.gameEnd(determineWinner(board));
 		}
-		return TurnEndResponse.nextTurn(removed, getCurrentPlayer(), turnCount, round, ActionType.ROLL_DICE);
+		return TurnEndResponse.nextTurn(removed, getCurrentPlayer(), turnCount, round, ActionType.START_TURN);
 	}
 
 	/**
@@ -112,6 +112,7 @@ public class TurnManager {
 	 * @return
 	 */
 	private boolean checkWinnerByPlayerSize() {
+
 		if (initialPlayerCount == 4) {
 			return players.size() <= 2;
 		} else if (initialPlayerCount == 3) {

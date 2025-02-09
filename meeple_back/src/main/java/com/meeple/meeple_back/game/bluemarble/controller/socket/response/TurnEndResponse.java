@@ -37,6 +37,6 @@ public class TurnEndResponse {
 	}
 
 	public static TurnEndResponse diceDoubleOneMoreTurn(Player currentPlayer, int turnCount, int round) {
-		return new TurnEndResponse(false, null, null, currentPlayer, turnCount, round, ActionType.ROLL_DICE.getAction());
+		return new TurnEndResponse(false, null, null, currentPlayer, turnCount, round, ActionType.START_TURN.getAction());
 	}
 }
