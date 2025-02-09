@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from "react";
 
-const QuestBuyLand = ({ setIsBuyLand, onClose, cardId, cardInfo }) => {
+const QuestBuildBase = ({ setIsBuildBase, onClose, cardId, cardInfo }) => {
   const [cardInfoma, setCardInfoma] = useState(null);
   useEffect(() => {
     setCardInfoma(cardId);
   }, [cardInfo]);
+
   const handleYes = () => {
-    setIsBuyLand(true);
+    setIsBuildBase(true);
     onClose();
   };
   const handleNo = () => {
-    setIsBuyLand(false);
+    setIsBuildBase(false);
     onClose();
   };
   return (
@@ -18,31 +19,31 @@ const QuestBuyLand = ({ setIsBuyLand, onClose, cardId, cardInfo }) => {
       {cardInfo && (
         <>
           <div className="bg-white w-96 h-96 p-4">
-            <div className={`bg-[${cardInfo.color}] p-3 rounded`}>
-              <h2 className="text-lg font-bold">{cardInfo.name}</h2>
-              <p className="text-gray-700">{cardInfo.description}</p>
+            <div className={`bg-[${cardInfoma.color}] p-3 rounded`}>
+              <h2 className="text-lg font-bold">{cardInfoma.name}</h2>
+              <p className="text-gray-700">{cardInfoma.description}</p>
               <div className="mt-3">
-                <p>땅 매입 비용: {cardInfo.seedCount}</p>
-                <p>기지 건설 비용: {cardInfo.baseConstructionCost} 마불</p>
-                <p>본부 사용료: {cardInfo.headquartersUsageFee} 마불</p>
-                <p>기지 사용료: {cardInfo.baseUsageFee} 마불</p>
+                <p>땅 매입 비용: {cardInfoma.seedCount}</p>
+                <p>기지 건설 비용: {cardInfoma.baseConstructionCost} 마불</p>
+                <p>본부 사용료: {cardInfoma.headquartersUsageFee} 마불</p>
+                <p>기지 사용료: {cardInfoma.baseUsageFee} 마불</p>
               </div>
             </div>
 
             <div className="mt-4">
-              <p>땅을 구매하시겠습니까?</p>
+              <p>기지를 건설하시겠습니까?</p>
               <div className="flex justify-between mt-2">
                 <button
                   className="bg-red-500 text-white px-4 py-2 rounded"
                   onClick={handleNo}
                 >
-                  안 살래요
+                  안 할래요
                 </button>
                 <button
                   className="bg-green-500 text-white px-4 py-2 rounded"
                   onClick={handleYes}
                 >
-                  살래요
+                  할래요
                 </button>
               </div>
             </div>
@@ -53,4 +54,4 @@ const QuestBuyLand = ({ setIsBuyLand, onClose, cardId, cardInfo }) => {
   );
 };
 
-export default QuestBuyLand;
+export default QuestBuildBase;

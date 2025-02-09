@@ -78,10 +78,12 @@ const Cell = ({
   textureUrl,
   topTextureUrl,
   size,
+  ownerIndex,
+  players,
 }) => {
   const textRef = useRef();
   const { camera } = useThree();
-
+  const colors = ["#FF3EA5", "#7695FF", "#00FF9C", "#EBF400"];
   // TextureLoader로 텍스쳐 로드
   const texture = textureUrl ? useLoader(TextureLoader, textureUrl) : null;
   const topTexture = topTextureUrl
@@ -94,14 +96,18 @@ const Cell = ({
     }
   });
 
-  // 특정 셀의 크기 조정
+  const getColor = () => {
+    if (ownerIndex !== null) {
+      return colors[ownerIndex];
+    }
+  };
 
   return (
     <mesh position={position}>
       {/* 셀 박스 = 직육면체 */}
       <boxGeometry args={size} />
       {/* 각 면의 텍스처 및 색상 설정 */}
-      <meshStandardMaterial color={isHighlight ? "#ff6b6b" : "white"} />
+      <meshStandardMaterial color={getColor()} />
 
       <Edges
         scale={1}
@@ -148,6 +154,8 @@ const TravelMap = ({
   roomId,
   isBuyLand,
   setShowCardId,
+  setShowBuildBase,
+  isBuildBase,
 }) => {
   // cities 배열
   const cities = [
@@ -201,13 +209,16 @@ const TravelMap = ({
     rollDice,
     buyLand,
     roll,
+    buildBase,
     currentPlayerSocketIndex,
     rollDiceSocketData,
     socketBoard,
     socketCards,
-    socketRollNext,
+    socketNext,
     socketUserUpdate,
     socketTileUpdate,
+    buyLandSocketData,
+    buildBaseSocketData,
     socketFirstDice,
     socketSecondDice,
     socketDouble,
@@ -215,10 +226,23 @@ const TravelMap = ({
     socketRoll,
   } = useContext(SocketContext);
   const [playData, setPlayData] = useState(gameData);
+
+  useEffect(() => {
+    console.log(buyLandSocketData);
+  }, [buyLandSocketData]);
+
+  // 플레이어 정보
+  const [players, setPlayers] = useState(playData?.players);
+  const numPlayers = players?.length;
+
   const [cards, setCards] = useState(null);
   const [board, setBoard] = useState(null);
   const [updatePlayerList, setUpdatePlayerList] = useState(socketUserUpdate);
   const [updateTileList, setUpdateTileList] = useState(socketTileUpdate);
+
+  useEffect(() => {
+    setCurrentPlayerIndex(currentPlayerSocketIndex);
+  }, [currentPlayerSocketIndex]);
 
   useEffect(() => {
     setPlayData(gameData);
@@ -226,49 +250,129 @@ const TravelMap = ({
     setBoard(socketBoard);
   }, [gameData, socketCards, socketBoard]);
 
-  const updatePlayer = (players, updatedPlayer) => {
-    return players.map((player) =>
-      player.playerId === updatedPlayer.playerId ? updatedPlayer : player
-    );
-  };
+  useEffect(() => {
+    if (buyLandSocketData) {
+      const { updatedPlayer, updatedTile } = buyLandSocketData;
 
-  const updateTile = (tiles, updatedTile) => {
-    return tiles.map((tile) =>
-      tile.id === updatedTile.id ? updatedTile : tile
-    );
-  };
+      // 플레이어 정보 업데이트
+      if (updatedPlayer) {
+        setPlayers((prevPlayers) => {
+          const newPlayers =
+            prevPlayers?.map((player) =>
+              player.playerId === updatedPlayer.playerId
+                ? {
+                    ...player,
+                    balance: updatedPlayer.balance,
+                    cardOwned: updatedPlayer.cardOwned || [],
+                    landOwned: updatedPlayer.landOwned || [],
+                    position: updatedPlayer.position,
+                  }
+                : player
+            ) || [];
+          console.log("Player update:", newPlayers);
+          return newPlayers;
+        });
+      }
+
+      // 보드(타일) 정보 업데이트
+      if (updatedTile) {
+        setBoard((prevBoard) => {
+          const newBoard =
+            prevBoard?.map((tile) =>
+              tile.id === updatedTile.id
+                ? {
+                    ...tile,
+                    ownerId: updatedTile.ownerId,
+                    hasBase: updatedTile.hasBase,
+                    tollPrice: updatedTile.tollPrice,
+                  }
+                : tile
+            ) || [];
+          console.log("Board update:", newBoard);
+          return newBoard;
+        });
+      }
+    }
+  }, [buyLandSocketData]);
 
   useEffect(() => {
-    if (socketUserUpdate) {
-      setUpdatePlayerList((prevPlayers) =>
-        updatePlayer(prevPlayers, socketUserUpdate)
-      );
-      setUpdatePlayerList(null);
-    }
-    if (socketTileUpdate) {
-      setUpdateTileList((prevTiles) => updateTile(prevTiles, socketTileUpdate));
-      setUpdateTileList(null);
-    }
-  }, [socketUserUpdate, socketTileUpdate]);
+    if (buildBaseSocketData) {
+      const { updatedPlayer, updatedTile } = buildBaseSocketData;
 
-  // 플레이어 정보
-  const players = playData.players;
-  const numPlayers = players.length;
+      // 플레이어 정보 업데이트
+      if (updatedPlayer) {
+        setPlayers((prevPlayers) => {
+          const newPlayers =
+            prevPlayers?.map((player) =>
+              player.playerId === updatedPlayer.playerId
+                ? {
+                    ...player,
+                    balance: updatedPlayer.balance,
+                    cardOwned: updatedPlayer.cardOwned || [],
+                    landOwned: updatedPlayer.landOwned || [],
+                    position: updatedPlayer.position,
+                  }
+                : player
+            ) || [];
+          console.log("Player update:", newPlayers);
+          return newPlayers;
+        });
+      }
+
+      // 보드(타일) 정보 업데이트
+      if (updatedTile) {
+        setBoard((prevBoard) => {
+          const newBoard =
+            prevBoard?.map((tile) =>
+              tile.id === updatedTile.id
+                ? {
+                    ...tile,
+                    ownerId: updatedTile.ownerId,
+                    hasBase: updatedTile.hasBase,
+                    tollPrice: updatedTile.tollPrice,
+                  }
+                : tile
+            ) || [];
+          console.log("Board update:", newBoard);
+          return newBoard;
+        });
+      }
+
+      // 우주 기지 상태 업데이트
+      setSpaceBases((prevBases) => {
+        return prevBases.map((base, index) => {
+          if (index === updatedTile.id) {
+            const ownerIndex = players.findIndex(
+              (p) => p.playerId === updatedTile.ownerId
+            );
+            return {
+              ...base,
+              visible: true,
+              color: colors[ownerIndex],
+            };
+          }
+          return base;
+        });
+      });
+    }
+  }, [buildBaseSocketData]);
+
+  // 상태 변화를 모니터링하기 위한 별도의 useEffect
+  useEffect(() => {
+    if (buyLandSocketData) {
+      console.log("상태 업데이트 확인:");
+      console.log("Updated Players:", players);
+      console.log("Updated Cards:", cards);
+      console.log("Updated Board:", board);
+    }
+  }, [players, board, cards, buyLandSocketData, buildBaseSocketData]);
 
   // 색상
-  const colors = ["FF3EA5", "#7695FF", "#00FF9C", "EBF400"];
+  const colors = ["#FF3EA5", "#7695FF", "#00FF9C", "#EBF400"];
 
   // 현재 플레이어는 인덱스 번호로
-  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(
-    currentPlayerSocketIndex
-  );
-
-  useEffect(() => {
-    setCurrentPlayerIndex(currentPlayerSocketIndex);
-  }, [currentPlayerSocketIndex]);
-
+  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const currentPlayer = players[currentPlayerIndex];
-
   // 주사위
   const [firstDice, setFirstDice] = useState(null);
   const [secondDice, setSecondDice] = useState(null);
@@ -322,24 +426,19 @@ const TravelMap = ({
   }, [isDiceRolling, firstDice, secondDice]);
 
   useEffect(() => {
-    setNextAction(socketRollNext);
-  }, [socketRollNext]);
-
-  const [buyLandResult, setBuyLandResult] = useState(isBuyLand);
-  useEffect(() => {
-    setBuyLandResult(isBuyLand);
-  }, [isBuyLand]);
+    setNextAction(socketNext);
+  }, [socketNext]);
 
   // 땅 구매
   useEffect(() => {
-    if (nextAction && nextAction) {
+    if (nextAction && nextAction === "DO_YOU_WANT_TO_BUY_THE_LAND") {
       setShowCardId(playersPositions[currentPlayerIndex]);
     }
     if (nextAction && nextAction === "BUY_LAND" && isBuyLand) {
       try {
         const buyInfo = {
           playerId: currentPlayer.playerId,
-          cellId: playersPositions[currentPlayerIndex],
+          tileId: playersPositions[currentPlayerIndex],
           action: "BUY_LAND",
         };
         buyLand(buyInfo);
@@ -349,6 +448,25 @@ const TravelMap = ({
       }
     }
   }, [nextAction, isBuyLand, setShowCardId]);
+
+  // 기지 건설
+  useEffect(() => {
+    if (nextAction && nextAction === "DO_YOU_WANT_TO_BUILD_THE_BASE") {
+      setShowCardId(playersPositions[currentPlayerIndex]);
+    }
+    if (nextAction && nextAction === "BUILD_BASE" && isBuildBase) {
+      try {
+        const buildInfo = {
+          playerId: currentPlayer.playerId,
+          tileId: playersPositions[currentPlayerIndex],
+        };
+        buildBase(buildInfo);
+        console.log("기지 건설 요청");
+      } catch (error) {
+        console.error("기지 건설 요청 실패 :", error);
+      }
+    }
+  });
 
   // 플레이어 위치 초기화
   const [playersPositions, setPlayersPositions] = useState(
@@ -391,8 +509,8 @@ const TravelMap = ({
   useEffect(() => {
     setPrevPosition(rollDiceSocketData.prevPosition);
     setNextPosition(rollDiceSocketData.nextPosition);
-    setMyAction(socketRollNext);
-  }, [rollDiceSocketData, socketRollNext]);
+    setMyAction(socketNext);
+  }, [rollDiceSocketData, socketNext]);
 
   // 주사위 굴린 후 플레이어 이동 처리
   const handleDiceComplete = async (score) => {
@@ -404,7 +522,6 @@ const TravelMap = ({
     setShowModal(false);
 
     setIsAnimating(true);
-    const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
     let current = startPosition;
     const movePlayer = async () => {
@@ -422,43 +539,11 @@ const TravelMap = ({
       // 300ms 후에 다음 위치로 이동
       await new Promise((resolve) => setTimeout(resolve, 300));
       await movePlayer();
+
+      await movePlayer();
+
+      setIsAnimating(false);
     };
-    await movePlayer();
-    // 우주 기지 생성
-    if (nextAction === "BUY_LAND" && currentPlayerIndex === myIndex) {
-      const targetCity = cities[targetPosition];
-      console.log("Building space base at:", positions[targetPosition]);
-
-      // 우주기지 색상 업데이트
-      setSpaceBases((prevBases) => {
-        return prevBases.map((base, index) => {
-          if (index === targetPosition) {
-            return { ...base, color: colors[currentPlayerIndex] };
-          }
-          return base;
-        });
-      });
-
-      // 플레이어의 우주기지 목록 업데이트
-      setPlayerBases((prev) => {
-        const newBases = [...prev];
-        if (!Array.isArray(newBases[currentPlayerIndex])) {
-          newBases[currentPlayerIndex] = [];
-        }
-        if (!newBases[currentPlayerIndex].includes(targetCity)) {
-          newBases[currentPlayerIndex] = [
-            ...newBases[currentPlayerIndex],
-            targetCity,
-          ];
-        }
-        return newBases;
-      });
-
-      console.log(
-        `Player ${currentPlayerIndex + 1} built a base in ${targetCity}`
-      );
-    }
-    setIsAnimating(false);
   };
 
   const [positions, setPositions] = useState([]);
@@ -622,16 +707,25 @@ const TravelMap = ({
       venusTexture,
     ];
 
-    return positions.map((pos, index) => (
-      <Cell
-        key={index}
-        position={pos}
-        isHighlight={index === currentPosition}
-        name={cities[index]}
-        topTextureUrl={index < topTextures.length ? topTextures[index] : null}
-        size={cellSizes[index]}
-      />
-    ));
+    return positions.map((pos, index) => {
+      const tile = board?.[index];
+      const ownerId = players?.findIndex(
+        (player) => player.playerId === tile?.ownerId
+      );
+
+      return (
+        <Cell
+          key={index}
+          position={pos}
+          isHighlight={index === currentPosition}
+          name={cities[index]}
+          topTextureUrl={index < topTextures.length ? topTextures[index] : null}
+          size={cellSizes[index]}
+          ownerIndex={ownerId}
+          players={players}
+        />
+      );
+    });
   };
 
   // 플레이어 우주 기지를 세운!
@@ -657,6 +751,7 @@ const TravelMap = ({
 
       const initialBases = positions.map((position, index) => {
         const cellSize = cellSizes[index];
+        const tile = board[index];
         let baseSize;
         // 인덱스  0-9, 20-29: 가로가 세로의 2배
         if ((index >= 0 && index <= 9) || (index >= 20 && index <= 29)) {
@@ -675,15 +770,19 @@ const TravelMap = ({
             depth: cellSize[2] * 0.64,
           };
         }
+        const ownerIndex = players?.findIndex(
+          (player) => player.playerId === tile?.ownerId
+        );
         return {
           position: position,
-          color: "gray",
+          color: colors[ownerIndex],
           size: baseSize,
+          visible: tile?.hasBase || false,
         };
       });
       setSpaceBases(initialBases);
     }
-  }, [positions, cellSizes, size]);
+  }, [positions, cellSizes, size, board, players]);
 
   // Preload textures
   const floor = useMemo(() => useLoader(TextureLoader, floorTexture), []);
