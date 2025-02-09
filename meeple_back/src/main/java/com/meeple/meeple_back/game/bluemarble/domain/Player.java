@@ -77,19 +77,33 @@ public class Player {
 	}
 
 
-	public Card getCardOwnedByTileId(int tileId) {
-		return cardOwned.stream()
-				.filter(card -> card.getNumber() == tileId)
+	public SeedCertificateCard getCardOwnedByTileId(int tileId) {
+		return (SeedCertificateCard) cardOwned.stream()
+				.filter(card -> card.getNumber() == tileId && card.getType() == CardType.SEED_CERTIFICATE_CARD)
 				.findFirst()
 				.orElseThrow(() -> new IllegalArgumentException("Card not found"));
 	}
 
 	/**
 	 * 파산 여부를 반환한다.
+	 * 증서, 우주기지, 보유한 현금의 합
 	 *
 	 * @return 자산이 0보다 작으면 파산
 	 */
 	public boolean isBankrupt() {
 		return this.balance < 0;
+	}
+
+
+	public long calculateTotalAsset(List<Tile> board) {
+		long balance = this.balance;
+		long landValue = landOwned.stream()
+				.mapToLong(tileId -> {
+					Tile tile = board.get(tileId);
+					long basePrice = tile.isHasBase() ? getCardOwnedByTileId(tileId).getBaseConstructionCost() : 0;
+					return tile.getPrice() + basePrice;
+				})
+				.sum();
+		return balance + landValue;
 	}
 }

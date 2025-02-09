@@ -84,7 +84,10 @@ public class BluemarbleGameServiceImpl implements BluemarbleGameService {
 	@Override
 	@Transactional
 	public TurnEndResponse turnEnd(int roomId, TurnEndRequest turnEndRequest) {
-		return null;
+		GamePlay gamePlay = getValidateGamePlay(roomId);
+		TurnEndResponse turnEndResponse = gamePlay.turnEnd(turnEndRequest);
+		bluemarbleGameRepository.save(gamePlay);
+		return turnEndResponse;
 	}
 
 
