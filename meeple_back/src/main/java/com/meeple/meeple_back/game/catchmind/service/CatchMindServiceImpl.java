@@ -70,6 +70,9 @@ public class CatchMindServiceImpl implements CatchMindService {
             throw new RuntimeException("OpenVidu HttpException 발생"+ e);
         }
 
+        Set<String> readyPlayer = new HashSet<>();
+        readyPlayer.add(request.getCreator());
+
         roomInfo.put("roomId", savedRoom.getRoomId());
         roomInfo.put("players", players);
         roomInfo.put("gameData", new HashMap<>());
@@ -82,6 +85,7 @@ public class CatchMindServiceImpl implements CatchMindService {
         roomInfo.put("quizCount", request.getQuizCount());
         roomInfo.put("timeLimit", request.getTimeLimit());
         roomInfo.put("roomTitle", request.getRoomTitle());
+        roomInfo.put("readyPlayer", new ArrayList<>());
 
 
         redisTemplate.opsForHash().put(ROOM_KEY, savedRoom.getRoomId() + "", roomInfo);
@@ -390,6 +394,7 @@ public class CatchMindServiceImpl implements CatchMindService {
             List<String> quizList = (List<String>) gameInfo.get("quizList");
 
             if (quizList.isEmpty()) {
+                playerScore.put(request.getSender(), currentScore + 30);
                 List<GameResultDTO> gameResult = gameResult(roomId);
 
                 MessageDTO responseMessage = MessageDTO.builder()
@@ -407,8 +412,6 @@ public class CatchMindServiceImpl implements CatchMindService {
                         .build();
 
                 messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, responseSendMessage);
-
-                playerScore.put(request.getSender(), currentScore + 30);
 
                 ResponseGameResult responseResult = ResponseGameResult.builder()
                         .type("result")
@@ -672,5 +675,25 @@ public class CatchMindServiceImpl implements CatchMindService {
                 .build();
 
         return responseTimeOut;
+    }
+
+    @Override
+    public ResponseCatchMindReady readyRoom(String roomId, RequestCatchMindReady request) {
+        Map<String, Object> roomInfo = (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+
+        Set<String> readyPlayer = (Set<String>) roomInfo.get("readyPlayer");
+
+        if (readyPlayer.contains(request.getUserNickname())) {
+            readyPlayer.remove(request.getUserNickname());
+        } else {
+            readyPlayer.add(request.getUserNickname());
+        }
+
+        ResponseCatchMindReady response = ResponseCatchMindReady.builder()
+                .type("ready")
+                .readyPlayers(readyPlayer)
+                .build();
+
+        return response;
     }
 }
