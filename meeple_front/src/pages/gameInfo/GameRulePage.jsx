@@ -1,36 +1,40 @@
-import axios from 'axios';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import GameInfoAPI from '../../sources/api/GameInfoAPI';
 
 const GameRulePage = () => {
-  const { gameId } = useParams(); // URL에서 gameId 받아오기
+  const { gameId } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    setLoading(true);
-    axios.get(`https://boardjjigae.duckdns.org/api/game-info/${gameId}`) //받아온 gameId로 게임 정보 받아오기
-      .then(response => {
-        setData(response.data);
+    const fetchGameRule = async () => {
+      try {
+        setLoading(true);
+        const gameData = await GameInfoAPI.getGameInfo(gameId);
+        setData(gameData);
+        setError(null);
+      } catch (err) {
+        setError(err);
+      } finally {
         setLoading(false);
-      })
-      .catch(error => {
-        setError(error);
-        setLoading(false);
-      });
-  }, [gameId]); //게임이 바뀌면 다시 불러옴
+      }
+    };
 
-  if (loading) return <div>로딩중...</div>; // 정보 받기 전에 표시시
-  if (error) return <div>에러가 발생했습니다.</div>;  //에러 발생 시
-  if (!data) return <div>데이터가 없습니다.</div>;  
+    fetchGameRule();
+  }, [gameId]);
+
+  if (loading) return <div>로딩중...</div>;
+  if (error) return <div>에러가 발생했습니다.</div>;
+  if (!data) return <div>데이터가 없습니다.</div>;
 
   return (
-    <div>
-      <h1>규칙</h1>
-      <p>
+    <div className="max-w-4xl mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-4">규칙</h1>
+      <div className="prose prose-lg">
         {data.gameRule}
-      </p>
+      </div>
     </div>
   );
 };
