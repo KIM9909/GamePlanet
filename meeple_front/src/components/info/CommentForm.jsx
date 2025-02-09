@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { GameInfoAPI } from '../../sources/api/GameInfoAPI';
 
-const CommentForm = ({ initialData, articleId, commentId, userId, onSubmit }) => {
+const CommentForm = ({ initialData, articleId, commentId, userId, onSuccess }) => {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditing = !!commentId;
@@ -19,20 +20,27 @@ const CommentForm = ({ initialData, articleId, commentId, userId, onSubmit }) =>
       return;
     }
 
+    const commentData = {
+      content,
+      gameCommunityId: articleId,
+      userId
+    };
+
     try {
       setIsSubmitting(true);
 
-      const success = await onSubmit({
-        content,
-        gameCommunityId: articleId,
-        userId,
-        ...(isEditing && { commentId }) // 수정 시에만 commentId 추가
-      });
+      if (isEditing) {
+        await GameInfoAPI.updateComment(commentId, commentData);
+      } else {
+        await GameInfoAPI.createComment(commentData);
+      }
 
-      if (success) {
-        if (!isEditing) {
-          setContent(''); // 새 댓글 작성 시에만 폼 초기화
-        }
+      if (!isEditing) {
+        setContent('');
+      }
+      
+      if (onSuccess) {
+        onSuccess();
       }
     } catch (error) {
       console.error('댓글 저장 실패:', error);
@@ -51,7 +59,8 @@ const CommentForm = ({ initialData, articleId, commentId, userId, onSubmit }) =>
           placeholder="댓글을 입력하세요"
           className="flex-1 p-2 border rounded resize-none h-[100px]
                    focus:outline-none focus:ring-2 focus:ring-blue-500 
-                   focus:border-transparent"
+                   focus:border-transparent
+                   disabled:bg-gray-100 disabled:cursor-not-allowed"
           disabled={isSubmitting}
         />
         <button
@@ -73,7 +82,6 @@ const CommentForm = ({ initialData, articleId, commentId, userId, onSubmit }) =>
       </div>
     </form>
   );
-
 };
 
 export default CommentForm;

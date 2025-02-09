@@ -1,48 +1,88 @@
+// CommentList.jsx
 import { useState } from 'react';
-import { useComments } from '../../hooks/useComments';
 import CommentItem from './CommentItem';
 import CommentForm from './CommentForm';
 import { useSelector } from 'react-redux';
+import { GameInfoAPI } from '../../sources/api/GameInfoAPI';
 
-const CommentList = ({ articleId }) => {
+const CommentList = ({ articleId, commentListData, onCommentUpdate }) => {
   const [content, setContent] = useState('');
-  const { comments, loading, error, addComment } = useComments(articleId);
+  const [editingComment, setEditingComment] = useState(null);
   const { token } = useSelector((state) => state.user);
   const userId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
-
-
-  const data={
-    articleId,
-    content,
-    userId,
-  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!content.trim()) return;
 
-    const success = await addComment(data);
-    if (success) {
+    try {
+      await GameInfoAPI.createComment({
+        content,
+        gameCommunityId: articleId,
+        userId
+      });
       setContent('');
+      if (onCommentUpdate) onCommentUpdate();
+    } catch (error) {
+      console.error('댓글 작성 실패:', error);
+      alert('댓글 작성에 실패했습니다.');
     }
   };
 
-  if (loading) return <div>댓글 로딩중...</div>;
-  if (error) return <div>댓글 로딩 실패: {error}</div>;
+  const handleEdit = (comment) => {
+    setEditingComment(comment);
+  };
+
+  const handleDelete = async (commentId) => {
+    try {
+      await GameInfoAPI.deleteComment(commentId);
+      if (onCommentUpdate) onCommentUpdate();
+    } catch (error) {
+      console.error('댓글 삭제 실패:', error);
+      alert('댓글 삭제에 실패했습니다.');
+    }
+  };
 
   return (
     <div className="mt-8">
-      <h2 className="text-xl font-bold mb-4">댓글 {comments.length}</h2>
+      <h2 className="text-xl font-bold mb-4">
+        댓글 {commentListData?.length || 0}
+      </h2>
       
-      {/* 댓글 목록 */}
       <div className="space-y-4">
-        {comments.map((comment) => (
-          <CommentItem key={comment.id} comment={comment} />
+        {commentListData?.map((comment) => (
+          editingComment?.id === comment.communityCommentId ? (
+            <CommentForm
+              key={comment.communityCommentId}
+              initialData={comment.content}
+              articleId={articleId}
+              commentId={comment.communityCommentId}
+              userId={userId}
+              onSuccess={() => {
+                setEditingComment(null);
+                if (onCommentUpdate) onCommentUpdate();
+              }}
+            />
+          ) : (
+            <CommentItem 
+              key={comment.communityCommentId}
+              comment={{
+                id: comment.communityCommentId,
+                userId: comment.userId,
+                userName: comment.userName,
+                content: comment.content,
+                createdAt: comment.createAt
+              }}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          )
         ))}
       </div>
 
-      {/* 댓글 작성 폼 */}
       <CommentForm 
+        articleId={articleId}
+        userId={userId}
         content={content}
         setContent={setContent}
         onSubmit={handleSubmit}
@@ -50,6 +90,5 @@ const CommentList = ({ articleId }) => {
     </div>
   );
 };
-
 
 export default CommentList;
