@@ -2,15 +2,16 @@ package com.meeple.meeple_back.game.bluemarble.domain;
 
 import com.meeple.meeple_back.game.bluemarble.controller.request.DiceRollRequest;
 import com.meeple.meeple_back.user.model.User;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -104,5 +105,9 @@ public class Player {
 				})
 				.sum();
 		return balance + landValue;
+	}
+
+	public void setBroken() {
+		this.balance = -1;
 	}
 }
