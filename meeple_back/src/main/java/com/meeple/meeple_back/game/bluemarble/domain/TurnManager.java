@@ -63,7 +63,11 @@ public class TurnManager {
 			return null;
 		}
 		Player currentElement = players.get(currentPlayerIndex);
+		if (currentPlayerIndex + 1 >= players.size()) {
+			round++;
+		}
 		currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+
 		return currentElement;
 	}
 
@@ -75,7 +79,7 @@ public class TurnManager {
 	/**
 	 * 턴 끝내기. 턴 끝내는 조건 확인하고 다음턴 준비하기.
 	 */
-	public TurnEndResponse endTurn(List<Tile> board) {
+	public synchronized TurnEndResponse endTurn(List<Tile> board) {
 		if (checkWinnerByPlayerSize()) {
 			return TurnEndResponse.gameEnd(determineWinner(board));
 		}
@@ -95,7 +99,7 @@ public class TurnManager {
 		}
 
 		Player nextPlayer = nextTurn();
-		logger.info("Current Player : " + players);
+
 		return TurnEndResponse.nextTurn(null, nextPlayer, currentPlayerIndex, round,
 				ActionType.START_TURN);
 	}
