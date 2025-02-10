@@ -1,5 +1,6 @@
 package com.meeple.meeple_back.game.catchmind.service;
 
+import com.meeple.meeple_back.admin.ai.model.response.ResponseSessionAndToken;
 import com.meeple.meeple_back.game.catchmind.model.GameResultDTO;
 import com.meeple.meeple_back.game.catchmind.model.MessageDTO;
 import com.meeple.meeple_back.game.catchmind.model.RoomInfoDTO;
@@ -150,6 +151,25 @@ public class CatchMindServiceImpl implements CatchMindService {
         // 정제된 플레이어 리스트로 업데이트
         roomInfo.put("players", updatedPlayers);
         redisTemplate.opsForHash().put(ROOM_KEY, roomIdStr, roomInfo);
+
+        ResponseSessionAndToken responseSessionAndToken = new ResponseSessionAndToken();
+
+        String sessionId = (String) roomInfo.get("sessionId");
+
+        responseSessionAndToken.setSessionId(sessionId);
+        try {
+            String token = openViduService.generateToken(sessionId);
+            responseSessionAndToken.setToken(token);
+        } catch (OpenViduJavaClientException e) {
+            responseSessionAndToken.setToken("error");
+            throw new RuntimeException(e);
+        } catch (OpenViduHttpException e) {
+            responseSessionAndToken.setToken("error");
+            throw new RuntimeException(e);
+        }
+
+        messagingTemplate.convertAndSend("/topic/vidu-session/" + request.getPlayerName()
+        , responseSessionAndToken);
 
         return ResponseJoinRoom.builder()
                 .type("roomInfo")
