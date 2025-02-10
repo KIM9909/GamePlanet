@@ -27,6 +27,8 @@ import CockroachRoom from "./components/game/cockroachcard/CockroachRoom";
 import BurumabulRoomListPage from "./pages/game/burumabul/BurumabulRoomListPage";
 import SocketLayout from "./components/layout/SocketLayout";
 
+import ErrorPage from "./pages/error/ErrorPage";
+
 function App() {
   return (
     <BrowserRouter>
@@ -108,6 +110,9 @@ function App() {
 
             {/* INTRODUCE */}
             <Route path="/introduce" element={<Introduce />} />
+
+            {/* ERROR */}
+              <Route path="/errorpage" element={<ErrorPage/>} />
           </Routes>
         </FriendModalLayout>
         {/* </SideLayout> */}

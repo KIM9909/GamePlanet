@@ -8,7 +8,8 @@ const TopLayout = ({ children }) => {
     location.pathname !== "/" &&
     !location.pathname.match(/^\/game\/burumabul\/[\w-]+(\/\d+)?$/) &&
     !location.pathname.match(/^\/catch-mind\/[\w-]+$/) &&
-    !location.pathname.match(/^\/game\/cockroach\/[\w-]+$/);
+    !location.pathname.match(/^\/game\/cockroach\/[\w-]+$/) &&
+    location.pathname !== "/errorpage"
 
   return (
     <div className="min-h-screen bg-gray-900">
