@@ -1,10 +1,10 @@
 import axios from "axios";
 
 
-const GAMEINFO_API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/game-info`; // 배포 API 주소
-// const GAMEINFO_API_BASE_URL = `${import.meta.env.VITE_LOCAL_API_BASE_URL}/game-info`; // 로컬 API 주소
+// const GAMEINFO_API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/game-info`; // 배포 API 주소
+const GAMEINFO_API_BASE_URL = `${import.meta.env.VITE_LOCAL_API_BASE_URL}/game-info`; // 로컬 API 주소
 
-
+const config = {"Content-Type": 'application/json'};
 
 export const GameInfoAPI = {
   
@@ -73,7 +73,11 @@ export const GameInfoAPI = {
         {},
         {params :{
           gameInfoId:gameInfoId
-        }});
+        },
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+      }});
       return response.data;
     } catch (error) {
       throw error;
@@ -134,7 +138,7 @@ export const GameInfoAPI = {
 
   createCommunityPost: async (postData) => {
     try {
-      const response = await axios.post(`${GAMEINFO_API_BASE_URL}/community`, postData);
+      const response = await axios.post(`${GAMEINFO_API_BASE_URL}/community`,postData);
       console.log("데이터:",response.data)
       return response.data;
     } catch (error) {
