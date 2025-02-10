@@ -38,10 +38,19 @@ public class AIController {
         messagingTemplate.convertAndSend("/topic/response-test", userId + "번 회원 연결 성공");
     }
 
-    @MessageMapping("/give-stream/{userId}")
+    @MessageMapping("/give-stream/{nickname}")
     public void giveStream(
+            @DestinationVariable String nickname,
             @RequestBody RequestGiveStream request
     ) {
-        messagingTemplate.convertAndSend("/topic/vidu-stream", request.getUserStream());
+        System.out.println("유저 닉네임: " + nickname);
+        System.out.println("유저 닉네임: " + nickname);
+        System.out.println("유저 닉네임: " + nickname);
+        System.out.println("=====================================");
+        System.out.println("유저 스트림: " + request.getUserStream());
+        System.out.println("유저 스트림: " + request.getUserStream());
+        System.out.println("유저 스트림: " + request.getUserStream());
+
+        messagingTemplate.convertAndSend("/topic/vidu-stream/" + nickname, request.getUserStream());
     }
 }
