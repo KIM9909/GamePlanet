@@ -18,7 +18,7 @@ const QuestBuildBase = ({ setIsBuildBase, onClose, cardId, cardInfo }) => {
     <>
       {cardInfo && (
         <>
-          <div className="bg-white w-96 h-96 p-4">
+          <div className="bg-white w-96 h-80 p-4">
             <div className={`bg-[${cardInfo.color}] p-3 rounded`}>
               <h2 className="text-lg font-bold">{cardInfo.name}</h2>
               <p className="text-gray-700">{cardInfo.description}</p>

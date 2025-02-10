@@ -66,16 +66,13 @@ import telepathyCard from "../../../../assets/burumabul_images/telepathycard.png
 import neuronsCard from "../../../../assets/burumabul_images/neuronscard.png";
 import BlueRobot from "./BlueRobot";
 import SpaceBase from "./SpaceBase";
-import useBurumabulSocket from "../../../../hooks/useBurumabulPlaySocket";
-import { color } from "framer-motion";
-import { depth } from "three/tsl";
 import { SocketContext } from "../../../layout/SocketLayout";
 import QuestBuildBase from "./burumabul_Modal/QuestBuildBase.";
 import QuestBuyLand from "./burumabul_Modal/QuestBuyLand";
+import PayTollModal from "./burumabul_Modal/PayTollModal";
 
 const Cell = ({
   position,
-  isHighlight,
   name,
   textureUrl,
   topTextureUrl,
@@ -216,8 +213,12 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
     socketTileUpdate,
     buyLandSocketData,
     buildBaseSocketData,
+    socketPayTollData,
     setBuyLandSocketData,
     setBuildBaseSocketData,
+    setSocketPayTollData,
+    socketTollPrice,
+    socketReceivedPlayer,
     setSocketNext,
     socketFirstDice,
     socketSecondDice,
@@ -254,7 +255,25 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
   useEffect(() => {
     setPlayData(gameData);
     setCards(socketCards);
-    setBoard(socketBoard);
+    if (socketBoard) {
+      setBoard((prevBoard) => {
+        // 이전 board가 없는 경우에만 새로운 socketBoard로 설정
+        if (!prevBoard) return socketBoard;
+
+        // 기존 board 상태 유지하면서 필요한 부분만 업데이트
+        return prevBoard.map((tile, index) => {
+          const newTile = socketBoard[index];
+          if (!newTile) return tile;
+
+          return {
+            ...tile,
+            ownerId: newTile.ownerId || tile.ownerId,
+            hasBase: newTile.hasBase || tile.hasBase,
+            tollPrice: newTile.tollPrice || tile.tollPrice,
+          };
+        });
+      });
+    }
   }, [gameData, socketCards, socketBoard]);
 
   useEffect(() => {
@@ -296,12 +315,12 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
                 : tile
             ) || [];
           console.log("Board update:", newBoard);
-          return newBoard;
+          return [...newBoard];
         });
       }
       setBuyLandSocketData(null);
     }
-  }, [buyLandSocketData]);
+  }, [buyLandSocketData, setPlayers, setBoard]);
 
   useEffect(() => {
     if (buildBaseSocketData) {
@@ -366,6 +385,56 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
     }
   }, [buildBaseSocketData, players, colors]);
 
+  // 통행료 지불 후 업데이트 정보
+  const [tollPrice, setTollPrice] = useState(null);
+  const [paidPlayer, setPaidPlayer] = useState(null);
+  const [receivedPlayer, setReceivedPlayer] = useState(null);
+  useEffect(() => {
+    if (socketPayTollData) {
+      const { paidPlayer, receivedPlayer, tollPrice } = socketPayTollData;
+
+      if (paidPlayer) {
+        setPlayers((prevPlayers) => {
+          const newPlayers =
+            prevPlayers?.map((player) =>
+              player.playerId === paidPlayer.playerId
+                ? {
+                    ...player,
+                    balance: paidPlayer.balance,
+                    cardOwned: paidPlayer.cardOwned || [],
+                    landOwned: paidPlayer.landOwned || [],
+                    position: paidPlayer.position,
+                  }
+                : player
+            ) || [];
+          console.log("Player update:", newPlayers);
+          return newPlayers;
+        });
+        setPaidPlayer(paidPlayer);
+      }
+      if (receivedPlayer) {
+        setPlayers((prevPlayers) => {
+          const newPlayers =
+            prevPlayers?.map((player) =>
+              player.playerId === receivedPlayer.playerId
+                ? {
+                    ...player,
+                    balance: receivedPlayer.balance,
+                    cardOwned: receivedPlayer.cardOwned || [],
+                    landOwned: receivedPlayer.landOwned || [],
+                    position: receivedPlayer.position,
+                  }
+                : player
+            ) || [];
+          console.log("Player update:", newPlayers);
+          return newPlayers;
+        });
+        setReceivedPlayer(receivedPlayer);
+      }
+      setTollPrice(tollPrice);
+    }
+  }, [socketPayTollData]);
+
   // 상태 변화를 모니터링하기 위한 별도의 useEffect
   useEffect(() => {
     if (buyLandSocketData) {
@@ -391,6 +460,9 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
   const [isDiceRolling, setIsDiceRolling] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [currentPosition, setCurrentPosition] = useState(0);
+
+  // 통행료 알림 모달 오픈
+  const [showPayTollModal, setShowPayTollModal] = useState(false);
 
   // 나는 몇 번째 순서인지
   const myIndex = players.findIndex((player) => player.playerId === userId);
@@ -585,14 +657,58 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
     }
   }, [nextAction]);
 
+  // 통행료 지불
+  useEffect(() => {
+    if (nextAction && nextAction === "PAY_TOLL") {
+      try {
+        const payInfo = {
+          playerId: currentPlayer.playerId,
+          tileId: nextPosition,
+        };
+        payToll(payInfo);
+        console.log("통행료 지불 성공");
+      } catch (error) {
+        console.log("통행료 지불 실패: ", error);
+      }
+      setShowPayTollModal(true);
+    }
+  }, [nextAction]);
+
   const closeBuyLand = () => {
     setShowBuyLand(false);
     setShowCardId(null);
+
+    try {
+      const endInfo = {
+        playerId: currentPlayer.playerId,
+      };
+      checkEnd(endInfo);
+      console.log("종료 조건 체크");
+    } catch (error) {
+      console.error("종료 조건 체크 실패 :", error);
+    }
   };
 
   const closeBuildBase = () => {
     setShowBuildBase(false);
     setShowCardId(null);
+
+    try {
+      const endInfo = {
+        playerId: currentPlayer.playerId,
+      };
+      checkEnd(endInfo);
+      console.log("종료 조건 체크");
+    } catch (error) {
+      console.error("종료 조건 체크 실패: ", error);
+    }
+  };
+
+  const closePayToll = () => {
+    setShowPayTollModal(false);
+    setPaidPlayer(null);
+    setReceivedPlayer(null);
+    setTollPrice(null);
   };
 
   // 플레이어 위치 초기화
@@ -821,7 +937,6 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
         <Cell
           key={index}
           position={pos}
-          isHighlight={index === currentPosition}
           name={cities[index]}
           topTextureUrl={index < topTextures.length ? topTextures[index] : null}
           size={cellSizes[index]}
@@ -1035,33 +1150,43 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
         >
           Reset Camera
         </button>
-        {/* <select
-          value={numPlayers}
-          onChange={(e) => handlePlayerCountChange(e.target.value)}
-          className="mt-5 mx-3 px-4 py-2 bg-yellow-300 text-white rounded hover:bg-blue-600"
-        >
-          <option value={2}>2 players</option>
-          <option value={3}>3 players</option>
-          <option value={4}>4 players</option>
-        </select> */}
       </div>
       <div className="flex w-full h-full">
         <div className=" w-full h-full">
           {!showModal && (
             <Canvas
               camera={{
-                position: initialCameraPosition, // 카메라 초기 위치
-                fov: 75, // 시야각 조절
+                position: initialCameraPosition,
+                fov: 75,
               }}
-              onCreated={({ scene, gl }) => {
+              dpr={[0.5, 1]}
+              style={{ maxWidth: "800px", maxHeight: "800px" }}
+              performance={{ min: 0.5 }}
+              gl={{
+                powerPreference: "high-performance",
+                antialias: false, // 안티앨리어싱 비활성화로 성능 향상
+                depth: true,
+              }}
+              onCreated={({ gl, scene }) => {
                 const texture = new TextureLoader().load(spaceBackground);
                 scene.background = texture;
                 gl.setClearColor("#000000", 0);
-                // WebGL 컨텍스트 손실 처리
-                gl.domElement.addEventListener("webglcontextlost", (event) => {
-                  event.preventDefault();
-                  console.warn("Main canvas context lost");
-                });
+
+                // WebGL 컨텍스트 복구 처리 추가
+                if (gl.domElement) {
+                  gl.domElement.addEventListener(
+                    "webglcontextlost",
+                    (event) => {
+                      event.preventDefault();
+                      console.warn("Main canvas context lost");
+                    }
+                  );
+
+                  gl.domElement.addEventListener("webglcontextrestored", () => {
+                    console.log("Context restored");
+                    gl.render(scene, camera);
+                  });
+                }
               }}
             >
               <ambientLight intensity={2} />
@@ -1176,6 +1301,19 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
               onClose={closeBuildBase}
               cardId={showCardId}
               cardInfo={cards?.[showCardId]}
+            />
+          </div>,
+          document.body
+        )}
+      {mountPortal &&
+        showPayTollModal &&
+        createPortal(
+          <div className="fixed inset-0 z-50 w-full text-center flex items-center justify-center">
+            <PayTollModal
+              onClose={closePayToll}
+              tollPrice={tollPrice}
+              receivedPlayer={receivedPlayer}
+              paidPlayer={paidPlayer}
             />
           </div>,
           document.body

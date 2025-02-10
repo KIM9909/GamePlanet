@@ -70,8 +70,18 @@ const SocketLayout = ({ children }) => {
 
   // 승자
   const [socketWinner, setSocketWinner] = useState(null);
+
   // 파산자
   const [socketRemovedPlayer, setSocketRemovedPlayer] = useState(null);
+
+  // 통행료 지불 후 데이터
+  const [socketPayTollData, setSocketPayTollData] = useState(null);
+
+  // 지불해야 하는 통행료
+  const [socketTollPrice, setSocketTollPrice] = useState(null);
+
+  // 돈을 받는 사람
+  const [socketReceivedPlayer, setSocketReceivedPlayer] = useState(null);
 
   const location = useLocation();
 
@@ -166,6 +176,12 @@ const SocketLayout = ({ children }) => {
               setGameSocketNotifi(receivedData.message);
               setSocketWinner(receivedData.data.winner);
               setSocketRemovedPlayer(receivedData.data.removedPlayer);
+            } else if (receivedData.type === "pay-fee") {
+              setSocketPayTollData(receivedData.data);
+              setSocketTollPrice(receivedData.data.tollprice);
+              setSocketReceivedPlayer(receivedData.data.receivedPlayer);
+              setGameSocketNotifi(receivedData.message);
+              setSocketNext(receivedData.data.nextAction);
             }
             if (receivedData.status) {
               setSocketStatus(receivedData.status);
@@ -536,6 +552,9 @@ const SocketLayout = ({ children }) => {
           setBuildBaseSocketData,
           socketStatus,
           setSocketStatus,
+          socketPayTollData,
+          socketTollPrice,
+          socketReceivedPlayer,
           enterWaitingRoom,
           chatWaitingRoom,
           changePassword,

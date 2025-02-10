@@ -348,7 +348,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
                   <div className="flex flex-col justify-center items-center">
                     <div className="flex flex-col justify-center items-center">
                       내 기지
-                      {myInfo?.cardOwned?.map((card, cardIndex) => (
+                      {myInfo?.cardOwned?.slice(0, 5).map((card, cardIndex) => (
                         <div
                           key={cardIndex}
                           className="flex justify-center items-center"
@@ -356,6 +356,11 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
                           <p>{card.name}</p>
                         </div>
                       ))}
+                      {myInfo?.cardOwned?.length > 5 && (
+                        <div className="flex justify-center items-center">
+                          <p>+ {myInfo.cardOwned.length - 5}</p>
+                        </div>
+                      )}
                     </div>
                     <div>
                       <button

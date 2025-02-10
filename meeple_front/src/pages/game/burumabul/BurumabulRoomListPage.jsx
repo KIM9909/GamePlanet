@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import BurumabulRoomListCard from "../../../components/game/burumabul/BurumabulRoomListCard";
 import {
   listBurumabulRoom,
   searchBurumabulRoomname,
 } from "../../../sources/api/BurumabulRoomAPI";
 import { Search } from "lucide-react";
+import BurumabulRoomCreateModal from "../../../components/game/burumabul/BurumabulRoomCreateModal";
 
 const ITEMS_PER_LOAD = 10; // 한 번에 보여줄 개수
 const BurumabulRoomList = () => {
@@ -13,6 +15,8 @@ const BurumabulRoomList = () => {
   const [loading, setLoading] = useState(false);
   const observer = useRef();
   const [searchName, setSearchName] = useState("");
+  const [isCreateBurumabulRoomModalOpen, setIsCreateBurumabulRoomModalOpen] =
+    useState(false);
 
   // 기존의 방 목록 가져오기
   const getRoomList = async () => {
@@ -131,6 +135,20 @@ const BurumabulRoomList = () => {
           </button>
         </form>
       </div>
+      <button
+        className="text-2xl text-white"
+        onClick={() => setIsCreateBurumabulRoomModalOpen(true)}
+      >
+        CREATE
+      </button>
+
+      {isCreateBurumabulRoomModalOpen &&
+        createPortal(
+          <BurumabulRoomCreateModal
+            onClose={() => setIsCreateBurumabulRoomModalOpen(false)}
+          />,
+          document.body
+        )}
 
       {roomList.length > 0 ? (
         <div className="bg-white bg-opacity-50 rounded-lg w-[60%] h-[70vh] overflow-y-auto p-4">
