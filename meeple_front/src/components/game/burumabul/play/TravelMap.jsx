@@ -252,14 +252,6 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
   const [showCardId, setShowCardId] = useState(null);
 
   useEffect(() => {
-    setCurrentPlayerIndex(currentPlayerSocketIndex);
-    setIsDiceRolling(false);
-    setHasRolledDice(false);
-    setFirstDice(false);
-    setSecondDice(false);
-  }, [currentPlayerSocketIndex]);
-
-  useEffect(() => {
     setPlayData(gameData);
     setCards(socketCards);
     setBoard(socketBoard);
@@ -400,6 +392,23 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
   const [showModal, setShowModal] = useState(false);
   const [currentPosition, setCurrentPosition] = useState(0);
 
+  // 나는 몇 번째 순서인지
+  const myIndex = players.findIndex((player) => player.playerId === userId);
+  const [myAction, setMyAction] = useState([]);
+  const [nextxTurn, setNextTurn] = useState(Number(currentPlayerIndex) + 1);
+  useEffect(() => {
+    setNextTurn(Number(currentPlayerIndex) + 1);
+  }, [currentPlayerIndex]);
+
+  // 이전 위치 , 다음 위치
+  const [prevPosition, setPrevPosition] = useState(null);
+  const [nextPosition, setNextPosition] = useState(null);
+
+  useEffect(() => {
+    setPrevPosition(rollDiceSocketData.prevPosition);
+    setNextPosition(rollDiceSocketData.nextPosition);
+  }, [rollDiceSocketData]);
+
   // 주사위 버튼을 눌렀는지 안 눌렀는지 추적
   useEffect(() => {
     if (onRollDice) {
@@ -423,6 +432,15 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
       });
     }
   }, [onRollDice, currentPlayer]);
+
+  useEffect(() => {
+    setCurrentPlayerIndex(currentPlayerSocketIndex);
+    setIsDiceRolling(false);
+    setHasRolledDice(false);
+    setFirstDice(null);
+    setSecondDice(null);
+    setShowModal(false);
+  }, [currentPlayerSocketIndex]);
 
   // 다음행동 유추
   useEffect(() => {
@@ -448,19 +466,21 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
   // 주사위 굴리기
   useEffect(() => {
     const handleDiceResult = async () => {
-      if (isDiceRolling && firstDice !== null && secondDice !== null) {
+      if (
+        isDiceRolling &&
+        hasRolledDice &&
+        firstDice !== null &&
+        secondDice !== null
+      ) {
         try {
           const diceInfo = {
             playerId: currentPlayer.playerId,
             firstDice: firstDice,
             secondDice: secondDice,
-            wasDouble: isDouble,
           };
+          console.log("주사위 정보 :", diceInfo);
           await rollDice(diceInfo);
           setIsDiceRolling(false);
-          setHasRolledDice(false);
-          setFirstDice(null);
-          setSecondDice(null);
         } catch (error) {
           console.error("주사위 굴리기에 실패했습니다.", error);
         }
@@ -469,55 +489,86 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
     if (nextAction && nextAction === "ROLL_DICE" && hasRolledDice) {
       handleDiceResult();
     }
-  }, [nextAction, isDiceRolling, hasRolledDice, firstDice, secondDice]);
+  }, [
+    nextAction,
+    isDiceRolling,
+    hasRolledDice,
+    firstDice,
+    secondDice,
+    currentPlayer,
+    rollDice,
+  ]);
 
   // 땅 구매
   useEffect(() => {
-    if (nextAction && nextAction === "DO_YOU_WANT_TO_BUY_THE_LAND") {
+    if (nextAction === "DO_YOU_WANT_TO_BUY_THE_LAND" && !showBuyLand) {
       setShowCardId(nextPosition);
       setShowBuyLand(true);
     }
-    if (
-      nextAction &&
-      nextAction === "DO_YOU_WANT_TO_BUY_THE_LAND" &&
-      isBuyLand
-    ) {
-      try {
-        const buyInfo = {
-          playerId: currentPlayer.playerId,
-          tileId: nextPosition,
-        };
-        buyLand(buyInfo);
-        console.log("땅 구매 요청");
-      } catch (error) {
-        console.error("땅 구매 요청 실패 :", error);
+  }, [nextAction, nextPosition]);
+
+  useEffect(() => {
+    const handleBuyLand = async () => {
+      if (isBuyLand && currentPlayer && nextPosition !== null) {
+        try {
+          const buyInfo = {
+            playerId: currentPlayer.playerId,
+            tileId: nextPosition,
+          };
+
+          console.log("구매 요청 보내기 :", buyInfo);
+          await buyLand(buyInfo);
+
+          // 구매 요청이 성공적으로 보내진 후 상태 초기화
+          setShowBuyLand(false);
+          setShowCardId(null);
+          setIsBuyLand(false);
+        } catch (error) {
+          console.error("땅 구매 요청 실패 :", error);
+
+          setShowBuyLand(false);
+          setShowCardId(null);
+          setIsBuyLand(false);
+        }
       }
-    }
-  }, [nextAction, isBuyLand, setShowCardId]);
+    };
+    handleBuyLand();
+  }, [isBuyLand, currentPlayer, nextPosition]);
 
   // 기지 건설
   useEffect(() => {
-    if (nextAction && nextAction === "DO_YOU_WANT_TO_BUILD_THE_BASE") {
+    if (nextAction === "DO_YOU_WANT_TO_BUILD_THE_BASE" && !showBuildBase) {
       setShowCardId(nextPosition);
       setShowBuildBase(true);
+      return;
     }
-    if (
-      nextAction &&
-      nextAction === "DO_YOU_WANT_TO_BUILD_THE_BASE" &&
-      isBuildBase
-    ) {
-      try {
-        const buildInfo = {
-          playerId: currentPlayer.playerId,
-          tileId: nextPosition,
-        };
-        buildBase(buildInfo);
-        console.log("기지 건설 요청");
-      } catch (error) {
-        console.error("기지 건설 요청 실패 :", error);
+  }, [nextAction, showBuildBase]);
+
+  useEffect(() => {
+    const handleBuildBase = async () => {
+      if (isBuildBase && currentPlayer && nextPosition !== null) {
+        try {
+          const buildInfo = {
+            playerId: currentPlayer.playerId,
+            titleId: nextPosition,
+          };
+          console.log("기지 건설 요청:", buildInfo);
+          await buildBase(buildInfo);
+
+          setShowBuildBase(false);
+          setShowCardId(null);
+          setIsBuildBase(false);
+        } catch (error) {
+          console.error("기지 건설 요청 실패 :", error);
+
+          setShowBuildBase(false);
+          setShowCardId(null);
+          setIsBuildBase(false);
+        }
       }
-    }
-  }, [nextAction, isBuildBase, setShowCardId]);
+    };
+    handleBuildBase();
+  }, [isBuildBase, currentPlayer, nextPosition]);
 
   // 종료 조건 확인
   useEffect(() => {
@@ -588,23 +639,6 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
       animateMovement();
     }
   }, [rollDiceSocketData, players, isAnimating]);
-
-  // 나는 몇 번째 순서인지
-  const myIndex = players.findIndex((player) => player.playerId === userId);
-  const [myAction, setMyAction] = useState([]);
-  const [nextxTurn, setNextTurn] = useState(Number(currentPlayerIndex) + 1);
-  useEffect(() => {
-    setNextTurn(Number(currentPlayerIndex) + 1);
-  }, [currentPlayerIndex]);
-
-  // 이전 위치 , 다음 위치
-  const [prevPosition, setPrevPosition] = useState(null);
-  const [nextPosition, setNextPosition] = useState(null);
-
-  useEffect(() => {
-    setPrevPosition(rollDiceSocketData.prevPosition);
-    setNextPosition(rollDiceSocketData.nextPosition);
-  }, [rollDiceSocketData]);
 
   // 주사위 굴린 후 플레이어 이동 처리
   const handleDiceComplete = async (score) => {
@@ -1086,8 +1120,6 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
         )}
       {showBuyLand &&
         showCardId &&
-        currentPlayerIndex !== null &&
-        currentPlayerIndex !== undefined &&
         currentPlayerIndex === myColorIndex &&
         createPortal(
           <div className="fixed inset-0 z-50 w-full text-center flex items-center justify-center">
@@ -1103,8 +1135,6 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
 
       {showBuildBase &&
         showCardId &&
-        currentPlayerIndex !== null &&
-        currentPlayerIndex !== undefined &&
         currentPlayerIndex === myColorIndex &&
         createPortal(
           <div className="fixed inset-0 z-50 w-full text-center flex items-center justify-center">

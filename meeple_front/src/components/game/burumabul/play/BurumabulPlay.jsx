@@ -338,9 +338,9 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
               >
                 <div className="h-[78%] mt-3">
                   <h1 className="text-center">내 정보</h1>
-                  <div>
-                    <div>
-                      내 기지 :
+                  <div className="flex flex-col justify-center items-center">
+                    <div className="flex flex-col justify-center items-center">
+                      내 기지
                       {myInfo?.cardOwned?.map((playerCard, cardIndex) => (
                         <div key={cardIndex}>
                           <p>{playerCard.name}</p>
@@ -348,7 +348,9 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
                       ))}
                     </div>
                     <div>
-                      <button className="bg-white">내 카드 더 보기</button>
+                      <button className="bg-white rounded-lg w-44 h-10">
+                        내 카드 더 보기
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -360,9 +362,15 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
                         className="flex flex-row justify-center items-center"
                         onClick={() => rollDice && rollDice()}
                       >
-                        <div className="flex-shrink-0 border-2 border-white text-white rounded-lg p-2 w-44 h-12 bg-teal-400 flex items-center justify-between whitespace-nowrap min-w-0">
+                        <div
+                          className="flex-shrink-0 border-2 border-white/50 text-white rounded-lg p-2 w-44 h-12 
+                  bg-gradient-to-r from-purple-500 to-indigo-600 
+                  shadow-lg hover:shadow-xl 
+                  flex items-center justify-between whitespace-nowrap min-w-0 
+                  transition duration-300 ease-in-out transform hover:brightness-110"
+                        >
                           <p
-                            className="flex-shrink-0 ml-2"
+                            className="flex-shrink-0 ml-2 text-white"
                             style={{
                               textShadow:
                                 "-1px 0px black, 0px 1px black, 1px 0px black, 0px -1px black",
