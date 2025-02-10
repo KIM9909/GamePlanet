@@ -1,11 +1,12 @@
 package com.meeple.meeple_back.game.bluemarble.domain;
 
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
-import lombok.Getter;
 
 /**
  * 턴 관리 클래스. 플레이어 순서를 관리하고, 더블 카운트, 현재 라운드를 관리한다.
@@ -32,7 +33,7 @@ public class TurnManager {
 	private List<Player> players;
 	private double doubleCount;
 	private int round;
-	private int turnCount;
+	private int currentPlayerIndex;
 
 	public TurnManager() {
 	}
@@ -41,7 +42,7 @@ public class TurnManager {
 		this.players = players;
 		this.doubleCount = doubleCount;
 		this.round = round;
-		this.turnCount = turnCount;
+		this.currentPlayerIndex = turnCount;
 		this.initialPlayerCount = players.size();
 	}
 
@@ -49,12 +50,21 @@ public class TurnManager {
 		this.players = players;
 		this.doubleCount = 0;
 		this.round = 1;
-		this.turnCount = 0;
+		this.currentPlayerIndex = 0;
 		this.initialPlayerCount = players.size();
 	}
 
 	public static TurnManager init(List<Player> players) {
 		return new TurnManager(new ArrayList<>(players));
+	}
+
+	public Player nextTurn() {
+		if (players.isEmpty()) {
+			return null;
+		}
+		Player currentElement = players.get(currentPlayerIndex);
+		currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+		return currentElement;
 	}
 
 
@@ -71,7 +81,7 @@ public class TurnManager {
 		}
 
 		if (rolledDouble()) {
-			return TurnEndResponse.diceDoubleOneMoreTurn(getCurrentPlayer(), round, turnCount);
+			return TurnEndResponse.diceDoubleOneMoreTurn(getCurrentPlayer(), currentPlayerIndex, round);
 		}
 		doubleCount = 0;
 
@@ -79,24 +89,39 @@ public class TurnManager {
 			return TurnEndResponse.gameEnd(getCurrentPlayer());
 		}
 
-		incrementTurn();
 
 		if (isCurrentPlayerBankrupt()) {
 			return handleBankruptCurrentPlayer(board);
 		}
 
-		cycleCurrentPlayer();
+		Player nextPlayer = nextTurn();
 		logger.info("Current Player : " + players);
-		return TurnEndResponse.nextTurn(null, getCurrentPlayer(), turnCount, round,
+		return TurnEndResponse.nextTurn(null, nextPlayer, currentPlayerIndex, round,
 				ActionType.START_TURN);
 	}
 
+	/**
+	 * 파산한 플레이어의 땅 소유주를 없앤다.
+	 *
+	 * @param board
+	 * @return
+	 */
 	private TurnEndResponse handleBankruptCurrentPlayer(List<Tile> board) {
-		Player removed = removeCurrentPlayer();
+
+		Player removed = getCurrentPlayer();
+		board.forEach(tile -> {
+
+			if (tile.getOwnerId() == removed.getPlayerId()) {
+				tile.initialize();
+			}
+		});
+		removePlayer(removed);
+
 		if (checkWinnerByPlayerSize()) {
 			return TurnEndResponse.gameEnd(determineWinner(board));
 		}
-		return TurnEndResponse.nextTurn(removed, getCurrentPlayer(), turnCount, round,
+		Player nextPlayer = nextTurn();
+		return TurnEndResponse.nextTurn(removed, nextPlayer, currentPlayerIndex, round,
 				ActionType.START_TURN);
 	}
 
@@ -156,25 +181,23 @@ public class TurnManager {
 				.orElse(null); // 플레이어가 없으면 null 리턴
 	}
 
-	private void incrementTurn() {
-		turnCount++;
-		if (turnCount >= players.size()) {
-			turnCount = 0;
-			round++;
+
+	public void removePlayer(Player player) {
+		int index = players.indexOf(player);
+		if (index != -1) {
+			players.remove(index);
+			if (index < currentPlayerIndex) {
+				currentPlayerIndex--;
+			}
+			if (currentPlayerIndex >= players.size()) {
+				currentPlayerIndex = 0;
+				this.round++;
+			}
 		}
 	}
 
-	private void cycleCurrentPlayer() {
-		Player currentPlayer = players.remove(0);
-		players.add(currentPlayer);
-	}
-
-	private Player removeCurrentPlayer() {
-		return players.remove(0);
-	}
-
 	private boolean isCurrentPlayerBankrupt() {
-		return players.get(0).isBankrupt();
+		return players.get(currentPlayerIndex).isBankrupt();
 	}
 
 	private boolean rolledDouble() {
@@ -188,6 +211,6 @@ public class TurnManager {
 	}
 
 	private Player getCurrentPlayer() {
-		return players.get(0);
+		return players.get(currentPlayerIndex);
 	}
 }
