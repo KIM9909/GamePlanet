@@ -2,16 +2,15 @@ package com.meeple.meeple_back.game.bluemarble.domain;
 
 import com.meeple.meeple_back.game.bluemarble.controller.request.DiceRollRequest;
 import com.meeple.meeple_back.user.model.User;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -43,17 +42,16 @@ public class Player {
 
 	public DiceRollResult rollDices(DiceRollRequest diceRollRequest) {
 		int sum = diceRollRequest.getFirstDice() + diceRollRequest.getSecondDice();
-		boolean isDouble = false;
-		if (!diceRollRequest.isWasDouble()) {
-			isDouble = diceRollRequest.getFirstDice() == diceRollRequest.getSecondDice();
-		}
+		boolean isDouble = diceRollRequest.getFirstDice() == diceRollRequest.getSecondDice();
+
 		int prevPosition = this.position;
 		int nextPosition = (this.position + sum) % 40;
 		if (this.position + sum >= 40) {
 			this.balance += 200;
 		}
 		this.position = nextPosition;
-		return new DiceRollResult(this.playerId, prevPosition, nextPosition, isDouble, diceRollRequest.getFirstDice(),
+		return new DiceRollResult(this.playerId, prevPosition, nextPosition, isDouble,
+				diceRollRequest.getFirstDice(),
 				diceRollRequest.getSecondDice());
 	}
 
@@ -79,14 +77,14 @@ public class Player {
 
 	public SeedCertificateCard getCardOwnedByTileId(int tileId) {
 		return (SeedCertificateCard) cardOwned.stream()
-				.filter(card -> card.getNumber() == tileId && card.getType() == CardType.SEED_CERTIFICATE_CARD)
+				.filter(card -> card.getNumber() == tileId
+						&& card.getType() == CardType.SEED_CERTIFICATE_CARD)
 				.findFirst()
 				.orElseThrow(() -> new IllegalArgumentException("Card not found"));
 	}
 
 	/**
-	 * 파산 여부를 반환한다.
-	 * 증서, 우주기지, 보유한 현금의 합
+	 * 파산 여부를 반환한다. 증서, 우주기지, 보유한 현금의 합
 	 *
 	 * @return 자산이 0보다 작으면 파산
 	 */
@@ -100,7 +98,8 @@ public class Player {
 		long landValue = landOwned.stream()
 				.mapToLong(tileId -> {
 					Tile tile = board.get(tileId);
-					long basePrice = tile.isHasBase() ? getCardOwnedByTileId(tileId).getBaseConstructionCost() : 0;
+					long basePrice = tile.isHasBase() ? getCardOwnedByTileId(
+							tileId).getBaseConstructionCost() : 0;
 					return tile.getPrice() + basePrice;
 				})
 				.sum();
