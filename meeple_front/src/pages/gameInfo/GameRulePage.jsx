@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import GameInfoAPI from '../../sources/api/GameInfoAPI';
 
 const GameRulePage = () => {
-  const { gameId } = useParams();
+  const { gameInfoId } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -12,7 +12,7 @@ const GameRulePage = () => {
     const fetchGameRule = async () => {
       try {
         setLoading(true);
-        const gameData = await GameInfoAPI.getGameInfo(gameId);
+        const gameData = await GameInfoAPI.getGameInfo(gameInfoId);
         setData(gameData);
         setError(null);
       } catch (err) {
@@ -23,7 +23,7 @@ const GameRulePage = () => {
     };
 
     fetchGameRule();
-  }, [gameId]);
+  }, [gameInfoId]);
 
   if (loading) return <div>로딩중...</div>;
   if (error) return <div>에러가 발생했습니다.</div>;

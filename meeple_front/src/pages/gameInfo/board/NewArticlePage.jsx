@@ -8,20 +8,19 @@ const NewArticlePage = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // 테스트 용
-  const gameId=7
-  // const { gameId } = useParams();
+
+  const { gameInfoId } = useParams();
 
   const handleSubmit = async (formData) => {
     try {
       setIsSubmitting(true);
       await GameInfoAPI.createCommunityPost({
         ...formData,
-        gameInfoId: gameId
+        gameInfoId: gameInfoId
       });
       
       alert('게시글이 등록되었습니다.');
-      navigate(`/game/${gameId}/board`);
+      navigate(`/game/${gameInfoId}/board`);
     } catch (error) {
       console.error('게시글 저장 실패:', error);
       throw error;
@@ -37,7 +36,7 @@ const NewArticlePage = () => {
       </section>
       <section>
         <ArticleForm 
-          gameId={gameId}
+          gameInfoId={gameInfoId}
           onSubmit={handleSubmit}
           isEditing={false}
           isSubmitting={isSubmitting}

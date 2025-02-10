@@ -1,13 +1,8 @@
 // App.jsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AdminPage from "./pages/admin/AdminPage";
-
 import BoardPage from "./pages/gameInfo/board/BoardPage";
-import BurumabulPage from "./pages/game/BurumabulPage";
-
-import BoardPage from "./pages/board/BoardPage";
-import BurumabulPage from "./pages/game/burumabul/BurumabulPage";
-
+import BurumabulPage from "./pages/game/BurumabulPage"
 import GameInfoPage from "./pages/gameInfo/GameInfoPage";
 import HomePage from "./pages/home/HomePage";
 import ProfilePage from "./pages/profile/ProfilePage";
@@ -67,14 +62,14 @@ function App() {
 
 
               {/* GameInfo */}
-              <Route path="/game/:gameId/info" element={<GameInfoPage />} />
-              <Route path="/game/:gameId/rule" element={<GameRulePage />} />
-              <Route path="/game/:gameId/board" element={<BoardPage />} />
-              <Route path="/game/:gameId/board/write" element={<NewArticlePage />} />
-              <Route path="/game/:gameId/board/detail/:articleId" element={<ArticleDetailPage />} />
-              <Route path="/game/:gameId/board/edit/:articleId" element={<ArticleDetailPage />} />
-              <Route path="/game/:gameId/review" element={<ReviewPage />} />
-              <Route path="/game/:gameId/video" element={<GameVideoPage />} />
+              <Route path="/game/:gameInfoId/info" element={<GameInfoPage />} />
+              <Route path="/game/:gameInfoId/rule" element={<GameRulePage />} />
+              <Route path="/game/:gameInfoId/board" element={<BoardPage />} />
+              <Route path="/game/:gameInfoId/board/write" element={<NewArticlePage />} />
+              <Route path="/game/:gameInfoId/board/detail/:articleId" element={<ArticleDetailPage />} />
+              <Route path="/game/:gameInfoId/board/edit/:articleId" element={<ArticleDetailPage />} />
+              <Route path="/game/:gameInfoId/review" element={<ReviewPage />} />
+              <Route path="/game/:gameInfoId/video" element={<GameVideoPage />} />
 
             <Route
               path="/game/cockroach/:roomId"

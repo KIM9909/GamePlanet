@@ -5,7 +5,7 @@ import ArticleForm from "../../../components/info/ArticleForm";
 import { GameInfoAPI } from '../../../sources/api/GameInfoAPI';
 
 const EditArticlePage = () => {
-  const { gameId, articleId } = useParams();
+  const { gameInfoId, articleId } = useParams();
   const navigate = useNavigate();
   const [article, setArticle] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -18,20 +18,20 @@ const EditArticlePage = () => {
       } catch (error) {
         console.error('게시글 조회 실패:', error);
         alert('게시글을 불러오는데 실패했습니다.');
-        navigate(`/game/${gameId}/board`);
+        navigate(`/game/${gameInfoId}/board`);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchArticle();
-  }, [articleId, gameId, navigate]);
+  }, [articleId, gameInfoId, navigate]);
 
   const handleSubmit = async (formData) => {
     try {
       await GameInfoAPI.updateCommunityPost(articleId, formData);
       alert('게시글이 수정되었습니다.');
-      navigate(`/game/${gameId}/board/detail/${articleId}`);
+      navigate(`/game/${gameInfoId}/board/detail/${articleId}`);
     } catch (error) {
       console.error('게시글 수정 실패:', error);
       throw error;
@@ -54,7 +54,7 @@ const EditArticlePage = () => {
       <section>
         {article && (
           <ArticleForm 
-            gameId={gameId}
+            gameInfoId={gameInfoId}
             initialData={article}
             onSubmit={handleSubmit}
             isEditing={true}
