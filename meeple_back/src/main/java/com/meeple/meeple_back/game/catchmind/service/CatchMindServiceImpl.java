@@ -99,6 +99,9 @@ public class CatchMindServiceImpl implements CatchMindService {
                 .sessionId((String) roomInfo.getOrDefault("sessionId", ""))
                 .build();
 
+        messagingTemplate.convertAndSend("/topic/ai-record" + request.getCreator(), "녹음 시작");
+
+
         return response;
     }
 
@@ -152,24 +155,26 @@ public class CatchMindServiceImpl implements CatchMindService {
         roomInfo.put("players", updatedPlayers);
         redisTemplate.opsForHash().put(ROOM_KEY, roomIdStr, roomInfo);
 
-        ResponseSessionAndToken responseSessionAndToken = new ResponseSessionAndToken();
+        messagingTemplate.convertAndSend("/topic/ai-record" + request.getPlayerName(), "녹음 시작");
 
-        String sessionId = (String) roomInfo.get("sessionId");
+//        ResponseSessionAndToken responseSessionAndToken = new ResponseSessionAndToken();
+//
+//        String sessionId = (String) roomInfo.get("sessionId");
+//
+//        responseSessionAndToken.setSessionId(sessionId);
+//        try {
+//            String token = openViduService.generateToken(sessionId);
+//            responseSessionAndToken.setToken(token);
+//        } catch (OpenViduJavaClientException e) {
+//            responseSessionAndToken.setToken("error");
+//            throw new RuntimeException(e);
+//        } catch (OpenViduHttpException e) {
+//            responseSessionAndToken.setToken("error");
+//            throw new RuntimeException(e);
+//        }
 
-        responseSessionAndToken.setSessionId(sessionId);
-        try {
-            String token = openViduService.generateToken(sessionId);
-            responseSessionAndToken.setToken(token);
-        } catch (OpenViduJavaClientException e) {
-            responseSessionAndToken.setToken("error");
-            throw new RuntimeException(e);
-        } catch (OpenViduHttpException e) {
-            responseSessionAndToken.setToken("error");
-            throw new RuntimeException(e);
-        }
-
-        messagingTemplate.convertAndSend("/topic/vidu-session/" + request.getPlayerName()
-        , responseSessionAndToken);
+//        messagingTemplate.convertAndSend("/topic/vidu-session/" + request.getPlayerName()
+//        , responseSessionAndToken);
 
         return ResponseJoinRoom.builder()
                 .type("roomInfo")
@@ -637,6 +642,9 @@ public class CatchMindServiceImpl implements CatchMindService {
         } else {
             redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
         }
+
+        messagingTemplate.convertAndSend("/topic/ai-record" + userName, "녹음 종료");
+
 
         return ResponseExitCatchmindRoom.builder()
                 .type("players")
