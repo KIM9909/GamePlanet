@@ -33,7 +33,7 @@ API.interceptors.request.use(
 // 응답 인터셉터 개선
 API.interceptors.response.use(
   (response) => {
-    // HTML 응답 체크를 더 엄격하게
+    // HTML 응답 체크를 더 엄격하게 함
     if (
       response.data &&
       typeof response.data === "string" &&
@@ -165,23 +165,23 @@ export const CatchMindAPI = {
   },
 
   // 방 비밀번호 확인
-  checkRoomPassword: async (roomId, password) => {
-    try {
-      // joinRoom API를 사용해 비밀번호 검증
-      const joinRequest = {
-        roomId: parseInt(roomId),
-        password: password,
-        playerName: localStorage.getItem("userNickname"), // 로그인한 사용자의 닉네임
-      };
+  // checkRoomPassword: async (roomId, password) => {
+  //   try {
+  //     // joinRoom API를 사용해 비밀번호 검증
+  //     const joinRequest = {
+  //       roomId: parseInt(roomId),
+  //       password: password,
+  //       playerName: localStorage.getItem("userNickname"), // 로그인한 사용자의 닉네임
+  //     };
 
-      const response = await API.post("/catch-mind/join-room", joinRequest);
+  //     const response = await API.post("/catch-mind/join-room", joinRequest);
 
-      // response.code가 200이면 비밀번호 일치, 400이면 불일치
-      return { isCorrect: response.code === 200 };
-    } catch (error) {
-      return { isCorrect: false };
-    }
-  },
+  //     // response.code가 200이면 비밀번호 일치, 400이면 불일치
+  //     return { isCorrect: response.code === 200 };
+  //   } catch (error) {
+  //     return { isCorrect: false };
+  //   }
+  // },
 
   // 방 입장 API
   joinRoom: async (roomId, playerName, password = "") => {

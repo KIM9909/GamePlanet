@@ -1,206 +1,108 @@
-import React, { useCallback, useEffect, useState } from "react";
-import TravelMap from "../../../components/game/burumabul/play/TravelMap";
-import GameSidebar from "../../../components/sidebar/GameSidebar";
-import { ChevronLeft, ChevronRight, Menu, X } from "lucide-react";
-import DiceImage from "../../../assets/burumabul_images/Dice.png";
-import PlayerVideo from "../../../components/game/burumabul/play/PlayerVideo";
+import React, { useCallback, useEffect, useState, useContext } from "react";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import useBurumabulSocket from "../../../hooks/useBurumabulSocket";
-import { useDispatch, useSelector } from "react-redux";
-import LoadingSpinner from "../../../components/game/burumabul/LoadingSpinner";
+import WaitingRoom from "../../../components/game/burumabul/waiting/WaitingRoom";
+import BurumabulPlay from "../../../components/game/burumabul/play/BurumabulPlay";
+import { useSelector } from "react-redux";
+import { findBurumabulRoom } from "../../../sources/api/BurumabulRoomAPI";
+import { SocketContext } from "../../../components/layout/SocketLayout";
 
-const BurumabulPage = ({ roomId }) => {
-  // 소켓 사용
-  const { connected, error, createGame, rollTheDice } =
-    useBurumabulSocket(roomId);
-  const dispatch = useDispatch();
-  const gameData = useSelector((state) => state.burumabul);
-  const currentPlayer = gameData.players[gameData.currentPlayerIndex];
+const BurumabulPage = () => {
+  const roomId = useSelector((state) => state.burumabul.roomId);
+  console.log("BurumabulPage received roomId:", roomId);
+  const navigate = useNavigate();
+  const userId = Number(useSelector((state) => state.user.userId));
+  const [currentRoomInfo, setCurrentRoomInfo] = useState({});
+  // 초기 게임 플레이 데이터
+  const [playData, setPlayData] = useState(null);
 
   useEffect(() => {
-    if (connected && gameData.players.length > 0) {
-      createGame();
+    const getRoomInfo = async () => {
+      if (roomId) {
+        try {
+          const response = await findBurumabulRoom(roomId);
+          setCurrentRoomInfo(response || {});
+        } catch (error) {
+          console.error("방 정보 조회 중 오류 발생 : ", error);
+        }
+      }
+    };
+    getRoomInfo();
+  }, [roomId]);
+
+  const [isStart, setIsStart] = useState(false);
+  const [roomMessage, setRoomMessage] = useState("");
+
+  const { connected, enterWaitingRoom, roomSocketData, gamePlaySocketData } =
+    useContext(SocketContext);
+
+  useEffect(() => {
+    const initializeRoom = async () => {
+      if (!roomId) return;
+
+      try {
+        const response = await findBurumabulRoom(roomId);
+        console.log("방정보 조회 결과 :", response);
+        setCurrentRoomInfo(response);
+
+        if (connected && response) {
+          const isCreator = response.creator?.playerId === userId;
+          const isExistingPlayer = response.players?.some(
+            (player) => player.playerId === userId
+          );
+          if (!isCreator && !isExistingPlayer) {
+            console.log("새로운 플레이어 입장 시도:", {
+              userId,
+              roomId,
+              isCreator,
+              isExistingPlayer,
+            });
+            enterWaitingRoom();
+          }
+        }
+      } catch (error) {
+        console.error("방 정보 조회/입장 중 오류:", error);
+      }
+    };
+    initializeRoom();
+  }, [roomId, connected, userId, enterWaitingRoom]);
+
+  useEffect(() => {
+    if (gamePlaySocketData) {
+      console.log("새로운 gamePalySocetData 수신:", gamePlaySocketData);
+      setPlayData(gamePlaySocketData);
+      setIsStart(true);
     }
-  }, [connected, gameData.players]);
+  }, [gamePlaySocketData]);
 
-  // const playerInfoList = [1, 2, 3, 4];
-  const firstDice = useSelector((state) => state.burumabul.firstDice);
-  const secondDice = useSelector((state) => state.burumabul.secondDice);
-
-  console.log("==================");
-  console.log(firstDice);
-  console.log(secondDice);
-
-  const [isSidebarOpen, setSidebarOpen] = useState(false);
-  // const [playerCount, setPlayerCount] = useState()
-  const [rollDice, setRollDice] = useState(null);
-  const [playerBases, setPlayerBases] = useState([]);
-  const handleRollDiceRef = useCallback((rollDiceFn) => {
-    // if (!connected) {
-    //   alert("서버와 연결이 끊어졌습니다.");
-    //   return;
-    // }
-    setRollDice(() => rollDiceFn);
-  }, []);
-
-  const handlePlayerBasesRef = useCallback((getBases) => {
-    console.log("플레이어 베이스 정보 : ", getBases);
-    setPlayerBases(getBases);
-  }, []);
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!isSidebarOpen);
-  };
+  useEffect(() => {
+    console.log("현재 roomSocketData 상태:", roomSocketData);
+    if (roomSocketData) {
+      setCurrentRoomInfo((prev) => ({
+        ...prev,
+        ...roomSocketData,
+      }));
+    }
+  }, [roomSocketData]);
 
   return (
     <>
-      <style>{`
-        .thin-scrollbar::-webkit-scrollbar { width: 5px;  position: absolute; right: 0;}
-        .thin-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
-        .thin-scrollbar::-webkit-scrollbar-thumb { background: #888; border-radius: 15px;}
-        .thin-scrollbar::-webkit-scrollbar-track { display: none; }
-
-      `}</style>
-      <div className="fixed left-0 top-0 h-full z-50 flex">
-        {/* 사이드바 */}
-        <div
-          className={`transition-transform duration-300 ease-in-out transform 
-              ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} 
-              relative`}
-        >
-          <GameSidebar />
-          {isSidebarOpen && (
-            <button
-              onClick={toggleSidebar}
-              className="absolute -right-12 top-1/2 -translate-y-1/2 w-12 h-12 
-                bg-gray-800 rounded-r text-white
-                hover:bg-gray-700 focus:outline-none 
-                flex items-center justify-center
-                shadow-lg"
-            >
-              <X className="w-8 h-8" />
-            </button>
-          )}
-        </div>
-      </div>
-      {/* Main Content 영역 */}
-      <div className="bg-white h-12">
-        {!connected && (
-          <div>
-            주사위 결과 : 첫 번째{firstDice} + 두 번째{secondDice} = 총 점수 :
-            {firstDice + secondDice}
-          </div>
-        )}
-      </div>
-      <div
-        className={`transition-all duration-300 ease-in-out ${
-          isSidebarOpen ? "ml-64" : "ml-0"
-        }`}
-      >
-        <div className="h-screen w-full flex">
-          {/* <div className="text-4xl font-bold text-center">BurumablePage</div> */}
-          <div className="w-2/3">
-            <TravelMap
-              onRollDice={handleRollDiceRef}
-              onBasesInfo={handlePlayerBasesRef}
-              gameData={gameData}
-              roomId={roomId}
-            />
-          </div>
-
-          <div className="w-1/3 bg-gray-300 flex justify-center h-screen">
-            <div className="flex flex-col items-center justify-center w-full h-full">
-              <div className="h-[60%] w-full border-2 overflow-y-auto thin-scrollbar max-h-[70vh]">
-                <h2 className="text-lg text-center my-2">현재 플레이어: </h2>
-                <div className="mx-2">
-                  {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-3">
-                    {playerInfoList.map((player, index) => (
-                      <PlayerVideo key={index} playerInfo={player} />
-                    ))}
-                  </div> */}
-                </div>
-                <div className="border-2 m-3 rounded-lg">
-                  <h2 className="text-center m-3">플레이어 순위</h2>
-                  {/* <div className="mb-3 mx-2">
-                    {playerInfoList.map((player, index) => (
-                      <div
-                        key={index}
-                        className="flex justify-around overflow-hidden text-ellipsis"
-                      >
-                        <p>순위</p>
-                        <p>player {index + 1}. : 누구누구</p>
-                        <p>~~~~~ 만 마불</p>
-                      </div>
-                    ))}
-                  </div> */}
-                </div>
-              </div>
-
-              {/* 내 정보 칸 */}
-              <div className="h-[40%] w-full border-2">
-                <div className="h-[78%] mt-3">
-                  <h1 className="text-center">플레이어 이름 정보</h1>
-                  <div>
-                    <div>
-                      내 기지 :{" "}
-                      {playerBases.map((playerBase, playerIndex) => (
-                        <div key={playerIndex}>
-                          <p>플레이어 {playerIndex + 1} : </p>
-                          {playerBases.length > 0 ? (
-                            playerBase.map((city, cityIndex) => (
-                              <p key={cityIndex} className="ml-4">
-                                {city}
-                              </p>
-                            ))
-                          ) : (
-                            <p className="ml-4 text-gray-500">
-                              기지가 없습니다.
-                            </p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex flex-row justify-center items-center">
-                  <button
-                    className="flex flex-row justify-center items-center"
-                    onClick={() => rollDice && rollDice()}
-                  >
-                    <div className="flex-shrink-0 border-2 border-white text-white rounded-lg p-2 w-44 h-12 bg-teal-400 flex items-center justify-between whitespace-nowrap min-w-0">
-                      <p
-                        className="flex-shrink-0 ml-2"
-                        style={{
-                          textShadow:
-                            "-1px 0px black, 0px 1px black, 1px 0px black, 0px -1px black",
-                        }}
-                      >
-                        주사위 굴리기
-                      </p>
-                      <img className="w-12 h-12" src={DiceImage} alt="Dice" />
-                    </div>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {!isSidebarOpen && (
-        <div className="fixed left-0 top-1/2 transform -translate-y-1/2 z-50">
-          <div className="relative group">
-            <button
-              onClick={toggleSidebar}
-              className="invisible group-hover:visible transition-all duration-300
-              bg-gray-800 rounded-r text-white
-              hover:bg-gray-700 focus:outline-none 
-              flex items-center justify-center
-              shadow-lg w-12 h-12"
-            >
-              <Menu className="w-8 h-8" />
-            </button>
-          </div>
-        </div>
+      {Object.keys(currentRoomInfo).length === 0 ? (
+        <div>Loading...</div>
+      ) : playData && playData.gameStatus === "IN_PROGRESS" ? (
+        <BurumabulPlay
+          roomId={roomId}
+          currentRoomInfo={currentRoomInfo}
+          setIsStart={setIsStart}
+          playData={playData}
+        />
+      ) : (
+        <WaitingRoom
+          roomId={roomId}
+          roomInfo={currentRoomInfo}
+          setIsStart={setIsStart}
+          setPlayData={setPlayData}
+        />
       )}
     </>
   );

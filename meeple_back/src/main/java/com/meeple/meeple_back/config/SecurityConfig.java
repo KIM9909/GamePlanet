@@ -80,19 +80,11 @@ public class SecurityConfig {
         return http.build();
     }
 
-
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(Arrays.asList(
-				"http://localhost:5173",
-				"ws://localhost:5173",
-				"wss://localhost:5173",
-				"http://boardjjigae.duckdns.org",
-				"https://boardjjigae.duckdns.org",
-				"ws://boardjjigae.duckdns.org",
-				"wss://boardjjigae.duckdns.org"
-		));
+		// allowedOriginPatterns를 사용하면 와일드카드 패턴 적용이 가능
+		configuration.setAllowedOriginPatterns(Arrays.asList("*"));
 		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(Arrays.asList(
 				"Authorization",
@@ -110,9 +102,47 @@ public class SecurityConfig {
 		configuration.setExposedHeaders(Arrays.asList("*"));
 		configuration.setAllowCredentials(true);
 		configuration.setMaxAge(3600L);
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        source.registerCorsConfiguration("/ws/**", configuration);
-        return source;
-    }
+
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", configuration);
+		source.registerCorsConfiguration("/ws/**", configuration);
+		return source;
+	}
+
+
+//	@Bean
+//	public CorsConfigurationSource corsConfigurationSource() {
+//		CorsConfiguration configuration = new CorsConfiguration();
+//		configuration.setAllowedOrigins(Arrays.asList(
+//				"null",
+//				"http://localhost:5173",
+//				"ws://localhost:5173",
+//				"wss://localhost:5173",
+//				"http://boardjjigae.duckdns.org",
+//				"https://boardjjigae.duckdns.org",
+//				"ws://boardjjigae.duckdns.org",
+//				"wss://boardjjigae.duckdns.org"
+//		));
+//		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+//		configuration.setAllowedHeaders(Arrays.asList(
+//				"Authorization",
+//				"Cache-Control",
+//				"Content-Type",
+//				"Sec-WebSocket-Extensions",
+//				"Sec-WebSocket-Key",
+//				"Sec-WebSocket-Version",
+//				"Upgrade",
+//				"Connection",
+//				"Host",
+//				"Origin",
+//				"*"
+//		));
+//		configuration.setExposedHeaders(Arrays.asList("*"));
+//		configuration.setAllowCredentials(true);
+//		configuration.setMaxAge(3600L);
+//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+//        source.registerCorsConfiguration("/**", configuration);
+//        source.registerCorsConfiguration("/ws/**", configuration);
+//        return source;
+//    }
 }

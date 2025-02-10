@@ -9,4 +9,5 @@ public class UserUpdateRequest {
     private String userName;
     private String userNickname;
     private LocalDateTime userBirthday;
+    private String userBio;
 }

@@ -19,15 +19,21 @@ const BurumabulRoomList = () => {
     try {
       const response = await listBurumabulRoom();
       setRoomList(response);
+      console.log(response);
       setVisibleRooms(response.slice(0, ITEMS_PER_LOAD));
     } catch (error) {
       console.error("부루마불 방 목록 조회 중 에러 발생 :", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
+    console.log("방 목록 불러오는 중...");
     getRoomList();
   }, []);
+  console.log("방 목록 : ", roomList);
+
   console.log(roomList);
 
   // 검색어가 변경될 때마다 검색 실행
@@ -128,7 +134,7 @@ const BurumabulRoomList = () => {
 
       {roomList.length > 0 ? (
         <div className="bg-yellow-300 rounded-lg w-[60%] h-[70vh] overflow-y-auto p-4">
-          <div className="my-6 flex flex-wrap justify-center gap-4 ">
+          <div className="my-6 flex flex-col items-center justify-center mx-auto gap-4 ">
             {visibleRooms.map((roomInfo, index) => {
               if (index === visibleRooms.length - 1) {
                 return (

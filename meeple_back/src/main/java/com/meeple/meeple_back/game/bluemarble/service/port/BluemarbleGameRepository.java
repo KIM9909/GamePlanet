@@ -7,5 +7,5 @@ public interface BluemarbleGameRepository {
 
 	GamePlay save(GamePlay gamePlay);
 
-	Optional<GamePlay> findById(int roomId);
+	Optional<GamePlay> findById(Integer roomId);
 }

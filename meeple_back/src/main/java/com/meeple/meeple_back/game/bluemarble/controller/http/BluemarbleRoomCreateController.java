@@ -25,7 +25,7 @@ public class BluemarbleRoomCreateController {
 
 	private final BluemarbleRoomService bluemarbleRoomService;
 
-	@PostMapping("/{userId}")
+	@PostMapping("/{userId}/create")
 	@Operation(summary = "대기방 생성", description = "새로운 블루마블 대기방을 생성합니다.")
 	public ResponseEntity<RoomResponse> create(@PathVariable Long userId,
 			@Valid @RequestBody RoomCreate roomCreate) {

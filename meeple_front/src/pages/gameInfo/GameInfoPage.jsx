@@ -1,43 +1,46 @@
-import { useState } from "react"
-import TopNavbar from "../../components/Navbar/TopNavBar"
-import InfoSideBar from "../../components/info/InfoSideBar"
-import GameInfo from "../../components/info/GameInfo"
-import GameRule from "../../components/info/GameRule"
-import GameCommunity from "../../components/info/GameCommunity"
-import ArticleList from "../../components/info/ArticleList"
-import ReviewList from "../../components/info/ReviewList"
-import PlayVideo from "../../components/info/PlayVideo"
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import GameInfoAPI from '../../sources/api/GameInfoAPI';
 
 const GameInfoPage = () => {
-  const [selectedMenu, setSelectedMenu] = useState("gameinfo")
+  const { gameInfoId } = useParams();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const renderContent = () => {
-    switch(selectedMenu) {
-      case "gameinfo":
-        return <GameInfo />
-      case "gamerule":
-        return <GameRule />
-      case "gamecommunity":
-        return <GameCommunity />
-      case "review":
-        return <ReviewList />
-      case "playvideo":
-        return <PlayVideo />
-      default:
-        return <GameInfo />
-    }
-  }
+  useEffect(() => {
+    const fetchGameInfo = async () => {
+      try {
+        setLoading(true);
+        const gameData = await GameInfoAPI.getGameInfo(gameInfoId);
+        setData(gameData);
+        setError(null);
+      } catch (err) {
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGameInfo();
+  }, [gameInfoId]);
+
+  if (loading) return <div>로딩중...</div>;
+  if (error) return <div>에러가 발생했습니다.</div>;
+  if (!data) return <div>데이터가 없습니다.</div>;
 
   return (
-    <>
-      <div className="flex">
-        <InfoSideBar onMenuSelect={setSelectedMenu} />
-        <div className="content flex-1 mx-10px bg-gray-200">
-          {renderContent()}
+    <div className="max-w-4xl mx-auto p-6">
+      <section className="mb-6">
+        <h1 className="text-2xl font-bold">{data.game.gameName}</h1>
+      </section>
+      <section className="prose prose-lg">
+        <div className="whitespace-pre-wrap">
+          {data.gameInfoContent}
         </div>
-      </div>
-    </>
-  )
+      </section>
+    </div>
+  );
 };
 
 export default GameInfoPage;

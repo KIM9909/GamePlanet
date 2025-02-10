@@ -8,25 +8,15 @@ import {
 import { setFriends } from "../../../../sources/store/slices/FriendSlice";
 import { useDispatch } from "react-redux";
 import { changeDice } from "../../../../sources/store/slices/BurumabulGameSlice";
-import useBurumabulSocket from "../../../../hooks/useBurumabulSocket";
+import useBurumabulSocket from "../../../../hooks/useBurumabulPlaySocket";
 
-const Dice = ({ onComplete, onClose, roomId }) => {
+const Dice = ({ onComplete, onClose, roomId, setFirstDice, setSecondDice }) => {
   const canvasRef = useRef(null);
   const [score, setScore] = useState("");
   const [firstScore, setFirstScore] = useState(null);
   const [secondScore, setSecondScore] = useState(null);
   const [totalScore, setTotalScore] = useState(0);
   const dispatch = useDispatch();
-  // 소켓 연결 설정
-  const { connected, error, rollTheDice } = useBurumabulSocket(roomId);
-  useEffect(() => {
-    if (connected) {
-      console.log("게임 소켓이 연결되었습니다.");
-    }
-    if (error) {
-      console.error("🚫 소켓 연결 오류:", error);
-    }
-  }, [connected, error, rollTheDice]);
 
   const params = {
     numberOfDice: 2,
@@ -495,13 +485,8 @@ const Dice = ({ onComplete, onClose, roomId }) => {
       // 주사위 동작이 완료된 후 약 1.7초 뒤에 모달을 닫고 'onComplete' 함수 호출
       const timer = setTimeout(() => {
         console.log("🎲 주사위 결과 적용 완료! 모달 닫기 준비");
-        dispatch(
-          changeDice({ firstDice: firstScore, secondDice: secondScore })
-        );
-        // 소켓으로 주사위 결과 전송
-        if (connected) {
-          rollTheDice(firstScore, secondScore);
-        }
+        setFirstDice(firstScore);
+        setSecondDice(secondScore);
 
         onComplete(totalScore);
       }, 1700);

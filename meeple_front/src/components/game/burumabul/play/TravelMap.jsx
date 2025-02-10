@@ -1,19 +1,13 @@
-import React, { useEffect, useState, useRef, Suspense, useMemo } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  Suspense,
+  useMemo,
+  useContext,
+} from "react";
 import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  setGameData,
-  addPlayer,
-  removePlayer,
-  movePlayer,
-  handleDiceRoll,
-  updateMinusBalance,
-  updatePlusBalance,
-  nextTurn,
-  nextRound,
-  changeDice,
-} from "../../../../sources/store/slices/BurumabulGameSlice";
-// 소켓 사용
 
 import {
   Canvas,
@@ -72,8 +66,10 @@ import telepathyCard from "../../../../assets/burumabul_images/telepathycard.png
 import neuronsCard from "../../../../assets/burumabul_images/neuronscard.png";
 import BlueRobot from "./BlueRobot";
 import SpaceBase from "./SpaceBase";
-import useBurumabulSocket from "../../../../hooks/useBurumabulSocket";
+import useBurumabulSocket from "../../../../hooks/useBurumabulPlaySocket";
 import { color } from "framer-motion";
+import { depth } from "three/tsl";
+import { SocketContext } from "../../../layout/SocketLayout";
 
 const Cell = ({
   position,
@@ -82,10 +78,12 @@ const Cell = ({
   textureUrl,
   topTextureUrl,
   size,
+  ownerIndex,
+  players,
 }) => {
   const textRef = useRef();
   const { camera } = useThree();
-
+  const colors = ["#FF3EA5", "#7695FF", "#00FF9C", "#EBF400"];
   // TextureLoader로 텍스쳐 로드
   const texture = textureUrl ? useLoader(TextureLoader, textureUrl) : null;
   const topTexture = topTextureUrl
@@ -98,14 +96,18 @@ const Cell = ({
     }
   });
 
-  // 특정 셀의 크기 조정
+  const getColor = () => {
+    if (ownerIndex !== null) {
+      return colors[ownerIndex];
+    }
+  };
 
   return (
     <mesh position={position}>
       {/* 셀 박스 = 직육면체 */}
       <boxGeometry args={size} />
       {/* 각 면의 텍스처 및 색상 설정 */}
-      <meshStandardMaterial color={isHighlight ? "#ff6b6b" : "white"} />
+      <meshStandardMaterial color={getColor()} />
 
       <Edges
         scale={1}
@@ -145,7 +147,16 @@ const Cell = ({
   );
 };
 
-const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
+const TravelMap = ({
+  onRollDice,
+  onBasesInfo,
+  gameData,
+  roomId,
+  isBuyLand,
+  setShowCardId,
+  setShowBuildBase,
+  isBuildBase,
+}) => {
   // cities 배열
   const cities = [
     "지구 Start",
@@ -189,7 +200,352 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
     "수성",
     "금성",
   ];
+  const userId = useSelector((state) => state.user.userId);
+
   const dispatch = useDispatch();
+  // 소켓에서 받아오는 정보들
+  const {
+    connected,
+    rollDice,
+    buyLand,
+    roll,
+    buildBase,
+    currentPlayerSocketIndex,
+    rollDiceSocketData,
+    socketBoard,
+    socketCards,
+    socketNext,
+    socketUserUpdate,
+    socketTileUpdate,
+    buyLandSocketData,
+    buildBaseSocketData,
+    socketFirstDice,
+    socketSecondDice,
+    socketDouble,
+    socketCurrentRound,
+    socketRoll,
+  } = useContext(SocketContext);
+  const [playData, setPlayData] = useState(gameData);
+
+  useEffect(() => {
+    console.log(buyLandSocketData);
+  }, [buyLandSocketData]);
+
+  // 플레이어 정보
+  const [players, setPlayers] = useState(playData?.players);
+  const numPlayers = players?.length;
+
+  const [cards, setCards] = useState(null);
+  const [board, setBoard] = useState(null);
+  const [updatePlayerList, setUpdatePlayerList] = useState(socketUserUpdate);
+  const [updateTileList, setUpdateTileList] = useState(socketTileUpdate);
+
+  useEffect(() => {
+    setCurrentPlayerIndex(currentPlayerSocketIndex);
+  }, [currentPlayerSocketIndex]);
+
+  useEffect(() => {
+    setPlayData(gameData);
+    setCards(socketCards);
+    setBoard(socketBoard);
+  }, [gameData, socketCards, socketBoard]);
+
+  useEffect(() => {
+    if (buyLandSocketData) {
+      const { updatedPlayer, updatedTile } = buyLandSocketData;
+
+      // 플레이어 정보 업데이트
+      if (updatedPlayer) {
+        setPlayers((prevPlayers) => {
+          const newPlayers =
+            prevPlayers?.map((player) =>
+              player.playerId === updatedPlayer.playerId
+                ? {
+                    ...player,
+                    balance: updatedPlayer.balance,
+                    cardOwned: updatedPlayer.cardOwned || [],
+                    landOwned: updatedPlayer.landOwned || [],
+                    position: updatedPlayer.position,
+                  }
+                : player
+            ) || [];
+          console.log("Player update:", newPlayers);
+          return newPlayers;
+        });
+      }
+
+      // 보드(타일) 정보 업데이트
+      if (updatedTile) {
+        setBoard((prevBoard) => {
+          const newBoard =
+            prevBoard?.map((tile) =>
+              tile.id === updatedTile.id
+                ? {
+                    ...tile,
+                    ownerId: updatedTile.ownerId,
+                    hasBase: updatedTile.hasBase,
+                    tollPrice: updatedTile.tollPrice,
+                  }
+                : tile
+            ) || [];
+          console.log("Board update:", newBoard);
+          return newBoard;
+        });
+      }
+    }
+  }, [buyLandSocketData]);
+
+  useEffect(() => {
+    if (buildBaseSocketData) {
+      const { updatedPlayer, updatedTile } = buildBaseSocketData;
+
+      // 플레이어 정보 업데이트
+      if (updatedPlayer) {
+        setPlayers((prevPlayers) => {
+          const newPlayers =
+            prevPlayers?.map((player) =>
+              player.playerId === updatedPlayer.playerId
+                ? {
+                    ...player,
+                    balance: updatedPlayer.balance,
+                    cardOwned: updatedPlayer.cardOwned || [],
+                    landOwned: updatedPlayer.landOwned || [],
+                    position: updatedPlayer.position,
+                  }
+                : player
+            ) || [];
+          console.log("Player update:", newPlayers);
+          return newPlayers;
+        });
+      }
+
+      // 보드(타일) 정보 업데이트
+      if (updatedTile) {
+        setBoard((prevBoard) => {
+          const newBoard =
+            prevBoard?.map((tile) =>
+              tile.id === updatedTile.id
+                ? {
+                    ...tile,
+                    ownerId: updatedTile.ownerId,
+                    hasBase: updatedTile.hasBase,
+                    tollPrice: updatedTile.tollPrice,
+                  }
+                : tile
+            ) || [];
+          console.log("Board update:", newBoard);
+          return newBoard;
+        });
+      }
+
+      // 우주 기지 상태 업데이트
+      setSpaceBases((prevBases) => {
+        return prevBases.map((base, index) => {
+          if (index === updatedTile.id) {
+            const ownerIndex = players.findIndex(
+              (p) => p.playerId === updatedTile.ownerId
+            );
+            return {
+              ...base,
+              visible: true,
+              color: colors[ownerIndex],
+            };
+          }
+          return base;
+        });
+      });
+    }
+  }, [buildBaseSocketData]);
+
+  // 상태 변화를 모니터링하기 위한 별도의 useEffect
+  useEffect(() => {
+    if (buyLandSocketData) {
+      console.log("상태 업데이트 확인:");
+      console.log("Updated Players:", players);
+      console.log("Updated Cards:", cards);
+      console.log("Updated Board:", board);
+    }
+  }, [players, board, cards, buyLandSocketData, buildBaseSocketData]);
+
+  // 색상
+  const colors = ["#FF3EA5", "#7695FF", "#00FF9C", "#EBF400"];
+
+  // 현재 플레이어는 인덱스 번호로
+  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
+  const currentPlayer = players[currentPlayerIndex];
+  // 주사위
+  const [firstDice, setFirstDice] = useState(null);
+  const [secondDice, setSecondDice] = useState(null);
+  const isDouble = firstDice === secondDice;
+  // 다음 행동
+  const [nextAction, setNextAction] = useState(null);
+  const [isDiceRolling, setIsDiceRolling] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [currentPosition, setCurrentPosition] = useState(0);
+
+  // 주사위 버튼을 눌렀는지 안 눌렀는지 추적
+  useEffect(() => {
+    if (onRollDice) {
+      onRollDice(() => {
+        const alertRoll = async () => {
+          try {
+            const rollInfo = {
+              playerId: currentPlayer.playerId,
+              diceRolled: "true",
+            };
+
+            await roll(rollInfo);
+            setShowModal(true);
+            setIsDiceRolling(true);
+          } catch (error) {
+            console.error("주사위 알림 전달 실패 :", error);
+          }
+        };
+        alertRoll();
+      });
+    }
+  }, [onRollDice, currentPlayer]);
+
+  useEffect(() => {
+    const handleDiceResult = async () => {
+      if (isDiceRolling && firstDice !== null && secondDice !== null) {
+        try {
+          const diceInfo = {
+            playerId: currentPlayer.playerId,
+            firstDice: firstDice,
+            secondDice: secondDice,
+            wasDouble: isDouble,
+          };
+          rollDice(diceInfo);
+        } catch (error) {
+          console.error("주사위 굴리기에 실패했습니다.", error);
+        }
+      }
+    };
+    handleDiceResult();
+  }, [isDiceRolling, firstDice, secondDice]);
+
+  useEffect(() => {
+    setNextAction(socketNext);
+  }, [socketNext]);
+
+  // 땅 구매
+  useEffect(() => {
+    if (nextAction && nextAction === "DO_YOU_WANT_TO_BUY_THE_LAND") {
+      setShowCardId(playersPositions[currentPlayerIndex]);
+    }
+    if (nextAction && nextAction === "BUY_LAND" && isBuyLand) {
+      try {
+        const buyInfo = {
+          playerId: currentPlayer.playerId,
+          tileId: playersPositions[currentPlayerIndex],
+          action: "BUY_LAND",
+        };
+        buyLand(buyInfo);
+        console.log("땅 구매 요청");
+      } catch (error) {
+        console.error("땅 구매 요청 실패 :", error);
+      }
+    }
+  }, [nextAction, isBuyLand, setShowCardId]);
+
+  // 기지 건설
+  useEffect(() => {
+    if (nextAction && nextAction === "DO_YOU_WANT_TO_BUILD_THE_BASE") {
+      setShowCardId(playersPositions[currentPlayerIndex]);
+    }
+    if (nextAction && nextAction === "BUILD_BASE" && isBuildBase) {
+      try {
+        const buildInfo = {
+          playerId: currentPlayer.playerId,
+          tileId: playersPositions[currentPlayerIndex],
+        };
+        buildBase(buildInfo);
+        console.log("기지 건설 요청");
+      } catch (error) {
+        console.error("기지 건설 요청 실패 :", error);
+      }
+    }
+  });
+
+  // 플레이어 위치 초기화
+  const [playersPositions, setPlayersPositions] = useState(
+    Array(numPlayers).fill(0)
+  );
+
+  const [isAnimating, setIsAnimating] = useState(false);
+  console.log(playersPositions);
+
+  useEffect(() => {
+    if (
+      rollDiceSocketData &&
+      rollDiceSocketData.nextPosition !== undefined &&
+      !isAnimating
+    ) {
+      setCurrentPosition(rollDiceSocketData.nextPosition);
+      setPlayersPositions((prevPositions) => {
+        const newPositions = [...prevPositions];
+        const playerIndex = players.findIndex(
+          (player) => player.playerId === rollDiceSocketData.playerId
+        );
+        newPositions[currentPlayerIndex] = rollDiceSocketData.nextPosition;
+        return newPositions;
+      });
+    }
+  }, [rollDiceSocketData, players, isAnimating, currentPlayerIndex]);
+
+  // 나는 몇 번째 순서인지
+  const myIndex = players.findIndex((player) => player.playerId === userId);
+  const [myAction, setMyAction] = useState([]);
+  const [nextxTurn, setNextTurn] = useState(Number(currentPlayerIndex) + 1);
+  useEffect(() => {
+    setNextTurn(Number(currentPlayerIndex) + 1);
+  }, [currentPlayerIndex]);
+
+  // 이전 위치 , 다음 위치
+  const [prevPosition, setPrevPosition] = useState(null);
+  const [nextPosition, setNextPosition] = useState(null);
+
+  useEffect(() => {
+    setPrevPosition(rollDiceSocketData.prevPosition);
+    setNextPosition(rollDiceSocketData.nextPosition);
+    setMyAction(socketNext);
+  }, [rollDiceSocketData, socketNext]);
+
+  // 주사위 굴린 후 플레이어 이동 처리
+  const handleDiceComplete = async (score) => {
+    const startPosition = playersPositions[currentPlayerIndex];
+    const targetPosition = rollDiceSocketData?.nextPosition ?? 0;
+
+    console.log(`🎲 Player ${currentPlayerIndex + 1} rolled: ${score}`);
+    console.log(`➡️ Moving to position: ${targetPosition}`);
+    setShowModal(false);
+
+    setIsAnimating(true);
+
+    let current = startPosition;
+    const movePlayer = async () => {
+      if (current === targetPosition) {
+        setIsAnimating(false);
+        return;
+      }
+      const nextPosition = (current + 1) % totalCells;
+      setPlayersPositions((prev) => {
+        const newPositions = [...prev];
+        newPositions[currentPlayerIndex] = nextPosition;
+        return newPositions;
+      });
+
+      // 300ms 후에 다음 위치로 이동
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await movePlayer();
+
+      await movePlayer();
+
+      setIsAnimating(false);
+    };
+  };
+
   const [positions, setPositions] = useState([]);
   const [cellSizes, setCellSizes] = useState([]);
 
@@ -197,23 +553,6 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
   const totalCells = size * 4 - 4; // 전체 칸 개수
   const cells = Array.from({ length: totalCells }, (_, i) => i); // 칸 번호
   // const [currentPosition, setCurrentPosition] = useState(0); // 현재 말 위치
-  const [isFirstMove, setIsFirstMove] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-
-  // 주사위 버튼을 눌렀는지 안 눌렀는지 추적
-  useEffect(() => {
-    if (onRollDice) {
-      onRollDice(() => setShowModal(true));
-    }
-  }, [onRollDice]);
-
-  // // 말 이동 함수
-  // const moveToken = () => {
-  //   setCurrentPosition((prev) => {
-  //     setIsFirstMove(false);
-  //     return (prev + 1) % totalCells;
-  //   });
-  // };
 
   // 카메라 위치 초기화하기 위한..
   const orbitControlsRef = useRef();
@@ -368,33 +707,29 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
       venusTexture,
     ];
 
-    return positions.map((pos, index) => (
-      <Cell
-        key={index}
-        position={pos}
-        isHighlight={index === currentPosition}
-        name={cities[index]}
-        topTextureUrl={index < topTextures.length ? topTextures[index] : null}
-        size={cellSizes[index]}
-      />
-    ));
+    return positions.map((pos, index) => {
+      const tile = board?.[index];
+      const ownerId = players?.findIndex(
+        (player) => player.playerId === tile?.ownerId
+      );
+
+      return (
+        <Cell
+          key={index}
+          position={pos}
+          isHighlight={index === currentPosition}
+          name={cities[index]}
+          topTextureUrl={index < topTextures.length ? topTextures[index] : null}
+          size={cellSizes[index]}
+          ownerIndex={ownerId}
+          players={players}
+        />
+      );
+    });
   };
 
-  const players = useSelector((state) => state.burumabul.players);
-  const currentPosition = useSelector((state) => state.burumabul.prevPosition);
-  const numPlayers = players.length;
-
-  // 현재 플레이어는 인덱스 번호로
-  const currentPlayerIndex = useSelector(
-    (state) => state.burumabul.currentPlayerIndex
-  );
-  // 플레이어 위치 초기화
-  const [playersPositions, setPlayersPositions] = useState(
-    Array(numPlayers).fill(0)
-  );
-  console.log(playersPositions);
   // 플레이어 우주 기지를 세운!
-  const [playerBases, setPlayerBases] = useState([[], [], [], []]);
+  const [playerBases, setPlayerBases] = useState(Array(numPlayers).fill(0));
 
   useEffect(() => {
     if (onBasesInfo) {
@@ -416,19 +751,38 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
 
       const initialBases = positions.map((position, index) => {
         const cellSize = cellSizes[index];
+        const tile = board[index];
+        let baseSize;
+        // 인덱스  0-9, 20-29: 가로가 세로의 2배
+        if ((index >= 0 && index <= 9) || (index >= 20 && index <= 29)) {
+          baseSize = {
+            width: cellSize[0] * 0.64,
+            height: 1.3,
+            depth: cellSize[2] * 0.28,
+          };
+        } else if (
+          (index >= 10 && index <= 19) ||
+          (index >= 30 && index <= 39)
+        ) {
+          baseSize = {
+            width: cellSize[0] * 0.28,
+            height: 1.3,
+            depth: cellSize[2] * 0.64,
+          };
+        }
+        const ownerIndex = players?.findIndex(
+          (player) => player.playerId === tile?.ownerId
+        );
         return {
           position: position,
-          color: "gray",
-          size: {
-            width: cellSize[0] * 0.8,
-            height: 0.1,
-            depth: cellSize[0] * 0.8,
-          },
+          color: colors[ownerIndex],
+          size: baseSize,
+          visible: tile?.hasBase || false,
         };
       });
       setSpaceBases(initialBases);
     }
-  }, [positions, cellSizes]);
+  }, [positions, cellSizes, size, board, players]);
 
   // Preload textures
   const floor = useMemo(() => useLoader(TextureLoader, floorTexture), []);
@@ -445,72 +799,14 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
     []
   );
 
-  // 주사위 굴린 후 플레이어 이동 처리
-  const handleDiceComplete = (score) => {
-    const player = players[currentPlayerIndex];
-
-    const targetPosition = player.position;
-
-    console.log(`🎲 Player ${currentPlayerIndex + 1} rolled: ${score}`);
-    console.log(`➡️ Moving to position: ${targetPosition}`);
-
-    const animateMovement = (currentPosition, targetPosition) => {
-      if (currentPosition !== targetPosition) {
-        setPlayersPositions((prevPlayersPosition) => {
-          const newPlayersPosition = [...prevPlayersPosition];
-          newPlayersPosition[currentPlayerIndex] =
-            (currentPosition + 1) % totalCells;
-          return newPlayersPosition;
-        });
-        setTimeout(
-          () =>
-            animateMovement((currentPosition + 1) % totalCells, targetPosition),
-          300
-        );
-      } else {
-        // 우주기지 생성 로직
-        const targetCity = cities[targetPosition];
-        console.log("Building space base at:", positions[targetPosition]);
-        setSpaceBases((prevBases) => {
-          return prevBases.map((base) => {
-            if (base.position === positions[targetPosition]) {
-              return { ...base, color: player.color };
-            }
-            return base;
-          });
-        });
-
-        // 플레이어의 우주기지 목록 업데이트
-        setPlayerBases((prev) => {
-          const newBases = [...prev];
-          return prev.map((bases, index) =>
-            index === currentPlayerIndex && !bases.includes(targetCity)
-              ? [...bases, targetCity]
-              : bases
-          );
-        });
-
-        console.log(
-          `player ${currentPlayerIndex + 1} built a base in ${targetCity}`
-        );
-
-        dispatch(nextTurn());
-      }
-    };
-    animateMovement(player.position, targetPosition);
-
-    setShowModal(false);
-  };
-  console.log(playerBases);
-
   // positions 배열에서 각 플레이어의 위치 좌표 계산
   const getPlayerPosition = (playerPosition, playerIndex) => {
     if (!positions[playerPosition]) {
-      return playersPositions;
+      return [0, 0, 0];
     }
     const basePosition = positions[playerPosition];
     // 말이 같은 칸에 있을 때 겹치지 않도록 약간의 오프셋 추가
-    const offset = 0.4;
+    const offset = 0.5;
     switch (playerIndex) {
       case 0:
         return [
@@ -557,11 +853,36 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
   const renderSpaceBases = useMemo(() => {
     console.log("render base");
     return spaceBases.map((base, index) => {
-      const adjustedPosition = [
-        base.position[0],
-        base.position[1] + 0.3,
-        base.position[2],
-      ]; // y축을 살짝 띄움 const size = [1, 1.5, 0.6];
+      let adjustedPosition;
+      if (index >= 1 && index <= 9) {
+        // 하단 1/3
+        adjustedPosition = [
+          base.position[0],
+          base.position[1] + 0.3,
+          base.position[2] + base.size.depth + 0.1,
+        ];
+      } else if (index >= 11 && index <= 19) {
+        // 좌측 1/3
+        adjustedPosition = [
+          base.position[0] - base.size.width - 0.1,
+          base.position[1] + 0.3,
+          base.position[2],
+        ];
+      } else if (index >= 21 && index <= 29) {
+        // 상단 1/3
+        adjustedPosition = [
+          base.position[0],
+          base.position[1] + 0.3,
+          base.position[2] - base.size.depth - 0.1,
+        ];
+      } else if (index >= 31 && index <= 39) {
+        // 우측 1/3
+        adjustedPosition = [
+          base.position[0] + base.size.width + 0.1,
+          base.position[1] + 0.3,
+          base.position[2],
+        ];
+      }
 
       return (
         <SpaceBase
@@ -689,8 +1010,9 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
               onComplete={handleDiceComplete}
               onClose={() => setShowModal(false)}
               roomId={roomId}
+              setFirstDice={setFirstDice}
+              setSecondDice={setSecondDice}
             />
-            ,
           </div>,
           document.body
         )}

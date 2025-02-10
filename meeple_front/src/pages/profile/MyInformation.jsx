@@ -14,6 +14,7 @@ import {
   setDeleteModalOpen,
 } from "../../sources/store/slices/ProfileSlice";
 import { UserAPI } from "../../sources/api/UserAPI";
+import { Lock } from "lucide-react";
 
 const MyInformation = () => {
   // URL 파라미터에서 userId를 추출하고 Redux dispatch 함수 가져오기
@@ -388,8 +389,9 @@ const MyInformation = () => {
               <div className="flex gap-3">
                 <button
                   onClick={() => dispatch(setPasswordModalOpen(true))}
-                  className="px-4 py-2 bg-zinc-700 text-zinc-200 rounded-lg hover:bg-zinc-600 transition-colors"
+                  className="flex px-4 py-2 bg-zinc-700 text-zinc-200 rounded-lg hover:bg-zinc-600 transition-colors"
                 >
+                  <Lock className="w-4 h-4 mr-2 mt-1" />
                   비밀번호 변경
                 </button>
                 <button

@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { FaRegEye } from "react-icons/fa";
-import { FaRegEyeSlash } from "react-icons/fa";
+import { EyeOff, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createBurumabulRoom } from "../../../sources/api/BurumabulRoomAPI";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { setRoomId } from "../../../sources/store/slices/BurumabulGameSlice";
 
 const BurumabulRoomCreateModal = ({ onClose }) => {
   const userId = useSelector((state) => state.user.userId);
@@ -16,7 +16,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
     maxPlayers: 2,
   };
   const [roomData, setRoomData] = useState(initialRoomData);
-
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -26,9 +26,8 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
       console.log(roomData);
       const response = await createBurumabulRoom(userId, roomData);
       const roomId = response.roomId;
-      navigate(`/game/burumabul/waitingroom/${roomId}`, {
-        state: { roomInfo: response },
-      });
+      dispatch(setRoomId(roomId));
+      navigate(`/game/burumabul/start/${roomId}`);
     } catch (error) {
       console.error("방 생성 중 오류 발생 : ", error);
     }
@@ -141,11 +140,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
                       className="absolute right-2 bottom-1.5 text-gray-500"
                       type="button"
                     >
-                      {showPassword ? (
-                        <FaRegEye size={20} />
-                      ) : (
-                        <FaRegEyeSlash size={20} />
-                      )}
+                      {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
                     </button>
                   </div>
                 </div>

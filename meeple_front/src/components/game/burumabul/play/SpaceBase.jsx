@@ -1,11 +1,9 @@
 import React from "react";
 
-const SpaceBase = ({ position, color, visible }) => {
-  const adjustedPosition = [position[0], position[1] + 0.3, position[2]]; // y축을 살짝 띄움
-  const size = [1, 1.5, 0.6];
+const SpaceBase = ({ position, color, visible, width, height, depth }) => {
   return (
-    <mesh position={adjustedPosition} visible={visible}>
-      <boxGeometry args={size} />
+    <mesh position={position} visible={visible}>
+      <boxGeometry args={[width, height, depth]} />
       <meshStandardMaterial
         color={color}
         emissive={color}

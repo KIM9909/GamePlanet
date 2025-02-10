@@ -12,9 +12,12 @@ import com.meeple.meeple_back.game.cockroach.model.entity.Room;
 import com.meeple.meeple_back.game.cockroach.repository.ChatMessageRespository;
 import com.meeple.meeple_back.game.cockroach.repository.RoomRepository;
 import com.meeple.meeple_back.game.game.model.Game;
+import com.meeple.meeple_back.game.openVidu.service.OpenViduService;
 import com.meeple.meeple_back.game.repo.GameRepository;
 import com.meeple.meeple_back.user.model.User;
 import com.meeple.meeple_back.user.repository.UserRepository;
+import io.openvidu.java.client.OpenViduHttpException;
+import io.openvidu.java.client.OpenViduJavaClientException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -36,6 +39,7 @@ public class CatchMindServiceImpl implements CatchMindService {
     private final GameRepository gameRepository;
     private final QuizRepository quizRepository;
     private final UserRepository userRepository;
+    private final OpenViduService openViduService;
 
     /* 게임방 로직 */
     @Override
@@ -57,6 +61,18 @@ public class CatchMindServiceImpl implements CatchMindService {
 
         Room savedRoom = roomRepository.save(room);
 
+        try {
+            String sessionId = openViduService.createSession();
+            roomInfo.put("sessionId", sessionId);
+        } catch (OpenViduJavaClientException e) {
+            throw new RuntimeException("OpenVidu JavaClientError 발생"+ e);
+        } catch (OpenViduHttpException e) {
+            throw new RuntimeException("OpenVidu HttpException 발생"+ e);
+        }
+
+        Set<String> readyPlayer = new HashSet<>();
+        readyPlayer.add(request.getCreator());
+
         roomInfo.put("roomId", savedRoom.getRoomId());
         roomInfo.put("players", players);
         roomInfo.put("gameData", new HashMap<>());
@@ -69,6 +85,7 @@ public class CatchMindServiceImpl implements CatchMindService {
         roomInfo.put("quizCount", request.getQuizCount());
         roomInfo.put("timeLimit", request.getTimeLimit());
         roomInfo.put("roomTitle", request.getRoomTitle());
+        roomInfo.put("readyPlayer", new ArrayList<>());
 
 
         redisTemplate.opsForHash().put(ROOM_KEY, savedRoom.getRoomId() + "", roomInfo);
@@ -78,6 +95,7 @@ public class CatchMindServiceImpl implements CatchMindService {
                 .creator(request.getCreator())
                 .isPrivate(request.isPrivate())
                 .password(request.getPassword())
+                .sessionId((String) roomInfo.getOrDefault("sessionId", ""))
                 .build();
 
         return response;
@@ -376,6 +394,14 @@ public class CatchMindServiceImpl implements CatchMindService {
             List<String> quizList = (List<String>) gameInfo.get("quizList");
 
             if (quizList.isEmpty()) {
+                int finalScore = currentScore + 30;
+                playerScore.put(request.getSender(), finalScore);
+
+                // Redis에 업데이트된 점수 저장
+                gameInfo.put("playerScore", playerScore);
+                roomInfo.put("gameInfo", gameInfo);
+                redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
+
                 List<GameResultDTO> gameResult = gameResult(roomId);
 
                 MessageDTO responseMessage = MessageDTO.builder()
@@ -394,8 +420,6 @@ public class CatchMindServiceImpl implements CatchMindService {
 
                 messagingTemplate.convertAndSend("/topic/catch-mind/" + roomId, responseSendMessage);
 
-                playerScore.put(request.getSender(), currentScore + 30);
-
                 ResponseGameResult responseResult = ResponseGameResult.builder()
                         .type("result")
                         .result(gameResult)
@@ -412,7 +436,7 @@ public class CatchMindServiceImpl implements CatchMindService {
 
                 ResponseSendMessage response = ResponseSendMessage.builder()
                         .type("message")
-                        .message(messageDTO)
+//                        .message(messageDTO)
                         .build();
 
                 return response;
@@ -658,5 +682,25 @@ public class CatchMindServiceImpl implements CatchMindService {
                 .build();
 
         return responseTimeOut;
+    }
+
+    @Override
+    public ResponseCatchMindReady readyRoom(String roomId, RequestCatchMindReady request) {
+        Map<String, Object> roomInfo = (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
+
+        Set<String> readyPlayer = (Set<String>) roomInfo.get("readyPlayer");
+
+        if (readyPlayer.contains(request.getUserNickname())) {
+            readyPlayer.remove(request.getUserNickname());
+        } else {
+            readyPlayer.add(request.getUserNickname());
+        }
+
+        ResponseCatchMindReady response = ResponseCatchMindReady.builder()
+                .type("ready")
+                .readyPlayers(readyPlayer)
+                .build();
+
+        return response;
     }
 }

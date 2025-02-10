@@ -47,4 +47,6 @@ public class User {
     private LocalDateTime userUpdatedAt;
     @Column(name = "user_deleted_at")
     private LocalDateTime userDeletedAt;
+    @Column(name = "user_bio")
+    private String userBio;
 }

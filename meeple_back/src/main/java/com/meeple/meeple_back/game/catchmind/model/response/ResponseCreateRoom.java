@@ -18,4 +18,7 @@ public class ResponseCreateRoom {
 
     @Schema(description = "비밀방 여부", example = "true", required = true)
     private boolean isPrivate;
+
+    @Schema(description = "OpenVidu 세션", example = "ses_lY5XF2yEEf", required = true)
+    private String sessionId;
 }
