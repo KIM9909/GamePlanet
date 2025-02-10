@@ -4,10 +4,12 @@ import com.meeple.meeple_back.game.bluemarble.domain.ActionType;
 import com.meeple.meeple_back.game.bluemarble.domain.Player;
 import com.meeple.meeple_back.game.bluemarble.domain.Tile;
 import lombok.Builder;
+import lombok.Data;
 import lombok.Getter;
 
 @Getter
 @Builder
+@Data
 public class BuyLandResponse {
 
 	private int playerId;

@@ -29,6 +29,8 @@ import SocketLayout from "./components/layout/SocketLayout";
 import EditArticlePage from "./pages/gameInfo/board/EditArticlePage";
 import FallingStars from "./components/background/FallingStars";
 
+import ErrorPage from "./pages/error/ErrorPage";
+
 function App() {
   return (
     <BrowserRouter>
@@ -94,19 +96,16 @@ function App() {
                 element={<GameVideoPage />}
               />
 
-              <Route
-                path="/game/cockroach/:roomId"
-                element={<CockroachPokerPage />}
-              />
               <Route path="/catch-mind/:roomId" element={<CatchMindPage />} />
               <Route path="/catch-mind" element={<CatchMindListPage />} />
 
-              {/* GameInfo */}
-              <Route path="/game/:gameId" element={<GameInfoPage />} />
 
               {/* Home & Main */}
               <Route path="/home" element={<HomePage />} />
               <Route path="/" element={<MainPage />} />
+
+            {/* GameInfo */}
+            <Route path="/game/:gameId" element={<GameInfoPage />} />
 
               {/* Profile */}
               <Route path="/profile/:userId" element={<ProfilePage />} />
@@ -121,16 +120,16 @@ function App() {
                 element={<ProposalPage />}
               />
 
-              {/* INTRODUCE */}
-              <Route path="/introduce" element={<Introduce />} />
+            {/* Cockroach Room List */}
+            <Route path="/test/cockroach" element={<CockroachRoom />} />
 
-              {/* Cockroach Room List */}
-              <Route path="/test/cockroach" element={<CockroachRoom />} />
+            {/* INTRODUCE */}
+            <Route path="/introduce" element={<Introduce />} />
 
-              {/* INTRODUCE */}
-              <Route path="/introduce" element={<Introduce />} />
-            </Routes>
-          </FriendModalLayout>
+            {/* ERROR */}
+              <Route path="/errorpage" element={<ErrorPage/>} />
+          </Routes>
+        </FriendModalLayout>
         </SideLayout>
       </TopLayout>
     </BrowserRouter>

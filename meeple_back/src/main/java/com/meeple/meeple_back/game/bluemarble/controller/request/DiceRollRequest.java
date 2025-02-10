@@ -15,16 +15,12 @@ public class DiceRollRequest {
 	private int firstDice;
 	@JsonProperty("secondDice")
 	private int secondDice;
-	@JsonProperty("wasDouble")
-	private boolean wasDouble;
 
 	@JsonCreator
 	public DiceRollRequest(@JsonProperty("playerId") int playerId,
-			@JsonProperty("firstDice") int firstDice, @JsonProperty("secondDice") int secondDice,
-			@JsonProperty("wasDouble") boolean wasDouble) {
+			@JsonProperty("firstDice") int firstDice, @JsonProperty("secondDice") int secondDice) {
 		this.playerId = playerId;
 		this.firstDice = firstDice;
 		this.secondDice = secondDice;
-		this.wasDouble = wasDouble;
 	}
 }
