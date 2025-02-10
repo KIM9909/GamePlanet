@@ -70,6 +70,8 @@ import useBurumabulSocket from "../../../../hooks/useBurumabulPlaySocket";
 import { color } from "framer-motion";
 import { depth } from "three/tsl";
 import { SocketContext } from "../../../layout/SocketLayout";
+import QuestBuildBase from "./burumabul_Modal/QuestBuildBase.";
+import QuestBuyLand from "./burumabul_Modal/QuestBuyLand";
 
 const Cell = ({
   position,
@@ -147,16 +149,7 @@ const Cell = ({
   );
 };
 
-const TravelMap = ({
-  onRollDice,
-  onBasesInfo,
-  gameData,
-  roomId,
-  isBuyLand,
-  setShowCardId,
-  setShowBuildBase,
-  isBuildBase,
-}) => {
+const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
   // cities 배열
   const cities = [
     "지구 Start",
@@ -201,6 +194,7 @@ const TravelMap = ({
     "금성",
   ];
   const userId = useSelector((state) => state.user.userId);
+  const colors = ["#FF3EA5", "#7695FF", "#00FF9C", "#EBF400"];
 
   const dispatch = useDispatch();
   // 소켓에서 받아오는 정보들
@@ -210,6 +204,9 @@ const TravelMap = ({
     buyLand,
     roll,
     buildBase,
+    startTurn,
+    payToll,
+    checkEnd,
     currentPlayerSocketIndex,
     rollDiceSocketData,
     socketBoard,
@@ -219,6 +216,9 @@ const TravelMap = ({
     socketTileUpdate,
     buyLandSocketData,
     buildBaseSocketData,
+    setBuyLandSocketData,
+    setBuildBaseSocketData,
+    setSocketNext,
     socketFirstDice,
     socketSecondDice,
     socketDouble,
@@ -235,10 +235,21 @@ const TravelMap = ({
   const [players, setPlayers] = useState(playData?.players);
   const numPlayers = players?.length;
 
+  const myInfo = players?.find((player) => player.playerId === userId);
+  const myColorIndex = players?.findIndex(
+    (player) => Number(player.playerId) === Number(userId)
+  );
+
   const [cards, setCards] = useState(null);
   const [board, setBoard] = useState(null);
   const [updatePlayerList, setUpdatePlayerList] = useState(socketUserUpdate);
   const [updateTileList, setUpdateTileList] = useState(socketTileUpdate);
+
+  const [showBuyLand, setShowBuyLand] = useState(false);
+  const [showBuildBase, setShowBuildBase] = useState(false);
+  const [isBuyLand, setIsBuyLand] = useState(false);
+  const [isBuildBase, setIsBuildBase] = useState(false);
+  const [showCardId, setShowCardId] = useState(null);
 
   useEffect(() => {
     setCurrentPlayerIndex(currentPlayerSocketIndex);
@@ -292,6 +303,7 @@ const TravelMap = ({
           return newBoard;
         });
       }
+      setBuyLandSocketData(null);
     }
   }, [buyLandSocketData]);
 
@@ -354,8 +366,9 @@ const TravelMap = ({
           return base;
         });
       });
+      setBuildBaseSocketData(null);
     }
-  }, [buildBaseSocketData]);
+  }, [buildBaseSocketData, players, colors]);
 
   // 상태 변화를 모니터링하기 위한 별도의 useEffect
   useEffect(() => {
@@ -368,7 +381,6 @@ const TravelMap = ({
   }, [players, board, cards, buyLandSocketData, buildBaseSocketData]);
 
   // 색상
-  const colors = ["#FF3EA5", "#7695FF", "#00FF9C", "#EBF400"];
 
   // 현재 플레이어는 인덱스 번호로
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
@@ -406,6 +418,27 @@ const TravelMap = ({
     }
   }, [onRollDice, currentPlayer]);
 
+  // 다음행동 유추
+  useEffect(() => {
+    setNextAction(socketNext);
+  }, [socketNext]);
+
+  // 턴 시작
+  useEffect(() => {
+    const turnStart = async () => {
+      try {
+        await startTurn();
+        console.log("턴을 시작합니다.");
+      } catch (error) {
+        console.error("턴 시작에 오류가 생겼습니다.", error);
+      }
+    };
+    if (nextAction && nextAction === "START_TURN") {
+      turnStart();
+    }
+  }, [nextAction]);
+
+  // 주사위 굴리기
   useEffect(() => {
     const handleDiceResult = async () => {
       if (isDiceRolling && firstDice !== null && secondDice !== null) {
@@ -416,23 +449,22 @@ const TravelMap = ({
             secondDice: secondDice,
             wasDouble: isDouble,
           };
-          rollDice(diceInfo);
+          await rollDice(diceInfo);
         } catch (error) {
           console.error("주사위 굴리기에 실패했습니다.", error);
         }
       }
     };
-    handleDiceResult();
-  }, [isDiceRolling, firstDice, secondDice]);
-
-  useEffect(() => {
-    setNextAction(socketNext);
-  }, [socketNext]);
+    if (nextAction && nextAction === "ROLL_DICE") {
+      handleDiceResult();
+    }
+  }, [nextAction, isDiceRolling, firstDice, secondDice]);
 
   // 땅 구매
   useEffect(() => {
     if (nextAction && nextAction === "DO_YOU_WANT_TO_BUY_THE_LAND") {
       setShowCardId(playersPositions[currentPlayerIndex]);
+      setShowBuyLand(true);
     }
     if (nextAction && nextAction === "BUY_LAND" && isBuyLand) {
       try {
@@ -453,6 +485,7 @@ const TravelMap = ({
   useEffect(() => {
     if (nextAction && nextAction === "DO_YOU_WANT_TO_BUILD_THE_BASE") {
       setShowCardId(playersPositions[currentPlayerIndex]);
+      setShowBuildBase(true);
     }
     if (nextAction && nextAction === "BUILD_BASE" && isBuildBase) {
       try {
@@ -466,7 +499,17 @@ const TravelMap = ({
         console.error("기지 건설 요청 실패 :", error);
       }
     }
-  });
+  }, [nextAction, isBuildBase, setShowCardId]);
+
+  const closeBuyLand = () => {
+    setShowBuyLand(false);
+    setShowCardId(null);
+  };
+
+  const closeBuildBase = () => {
+    setShowBuildBase(false);
+    setShowCardId(null);
+  };
 
   // 플레이어 위치 초기화
   const [playersPositions, setPlayersPositions] = useState(
@@ -482,15 +525,29 @@ const TravelMap = ({
       rollDiceSocketData.nextPosition !== undefined &&
       !isAnimating
     ) {
-      setCurrentPosition(rollDiceSocketData.nextPosition);
-      setPlayersPositions((prevPositions) => {
-        const newPositions = [...prevPositions];
-        const playerIndex = players.findIndex(
-          (player) => player.playerId === rollDiceSocketData.playerId
-        );
-        newPositions[currentPlayerIndex] = rollDiceSocketData.nextPosition;
-        return newPositions;
-      });
+      const playerIndex = players.findIndex(
+        (player) => player.playerId === rollDiceSocketData.playerId
+      );
+
+      const startPosition = playersPositions[playerIndex];
+      const targetPosition = rollDiceSocketData.nextPosition;
+
+      setIsAnimating(true);
+
+      const animateMovement = async () => {
+        let current = startPosition;
+        while (current !== targetPosition) {
+          current = (current + 1) % totalCells;
+
+          setPlayersPositions((prev) => {
+            const newPositions = [...prev];
+            newPositions[playerIndex] = current;
+            return newPositions;
+          });
+          setIsAnimating(false);
+        }
+        animateMovement();
+      };
     }
   }, [rollDiceSocketData, players, isAnimating, currentPlayerIndex]);
 
@@ -509,8 +566,7 @@ const TravelMap = ({
   useEffect(() => {
     setPrevPosition(rollDiceSocketData.prevPosition);
     setNextPosition(rollDiceSocketData.nextPosition);
-    setMyAction(socketNext);
-  }, [rollDiceSocketData, socketNext]);
+  }, [rollDiceSocketData]);
 
   // 주사위 굴린 후 플레이어 이동 처리
   const handleDiceComplete = async (score) => {
@@ -520,30 +576,6 @@ const TravelMap = ({
     console.log(`🎲 Player ${currentPlayerIndex + 1} rolled: ${score}`);
     console.log(`➡️ Moving to position: ${targetPosition}`);
     setShowModal(false);
-
-    setIsAnimating(true);
-
-    let current = startPosition;
-    const movePlayer = async () => {
-      if (current === targetPosition) {
-        setIsAnimating(false);
-        return;
-      }
-      const nextPosition = (current + 1) % totalCells;
-      setPlayersPositions((prev) => {
-        const newPositions = [...prev];
-        newPositions[currentPlayerIndex] = nextPosition;
-        return newPositions;
-      });
-
-      // 300ms 후에 다음 위치로 이동
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      await movePlayer();
-
-      await movePlayer();
-
-      setIsAnimating(false);
-    };
   };
 
   const [positions, setPositions] = useState([]);
@@ -751,7 +783,7 @@ const TravelMap = ({
 
       const initialBases = positions.map((position, index) => {
         const cellSize = cellSizes[index];
-        const tile = board[index];
+
         let baseSize;
         // 인덱스  0-9, 20-29: 가로가 세로의 2배
         if ((index >= 0 && index <= 9) || (index >= 20 && index <= 29)) {
@@ -770,19 +802,17 @@ const TravelMap = ({
             depth: cellSize[2] * 0.64,
           };
         }
-        const ownerIndex = players?.findIndex(
-          (player) => player.playerId === tile?.ownerId
-        );
+
         return {
           position: position,
-          color: colors[ownerIndex],
+          color: null,
           size: baseSize,
-          visible: tile?.hasBase || false,
+          visible: false,
         };
       });
       setSpaceBases(initialBases);
     }
-  }, [positions, cellSizes, size, board, players]);
+  }, [positions, cellSizes]);
 
   // Preload textures
   const floor = useMemo(() => useLoader(TextureLoader, floorTexture), []);
@@ -892,7 +922,7 @@ const TravelMap = ({
           width={base.size.width}
           height={base.size.height}
           depth={base.size.depth} // 3D 크기
-          visible={true}
+          visible={base.visible}
         />
       );
     });
@@ -1015,6 +1045,38 @@ const TravelMap = ({
             />
           </div>,
           document.body
+        )}
+      {showBuyLand &&
+        showCardId &&
+        currentPlayerIndex !== null &&
+        currentPlayerIndex !== undefined &&
+        currentPlayerIndex === myColorIndex &&
+        createPortal(
+          <div className="fixed inset-0 z-50 w-full text-center flex items-center justify-center">
+            <QuestBuyLand
+              setIsBuyLand={setIsBuyLand}
+              onClose={closeBuyLand}
+              cardId={showCardId}
+              cardInfo={cards?.[showCardId]}
+            />
+          </div>,
+          document.body
+        )}
+
+      {showBuildBase &&
+        showCardId &&
+        currentPlayerIndex !== null &&
+        currentPlayerIndex !== undefined &&
+        currentPlayerIndex === myColorIndex &&
+        createPortal(
+          <div className="fixed inset-0 z-50 w-full text-center flex items-center justify-center">
+            <QuestBuildBase
+              setIsBuildBase={setIsBuildBase}
+              onClose={closeBuildBase}
+              cardId={showCardId}
+              cardInfo={cards?.[showCardId]}
+            />
+          </div>
         )}
     </div>
   );
