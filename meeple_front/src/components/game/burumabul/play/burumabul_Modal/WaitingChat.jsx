@@ -125,7 +125,7 @@ const WaitingChat = ({ roomId, players }) => {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="메시지를 입력하세요"
-            className="flex-1 px-3 py-2 rounded-full border border-gray-300 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+            className="w-4/5 px-3 py-2 rounded-full border border-gray-300 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
             disabled={!connected}
           />
           <button

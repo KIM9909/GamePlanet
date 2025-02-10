@@ -1,34 +1,32 @@
 package com.meeple.meeple_back.game.bluemarble.domain;
 
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
-import lombok.Getter;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
+import lombok.Getter;
 
 /**
  * 턴 관리 클래스. 플레이어 순서를 관리하고, 더블 카운트, 현재 라운드를 관리한다.
  */
 
 /**
- * 턴 종료할지 확인.
- * 주사위 더블이면 한턴 더
- * 파산한 사람있으면 플레이어에서 제외
- * 라운드 계산
+ * 턴 종료할지 확인. 주사위 더블이면 한턴 더 파산한 사람있으면 플레이어에서 제외 라운드 계산
  * <p>
  * <p>
- * 4명이 플레이 할 경우 (1.  우주기지 6개 먼저 건설한 사람이 승리 2. 2명이 파산하면 게임 즉시 끝나고 보유한 재산이 많은 사람이 승리)
- * 3명이 플레이 할 경우 (1. 우주기지 8개 먼저 건설한 사람이 승리 2. 1명이 파산하면 게임 즉시 끝나고 보유한 재산이 많은 사람이 승리)
- * 2명이 플레이할 경우 (1. 우주기지 10개 먼저 건설한 사람이 승리 2. 1명이 파산하면 게임 즉시 끝나고 보유한 재산이 많은 사람이 승리)
+ * 4명이 플레이 할 경우 (1.  우주기지 6개 먼저 건설한 사람이 승리 2. 2명이 파산하면 게임 즉시 끝나고 보유한 재산이 많은 사람이 승리) 3명이 플레이 할 경우 (1.
+ * 우주기지 8개 먼저 건설한 사람이 승리 2. 1명이 파산하면 게임 즉시 끝나고 보유한 재산이 많은 사람이 승리) 2명이 플레이할 경우 (1. 우주기지 10개 먼저 건설한
+ * 사람이 승리 2. 1명이 파산하면 게임 즉시 끝나고 보유한 재산이 많은 사람이 승리)
  * <p>
  * 재산 : 증서, 우주기지, 보유한 현금의 합
  * <p>
- * 리턴하는거 -> 게임 끝남 (다음 액션 : 승자 정보 가져오기) , 다음 턴 - 해당 플레이어가 파산한 경우(파산한 플레이어, 다음턴 플레이어, 턴 정보 리턴, 다음 액션: ROLL_DICE), 주사위 더블인 경우(주사위 더블인 플레이어 주기, 다음 액션 : ROLL_DICE)
+ * 리턴하는거 -> 게임 끝남 (다음 액션 : 승자 정보 가져오기) , 다음 턴 - 해당 플레이어가 파산한 경우(파산한 플레이어, 다음턴 플레이어, 턴 정보 리턴, 다음 액션:
+ * ROLL_DICE), 주사위 더블인 경우(주사위 더블인 플레이어 주기, 다음 액션 : ROLL_DICE)
  */
 @Getter
 public class TurnManager {
+
 	private static Logger logger = Logger.getLogger(TurnManager.class.getName());
 	private int initialPlayerCount;
 	private List<Player> players;
@@ -51,7 +49,7 @@ public class TurnManager {
 		this.players = players;
 		this.doubleCount = 0;
 		this.round = 1;
-		this.turnCount = 1;
+		this.turnCount = 0;
 		this.initialPlayerCount = players.size();
 	}
 
@@ -65,8 +63,7 @@ public class TurnManager {
 	}
 
 	/**
-	 * 턴 끝내기.
-	 * 턴 끝내는 조건 확인하고 다음턴 준비하기.
+	 * 턴 끝내기. 턴 끝내는 조건 확인하고 다음턴 준비하기.
 	 */
 	public TurnEndResponse endTurn(List<Tile> board) {
 		if (checkWinnerByPlayerSize()) {
@@ -90,7 +87,8 @@ public class TurnManager {
 
 		cycleCurrentPlayer();
 		logger.info("Current Player : " + players);
-		return TurnEndResponse.nextTurn(null, getCurrentPlayer(), turnCount, round, ActionType.START_TURN);
+		return TurnEndResponse.nextTurn(null, getCurrentPlayer(), turnCount, round,
+				ActionType.START_TURN);
 	}
 
 	private TurnEndResponse handleBankruptCurrentPlayer(List<Tile> board) {
@@ -98,14 +96,12 @@ public class TurnManager {
 		if (checkWinnerByPlayerSize()) {
 			return TurnEndResponse.gameEnd(determineWinner(board));
 		}
-		return TurnEndResponse.nextTurn(removed, getCurrentPlayer(), turnCount, round, ActionType.START_TURN);
+		return TurnEndResponse.nextTurn(removed, getCurrentPlayer(), turnCount, round,
+				ActionType.START_TURN);
 	}
 
 	/**
-	 * 파산으로 게임이 끝나야 하는지 확인.
-	 * 4 -> 2명
-	 * 3 -> 1명
-	 * 2 -> 1명
+	 * 파산으로 게임이 끝나야 하는지 확인. 4 -> 2명 3 -> 1명 2 -> 1명
 	 *
 	 * @return
 	 */
@@ -125,16 +121,16 @@ public class TurnManager {
 	/**
 	 * 건설 승리 조건을 만족했는지 확인.
 	 * <p>
-	 * 4명이 플레이 할 경우 (1.  우주기지 6개 먼저 건설한 사람이 승리 )
-	 * * 3명이 플레이 할 경우 (1. 우주기지 8개 먼저 건설한 사람이 승리)
-	 * * 2명이 플레이할 경우 (1. 우주기지 10개 먼저 건설한 사람이 승리)
+	 * 4명이 플레이 할 경우 (1.  우주기지 6개 먼저 건설한 사람이 승리 ) * 3명이 플레이 할 경우 (1. 우주기지 8개 먼저 건설한 사람이 승리) * 2명이
+	 * 플레이할 경우 (1. 우주기지 10개 먼저 건설한 사람이 승리)
 	 *
 	 * @param currentPlayer
 	 * @return
 	 */
 	private boolean hasMetConstructionWinCondition(Player currentPlayer, List<Tile> board) {
 		int currentPlayerBaseCount = (int) board.stream()
-				.filter(tile -> tile.getOwnerId() == currentPlayer.getPlayerId() && tile.isHasBase())
+				.filter(tile -> tile.getOwnerId() == currentPlayer.getPlayerId()
+						&& tile.isHasBase())
 				.count();
 		if (initialPlayerCount == 4) {
 			return currentPlayerBaseCount >= 6;
@@ -149,8 +145,7 @@ public class TurnManager {
 	// TODO 3: 승자를 결정한다.
 
 	/**
-	 * 승자를 결정한다.
-	 * 남은 플레이어 중에서 재산이 가장 많은 플레이어 결정
+	 * 승자를 결정한다. 남은 플레이어 중에서 재산이 가장 많은 플레이어 결정
 	 *
 	 * @return
 	 */
@@ -163,8 +158,8 @@ public class TurnManager {
 
 	private void incrementTurn() {
 		turnCount++;
-		if (turnCount > players.size()) {
-			turnCount = 1;
+		if (turnCount >= players.size()) {
+			turnCount = 0;
 			round++;
 		}
 	}

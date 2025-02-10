@@ -20,15 +20,17 @@ const GameStartScreen = ({
   stompClient,
 }) => {
   const [isUpdateModalOpen, setUpdateModalOpen] = useState(false);
-  useEffect(() => {
-    console.log("GameStartScreen props:", {
-      playerCount,
-      roomTitle,
-      maxPeople,
-      isCreator,
-    });
-  }, [playerCount, roomTitle, maxPeople, isCreator]);
+
+  const actualPlayerCount = players.length || 0;
   const canStartGame = playerCount >= 2;
+
+  useEffect(() => {
+    console.log("GameStartScreen 현재 상태:", {
+      players,
+      actualPlayerCount,
+      canStartGame
+    });
+  }, [players, actualPlayerCount, canStartGame]);
 
   const handleUpdateRoom = async (updateData) => {
     if (stompClient) {
@@ -134,7 +136,7 @@ const GameStartScreen = ({
               ))}
             </div>
             <div className="text-gray-400 mt-2">
-              {playerCount}/{maxPeople} 명
+              {actualPlayerCount}/{maxPeople} 명
             </div>
           </div>
           <div className="space-y-2 text-gray-300">

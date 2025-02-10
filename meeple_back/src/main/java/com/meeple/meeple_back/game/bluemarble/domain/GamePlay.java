@@ -5,15 +5,18 @@ import com.meeple.meeple_back.game.bluemarble.controller.response.BuildBaseRespo
 import com.meeple.meeple_back.game.bluemarble.controller.response.BuyLandResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DiceRollResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DrawCardResponse;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.request.*;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuildBaseRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.PayFeeRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.TurnEndRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.PayFeeResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
-import lombok.Builder;
-import lombok.Getter;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import lombok.Builder;
+import lombok.Getter;
 
 @Getter
 @Builder
@@ -175,7 +178,8 @@ public class GamePlay {
 		}
 
 		// 땅 살건지 물어보는 액션 추가
-		if (currentTile.getOwnerId() == EMPTY_TILE_OWNER_NUMBER && currentPlayer.getBalance() >= currentTile.getPrice()) {
+		if (currentTile.getOwnerId() == EMPTY_TILE_OWNER_NUMBER
+				&& currentPlayer.getBalance() >= currentTile.getPrice()) {
 			return ActionType.DO_YOU_WANT_TO_BUY_THE_LAND;
 		}
 
@@ -259,7 +263,8 @@ public class GamePlay {
 				CardType.valueOf(tile.getType().name()));
 
 		player.addCardOwned(card);
-		return DrawCardResponse.from(player.getPlayerId(), player, card, ActionType.USE_CARD);
+		return DrawCardResponse.from(player.getPlayerId(), player, card, ActionType.USE_CARD,
+				getCards());
 	}
 
 	/**
@@ -326,7 +331,7 @@ public class GamePlay {
 	}
 
 	private PayFeeResponse handleInsufficientBalance(Player paidPlayer, Player receivedPlayer,
-	                                                 int tollPrice) {
+			int tollPrice) {
 		final int availablePayment = paidPlayer.getBalance();
 		final int remainingToll = tollPrice - paidPlayer.getBalance();
 		paidPlayer.payMoney(availablePayment);
@@ -336,12 +341,11 @@ public class GamePlay {
 	}
 
 	private PayFeeResponse handleSufficientBalance(Player paidPlayer, Player receivedPlayer,
-	                                               int tollPrice) {
+			int tollPrice) {
 		final int previousBalance = paidPlayer.getBalance();
 
 		paidPlayer.payMoney(tollPrice);
 		receivedPlayer.addMoney(tollPrice);
-
 
 		return PayFeeResponse.from(previousBalance, paidPlayer.getBalance(), tollPrice, false,
 				paidPlayer, receivedPlayer, ActionType.CHECK_END);

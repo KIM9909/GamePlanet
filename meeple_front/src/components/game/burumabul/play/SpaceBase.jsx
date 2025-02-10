@@ -1,8 +1,10 @@
 import React from "react";
 
-const SpaceBase = ({ position, color, visible, width, height, depth }) => {
+const SpaceBase = ({ position, color, width, height, depth, visible }) => {
+  if (!visible) return null;
+
   return (
-    <mesh position={position} visible={visible}>
+    <mesh position={position}>
       <boxGeometry args={[width, height, depth]} />
       <meshStandardMaterial
         color={color}
