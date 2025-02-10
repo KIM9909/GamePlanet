@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { toast } from "react-hot-toast";
 import UserAPI from "../../../../sources/api/UserAPI";
 import useCockroachSocket, { WS_ENDPOINTS } from "../../../../hooks/useCockroachSocket";
@@ -39,7 +39,7 @@ const CreateRoomModal = ({ isOpen, onClose, onCreateRoom }) => {
       toast.error("닉네임 정보를 가져오는 중입니다. 잠시 후 다시 시도해주세요.");
       return;
     }
-
+  
     const roomData = {
       gameId: 1,
       roomTitle,
@@ -48,15 +48,15 @@ const CreateRoomModal = ({ isOpen, onClose, onCreateRoom }) => {
       password: isPrivate ? password : "",
       maxPeople,
     };
-
+  
     try {
-      const createdRoom = await onCreateRoom(roomData);
-      await sendMessage('JOIN_ROOM', {
-        roomId: createdRoom.roomId,
-        playerName: creatorNickname,
-        password: roomData.password,
-      });
+      // onCreateRoom은 Promise를 반환하지만, 반환값을 기다리지 않고 바로 사용하려고 함
+      await onCreateRoom(roomData);  // 여기서 await 하고
+      
+      // 방 생성 성공 후에만 모달을 닫음
       onClose();
+      
+      // JOIN_ROOM 메시지는 CockroachRoom에서 처리되므로 여기서는 제거
     } catch (error) {
       console.error("방 생성 중 오류:", error);
       toast.error("방 생성에 실패했습니다.");

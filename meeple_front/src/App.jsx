@@ -1,7 +1,7 @@
 // App.jsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AdminPage from "./pages/admin/AdminPage";
-import BoardPage from "./pages/board/BoardPage";
+import BoardPage from "./pages/gameInfo/board/BoardPage";
 import BurumabulPage from "./pages/game/burumabul/BurumabulPage";
 import GameInfoPage from "./pages/gameInfo/GameInfoPage";
 import HomePage from "./pages/home/HomePage";
@@ -16,6 +16,13 @@ import ScrollToTop from "./components/layout/ScrollToTop";
 import CatchMindPage from "./pages/game/CatchMindPage";
 import FriendModalLayout from "./components/layout/FriendModalLayout";
 import CatchMindListPage from "./components/game/catchMind/roomList/CatchMindListPage";
+
+import NewArticlePage from "./pages/gameInfo/board/NewArticlePage";
+import GameRulePage from "./pages/gameInfo/GameRulePage";
+import ArticleDetailPage from "./pages/gameInfo/board/ArticleDetailPage";
+import ReviewPage from "./pages/gameInfo/ReviewPage";
+import GameVideoPage from "./pages/gameInfo/GameVideoPage";
+
 import CockroachRoom from "./components/game/cockroachcard/CockroachRoom";
 import BurumabulRoomListPage from "./pages/game/burumabul/BurumabulRoomListPage";
 import SocketLayout from "./components/layout/SocketLayout";
@@ -52,6 +59,25 @@ function App() {
                 </SocketLayout>
               }
             />
+
+            {/* GameInfo */}
+            <Route path="/game/:gameInfoId/info" element={<GameInfoPage />} />
+            <Route path="/game/:gameInfoId/rule" element={<GameRulePage />} />
+            <Route path="/game/:gameInfoId/board" element={<BoardPage />} />
+            <Route
+              path="/game/:gameInfoId/board/write"
+              element={<NewArticlePage />}
+            />
+            <Route
+              path="/game/:gameInfoId/board/detail/:articleId"
+              element={<ArticleDetailPage />}
+            />
+            <Route
+              path="/game/:gameInfoId/board/edit/:articleId"
+              element={<ArticleDetailPage />}
+            />
+            <Route path="/game/:gameInfoId/review" element={<ReviewPage />} />
+            <Route path="/game/:gameInfoId/video" element={<GameVideoPage />} />
 
             <Route
               path="/game/cockroach/:roomId"

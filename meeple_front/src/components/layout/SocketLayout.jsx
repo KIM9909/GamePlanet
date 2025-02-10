@@ -3,6 +3,7 @@ import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
+import { body } from "framer-motion/client";
 
 export const SocketContext = React.createContext();
 
@@ -123,10 +124,16 @@ const SocketLayout = ({ children }) => {
             } else if (receivedData.type === "create") {
               setGamePlaySocketData(receivedData.data);
               setGameSocketNotifi(receivedData.message);
+              setSocketNext(receivedData.data.nextAction);
               setCurrentPlayerSocketIndex(receivedData.data.currentPlayerIndex);
               setSocketCurrentRound(receivedData.data.round);
               setSocketBoard(receivedData.data.board);
               setSocketCards(receivedData.data.cards);
+            } else if (receivedData.type === "start-turn") {
+              setGamePlaySocketData(receivedData.data);
+              setGameSocketNotifi(receivedData.message);
+              setSocketNext(receivedData.data.nextAction);
+              setCurrentPlayerSocketIndex(receivedData.data.currentPlayerIndex);
             } else if (receivedData.type === "buy-land") {
               setBuyLandSocketData(receivedData.buyLandResponse);
               setSocketUserUpdate(receivedData.buyLandResponse.updatedPlayer);
@@ -142,12 +149,16 @@ const SocketLayout = ({ children }) => {
               setGameSocketNotifi(receivedData.message);
             } else if (receivedData.type === "just-roll-dice") {
               setSocektRoll(receivedData.data);
-
               setGameSocketNotifi(receivedData.message);
             } else if (receivedData.type === "build-base") {
               setBuildBaseSocketData(receivedData.data);
               setGameSocketNotifi(receivedData.message);
               setSocketNext(receivedData.data.nextAction);
+            } else if (receivedData.type === "turn-end") {
+              setCurrentPlayerSocketIndex(receivedData.data.currentPlayerIndex);
+              setSocketNext(receivedData.data.nextAction);
+              setSocketCurrentRound(receivedData.data.round);
+              setGameSocketNotifi(receivedData.message);
             }
             if (receivedData.status) {
               setSocketStatus(receivedData.status);
@@ -205,7 +216,7 @@ const SocketLayout = ({ children }) => {
       setError("게임 대기방에 참가 중 오류가 발생했습니다. ");
     }
   }, [roomId, userId]);
-  // TODO: 해야해!!
+
   // 대기방 채팅
   const chatWaitingRoom = useCallback(
     (message) => {
@@ -396,6 +407,7 @@ const SocketLayout = ({ children }) => {
     [roomId, userId]
   );
 
+  // 기지 생성
   const buildBase = useCallback(
     (buildInfo) => {
       if (!stompClientRef.current?.connected) {
@@ -416,6 +428,63 @@ const SocketLayout = ({ children }) => {
     },
     [roomId, userId]
   );
+
+  // 턴 시작
+  const startTurn = useCallback(() => {
+    if (!stompClientRef.current?.connected) {
+      console.warn("웹소켓에 연결되어 있지 않습니다.");
+      return;
+    }
+    try {
+      console.log("턴을 시작합니다.");
+      stompClientRef.current.publish({
+        destination: `/app/game/blue-marble/game-plays/${roomId}/start-turn`,
+      });
+      console.log("턴 시작에 성공했습니다.");
+    } catch (error) {
+      console.error("턴 시작에 실패했습니다. :", error);
+      setError("턴 시작에 실패했습니다.");
+    }
+  }, [roomId, userId]);
+
+  // 통행료 지불
+  const payToll = useCallback((payInfo) => {
+    if (!stompClientRef.current?.connected) {
+      console.warn("웹소켓에 연결되어 있지 않습니다.");
+      return;
+    }
+    try {
+      console.log("통행료를 지불합니다.");
+      stompClientRef.current.publish({
+        destination: `/app/game/blue-marble/game-plays/${roomId}/pay-fee`,
+        body: JSON.stringify(payInfo),
+      });
+      console.log("통행료 지불에 성공했습니다.");
+    } catch (error) {
+      console.error("통행료 지불에 실패했습니다.", error);
+      setError("통행료 지불에 실패했습니다.");
+    }
+  });
+
+  // 종료 조건 확인
+  const checkEnd = useCallback((endInfo) => {
+    if (!stompClientRef.current?.connected) {
+      console.warn("웹소켓에 연결되어 있지 않습니다.");
+      return;
+    }
+    try {
+      console.log("종료조건을 확인합니다.");
+      stompClientRef.current.publish({
+        destination: `/app/game/blue-marble/game-plays/${roomId}/check-end`,
+        body: JSON.stringify(endInfo),
+      });
+      console.log("종료조건 확인에 성공했습니다");
+    } catch (error) {
+      console.error("종료조건 확인에 실패했습니다.", error);
+    }
+  });
+
+  //
 
   if (!userId || !token) {
     return children;
@@ -438,6 +507,7 @@ const SocketLayout = ({ children }) => {
           currentPlayerSocketIndex,
           rollDiceSocketData,
           buyLandSocketData,
+          setBuyLandSocketData,
           roll,
           socketRoll,
           socketFirstDice,
@@ -450,6 +520,7 @@ const SocketLayout = ({ children }) => {
           socketUserUpdate,
           socketTileUpdate,
           buildBaseSocketData,
+          setBuildBaseSocketData,
           socketStatus,
           setSocketStatus,
           enterWaitingRoom,
@@ -462,6 +533,9 @@ const SocketLayout = ({ children }) => {
           createBurumabulPlay,
           updateWaitingRoom,
           buildBase,
+          startTurn,
+          payToll,
+          checkEnd,
         }}
       >
         {children}

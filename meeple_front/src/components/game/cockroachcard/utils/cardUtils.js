@@ -8,21 +8,31 @@ export const ANIMAL_ORDER = [
  };
  
  export const sortCards = (cards) => {
-  return [...cards].sort((a, b) => {
+  if (!cards) return [];
+  
+  return [...cards].filter(card => card && card.type).sort((a, b) => {
+    // type이 있는지 한번 더 체크
+    if (!a?.type || !b?.type) return 0;
+    
     const typeA = a.type.replace("King", "");
     const typeB = b.type.replace("King", "");
+    
     if (typeA === typeB) return a.type.includes("King") ? 1 : -1;
     return ANIMAL_ORDER.indexOf(typeA) - ANIMAL_ORDER.indexOf(typeB);
   });
- };
- 
- export const sortPenaltyGroups = (groups) => {
-  return Object.values(groups).sort((a, b) => {
+};
+
+export const sortPenaltyGroups = (groups) => {
+  if (!groups) return [];
+  
+  return Object.values(groups).filter(group => group && group.type).sort((a, b) => {
+    if (!a?.type || !b?.type) return 0;
+    
     const typeA = a.type.replace("King", "");
     const typeB = b.type.replace("King", "");
     return ANIMAL_ORDER.indexOf(typeA) - ANIMAL_ORDER.indexOf(typeB);
   });
- };
+};
  
  export const getKoreanName = (type) => {
   const nameMap = {
@@ -50,9 +60,15 @@ export const ANIMAL_ORDER = [
  
  export const normalizeCardData = (card) => {
   if (!card) return null;
+  
+  // type이 'King'으로 시작하면 royal을 true로 설정
+  const isKingCard = card.type?.startsWith('King');
+  const cardType = isKingCard ? card.type.substring(4) : card.type;
+  
   return {
-    type: card.type,
-    royal: card.royal || card.isRoyal,
-    isRoyal: card.royal || card.isRoyal
+    type: cardType,
+    royal: isKingCard || card.royal || card.isRoyal,
+    isRoyal: isKingCard || card.royal || card.isRoyal,
+    cardId: card.cardId  // cardId 추가
   };
- };
+};
