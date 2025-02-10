@@ -141,7 +141,7 @@ const HomePage = () => {
           document.body
         )}
 
-      <style jsx global>{`
+      <style jsx="true" global="true">{`
         @keyframes shooting-star {
           0% {
             transform: translateX(-100%) translateY(-100%) rotate(-45deg);

@@ -333,23 +333,6 @@ const TopNavbar = () => {
           setNotiList={setNotificationList}
         />
       )}
-
-      {/* Animations */}
-      <style>
-        {`
-          @keyframes jump {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
-          }
-          .jump-animation {
-            animation: jump 0.5s ease-in-out;
-          }
-          @keyframes popup {
-            0% { opacity: 0; transform: translateY(-10px); }
-            100% { opacity: 1; transform: translateY(0); }
-          }
-        `}
-      </style>
     </nav>
   );
 };
