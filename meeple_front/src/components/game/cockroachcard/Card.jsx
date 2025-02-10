@@ -28,6 +28,7 @@ const Card = ({
   onClick,
   selectedCard,
   isActive = false,
+  cardId,
 }) => {
   if (isBack || !type) {
     return (
@@ -49,10 +50,10 @@ const Card = ({
     const cardImageType = type === "Joker" ? "JockerCard" : "BlackCard";
     return (
       <div
-        data-card-id={type} // data-card-id 추가
-        onClick={(e) => onClick?.({ type }, e)}
+        data-card-id={cardId} // data-card-id 추가
+        onClick={(e) => onClick?.({ type, cardId }, e)}
         className={`flex-shrink-0 w-16 h-24 rounded-lg relative group cursor-pointer overflow-hidden
-          ${selectedCard?.type === type ? "ring-2 ring-blue-500" : ""} 
+          ${selectedCard?.cardId === cardId ? "ring-2 ring-blue-500" : ""} 
           ${isActive ? "ring-2 ring-green-500" : ""}`}
       >
         <img
@@ -72,11 +73,11 @@ const Card = ({
 
   return (
     <div
-      data-card-id={type}
-      onClick={(e) => onClick?.({ type, isRoyal }, e)}
+      data-card-id={cardId}
+      onClick={(e) => onClick?.({ type, isRoyal, cardId }, e)}
       className={`
           flex-shrink-0 w-16 h-24 rounded-lg relative group cursor-pointer overflow-hidden
-          ${selectedCard?.type === type ? "ring-2 ring-blue-500" : ""}
+          ${selectedCard?.cardId === cardId ? "ring-2 ring-blue-500" : ""}
           ${isActive ? "shadow-lg shadow-blue-500/50" : ""}
         `}
     >

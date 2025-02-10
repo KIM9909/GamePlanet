@@ -20,7 +20,6 @@ const useFriendSocket = () => {
     //   `${import.meta.env.VITE_SOCKET_LOCAL_API_BASE_URL}`
     // ); // 로컬 서버 소켓 통신
     const socket = new SockJS(`${import.meta.env.VITE_SOCKET_API_BASE_URL}`); // 배포 서버 소켓 통신
-    console.log(socket);
     const stompClient = new Client({
       webSocketFactory: () => socket,
       reconnectDelay: 5000,
@@ -29,7 +28,6 @@ const useFriendSocket = () => {
     });
 
     stompClient.onConnect = () => {
-      console.log("WebSocket Connected");
       setConnected(true);
 
       // 친구 요청 알림 구독

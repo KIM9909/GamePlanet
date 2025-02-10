@@ -27,6 +27,7 @@ export const setRoomData = createAction("cockroach/setRoomData", (roomData) => {
     payload: {
       ...roomData,
       roomTitle: roomData.roomTitle || "바퀴벌레 포커",
+      players: roomData.players ? [...new Set(roomData.players)] : [],
     },
   };
 });
@@ -46,24 +47,26 @@ const cockroachSlice = createSlice({
         state.playerCards = action.payload.playerCards || {};
         state.publicDeck = action.payload.publicDeck || [];
         state.userTableCards = action.payload.userTableCards || {};
+        
         if (action.payload.gameState) {
           state.gameState = {
             ...state.gameState,
             ...action.payload.gameState,
           };
-        }
-        // isGameStart가 true일 때만 isGameStarted를 true로 설정
-        if (action.payload.isGameStart) {
-          state.isGameStarted = true;
-        }
+          // 게임이 진행중인지 확인 11
+          if (state.gameState.currentTurn || state.playerCards[state.currentUser]?.length > 0) {
+            state.isGameStarted = true;
+          }
+          };
+        
         return;
       }
 
       // players와 gameData가 분리되어 전달된 경우
       const { players, gameData } = action.payload;
 
-      if (players) {
-        state.players = [...new Set(players)];
+      if (action.payload.players) {
+        state.players = [...new Set(action.payload.players)];
       }
 
       if (gameData) {
@@ -71,15 +74,16 @@ const cockroachSlice = createSlice({
         state.playerCards = gameData.playerCards || {};
         state.publicDeck = gameData.publicDeck || [];
         state.userTableCards = gameData.userTableCards || {};
+        
         if (gameData.gameState) {
           state.gameState = {
             ...state.gameState,
             ...gameData.gameState,
           };
-        }
-        // isGameStart가 true일 때만 isGameStarted를 true로 설정
-        if (gameData.isGameStart) {
-          state.isGameStarted = true;
+          // 게임이 진행중인지 확인 22
+          if (state.gameState.currentTurn || state.playerCards[state.currentUser]?.length > 0) {
+            state.isGameStarted = true;
+          }
         }
       }
 
@@ -91,14 +95,32 @@ const cockroachSlice = createSlice({
     },
 
     startGame: (state) => {
-      console.log("Starting game...");
+      console.log("게임 시작...");
       state.isGameStarted = true;
     },
 
-    updateGameState: (state, action) => {
-      console.log("Updating gameState:", action.payload);
-      state.gameState = { ...state.gameState, ...action.payload };
-    },
+updateGameState: (state, action) => {
+  console.log("게임 진행 상황 :", action.payload);
+  if (!action.payload) return;
+
+  // currentCard 업데이트 시 특별 처리
+  if (action.payload.currentCard) {
+    state.gameState = {
+      ...state.gameState,
+      ...action.payload,
+      currentCard: {
+        type: action.payload.currentCard.type,
+        royal: action.payload.currentCard.royal,
+      },
+    }
+    return;
+  }
+
+  state.gameState = {
+    ...state.gameState,
+    ...action.payload,
+    }
+  },
 
     updatePlayerCards: (state, action) => {
       const { player, cards } = action.payload;
@@ -126,16 +148,19 @@ const cockroachSlice = createSlice({
 
     resetGame: (state) => {
       console.log("Resetting game state");
+      const savedRoomData = state.roomData;
+      const savedPlayers = state.players;
+      
       // roomData와 players는 유지하고 나머지 상태만 초기화
-      return {
+      Object.assign(state, {
         ...initialState,
-        roomData: state.roomData,
-        players: state.players
-      };
+        roomData: savedRoomData,
+        players: savedPlayers,
+      });
     },
 
     leaveGame: (state) => {
-      console.log("Leaving game - full reset");
+      console.log("게임 나가기");
       // 모든 상태를 완전히 초기화
       return initialState;
     },
@@ -165,7 +190,7 @@ export const {
   updatePublicDeck,
   resetGame,
   leaveGame,
-  setGameStarted
+  setGameStarted,
 } = cockroachSlice.actions;
 
 export default cockroachSlice.reducer;
