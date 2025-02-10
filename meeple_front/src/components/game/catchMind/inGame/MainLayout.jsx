@@ -72,6 +72,17 @@ const GameInfo = React.memo(
   }) => {
     const [timeLeft, setTimeLeft] = useState(roomInfo?.timeLimit || 90);
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+    const [readyPlayers, setReadyPlayers] = useState(new Set());
+    const [isReady, setIsReady] = useState(false);
+
+    const areAllPlayersReady = useMemo(() => {
+      // 방장을 제외한 플레이어 수
+      const nonCreatorPlayerCount =
+        roomInfo?.players?.filter((player) => player !== roomInfo.creator)
+          .length || 0;
+      // 준비한 플레이어 수가 방장을 제외한 플레이어 수와 같은지 확인
+      return readyPlayers.size === nonCreatorPlayerCount;
+    }, [readyPlayers, roomInfo?.players, roomInfo?.creator]);
 
     useEffect(() => {
       let timer;
@@ -184,22 +195,40 @@ const GameInfo = React.memo(
               </div>
 
               {/* Creator Controls */}
-              {isCreator && !roomInfo?.isGameStarted && (
+              {!roomInfo?.isGameStarted && (
                 <div className="flex space-x-2">
-                  <button
-                    onClick={handleStartGame}
-                    className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200"
-                  >
-                    <PlayCircle className="w-4 h-4 mr-2" />
-                    <span>Start Game</span>
-                  </button>
-                  <button
-                    onClick={() => setIsUpdateModalOpen(true)}
-                    className="flex items-center px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg transition-colors duration-200 border border-gray-600"
-                  >
-                    <Settings className="w-4 h-4 mr-2" />
-                    <span>Settings</span>
-                  </button>
+                  {isCreator ? (
+                    <>
+                      <button
+                        onClick={handleStartGame}
+                        className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200"
+                      >
+                        <PlayCircle className="w-4 h-4 mr-2" />
+                        <span>Start Game</span>
+                      </button>
+                      <button
+                        onClick={() => setIsUpdateModalOpen(true)}
+                        className="flex items-center px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg transition-colors duration-200 border border-gray-600"
+                      >
+                        <Settings className="w-4 h-4 mr-2" />
+                        <span>Settings</span>
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() =>
+                        client?.publish({
+                          destination: `/app/ready/${roomInfo.roomId}`,
+                          body: "",
+                          headers: { "content-type": "text/plain" },
+                        })
+                      }
+                      className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+                    >
+                      <PlayCircle className="w-4 h-4 mr-2" />
+                      <span>Ready</span>
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -388,9 +417,17 @@ const MainLayout = () => {
         callback: (message) => {
           try {
             const data = JSON.parse(message.body);
+            console.log("Received WebSocket data:", data); // 디버깅을 위한 로그 추가
 
             if (data.type === "roomInfo" && data.roomInfo) {
-              setRoomInfo(data.roomInfo);
+              const updatedRoomInfo = {
+                ...data.roomInfo,
+                isGameStarted:
+                  data.roomInfo.isGameStarted ||
+                  data.roomInfo.isGameStart ||
+                  false,
+              };
+              setRoomInfo(updatedRoomInfo);
 
               if (data.roomInfo.players) {
                 const players = data.roomInfo.players.map((player, index) => ({
