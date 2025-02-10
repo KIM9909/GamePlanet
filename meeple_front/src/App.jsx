@@ -30,6 +30,7 @@ import EditArticlePage from "./pages/gameInfo/board/EditArticlePage";
 import FallingStars from "./components/background/FallingStars";
 
 import ErrorPage from "./pages/error/ErrorPage";
+import CustomEditor from "./components/info/gameproposal/CustomEditor";
 
 function App() {
   return (
@@ -110,15 +111,13 @@ function App() {
               {/* Profile */}
               <Route path="/profile/:userId" element={<ProfilePage />} />
 
-              {/* Proposal */}
+              {/* custom */}
               <Route
-                path="/game-info/:gameInfoId/proposal"
+                path="/game-info/:gameInfoId/custom"
                 element={<ProposalPage />}
               />
-              <Route
-                path="/game-info/:gameInfoId/proposal/:proposalId"
-                element={<ProposalPage />}
-              />
+              <Route path="game-info/:gameInfoId/custom/editor" 
+              element={<CustomEditor/>}/>
 
             {/* Cockroach Room List */}
             <Route path="/test/cockroach" element={<CockroachRoom />} />
