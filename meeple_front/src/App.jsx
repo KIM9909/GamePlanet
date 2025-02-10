@@ -2,7 +2,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AdminPage from "./pages/admin/AdminPage";
 import BoardPage from "./pages/gameInfo/board/BoardPage";
-import BurumabulPage from "./pages/game/BurumabulPage"
+import BurumabulPage from "./pages/game/burumabul/BurumabulPage"
 import GameInfoPage from "./pages/gameInfo/GameInfoPage";
 import HomePage from "./pages/home/HomePage";
 import ProfilePage from "./pages/profile/ProfilePage";
@@ -26,6 +26,8 @@ import GameVideoPage from "./pages/gameInfo/GameVideoPage";
 import CockroachRoom from "./components/game/cockroachcard/CockroachRoom";
 import BurumabulRoomListPage from "./pages/game/burumabul/BurumabulRoomListPage";
 import SocketLayout from "./components/layout/SocketLayout";
+
+import ErrorPage from "./pages/error/ErrorPage";
 
 function App() {
   return (
@@ -101,6 +103,9 @@ function App() {
 
             {/* INTRODUCE */}
             <Route path="/introduce" element={<Introduce />} />
+
+            {/* ERROR */}
+              <Route path="/errorpage" element={<ErrorPage/>} />
           </Routes>
         </FriendModalLayout>
         {/* </SideLayout> */}
