@@ -83,7 +83,7 @@ const ProfilePage = () => {
 
   // UI 렌더링
   return (
-    <div className="min-h-screen bg-zinc-900">
+    <div className="min-h-screen">
       <div className="max-w-3xl mx-auto py-6 px-8">
         {/* 프로필 헤더 */}
         <div className="mb-8">

@@ -2,134 +2,137 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import BurumabulRoomCreateModal from "../../components/game/burumabul/BurumabulRoomCreateModal";
-import FriendModal from "../../components/friend/FriendModal";
-import { useSelector, useDispatch } from "react-redux";
-
-import GameCard from "../../components/game/GameCard";
+import { useSelector } from "react-redux";
+import { GameInfoAPI } from "../../sources/api/GameInfoAPI";
+import { Star } from "lucide-react";
 import CockroachPokerRoyalMainImg from "../../assets/images/games/MainImage/Cockroach_Poker_Royal.webp";
 import BurumabulMainImg from "../../assets/images/games/MainImage/BuruMabul.png";
 import CatchMindMainImg from "../../assets/images/games/MainImage/CatchMind.jpg";
 
-
 const HomePage = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const [isCreateRoomModalOpen, setCreateRoomModalOpen] = useState(false);
-
-  // 부루마불
   const [isCreateBurumabulRoomModalOpen, setIsCreateBurumabulRoomModalOpen] =
     useState(false);
-
+  const [gameList, setGameList] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const userId = useSelector((state) => state.user.userId);
 
   useEffect(() => {
     const path = window.location.pathname;
-    // 게임 페이지가 아닐 때만 체크
     if (!userId && !path.includes("/game/")) {
       navigate("/");
       return;
     }
   }, [userId, navigate]);
 
-  // const handleLogout = () => {
-  //   dispatch(logout());
-  //   navigate("/");
-  // };
+  useEffect(() => {
+    const fetchGameList = async () => {
+      try {
+        setIsLoading(true);
+        const response = await GameInfoAPI.getGameInfoList();
+        setGameList(response.gameInfoList || []);
+      } catch (error) {
+        console.error("게임 목록 조회 실패:", error);
+        setGameList([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  console.log(userId);
+    fetchGameList();
+  }, []);
 
-  // 부루마불 방생성 모달에서 정보 입력 후 대기방 이동
-  const handleCreateBurumabulRoom = () => {
-    navigate("/game/burumabul/waitingroom");
-  };
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white bg-[#0a0a2a]">
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-white rounded-full animate-pulse" />
+          <div className="w-4 h-4 bg-white rounded-full animate-pulse delay-75" />
+          <div className="w-4 h-4 bg-white rounded-full animate-pulse delay-150" />
+        </div>
+      </div>
+    );
+  }
 
-  // 부루마불 방 목록 페이지 이동
-
-  const goToRoomList = async () => {
-    await navigate("/burumabul/room-list");
+  const GameCard = ({ gameInfo }) => {
+    return (
+      <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-lg overflow-hidden group relative border border-indigo-500 hover:border-indigo-300 transition-all duration-300 h-full">
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="relative h-48 overflow-hidden">
+          <img
+            src={
+              gameInfo.game.gameId === 1
+                ? CockroachPokerRoyalMainImg
+                : gameInfo.game.gameId === 2
+                ? BurumabulMainImg
+                : CatchMindMainImg
+            }
+            alt={gameInfo.game.gameName}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+          <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-4 backdrop-blur-sm">
+            <button
+              onClick={() =>
+                navigate(`/game-info/${gameInfo.gameInfoId}`, {
+                  state: { gameInfo: gameInfo },
+                })
+              }
+              className="px-6 py-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-colors transform hover:scale-105 duration-300"
+            >
+              GAME INFO
+            </button>
+            <button
+              onClick={() =>
+                gameInfo.game.gameId === 1
+                  ? navigate("/test/cockroach")
+                  : gameInfo.game.gameId === 2
+                  ? navigate("/burumabul/room-list")
+                  : navigate("/catch-mind")
+              }
+              className="px-6 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors transform hover:scale-105 duration-300"
+            >
+              GAME PLAY
+            </button>
+          </div>
+        </div>
+        <div className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Star className="w-5 h-5 text-yellow-400" />
+            <h2 className="text-xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+              {gameInfo.game.gameName}
+            </h2>
+          </div>
+          <p className="text-gray-300 mb-4">{gameInfo.gameInfoContent}</p>
+          {gameInfo.game.gameId === 2 && (
+            <button
+              onClick={() => setIsCreateBurumabulRoomModalOpen(true)}
+              className="w-full px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full hover:from-indigo-500 hover:to-purple-500 transition-all duration-300 transform hover:scale-105"
+            >
+              방 만들기
+            </button>
+          )}
+        </div>
+      </div>
+    );
   };
 
   return (
-    <div className="min-h-screen relative">
-      <div className="min-h-screen bg-gray-100 p-8">
+    <div className="min-h-screen relative overflow-hidden">
+      <div className="min-h-screen p-8 relative z-5">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h1 className="text-2xl font-bold mb-6">게임 목록</h1>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* 바퀴벌레 포커 */}
-              {/* <div className="bg-gray-50 p-6 rounded-lg shadow">
-                <h2 className="text-xl font-semibold mb-4">바퀴벌레 포커</h2>
-                <p className="text-gray-600 mb-4">
-                  블러핑과 심리전이 핵심인 카드게임입니다.
-                </p>
-                <button
-                  onClick={() => setCreateRoomModalOpen(true)}
-                  className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                >
-                  방 만들기
-                </button>
-
-              </div> */}
-
-              <GameCard
-                imgUrl={CockroachPokerRoyalMainImg}
-                title={"바퀴벌레포커"}
-                description={"블러핑과 심리전이 핵심인 카드게임입니다."}
-              />
-
-              {/* 부루마불 */}
-              <div className="bg-gray-50 p-6 rounded-lg shadow">
-                <h2 className="text-xl font-semibold mb-4">부루마불</h2>
-                <p className="text-gray-600 mb-4">
-                  친구들과 함께 떠나는 신기한 우주여행!
-                </p>
-                <button
-                  onClick={() => setIsCreateBurumabulRoomModalOpen(true)}
-                  className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                >
-                  방 만들기
-                </button>
-                <button onClick={() => navigate("/burumabul/room-list")}>
-                  대기방 목록 보기
-                </button>
-              </div>
-
-              <GameCard
-                imgUrl={BurumabulMainImg}
-                title={"부루마블"}
-                description={"친구들과 함께 떠나는 미플만의 우주여행!"}
-              />
-
-              {/* 캐치마인드 */}
-              {/* <div className="bg-gray-50 p-6 rounded-lg shadow">
-                <h2 className="text-xl font-semibold mb-4">캐치마인드</h2>
-                <p className="text-gray-600 mb-4">
-                폭풍을 부르는 그림 그림 대소동 퀴즈 작전!
-                </p>
-                <div className="flex gap-4 justify-between">
-                <button className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-                게임 정보
-                </button>
-                <button
-                onClick={() => navigate("/catch-mind")}
-                className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                >
-                게임 보기
-                </button>
-                </div>
-                </div> */}
-
-              <GameCard
-                imgUrl={CatchMindMainImg}
-                title={"캐치마인드"}
-                description={"폭풍을 부르는 그림 그림 대소동 퀴즈 작전!"}
-              />
+          <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-indigo-500/30">
+            <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+              게임 목록
+            </h1>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {gameList.map((gameInfo) => (
+                <GameCard key={gameInfo.gameInfoId} gameInfo={gameInfo} />
+              ))}
             </div>
           </div>
         </div>
       </div>
 
-      {/* 부루마불 */}
       {isCreateBurumabulRoomModalOpen &&
         createPortal(
           <BurumabulRoomCreateModal
@@ -137,6 +140,37 @@ const HomePage = () => {
           />,
           document.body
         )}
+
+      <style jsx global>{`
+        @keyframes shooting-star {
+          0% {
+            transform: translateX(-100%) translateY(-100%) rotate(-45deg);
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(200%) translateY(200%) rotate(-45deg);
+            opacity: 0;
+          }
+        }
+
+        @keyframes twinkle {
+          0%,
+          100% {
+            opacity: 0.2;
+          }
+          50% {
+            opacity: 1;
+          }
+        }
+
+        .animate-shooting-star {
+          animation: shooting-star 3s linear infinite;
+        }
+
+        .animate-twinkle {
+          animation: twinkle 3s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 };

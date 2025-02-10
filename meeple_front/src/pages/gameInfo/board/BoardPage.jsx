@@ -1,7 +1,7 @@
-import ArticleItem from "../../../components/info/ArticleItem"
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { GameInfoAPI } from '../../../sources/api/GameInfoAPI';
+import ArticleItem from "../../../components/info/ArticleItem";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { GameInfoAPI } from "../../../sources/api/GameInfoAPI";
 
 const BoardPage = () => {
   const { gameInfoId } = useParams();
@@ -67,7 +67,7 @@ const BoardPage = () => {
         </section>
         <section className="mt-4 flex justify-between items-center">
           <div className="flex gap-2">
-            <button 
+            <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
               className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50"
@@ -79,7 +79,11 @@ const BoardPage = () => {
                 key={i + 1}
                 onClick={() => handlePageChange(i + 1)}
                 className={`px-3 py-1 border rounded 
-                  ${currentPage === i + 1 ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'}`}
+                  ${
+                    currentPage === i + 1
+                      ? "bg-blue-500 text-white"
+                      : "hover:bg-gray-100"
+                  }`}
               >
                 {i + 1}
               </button>
