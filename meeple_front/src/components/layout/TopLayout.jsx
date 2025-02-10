@@ -12,9 +12,9 @@ const TopLayout = ({ children }) => {
     location.pathname !== "/errorpage"
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen">
       {showNavbar && <TopNavbar />}
-      <main>{children}</main>
+      <main className={showNavbar ? "pt-16" : ""}>{children}</main>
     </div>
   );
 };

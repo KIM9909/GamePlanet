@@ -26,6 +26,8 @@ import GameVideoPage from "./pages/gameInfo/GameVideoPage";
 import CockroachRoom from "./components/game/cockroachcard/CockroachRoom";
 import BurumabulRoomListPage from "./pages/game/burumabul/BurumabulRoomListPage";
 import SocketLayout from "./components/layout/SocketLayout";
+import EditArticlePage from "./pages/gameInfo/board/EditArticlePage";
+import FallingStars from "./components/background/FallingStars";
 
 import ErrorPage from "./pages/error/ErrorPage";
 
@@ -34,76 +36,89 @@ function App() {
     <BrowserRouter>
       <ScrollToTop />
       <TopLayout>
-        {/* <SideLayout> */}
-        <FriendModalLayout>
-          <Routes>
-            {/* Admin */}
-            <Route path="/admin" element={<AdminPage />} />
+        <SideLayout>
+          <FallingStars />
+          <FriendModalLayout>
+            <Routes>
+              {/* Admin */}
+              <Route path="/admin" element={<AdminPage />} />
 
-            {/* Board */}
-            <Route path="/board" element={<BoardPage />} />
-            <Route path="/board/:boardId" element={<BoardPage />} />
+              {/* Board */}
+              <Route path="/board" element={<BoardPage />} />
+              <Route path="/board/:boardId" element={<BoardPage />} />
 
-            {/* Game */}
-            <Route
-              path="/game/burumabul/start/:roomId"
-              element={
-                <SocketLayout>
-                  <BurumabulPage />
-                </SocketLayout>
-              }
-            />
-            <Route
-              path="/burumabul/room-list"
-              element={
-                <SocketLayout>
-                  <BurumabulRoomListPage />
-                </SocketLayout>
-              }
-            />
+              {/* Game */}
+              <Route
+                path="/game/burumabul/start/:roomId"
+                element={
+                  <SocketLayout>
+                    <BurumabulPage />
+                  </SocketLayout>
+                }
+              />
+              <Route
+                path="/burumabul/room-list"
+                element={
+                  <SocketLayout>
+                    <BurumabulRoomListPage />
+                  </SocketLayout>
+                }
+              />
 
-            {/* GameInfo */}
-            <Route path="/game/:gameInfoId/info" element={<GameInfoPage />} />
-            <Route path="/game/:gameInfoId/rule" element={<GameRulePage />} />
-            <Route path="/game/:gameInfoId/board" element={<BoardPage />} />
-            <Route
-              path="/game/:gameInfoId/board/write"
-              element={<NewArticlePage />}
-            />
-            <Route
-              path="/game/:gameInfoId/board/detail/:articleId"
-              element={<ArticleDetailPage />}
-            />
-            <Route
-              path="/game/:gameInfoId/board/edit/:articleId"
-              element={<ArticleDetailPage />}
-            />
-            <Route path="/game/:gameInfoId/review" element={<ReviewPage />} />
-            <Route path="/game/:gameInfoId/video" element={<GameVideoPage />} />
+              {/* GameInfo */}
+              <Route path="/game-info/:gameInfoId" element={<GameInfoPage />} />
+              <Route
+                path="/game-info/:gameInfoId/rule"
+                element={<GameRulePage />}
+              />
+              <Route
+                path="/game-info/:gameInfoId/board"
+                element={<BoardPage />}
+              />
+              <Route
+                path="/game-info/:gameInfoId/board/write"
+                element={<NewArticlePage />}
+              />
+              <Route
+                path="/game-info/:gameInfoId/board/detail/:gameCommunityId"
+                element={<ArticleDetailPage />}
+              />
+              <Route
+                path="/game-info/:gameInfoId/board/edit/:gameCommunityId"
+                element={<EditArticlePage />}
+              />
+              <Route
+                path="/game-info/:gameInfoId/review"
+                element={<ReviewPage />}
+              />
+              <Route
+                path="/game-info/:gameInfoId/video"
+                element={<GameVideoPage />}
+              />
 
-            <Route
-              path="/game/cockroach/:roomId"
-              element={<CockroachPokerPage />}
-            />
-            <Route path="/catch-mind/:roomId" element={<CatchMindPage />} />
-            <Route path="/catch-mind" element={<CatchMindListPage />} />
+              <Route path="/catch-mind/:roomId" element={<CatchMindPage />} />
+              <Route path="/catch-mind" element={<CatchMindListPage />} />
+
+
+              {/* Home & Main */}
+              <Route path="/home" element={<HomePage />} />
+              <Route path="/" element={<MainPage />} />
 
             {/* GameInfo */}
             <Route path="/game/:gameId" element={<GameInfoPage />} />
 
-            {/* Home & Main */}
-            <Route path="/home" element={<HomePage />} />
-            <Route path="/" element={<MainPage />} />
+              {/* Profile */}
+              <Route path="/profile/:userId" element={<ProfilePage />} />
 
-            {/* Profile */}
-            <Route path="/profile/:userId" element={<ProfilePage />} />
-
-            {/* Proposal */}
-            <Route path="/proposal" element={<ProposalPage />} />
-            <Route path="/proposal/:proposalId" element={<ProposalPage />} />
-
-            {/* INTRODUCE */}
-            <Route path="/introduce" element={<Introduce />} />
+              {/* Proposal */}
+              <Route
+                path="/game-info/:gameInfoId/proposal"
+                element={<ProposalPage />}
+              />
+              <Route
+                path="/game-info/:gameInfoId/proposal/:proposalId"
+                element={<ProposalPage />}
+              />
 
             {/* Cockroach Room List */}
             <Route path="/test/cockroach" element={<CockroachRoom />} />
@@ -115,7 +130,7 @@ function App() {
               <Route path="/errorpage" element={<ErrorPage/>} />
           </Routes>
         </FriendModalLayout>
-        {/* </SideLayout> */}
+        </SideLayout>
       </TopLayout>
     </BrowserRouter>
   );

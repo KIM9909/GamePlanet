@@ -4,6 +4,8 @@ import axios from "axios";
 import PlayerCard from "./PlayerCard";
 import { Mic, MicOff, Video, VideoOff } from "lucide-react";
 import { useSelector } from "react-redux";
+import * as StompJs from "@stomp/stompjs";
+import SockJS from "sockjs-client";
 
 const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
   const [session, setSession] = useState(null);
@@ -15,8 +17,114 @@ const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [videoEnabled, setVideoEnabled] = useState(true);
   const tokenRef = useRef(null);
+  const stompClient = useRef(null);
 
   const gameStatePlayers = useSelector((state) => state.catchmind.players);
+
+  useEffect(() => {
+    let isComponentMounted = true;
+    let client = null;
+
+    const connect = () => {
+      if (!isComponentMounted) return;
+
+      try {
+        const wsUrl = `${import.meta.env.VITE_SOCKET_API_BASE_URL}`;
+        console.log("Connecting to WebSocket URL:", wsUrl);
+
+        // SockJS 설정
+        const socket = new SockJS(wsUrl, null, {
+          transports: ["websocket", "xhr-streaming", "xhr-polling"],
+          timeout: 10000,
+        });
+
+        client = new StompJs.Client({
+          webSocketFactory: () => socket,
+          connectHeaders: {
+            Origin: window.location.origin,
+          },
+          debug: (str) => {
+            console.log("STOMP Debug:", str);
+          },
+          reconnectDelay: 5000,
+          heartbeatIncoming: 4000,
+          heartbeatOutgoing: 4000,
+          connectionTimeout: 10000,
+        });
+
+        client.onConnect = () => {
+          console.log("WebSocket Connected Successfully");
+          if (!isComponentMounted) {
+            client.deactivate();
+            return;
+          }
+          stompClient.current = client;
+
+          // OpenVidu 스트림이 이미 존재하면 데이터 전송
+          if (publisher) {
+            const streamData = {
+              nickname: nickname,
+              streamId: publisher.stream.streamId,
+              connectionId: publisher.stream.connection.connectionId,
+            };
+            sendStreamData(nickname, JSON.stringify(streamData));
+          }
+        };
+
+        client.onStompError = (frame) => {
+          console.error("STOMP Protocol Error:", frame);
+        };
+
+        client.onWebSocketError = (error) => {
+          console.error("WebSocket Error:", error);
+        };
+
+        client.onDisconnect = () => {
+          console.log("WebSocket Disconnected");
+          if (isComponentMounted) {
+            setTimeout(connect, 5000);
+          }
+        };
+
+        client.activate();
+      } catch (error) {
+        console.error("Error creating WebSocket connection:", error);
+        if (isComponentMounted) {
+          setTimeout(connect, 5000);
+        }
+      }
+    };
+
+    connect();
+
+    return () => {
+      isComponentMounted = false;
+      if (client?.connected) {
+        client.deactivate();
+      }
+    };
+  }, [nickname, publisher]);
+
+  // 스트림 데이터 전송 함수
+  const sendStreamData = (nickname, streamData) => {
+    if (stompClient.current?.connected) {
+      try {
+        const message = {
+          userStream: streamData,
+        };
+        console.log("Sending stream data:", message);
+        stompClient.current.publish({
+          destination: `/app/give-stream/${nickname}`,
+          body: JSON.stringify(message),
+          headers: { "content-type": "application/json" },
+        });
+      } catch (error) {
+        console.error("Error sending stream data:", error);
+      }
+    } else {
+      console.warn("STOMP client not connected. Unable to send stream data.");
+    }
+  };
 
   // 오디오 상태 토글
   const toggleAudio = () => {
@@ -233,6 +341,16 @@ const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
 
         await currentSession.publish(newPublisher);
         setPublisher(newPublisher);
+
+        // Publisher가 생성되면 스트림 데이터 전송
+        const streamData = {
+          nickname: nickname,
+          streamId: newPublisher.stream.streamId,
+          connectionId: newPublisher.stream.connection.connectionId,
+        };
+
+        // nickname으로 스트림 데이터 전송
+        sendStreamData(nickname, JSON.stringify(streamData));
       } catch (error) {
         console.error("Error in video chat connection:", error);
         setConnectionError(

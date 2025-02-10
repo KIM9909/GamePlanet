@@ -144,7 +144,7 @@ const TopNavbar = () => {
   return (
     <nav
       ref={navbarRef}
-      className="bg-gradient-to-r from-gray-800 to-gray-800 text-white p-1 shadow-lg relative"
+      className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-gray-800 to-gray-800 text-white p-1 shadow-lg"
     >
       <div className="container mx-auto px-4">
         {/* Desktop Navigation */}
