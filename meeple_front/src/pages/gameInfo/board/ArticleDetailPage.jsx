@@ -54,12 +54,12 @@ const ArticleDetailPage = () => {
             <span className="mx-4">|</span>
             <span>작성일: {new Date(article.createdAt).toLocaleDateString()}</span>
           </div>
-          <span>조회수: {article.viewCount}</span>
+          {/* <span>조회수: {article.viewCount}</span> */}
         </div>
       </div>
 
       <div className="py-6 min-h-[200px] whitespace-pre-wrap">
-        {article.content}
+        {article.gameCommunityContent}
       </div>
 
       <div className="flex justify-end gap-2 border-t pt-4">
