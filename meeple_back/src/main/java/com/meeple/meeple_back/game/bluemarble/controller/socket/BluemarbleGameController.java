@@ -10,7 +10,6 @@ import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandR
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.DiceRollBroadcastRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.PayFeeRequest;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.request.StartTurnRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.TurnEndRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.PayFeeResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.SocketBuyLandResponse;
@@ -139,7 +138,7 @@ public class BluemarbleGameController {
 	 */
 	@MessageMapping("/{roomId}/start-turn")
 	@Operation(summary = "턴 시작", description = "턴을 시작합니다.")
-	public void startTurn(@DestinationVariable("roomId") int roomId,) {
+	public void startTurn(@DestinationVariable("roomId") int roomId) {
 		SocketResponse<GamePlayResponse> response = SocketResponse.from("start-turn",
 				bluemarbleGameService.startTurn(roomId), "턴을 시작합니다.");
 		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, response);
