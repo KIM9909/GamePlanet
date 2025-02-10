@@ -43,6 +43,14 @@ public class AIController {
             @DestinationVariable String nickname,
             @RequestBody RequestGiveStream request
     ) {
-        messagingTemplate.convertAndSend("/topic/vidu-stream", request.getUserStream());
+        System.out.println("유저 닉네임: " + nickname);
+        System.out.println("유저 닉네임: " + nickname);
+        System.out.println("유저 닉네임: " + nickname);
+        System.out.println("=====================================");
+        System.out.println("유저 스트림: " + request.getUserStream());
+        System.out.println("유저 스트림: " + request.getUserStream());
+        System.out.println("유저 스트림: " + request.getUserStream());
+
+        messagingTemplate.convertAndSend("/topic/vidu-stream/" + nickname, request.getUserStream());
     }
 }
