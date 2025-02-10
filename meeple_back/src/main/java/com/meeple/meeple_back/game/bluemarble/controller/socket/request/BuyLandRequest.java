@@ -11,14 +11,12 @@ public class BuyLandRequest {
 
 	private int playerId;
 	private int tileId;
-	private String action;
 
 	@JsonCreator
 	public BuyLandRequest(@JsonProperty("playerId") int playerId,
-			@JsonProperty("tileId") int tileId, @JsonProperty("action") String action) {
+			@JsonProperty("tileId") int tileId) {
 		this.playerId = playerId;
 		this.tileId = tileId;
-		this.action = action;
 	}
 }
 
