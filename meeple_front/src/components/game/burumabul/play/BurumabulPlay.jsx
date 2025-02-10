@@ -12,7 +12,7 @@ import QuestBuildBase from "./burumabul_Modal/QuestBuildBase.";
 
 const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
   console.log("부루마불 플레이 현재 방 정보 :", currentRoomInfo);
-  const userId = useSelector((state) => state.user.userId);
+  const userId = Number(useSelector((state) => state.user.userId));
   // 소켓 사용
   const socketContext = useContext(SocketContext);
   const {
@@ -32,7 +32,10 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     socketTileUpdate,
     socketUserUpdate,
     rollDiceSocketData,
+    setBuyLandSocketData,
     buyLandSocketData,
+    setBuildBaseSocketData,
+    buildBaseSocketData,
     roll,
   } = socketContext;
 
@@ -41,28 +44,29 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(
     currentPlayerSocketIndex
   );
-  console.log("소켓에서 받아오는 현재 플레이어 순서", currentPlayerIndex);
   const [board, setBoard] = useState(null);
   const [cards, setCards] = useState(null);
   const [players, setPlayers] = useState(currentPlayData?.players || []);
-
-  const currentPlayer = players?.[currentPlayData?.currentPlayerIndex];
-  console.log("현재 플레이어: ", currentPlayer);
-  const playerInfoList = currentPlayData.players;
-
-  const myInfo = players?.find((player) => player.playerId === userId);
-  const myColorIndex = players?.findIndex(
-    (player) => Number(player.playerId) === Number(userId)
-  );
-  console.log(players);
-  const colors = ["#FF3EA5", "#7695FF", "#00FF9C", "#EBF400"];
-
   useEffect(() => {
     setCurrentPlayData(playData);
     setBoard(socketBoard);
     setCards(socketCards);
     setCurrentPlayerIndex(currentPlayerSocketIndex);
   }, [playData, socketBoard, socketCards, currentPlayerSocketIndex]);
+
+  console.log("소켓에서 받아오는 현재 플레이어 순서", currentPlayerIndex);
+
+  const currentPlayer = players?.[currentPlayData?.currentPlayerIndex];
+  console.log("현재 플레이어: ", currentPlayer);
+  const playerInfoList = currentPlayData.players;
+
+  const myInfo = players?.find((player) => Number(player.playerId) === userId);
+  console.log("내 정보 출력 ==================", myInfo);
+  const myColorIndex = players?.findIndex(
+    (player) => Number(player.playerId) === Number(userId)
+  );
+  console.log(players);
+  const colors = ["#FF3EA5", "#7695FF", "#00FF9C", "#EBF400"];
 
   const [playerBases, setPlayerBases] = useState(
     Array(currentPlayData?.players.length).fill([])
@@ -151,8 +155,55 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
           return newBoard;
         });
       }
+      setBuyLandSocketData(null);
     }
   }, [buyLandSocketData]);
+
+  useEffect(() => {
+    if (buildBaseSocketData) {
+      const { updatedPlayer, updatedTile } = buildBaseSocketData;
+
+      // 플레이어 정보 업데이트
+      if (updatedPlayer) {
+        setPlayers((prevPlayers) => {
+          const newPlayers =
+            prevPlayers?.map((player) =>
+              player.playerId === updatedPlayer.playerId
+                ? {
+                    ...player,
+                    balance: updatedPlayer.balance,
+                    cardOwned: updatedPlayer.cardOwned || [],
+                    landOwned: updatedPlayer.landOwned || [],
+                    position: updatedPlayer.position,
+                  }
+                : player
+            ) || [];
+          console.log("Player update:", newPlayers);
+          return newPlayers;
+        });
+      }
+
+      // 보드(타일) 정보 업데이트
+      if (updatedTile) {
+        setBoard((prevBoard) => {
+          const newBoard =
+            prevBoard?.map((tile) =>
+              tile.id === updatedTile.id
+                ? {
+                    ...tile,
+                    ownerId: updatedTile.ownerId,
+                    hasBase: updatedTile.hasBase,
+                    tollPrice: updatedTile.tollPrice,
+                  }
+                : tile
+            ) || [];
+          console.log("Board update:", newBoard);
+          return newBoard;
+        });
+      }
+      setBuildBaseSocketData(null);
+    }
+  }, [buildBaseSocketData, players, colors]);
 
   // 상태 변화를 모니터링하기 위한 별도의 useEffect
   useEffect(() => {
@@ -264,7 +315,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
                 <div className="border-2 m-3 rounded-lg">
                   <h2 className="text-center m-3">플레이어 순위</h2>
                   <div className="mb-3 mx-2">
-                    {playerInfoList.map((player, index) => (
+                    {players.map((player, index) => (
                       <div
                         key={index}
                         className="flex justify-around overflow-hidden text-ellipsis"
@@ -295,6 +346,9 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
                           <p>{playerCard.name}</p>
                         </div>
                       ))}
+                    </div>
+                    <div>
+                      <button className="bg-white">내 카드 더 보기</button>
                     </div>
                   </div>
                 </div>

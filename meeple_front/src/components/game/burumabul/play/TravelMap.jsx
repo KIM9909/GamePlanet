@@ -253,6 +253,10 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
 
   useEffect(() => {
     setCurrentPlayerIndex(currentPlayerSocketIndex);
+    setIsDiceRolling(false);
+    setHasRolledDice(false);
+    setFirstDice(false);
+    setSecondDice(false);
   }, [currentPlayerSocketIndex]);
 
   useEffect(() => {
@@ -391,6 +395,7 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
   const isDouble = firstDice === secondDice;
   // 다음 행동
   const [nextAction, setNextAction] = useState(null);
+  const [hasRolledDice, setHasRolledDice] = useState(false);
   const [isDiceRolling, setIsDiceRolling] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [currentPosition, setCurrentPosition] = useState(0);
@@ -409,6 +414,7 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
             await roll(rollInfo);
             setShowModal(true);
             setIsDiceRolling(true);
+            setHasRolledDice(true);
           } catch (error) {
             console.error("주사위 알림 전달 실패 :", error);
           }
@@ -451,28 +457,35 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
             wasDouble: isDouble,
           };
           await rollDice(diceInfo);
+          setIsDiceRolling(false);
+          setHasRolledDice(false);
+          setFirstDice(null);
+          setSecondDice(null);
         } catch (error) {
           console.error("주사위 굴리기에 실패했습니다.", error);
         }
       }
     };
-    if (nextAction && nextAction === "ROLL_DICE") {
+    if (nextAction && nextAction === "ROLL_DICE" && hasRolledDice) {
       handleDiceResult();
     }
-  }, [nextAction, isDiceRolling, firstDice, secondDice]);
+  }, [nextAction, isDiceRolling, hasRolledDice, firstDice, secondDice]);
 
   // 땅 구매
   useEffect(() => {
     if (nextAction && nextAction === "DO_YOU_WANT_TO_BUY_THE_LAND") {
-      setShowCardId(playersPositions[currentPlayerIndex]);
+      setShowCardId(nextPosition);
       setShowBuyLand(true);
     }
-    if (nextAction && nextAction === "BUY_LAND" && isBuyLand) {
+    if (
+      nextAction &&
+      nextAction === "DO_YOU_WANT_TO_BUY_THE_LAND" &&
+      isBuyLand
+    ) {
       try {
         const buyInfo = {
           playerId: currentPlayer.playerId,
-          tileId: playersPositions[currentPlayerIndex],
-          action: "BUY_LAND",
+          tileId: nextPosition,
         };
         buyLand(buyInfo);
         console.log("땅 구매 요청");
@@ -485,14 +498,18 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
   // 기지 건설
   useEffect(() => {
     if (nextAction && nextAction === "DO_YOU_WANT_TO_BUILD_THE_BASE") {
-      setShowCardId(playersPositions[currentPlayerIndex]);
+      setShowCardId(nextPosition);
       setShowBuildBase(true);
     }
-    if (nextAction && nextAction === "BUILD_BASE" && isBuildBase) {
+    if (
+      nextAction &&
+      nextAction === "DO_YOU_WANT_TO_BUILD_THE_BASE" &&
+      isBuildBase
+    ) {
       try {
         const buildInfo = {
           playerId: currentPlayer.playerId,
-          tileId: playersPositions[currentPlayerIndex],
+          tileId: nextPosition,
         };
         buildBase(buildInfo);
         console.log("기지 건설 요청");
@@ -501,6 +518,21 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
       }
     }
   }, [nextAction, isBuildBase, setShowCardId]);
+
+  // 종료 조건 확인
+  useEffect(() => {
+    if (nextAction && nextAction === "CHECK_END") {
+      try {
+        const endInfo = {
+          playerId: currentPlayer.playerId,
+        };
+        checkEnd(endInfo);
+        console.log("종료 조건 체크");
+      } catch (error) {
+        console.error("종료 조건 체크 실패 : ", error);
+      }
+    }
+  }, [nextAction]);
 
   const closeBuyLand = () => {
     setShowBuyLand(false);
@@ -537,20 +569,25 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
 
       const animateMovement = async () => {
         let current = startPosition;
-        while (current !== targetPosition) {
+        const moveOneStep = async () => {
+          if (current === targetPosition) {
+            setIsAnimating(false);
+            return;
+          }
           current = (current + 1) % totalCells;
-
           setPlayersPositions((prev) => {
             const newPositions = [...prev];
             newPositions[playerIndex] = current;
             return newPositions;
           });
-          setIsAnimating(false);
-        }
-        animateMovement();
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          await moveOneStep();
+        };
+        await moveOneStep();
       };
+      animateMovement();
     }
-  }, [rollDiceSocketData, players, isAnimating, currentPlayerIndex]);
+  }, [rollDiceSocketData, players, isAnimating]);
 
   // 나는 몇 번째 순서인지
   const myIndex = players.findIndex((player) => player.playerId === userId);
