@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import Card from "../Card";
-import { getCardInfo, normalizeCardData } from "../utils/cardUtils";
 
 const ActiveCardArea = ({
   currentCard,
@@ -15,9 +14,9 @@ const ActiveCardArea = ({
 }) => {
   const [cardVisible, setCardVisible] = useState(true);
 
-  // 디버깅을 위한 useEffect 추가
+  // 디버깅을 위한 useEffect
   useEffect(() => {
-    console.log("ActiveCardArea props:", {
+    console.log("ActiveCardArea 전달 받은 값:", {
       currentCard,
       selectedCard,
       cardSender,
@@ -26,37 +25,59 @@ const ActiveCardArea = ({
     });
   }, [currentCard, selectedCard, cardSender, cardReceiver, isPassing]);
 
+  // 카드가 앞면을 보여줘야 하는지 결정
   const shouldShowFront = () => {
-    if (cardSender === currentUser || isPassing) return true;
-    return false;
+    return !!selectedCard || cardSender === currentUser || isPassing;
   };
 
+  // 카드 상태가 변경될 때마다 카드를 보이게 설정
   useEffect(() => {
     if (currentCard || selectedCard) {
       setCardVisible(true);
+      console.log("카드 상태 업데이트:", { currentCard, selectedCard });
     }
   }, [currentCard, selectedCard]);
 
+
+  // 추측 버튼 클릭 핸들러
   const handleGuessClick = () => {
-    if (isPassing) return;
-    setCardVisible(false);
+    if (isPassing) {
+      console.log("패스 진행중!")
+      return};
     setShowGuessModal(true);
+    setTimeout(()=> setCardVisible(false), 100);
   };
 
-  // 카드 정보 처리 과정 디버깅
-  const activeCard = currentCard || selectedCard;
-  const cardType = activeCard?.type?.startsWith("King")
-    ? activeCard.type.substring(4)
-    : activeCard?.type;
+  // 카드 정보 계산
+  const getCardInfo = () => {
+    const activeCard = currentCard || selectedCard;
+    if (!activeCard) {
+      console.log("Active Card 가 없습니다!");
+      
+      return null};
 
-  const cardInfo = activeCard
-    ? {
-        type: cardType || "",
-        isBack: !(cardSender === currentUser || isPassing),
-        isRoyal:
-          activeCard?.royal || activeCard?.type?.startsWith("King") || false,
-      }
-    : null;
+    // 카드 타입 정규화
+    let cardType = activeCard.type;
+    let isRoyal = activeCard.royal;
+
+    // King 접두사 처리
+    if (typeof cardType === 'string' && cardType.startsWith('King')) {
+      cardType = cardType.substring(4);
+      isRoyal = true;
+    }
+
+    const cardInfo = {
+      type: cardType,
+      isBack: !shouldShowFront(),
+      isRoyal: isRoyal
+    };
+
+    console.log("Card info" , cardInfo);
+    return cardInfo
+  };
+
+  const cardInfo = getCardInfo();
+  const showButtons = cardReceiver === currentUser && currentCard
 
   return (
     <div className="absolute top-[60%] right-4 w-72 active-card-area">
@@ -65,17 +86,14 @@ const ActiveCardArea = ({
           PLAY ZONE
         </div>
 
-        <div
-          className="relative flex justify-center h-24"
-          data-active-card-slot
-        >
+        <div className="relative flex justify-center h-24" data-active-card-slot>
           <div
             className={`
-            transition-all duration-300 ease-in-out
-            ${cardVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"}
-          `}
+              transition-all duration-300 ease-in-out
+              ${cardVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"}
+            `}
           >
-            {cardInfo && cardVisible ? (
+            {cardInfo ? (
               <Card
                 type={cardInfo.type}
                 isBack={cardInfo.isBack}
@@ -92,7 +110,7 @@ const ActiveCardArea = ({
           {cardSender && cardReceiver ? `${cardSender} → ${cardReceiver}` : ""}
         </div>
 
-        {cardReceiver === currentUser && (
+        {showButtons && (
           <div className="flex justify-center gap-4 mt-4">
             {!isPassing && (
               <button
