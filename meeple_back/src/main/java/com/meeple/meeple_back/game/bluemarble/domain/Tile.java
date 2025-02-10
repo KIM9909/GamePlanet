@@ -22,7 +22,7 @@ public class Tile {
 
 
 	public void update(int ownerId, int tollPrice,
-			int price) {
+	                   int price) {
 		this.ownerId = ownerId;
 		this.tollPrice = tollPrice;
 		this.price = price;
@@ -34,5 +34,11 @@ public class Tile {
 
 	public void updateTollPrice(int newTollPrice) {
 		this.tollPrice = newTollPrice;
+	}
+
+	public void initialize() {
+		this.ownerId = -1;
+		this.tollPrice = 0;
+		this.hasBase = false;
 	}
 }

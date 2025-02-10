@@ -1,16 +1,13 @@
 package com.meeple.meeple_back.game.bluemarble.infrastructure;
 
 
-import com.meeple.meeple_back.game.bluemarble.domain.Card;
-import com.meeple.meeple_back.game.bluemarble.domain.GamePlay;
-import com.meeple.meeple_back.game.bluemarble.domain.Player;
-import com.meeple.meeple_back.game.bluemarble.domain.Tile;
-import com.meeple.meeple_back.game.bluemarble.domain.TurnManager;
-import java.util.List;
+import com.meeple.meeple_back.game.bluemarble.domain.*;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
+
+import java.util.List;
 
 @RedisHash("GamePlayEntity")
 @Getter
@@ -19,7 +16,6 @@ public class GamePlayEntity {
 
 	@Id
 	private int gamePlayId;
-	private int currentPlayerIndex;
 	private List<Player> players;
 	private String gameStatus;
 	private int round;
@@ -32,12 +28,11 @@ public class GamePlayEntity {
 
 	}
 
-	public GamePlayEntity(int gamePlayId, int currentPlayerIndex, List<Player> players,
-			String gameStatus, int round, List<Tile> board, List<Card> cards,
-			TurnManager turnManager
+	public GamePlayEntity(int gamePlayId, List<Player> players,
+	                      String gameStatus, int round, List<Tile> board, List<Card> cards,
+	                      TurnManager turnManager
 	) {
 		this.gamePlayId = gamePlayId;
-		this.currentPlayerIndex = currentPlayerIndex;
 		this.players = players;
 		this.gameStatus = gameStatus;
 		this.round = round;
@@ -49,7 +44,6 @@ public class GamePlayEntity {
 	public static GamePlayEntity from(GamePlay gamePlay) {
 		return new GamePlayEntity(
 				gamePlay.getGamePlayId(),
-				gamePlay.getCurrentPlayerIndex(),
 				gamePlay.getPlayers(),
 				gamePlay.getGameStatus(),
 				gamePlay.getRound(),
@@ -62,7 +56,6 @@ public class GamePlayEntity {
 	public static GamePlay toGamePlay(GamePlayEntity gamePlayEntity) {
 		return GamePlay.builder()
 				.gamePlayId(gamePlayEntity.getGamePlayId())
-				.currentPlayerIndex(gamePlayEntity.getCurrentPlayerIndex())
 				.players(gamePlayEntity.getPlayers())
 				.gameStatus(gamePlayEntity.getGameStatus())
 				.round(gamePlayEntity.getRound())
