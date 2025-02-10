@@ -1,4 +1,3 @@
-import { isAction } from "@reduxjs/toolkit";
 import React, { useEffect, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -7,14 +6,11 @@ const SideLayout = ({ children }) => {
   const { token } = useSelector((state) => state.user);
   const location = useLocation();
   const userId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
+  const gameInfo = location.state?.gameInfo;
 
-  // 게임 페이지 경로 체크 추가
-  const showSidebar =
-    location.pathname !== "/" &&
-    location.pathname !== `/profile/${userId}` &&
-    !location.pathname.match(/^\/game\/burumabul\/[\w-]+(\/\d+)?$/) &&
-    !location.pathname.match(/^\/catch-mind\/[\w-]+$/) &&
-    !location.pathname.match(/^\/game\/cockroach\/[\w-]+$/);
+  const notShowSidebar =
+    !location.pathname.includes("/game-info") &&
+    !location.pathname.includes("/proposal");
   const [activeLink, setActiveLink] = useState(location.pathname);
 
   const linkStyle =
@@ -28,20 +24,23 @@ const SideLayout = ({ children }) => {
 
   return (
     <div>
-      {showSidebar ? (
+      {!notShowSidebar && gameInfo ? (
         <div style={{ userSelect: "none" }} className="h-screen">
           <div className="flex flex-row">
             <div className="flex w-2/7 bg-gradient-to-r from-gray-800 to-gray-800 h-screen border-2">
               <div className="flex-1 m-2 border-2 box-border">
                 <div className="flex flex-col m-2 text-center py-2 text-[33px]">
-                  {/* HOME */}
+                  {/* GAME INFO */}
                   <div className="m-2">
                     <Link
-                      to="/home"
+                      to={`/game-info/${gameInfo.gameInfoId}`}
                       className={linkStyle}
-                      onClick={() => setActiveLink("/home")}
+                      onClick={() =>
+                        setActiveLink(`/game-info/${gameInfo.gameInfoId}`)
+                      }
+                      state={{ gameInfo }}
                       style={
-                        activeLink === "/home"
+                        activeLink === `/game-info/${gameInfo.gameInfoId}`
                           ? {
                               color: "#D7C3F1",
                               textShadow: textShadow,
@@ -51,39 +50,45 @@ const SideLayout = ({ children }) => {
                             }
                       }
                     >
-                      HOME
+                      GAME INFO
+                    </Link>
+                  </div>
+
+                  {/* GAME RULE */}
+                  <div className="m-2">
+                    <Link
+                      to={`/game-info/${gameInfo.gameInfoId}/rule`}
+                      className={linkStyle}
+                      onClick={() =>
+                        setActiveLink(`/game-info/${gameInfo.gameInfoId}/rule`)
+                      }
+                      state={{ gameInfo }}
+                      style={
+                        activeLink === `/game-info/${gameInfo.gameInfoId}/rule`
+                          ? {
+                              color: "#D7C3F1",
+                              textShadow: textShadow,
+                            }
+                          : {
+                              textShadow: textShadow,
+                            }
+                      }
+                    >
+                      GAME RULE
                     </Link>
                   </div>
 
                   {/* COMMUNITY */}
                   <div className="m-2">
                     <Link
-                      to="/board"
+                      to={`/game-info/${gameInfo.gameInfoId}/board`}
                       className={linkStyle}
-                      onClick={() => setActiveLink("/board")}
-                      style={
-                        activeLink === "/board"
-                          ? {
-                              color: "#D7C3F1",
-                              textShadow: textShadow,
-                            }
-                          : {
-                              textShadow: textShadow,
-                            }
+                      onClick={() =>
+                        setActiveLink(`/game-info/${gameInfo.gameInfoId}/board`)
                       }
-                    >
-                      COMMUNITY
-                    </Link>
-                  </div>
-
-                  {/* TOURNAMENT */}
-                  <div className="m-2">
-                    <Link
-                      to="/tournament"
-                      className={linkStyle}
-                      onClick={() => setActiveLink("/tournament")}
+                      state={{ gameInfo }}
                       style={
-                        activeLink === "/tournament"
+                        activeLink === `/game-info/${gameInfo.gameInfoId}/board`
                           ? {
                               color: "#D7C3F1",
                               textShadow: textShadow,
@@ -94,18 +99,75 @@ const SideLayout = ({ children }) => {
                             }
                       }
                     >
-                      TOURNAMENT
+                      COMMUNITY
                     </Link>
                   </div>
 
-                  {/* GAME CUSTOM */}
+                  {/* GAME REVIEW */}
                   <div className="m-2">
                     <Link
-                      to="/proposal"
+                      to={`/game-info/${gameInfo.gameInfoId}/review`}
                       className={linkStyle}
-                      onClick={() => setActiveLink("/proposal")}
+                      onClick={() =>
+                        setActiveLink(
+                          `/game-info/${gameInfo.gameInfoId}/review`
+                        )
+                      }
+                      state={{ gameInfo }}
                       style={
-                        activeLink === "/proposal"
+                        activeLink ===
+                        `/game-info/${gameInfo.gameInfoId}/review`
+                          ? {
+                              color: "#D7C3F1",
+                              textShadow: textShadow,
+                            }
+                          : {
+                              textShadow: textShadow,
+                            }
+                      }
+                    >
+                      GAME REVIEW
+                    </Link>
+                  </div>
+
+                  {/* VIDEO */}
+                  <div className="m-2">
+                    <Link
+                      to={`/game-info/${gameInfo.gameInfoId}/video`}
+                      className={linkStyle}
+                      onClick={() =>
+                        setActiveLink(`/game-info/${gameInfo.gameInfoId}/video`)
+                      }
+                      state={{ gameInfo }}
+                      style={
+                        activeLink === `/game-info/${gameInfo.gameInfoId}/video`
+                          ? {
+                              color: "#D7C3F1",
+                              textShadow: textShadow,
+                            }
+                          : {
+                              textShadow: textShadow,
+                            }
+                      }
+                    >
+                      VIDEO
+                    </Link>
+                  </div>
+
+                  {/* CUSTOM */}
+                  <div className="m-2">
+                    <Link
+                      to={`/game-info/${gameInfo.gameInfoId}/proposal`}
+                      className={linkStyle}
+                      onClick={() =>
+                        setActiveLink(
+                          `/game-info/${gameInfo.gameInfoId}/proposal`
+                        )
+                      }
+                      state={{ gameInfo }}
+                      style={
+                        activeLink ===
+                        `/game-info/${gameInfo.gameInfoId}/proposal`
                           ? {
                               color: "#D7C3F1",
                               textShadow: textShadow,
@@ -116,27 +178,6 @@ const SideLayout = ({ children }) => {
                       }
                     >
                       GAME CUSTOM
-                    </Link>
-                  </div>
-
-                  {/* 프로젝트 소개 */}
-                  <div className="m-2">
-                    <Link
-                      to="/introduce"
-                      className={linkStyle}
-                      onClick={() => setActiveLink("/introduce")}
-                      style={
-                        activeLink === "/introduce"
-                          ? {
-                              color: "#D7C3F1",
-                              textShadow: textShadow,
-                            }
-                          : {
-                              textShadow: textShadow,
-                            }
-                      }
-                    >
-                      INTRODUCE
                     </Link>
                   </div>
                 </div>

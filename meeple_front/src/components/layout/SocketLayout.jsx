@@ -68,6 +68,11 @@ const SocketLayout = ({ children }) => {
   // 틀린 비밀번호 입력 시
   const [socketStatus, setSocketStatus] = useState(null);
 
+  // 승자
+  const [socketWinner, setSocketWinner] = useState(null);
+  // 파산자
+  const [socketRemovedPlayer, setSocketRemovedPlayer] = useState(null);
+
   const location = useLocation();
 
   const stompClientRef = useRef(null);
@@ -159,6 +164,8 @@ const SocketLayout = ({ children }) => {
               setSocketNext(receivedData.data.nextAction);
               setSocketCurrentRound(receivedData.data.round);
               setGameSocketNotifi(receivedData.message);
+              setSocketWinner(receivedData.data.winner);
+              setSocketRemovedPlayer(receivedData.data.removedPlayer);
             }
             if (receivedData.status) {
               setSocketStatus(receivedData.status);
@@ -448,41 +455,47 @@ const SocketLayout = ({ children }) => {
   }, [roomId, userId]);
 
   // 통행료 지불
-  const payToll = useCallback((payInfo) => {
-    if (!stompClientRef.current?.connected) {
-      console.warn("웹소켓에 연결되어 있지 않습니다.");
-      return;
-    }
-    try {
-      console.log("통행료를 지불합니다.");
-      stompClientRef.current.publish({
-        destination: `/app/game/blue-marble/game-plays/${roomId}/pay-fee`,
-        body: JSON.stringify(payInfo),
-      });
-      console.log("통행료 지불에 성공했습니다.");
-    } catch (error) {
-      console.error("통행료 지불에 실패했습니다.", error);
-      setError("통행료 지불에 실패했습니다.");
-    }
-  });
+  const payToll = useCallback(
+    (payInfo) => {
+      if (!stompClientRef.current?.connected) {
+        console.warn("웹소켓에 연결되어 있지 않습니다.");
+        return;
+      }
+      try {
+        console.log("통행료를 지불합니다.");
+        stompClientRef.current.publish({
+          destination: `/app/game/blue-marble/game-plays/${roomId}/pay-fee`,
+          body: JSON.stringify(payInfo),
+        });
+        console.log("통행료 지불에 성공했습니다.");
+      } catch (error) {
+        console.error("통행료 지불에 실패했습니다.", error);
+        setError("통행료 지불에 실패했습니다.");
+      }
+    },
+    [roomId, userId]
+  );
 
   // 종료 조건 확인
-  const checkEnd = useCallback((endInfo) => {
-    if (!stompClientRef.current?.connected) {
-      console.warn("웹소켓에 연결되어 있지 않습니다.");
-      return;
-    }
-    try {
-      console.log("종료조건을 확인합니다.");
-      stompClientRef.current.publish({
-        destination: `/app/game/blue-marble/game-plays/${roomId}/check-end`,
-        body: JSON.stringify(endInfo),
-      });
-      console.log("종료조건 확인에 성공했습니다");
-    } catch (error) {
-      console.error("종료조건 확인에 실패했습니다.", error);
-    }
-  });
+  const checkEnd = useCallback(
+    (endInfo) => {
+      if (!stompClientRef.current?.connected) {
+        console.warn("웹소켓에 연결되어 있지 않습니다.");
+        return;
+      }
+      try {
+        console.log("종료조건을 확인합니다.");
+        stompClientRef.current.publish({
+          destination: `/app/game/blue-marble/game-plays/${roomId}/check-end`,
+          body: JSON.stringify(endInfo),
+        });
+        console.log("종료조건 확인에 성공했습니다");
+      } catch (error) {
+        console.error("종료조건 확인에 실패했습니다.", error);
+      }
+    },
+    [roomId, userId]
+  );
 
   //
 

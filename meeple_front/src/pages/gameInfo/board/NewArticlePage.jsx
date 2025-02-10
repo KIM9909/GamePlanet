@@ -20,7 +20,7 @@ const NewArticlePage = () => {
       });
       
       alert('게시글이 등록되었습니다.');
-      navigate(`/game/${gameInfoId}/board`);
+      navigate(`/game-info/${gameInfoId}/board`);
     } catch (error) {
       console.error('게시글 저장 실패:', error);
       throw error;
@@ -31,9 +31,6 @@ const NewArticlePage = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
-      <section className="mb-6">
-        <BoardHeader />
-      </section>
       <section>
         <ArticleForm 
           gameInfoId={gameInfoId}

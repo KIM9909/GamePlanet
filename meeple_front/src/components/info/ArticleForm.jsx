@@ -7,18 +7,18 @@ const ArticleForm = ({ gameInfoId,initialData, onSubmit, isEditing, isSubmitting
   const userId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
   
   const [formData, setFormData] = useState({
-    title: '',
+    // title: '',
     gameCommunityContent: '',
     userId: userId,
-    gameInfoId: gameInfoId
+    gameInfoId: gameInfoId,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (initialData) {
       setFormData({
-        title: initialData.title || '',
-        content: initialData.content || '',
+        // title: initialData.title || '',
+        gameCommunityContent: initialData.gameCommunityContent || '',
         userId: userId
       });
     }
@@ -40,8 +40,9 @@ const ArticleForm = ({ gameInfoId,initialData, onSubmit, isEditing, isSubmitting
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.title.trim() || !formData.content.trim()) {
-      alert('제목과 내용을 모두 입력해주세요.');
+    console.log(userId)
+    if (!formData.gameCommunityContent.trim()) {
+      alert('내용을 입력해주세요.');
       return;
     }
 
@@ -56,7 +57,11 @@ const ArticleForm = ({ gameInfoId,initialData, onSubmit, isEditing, isSubmitting
       setIsSubmitting(true);
       await onSubmit(formData);
       if (!isEditing) {
-        setFormData({ title: '', content: '', userId });
+        setFormData({ 
+          // title: '', 
+          gameCommunityContent: '', 
+          userId :userId
+        });
       }
     } catch (error) {
       console.error('저장 중 오류 발생:', error);
@@ -70,7 +75,7 @@ const ArticleForm = ({ gameInfoId,initialData, onSubmit, isEditing, isSubmitting
 
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl mx-auto p-4 space-y-4">
-      <div className="space-y-2">
+      {/* <div className="space-y-2">
         <input
           type="text"
           name="title"
@@ -83,12 +88,12 @@ const ArticleForm = ({ gameInfoId,initialData, onSubmit, isEditing, isSubmitting
           maxLength={100}
           disabled={isSubmitting}
         />
-      </div>
+      </div> */}
 
       <div className="space-y-2">
         <textarea
-          name="content"
-          value={formData.content}
+          name="gameCommunityContent"
+          value={formData.gameCommunityContent}
           onChange={handleChange}
           placeholder="내용을 입력하세요"
           className="w-full h-96 px-4 py-2 border border-gray-300 rounded-lg 

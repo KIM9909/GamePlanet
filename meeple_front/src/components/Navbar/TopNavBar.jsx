@@ -144,7 +144,7 @@ const TopNavbar = () => {
   return (
     <nav
       ref={navbarRef}
-      className="bg-gradient-to-r from-gray-800 to-gray-800 text-white p-1 shadow-lg relative"
+      className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-gray-800 to-gray-800 text-white p-1 shadow-lg"
     >
       <div className="container mx-auto px-4">
         {/* Desktop Navigation */}
@@ -333,23 +333,6 @@ const TopNavbar = () => {
           setNotiList={setNotificationList}
         />
       )}
-
-      {/* Animations */}
-      <style>
-        {`
-          @keyframes jump {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
-          }
-          .jump-animation {
-            animation: jump 0.5s ease-in-out;
-          }
-          @keyframes popup {
-            0% { opacity: 0; transform: translateY(-10px); }
-            100% { opacity: 1; transform: translateY(0); }
-          }
-        `}
-      </style>
     </nav>
   );
 };
