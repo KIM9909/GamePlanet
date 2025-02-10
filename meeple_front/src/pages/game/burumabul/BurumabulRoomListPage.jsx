@@ -112,7 +112,7 @@ const BurumabulRoomList = () => {
   );
 
   return (
-    <div className="flex justify-center flex-col items-center w-full  min-h-screen bg-gradient-to-b from-black via-purple-900 to-indigo-900">
+    <div className="flex justify-center flex-col items-center w-full  min-h-screen ">
       <h1 className="text-white text-4xl text-center my-10">
         부루마불 게임 대기방 목록
       </h1>
@@ -133,7 +133,7 @@ const BurumabulRoomList = () => {
       </div>
 
       {roomList.length > 0 ? (
-        <div className="bg-yellow-300 rounded-lg w-[60%] h-[70vh] overflow-y-auto p-4">
+        <div className="bg-white bg-opacity-50 rounded-lg w-[60%] h-[70vh] overflow-y-auto p-4">
           <div className="my-6 flex flex-col items-center justify-center mx-auto gap-4 ">
             {visibleRooms.map((roomInfo, index) => {
               if (index === visibleRooms.length - 1) {
@@ -155,8 +155,8 @@ const BurumabulRoomList = () => {
           )}
         </div>
       ) : (
-        <div className="bg-yellow-300 rounded-lg  w-[60%] h-[70vh] flex justify-center items-center">
-          <div className="text-white text-3xl font-bold font-">
+        <div className="bg-white rounded-lg  w-[60%] h-[70vh] flex justify-center items-center">
+          <div className="text-blue-950 text-3xl font-bold font-">
             생성된 방 목록이 없습니다.
           </div>
         </div>
