@@ -262,7 +262,7 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
             </div>
           </div>
         </div>
-        <div className="w-[250px] bg-white ">
+        <div className="w-[250px] bg-white rounded-lg">
           <WaitingChat roomId={roomId} players={playersInfo} />
         </div>
       </div>
