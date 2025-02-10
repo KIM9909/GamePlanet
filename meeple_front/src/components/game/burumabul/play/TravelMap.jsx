@@ -434,6 +434,7 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
       }
     };
     if (nextAction && nextAction === "START_TURN") {
+      console.log("턴을 시작합니다!!!");
       turnStart();
     }
   }, [nextAction]);
