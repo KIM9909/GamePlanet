@@ -124,7 +124,7 @@ const SocketLayout = ({ children }) => {
             } else if (receivedData.type === "create") {
               setGamePlaySocketData(receivedData.data);
               setGameSocketNotifi(receivedData.message);
-              setSocketNext(receivedData.nextAction);
+              setSocketNext(receivedData.data.nextAction);
               setCurrentPlayerSocketIndex(receivedData.data.currentPlayerIndex);
               setSocketCurrentRound(receivedData.data.round);
               setSocketBoard(receivedData.data.board);
@@ -133,6 +133,7 @@ const SocketLayout = ({ children }) => {
               setGamePlaySocketData(receivedData.data);
               setGameSocketNotifi(receivedData.message);
               setSocketNext(receivedData.data.nextAction);
+              setCurrentPlayerSocketIndex(receivedData.data.currentPlayerIndex);
             } else if (receivedData.type === "buy-land") {
               setBuyLandSocketData(receivedData.buyLandResponse);
               setSocketUserUpdate(receivedData.buyLandResponse.updatedPlayer);
