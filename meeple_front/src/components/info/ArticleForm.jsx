@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 
 
-const ArticleForm = ({ gameId,initialData, onSubmit, isEditing, isSubmitting: externalIsSubmitting }) => {
+const ArticleForm = ({ gameInfoId,initialData, onSubmit, isEditing, isSubmitting: externalIsSubmitting }) => {
   const { token } = useSelector((state) => state.user);
   const userId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
   
@@ -10,7 +10,7 @@ const ArticleForm = ({ gameId,initialData, onSubmit, isEditing, isSubmitting: ex
     title: '',
     gameCommunityContent: '',
     userId: userId,
-    gameInfoId: gameId
+    gameInfoId: gameInfoId
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 

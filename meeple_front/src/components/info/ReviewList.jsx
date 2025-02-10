@@ -7,7 +7,7 @@ import { GameInfoAPI } from '../../sources/api/GameInfoAPI';
 import { useSelector } from 'react-redux';
 
 const ReviewList = () => {
-  const { gameId } = useParams();
+  const { gameInfoId } = useParams();
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -20,7 +20,7 @@ const ReviewList = () => {
   const fetchReviews = async () => {
     try {
       setLoading(true);
-      const reviewData = await GameInfoAPI.getReviews(gameId);
+      const reviewData = await GameInfoAPI.getReviews(gameInfoId);
       setData(reviewData);
       setError(null);
     } catch (error) {
@@ -32,7 +32,7 @@ const ReviewList = () => {
 
   useEffect(() => {
     fetchReviews();
-  }, [gameId]);
+  }, [gameInfoId]);
 
   const handleEditClick = (reviewId) => {
     setEditingReviewId(reviewId);
@@ -46,7 +46,7 @@ const ReviewList = () => {
   const handleDeleteClick = async (reviewId) => {
     if (window.confirm('정말로 이 리뷰를 삭제하시겠습니까?')) {
       try {
-        await GameInfoAPI.deleteReview(gameId, reviewId);
+        await GameInfoAPI.deleteReview(gameInfoId, reviewId);
         alert('리뷰가 삭제되었습니다.');
         fetchReviews();
       } catch (error) {
@@ -71,7 +71,7 @@ const ReviewList = () => {
       
       {!editingReviewId && (
         <ReviewForm 
-          gameId={gameId}
+          gameInfoId={gameInfoId}
           onSuccess={fetchReviews}
         />
       )}

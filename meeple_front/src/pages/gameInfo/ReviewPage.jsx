@@ -4,7 +4,7 @@ import axios from "axios";
 import { useParams } from "react-router-dom";
 
 const ReviewPage = () => {
-  const gameId=useParams();
+  const gameInfoId=useParams();
 
 
 

@@ -10,7 +10,7 @@ const ReviewForm = ({ initialData, onSuccess }) => {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { gameId } = useParams();
+  const { gameInfoId } = useParams();
   const { token } = useSelector((state) => state.user);
   const userId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
   
@@ -39,7 +39,7 @@ const ReviewForm = ({ initialData, onSuccess }) => {
     const reviewData = {
       gameReviewStar: rating,
       gameReviewContent: content,
-      gameInfoId: gameId,
+      gameInfoId: gameInfoId,
       userId: userId,
     };
 

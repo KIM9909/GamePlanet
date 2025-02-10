@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { GameInfoAPI } from '../../../sources/api/GameInfoAPI';
 
 const BoardPage = () => {
-  const { gameId } = useParams();
+  const { gameInfoId } = useParams();
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,9 +15,8 @@ const BoardPage = () => {
   const fetchArticles = async () => {
     try {
       setLoading(true);
-      //테스트용 코드
-      const response = await GameInfoAPI.getCommunityPosts(7);
-      // const response = await GameInfoAPI.getCommunityPosts(gameId);
+
+      const response = await GameInfoAPI.getCommunityPosts(gameInfoId);
       setData(response);
       setError(null);
     } catch (err) {
@@ -29,7 +28,7 @@ const BoardPage = () => {
 
   useEffect(() => {
     fetchArticles();
-  }, [gameId]);
+  }, [gameInfoId]);
 
   if (loading) return <div>로딩중...</div>;
   if (error) return <div>에러가 발생했습니다.</div>;
@@ -94,7 +93,7 @@ const BoardPage = () => {
             </button>
           </div>
           <button
-            onClick={() => navigate(`/game/${gameId}/board/write`)}
+            onClick={() => navigate(`/game/${gameInfoId}/board/write`)}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             글쓰기
