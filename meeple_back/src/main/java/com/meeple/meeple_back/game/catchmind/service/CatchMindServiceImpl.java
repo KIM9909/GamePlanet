@@ -160,6 +160,10 @@ public class CatchMindServiceImpl implements CatchMindService {
         try {
             String token = openViduService.generateToken(sessionId);
             responseSessionAndToken.setToken(token);
+
+            System.out.println("token: " + token);
+            System.out.println("token: " + token);
+            System.out.println("token: " + token);
         } catch (OpenViduJavaClientException e) {
             responseSessionAndToken.setToken("error");
             throw new RuntimeException(e);
@@ -167,6 +171,10 @@ public class CatchMindServiceImpl implements CatchMindService {
             responseSessionAndToken.setToken("error");
             throw new RuntimeException(e);
         }
+
+        System.out.println("sessionId: " + sessionId);
+        System.out.println("sessionId: " + sessionId);
+        System.out.println("sessionId: " + sessionId);
 
         messagingTemplate.convertAndSend("/topic/vidu-session/" + request.getPlayerName()
         , responseSessionAndToken);
