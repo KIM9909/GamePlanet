@@ -38,8 +38,9 @@ public class AIController {
         messagingTemplate.convertAndSend("/topic/response-test", userId + "번 회원 연결 성공");
     }
 
-    @MessageMapping("/give-stream/{userId}")
+    @MessageMapping("/give-stream/{nickname}")
     public void giveStream(
+            @DestinationVariable String nickname,
             @RequestBody RequestGiveStream request
     ) {
         messagingTemplate.convertAndSend("/topic/vidu-stream", request.getUserStream());
