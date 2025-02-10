@@ -136,14 +136,13 @@ public class BluemarbleGameController {
 	 * 턴 시작하는 기능, 현재 라운드, 턴수, 플레이어 목록 등 게임관련된 모든 정보를 반환한다 return에 다음 기능 -> 주사위 굴리기로 정한다.
 	 *
 	 * @param roomId
-	 * @param startTurnRequest
 	 */
 	@MessageMapping("/{roomId}/start-turn")
 	@Operation(summary = "턴 시작", description = "턴을 시작합니다.")
-	public void startTurn(@DestinationVariable("roomId") int roomId,
-			@Payload StartTurnRequest startTurnRequest) {
+	public void startTurn(@DestinationVariable("roomId") int roomId,) {
 		SocketResponse<GamePlayResponse> response = SocketResponse.from("start-turn",
-				bluemarbleGameService.startTurn(roomId, startTurnRequest), "턴을 시작합니다.");
+				bluemarbleGameService.startTurn(roomId), "턴을 시작합니다.");
 		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, response);
 	}
+
 }

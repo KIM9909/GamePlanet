@@ -12,7 +12,6 @@ import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuildBas
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.PayFeeRequest;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.request.StartTurnRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.TurnEndRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.PayFeeResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
@@ -101,7 +100,7 @@ public class BluemarbleGameServiceImpl implements BluemarbleGameService {
 
 	@Override
 	@Transactional
-	public GamePlayResponse startTurn(int roomId, StartTurnRequest startTurnRequest) {
+	public GamePlayResponse startTurn(int roomId) {
 		GamePlay gamePlay = getValidateGamePlay(roomId);
 		bluemarbleGameRepository.save(gamePlay);
 		return GamePlayResponse.from(gamePlay, ActionType.ROLL_DICE);
