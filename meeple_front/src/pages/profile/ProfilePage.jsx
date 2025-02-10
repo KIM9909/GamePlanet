@@ -83,36 +83,36 @@ const ProfilePage = () => {
 
   // UI 렌더링
   return (
-    <div className="min-h-screen">
-      <div className="max-w-3xl mx-auto py-6 px-8">
-        {/* 프로필 헤더 */}
-        <div className="mb-8">
-          <div className="rounded-xl p-7 bg-zinc-800 shadow-lg">
-            <div className="flex items-start gap-8">
-              {/* 프로필 이미지 */}
-              <div className="relative w-36 h-36">
-                <div className="w-full h-full bg-white rounded-full overflow-hidden border-4 border-cyan-500 shadow-xl">
-                  <img
-                    src={Heejun}
-                    alt="프로필"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-
-              {/* 사용자 정보 */}
-              <div className="flex-1">
-                <div className="flex flex-col space-y-1">
-                  <div className="flex items-center gap-4 mt-5">
-                    <h1 className="text-[28px] font-bold text-white mb-3">
-                      {profile.userNickname}
-                    </h1>
-                    <span className="text-cyan-400 text-md px-3 py-0.5 bg-cyan-950 rounded-full mb-2">
-                      Lv.{profile.userLevel}
-                    </span>
+    <div className="min-h-screen mt-3">
+      <div className="max-w-3xl mx-auto bg-zinc-900/80 rounded-[40px] border border-cyan-400/40">
+        <div className="max-w-3xl mx-auto py-6 px-8">
+          {/* 프로필 헤더 */}
+          <div className="mb-8">
+            <div className="rounded-xl p-7 bg-zinc-900/60 shadow-lg backdrop-blur-sm border border-zinc-700/50">
+              <div className="flex items-start gap-8">
+                {/* 프로필 이미지 */}
+                <div className="relative w-36 h-36">
+                  <div className="w-full h-full bg-white rounded-full overflow-hidden border-4 border-cyan-500 shadow-xl">
+                    <img
+                      src={Heejun}
+                      alt="프로필"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                  <div>
-                    <div>
+                </div>
+
+                {/* 사용자 정보 */}
+                <div className="flex-1">
+                  <div className="flex flex-col space-y-1">
+                    <div className="flex items-center gap-4 mt-3">
+                      <h1 className="text-[28px] font-bold text-white mb-2">
+                        {profile.userNickname}
+                      </h1>
+                      <span className="text-cyan-400 text-md px-3 py-0.5 bg-cyan-950 rounded-full">
+                        Lv.{profile.userLevel}
+                      </span>
+                    </div>
+                    <div className="space-y-4">
                       <ProfileBio
                         initialBio={profile?.userBio}
                         onSave={async (newBio) => {
@@ -129,8 +129,8 @@ const ProfilePage = () => {
                           }
                         }}
                       />
-                      <div className="text-zinc-300 text-base font-medium mt-2">
-                        <div>15승 / 5무 / 0패</div>
+                      <div className="text-zinc-300 text-base font-medium">
+                        15승 / 5무 / 0패
                       </div>
                     </div>
                   </div>
@@ -138,54 +138,53 @@ const ProfilePage = () => {
               </div>
             </div>
           </div>
-        </div>
 
-        {/* 마이페이지 네비게이션 */}
-        <div className="mb-8">
-          <div className="grid grid-cols-3 gap-4">
-            {[
-              { name: "내 정보", id: "info" },
-              { name: "내 업적", id: "achievements" },
-              { name: "내 요청", id: "requests" },
-            ].map((item, index) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`px-4 py-3 rounded-lg text-base font-medium transition-all
-                  ${
-                    activeTab === item.id
-                      ? "bg-cyan-500 text-white"
-                      : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
-                  }`}
-              >
-                {item.name}
-              </button>
-            ))}
+          {/* 마이페이지 네비게이션 */}
+          <div className="mb-8">
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                { name: "내 정보", id: "info" },
+                { name: "내 업적", id: "achievements" },
+                { name: "내 요청", id: "requests" },
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`px-4 py-3 rounded-lg text-base font-medium transition-all
+                    ${
+                      activeTab === item.id
+                        ? "bg-cyan-500 text-white"
+                        : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+                    }`}
+                >
+                  {item.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 탭 컨텐츠 */}
+          <div>
+            {activeTab === "info" && <MyInformation />}
+            {activeTab === "achievements" && <MyAward />}
+            {activeTab === "requests" && <MyCustomRequest />}
           </div>
         </div>
-
-        {/* 탭 컨텐츠 */}
-        <div className="bg-zinc-800 rounded-xl p-6 shadow-lg">
-          {activeTab === "info" && <MyInformation />} {/* 내 정보 */}
-          {activeTab === "achievements" && <MyAward />} {/* 내가 받은 상 */}
-          {activeTab === "requests" && <MyCustomRequest />}{" "}
-          {/* 내가 요청한 커스텀 게임 */}
-        </div>
-
-        {/* 모달 컴포넌트들 */}
-        {isPasswordModalOpen && (
-          <PasswordChangePage
-            userId={userId}
-            onClose={() => dispatch(setPasswordModalOpen(false))}
-          />
-        )}
-        {isDeleteModalOpen && (
-          <UserDeletePage
-            userId={userId}
-            onClose={() => dispatch(setDeleteModalOpen(false))}
-          />
-        )}
       </div>
+
+      {/* 모달 컴포넌트들 */}
+      {isPasswordModalOpen && (
+        <PasswordChangePage
+          userId={userId}
+          onClose={() => dispatch(setPasswordModalOpen(false))}
+        />
+      )}
+      {isDeleteModalOpen && (
+        <UserDeletePage
+          userId={userId}
+          onClose={() => dispatch(setDeleteModalOpen(false))}
+        />
+      )}
     </div>
   );
 };
