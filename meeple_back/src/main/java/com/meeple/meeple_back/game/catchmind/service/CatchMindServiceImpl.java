@@ -173,8 +173,28 @@ public class CatchMindServiceImpl implements CatchMindService {
 //            throw new RuntimeException(e);
 //        }
 
-//        messagingTemplate.convertAndSend("/topic/vidu-session/" + request.getPlayerName()
-//        , responseSessionAndToken);
+        responseSessionAndToken.setSessionId(sessionId);
+        try {
+            String token = openViduService.generateToken(sessionId);
+            responseSessionAndToken.setToken(token);
+
+            System.out.println("token: " + token);
+            System.out.println("token: " + token);
+            System.out.println("token: " + token);
+        } catch (OpenViduJavaClientException e) {
+            responseSessionAndToken.setToken("error");
+            throw new RuntimeException(e);
+        } catch (OpenViduHttpException e) {
+            responseSessionAndToken.setToken("error");
+            throw new RuntimeException(e);
+        }
+
+        System.out.println("sessionId: " + sessionId);
+        System.out.println("sessionId: " + sessionId);
+        System.out.println("sessionId: " + sessionId);
+
+        messagingTemplate.convertAndSend("/topic/vidu-session/" + request.getPlayerName()
+        , responseSessionAndToken);
 
         return ResponseJoinRoom.builder()
                 .type("roomInfo")
