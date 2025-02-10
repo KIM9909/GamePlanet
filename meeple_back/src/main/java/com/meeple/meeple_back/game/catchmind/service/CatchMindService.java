@@ -1,5 +1,6 @@
 package com.meeple.meeple_back.game.catchmind.service;
 
+import com.meeple.meeple_back.game.catchmind.model.GameResultDTO;
 import com.meeple.meeple_back.game.catchmind.model.request.*;
 import com.meeple.meeple_back.game.catchmind.model.response.*;
 
@@ -19,7 +20,7 @@ public interface CatchMindService {
 
     ResponseSendMessage sendMessage(String roomId, RequestSendMessage request);
 
-    ResponseQuiz requestQuiz(String roomId);
+//    ResponseQuiz requestQuiz(String roomId);
 
     ResponseSendVote sendVote(String roomId, RequestSendVote request);
 
@@ -27,9 +28,14 @@ public interface CatchMindService {
 
     ResponseVoteResult voteResult(String roomId, RequestVoteResult request);
 
-    List<ResponseGameResult> gameResult(String roomId);
+    List<GameResultDTO> gameResult(String roomId);
 
     ResponseUpdateRoom updateRoom(String roomId, RequestUpdateRoom request);
 
     ResponseExitCatchmindRoom exitRoom(String roomId, String userName);
+
+    ResponseTimeOut quizTimeOut(String roomId);
+
+    ResponseCatchMindReady readyRoom(String roomId, RequestCatchMindReady request);
 }
+

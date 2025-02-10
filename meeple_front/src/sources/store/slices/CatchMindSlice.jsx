@@ -24,6 +24,13 @@ const initialState = {
   currentTurnIndex: 0,
   quizCategory: null, // 퀴즈 카테고리 추가
   remainQuizCount: 0, // 남은 퀴즈 수 추가
+  // 추가 필드들
+  creator: null,
+  roomTitle: "",
+  maxPeople: 2,
+  quizCount: 5,
+  isPrivate: false,
+  password: "",
   userStatus: {
     isLoading: false,
     error: null,
@@ -84,7 +91,27 @@ const CatchMindSlice = createSlice({
 
     // 게임 시작 상태 업데이트 리듀서 추가
     setGameStarted: (state, action) => {
+      console.log("게임 시작 상태 변경:", action.payload);
       state.isGameStarted = action.payload;
+
+      // 게임 시작 시에는 상태 초기화하지 않음
+      // 게임 종료 시에만 초기화
+      if (action.payload === false) {
+        state.currentWord = null;
+        state.currentRound = 1;
+        state.currentTurnIndex = 0;
+        // 플레이어 점수 초기화
+        state.players = state.players.map((player) => ({
+          ...player,
+          score: 0,
+          isTurn: false,
+        }));
+      }
+    },
+
+    // sessionId 업데이트를 위한 리듀서 추가
+    setSessionId: (state, action) => {
+      state.sessionId = action.payload;
     },
 
     updateGameState: (state, action) => {
@@ -94,21 +121,47 @@ const CatchMindSlice = createSlice({
         currentTurn,
         quizCategory,
         remainQuizCount,
+        creator,
+        roomTitle,
+        maxPeople,
+        timeLimit,
+        quizCount,
+        isPrivate,
+        password,
+        roomId,
+        sessionId,
       } = action.payload;
 
       // 상태 업데이트
       if (currentWord !== undefined) state.currentWord = currentWord;
-      if (currentRound !== undefined) state.currentRound = currentRound;
+      // if (currentRound !== undefined) state.currentRound = currentRound;
       if (quizCategory !== undefined) state.quizCategory = quizCategory;
-      if (remainQuizCount !== undefined)
+      if (remainQuizCount !== undefined) {
         state.remainQuizCount = remainQuizCount;
+        // quizCount가 있으면 그것을 사용, 없으면 기본값 10 사용
+        const totalQuizzes = quizCount || state.quizCount || 10;
+        // 현재 라운드는 (전체 퀴즈 수 - 남은 퀴즈 수)
+        state.currentRound = totalQuizzes - remainQuizCount;
+      }
+      // 추가 필드 업데이트
+      if (creator !== undefined) state.creator = creator;
+      if (roomTitle !== undefined) state.roomTitle = roomTitle;
+      if (maxPeople !== undefined) state.maxPeople = maxPeople;
+      if (timeLimit !== undefined) state.timeLimit = timeLimit;
+      if (quizCount !== undefined) state.quizCount = quizCount;
+      if (isPrivate !== undefined) state.isPrivate = isPrivate;
+      if (password !== undefined) state.password = password;
+      if (roomId !== undefined) state.roomId = roomId;
 
       // 턴 업데이트
-      if (currentTurn) {
-        state.players.forEach((player) => {
-          player.isTurn = player.nickname === currentTurn;
-        });
+      if (currentTurn && state.players.length > 0) {
+        state.players = state.players.map((player) => ({
+          ...player,
+          isTurn: player.nickname === currentTurn,
+        }));
       }
+
+      if (sessionId !== undefined) state.sessionId = sessionId;
     },
 
     setRoomId: (state, action) => {
@@ -134,12 +187,17 @@ const CatchMindSlice = createSlice({
 
     // 게임 상태 초기화 리듀서 추가
     resetGameState: (state) => {
+      const existingPlayers = [...state.players]; // 기존 플레이어 정보 보존
+
+      // 게임 상태 초기화
       state.currentWord = null;
       state.currentRound = 1;
       state.isGameStarted = false;
       state.quizCategory = null;
       state.remainQuizCount = 0;
-      state.players = state.players.map((player) => ({
+
+      // 플레이어 정보는 유지하되 점수와 턴만 초기화
+      state.players = existingPlayers.map((player) => ({
         ...player,
         score: 0,
         isTurn: false,
@@ -185,6 +243,7 @@ export const {
   updatePlayerNickname,
   setGameStarted,
   resetGameState,
+  setSessionId,
 } = CatchMindSlice.actions;
 
 export default CatchMindSlice.reducer;

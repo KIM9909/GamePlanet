@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import CreateRoomModal from "../../components/game/cockroachcard/modal/CreateRoomModal";
 import { createPortal } from "react-dom";
 import BurumabulRoomCreateModal from "../../components/game/burumabul/BurumabulRoomCreateModal";
 import FriendModal from "../../components/friend/FriendModal";
 import { useSelector, useDispatch } from "react-redux";
 
 import GameCard from "../../components/game/GameCard";
-import CockroachPokerRoyalMainImg from "../../assets/images/games/MainImage/Cockroach_Poker_Royal.webp"
-import BurumabulMainImg from "../../assets/images/games/MainImage/BuruMabul.png"
-import CatchMindMainImg from "../../assets/images/games/MainImage/CatchMind.jpg"
-
-import RoomList from "../../components/game/cockroachcard/RoomList";
+import CockroachPokerRoyalMainImg from "../../assets/images/games/MainImage/Cockroach_Poker_Royal.webp";
+import BurumabulMainImg from "../../assets/images/games/MainImage/BuruMabul.png";
+import CatchMindMainImg from "../../assets/images/games/MainImage/CatchMind.jpg";
 
 
 const HomePage = () => {
@@ -25,6 +22,15 @@ const HomePage = () => {
 
   const userId = useSelector((state) => state.user.userId);
 
+  useEffect(() => {
+    const path = window.location.pathname;
+    // 게임 페이지가 아닐 때만 체크
+    if (!userId && !path.includes("/game/")) {
+      navigate("/");
+      return;
+    }
+  }, [userId, navigate]);
+
   // const handleLogout = () => {
   //   dispatch(logout());
   //   navigate("/");
@@ -32,38 +38,15 @@ const HomePage = () => {
 
   console.log(userId);
 
-
-  const handleCreateRoom = async (roomData) => {
-    console.log("roomData:", roomData);
-    try {
-      const response = await fetch(
-        `http://localhost:8090/game/create-room`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(roomData),
-        }
-      );
-
-      if (!response.ok) {
-        const responseText = await response.text();
-        throw new Error(`서버 오류: ${response.status} - ${responseText}`);
-      }
-
-      const data = await response.json();
-      console.log("Response data:", data);
-      navigate(`/game/cockroach/${data.roomId}`);
-    } catch (error) {
-      console.error("Error details:", error);
-      throw new Error(`방 생성 실패: ${error.message}`);
-    }
-  };
-
-  // 부루마불 방생성 -> 후에 백엔드와 연결 예정
+  // 부루마불 방생성 모달에서 정보 입력 후 대기방 이동
   const handleCreateBurumabulRoom = () => {
     navigate("/game/burumabul/waitingroom");
+  };
+
+  // 부루마불 방 목록 페이지 이동
+
+  const goToRoomList = async () => {
+    await navigate("/burumabul/room-list");
   };
 
   return (
@@ -87,18 +70,18 @@ const HomePage = () => {
                 </button>
 
               </div> */}
-              
-              <GameCard imgUrl={CockroachPokerRoyalMainImg} title={"바퀴벌레포커"} description={"블러핑과 심리전이 핵심인 카드게임입니다."} gameId={1}/>
 
-
-              <RoomList/>
-
+              <GameCard
+                imgUrl={CockroachPokerRoyalMainImg}
+                title={"바퀴벌레포커"}
+                description={"블러핑과 심리전이 핵심인 카드게임입니다."}
+              />
 
               {/* 부루마불 */}
-              {/* <div className="bg-gray-50 p-6 rounded-lg shadow">
+              <div className="bg-gray-50 p-6 rounded-lg shadow">
                 <h2 className="text-xl font-semibold mb-4">부루마불</h2>
                 <p className="text-gray-600 mb-4">
-                  친구들과 함께 떠나는 미플만의 우주여행!
+                  친구들과 함께 떠나는 신기한 우주여행!
                 </p>
                 <button
                   onClick={() => setIsCreateBurumabulRoomModalOpen(true)}
@@ -106,41 +89,45 @@ const HomePage = () => {
                 >
                   방 만들기
                 </button>
-              </div> */}
+                <button onClick={() => navigate("/burumabul/room-list")}>
+                  대기방 목록 보기
+                </button>
+              </div>
 
-              <GameCard imgUrl={BurumabulMainImg} title={"부루마블"} description={"친구들과 함께 떠나는 미플만의 우주여행!"}/>
+              <GameCard
+                imgUrl={BurumabulMainImg}
+                title={"부루마블"}
+                description={"친구들과 함께 떠나는 미플만의 우주여행!"}
+              />
 
               {/* 캐치마인드 */}
               {/* <div className="bg-gray-50 p-6 rounded-lg shadow">
                 <h2 className="text-xl font-semibold mb-4">캐치마인드</h2>
                 <p className="text-gray-600 mb-4">
-                  폭풍을 부르는 그림 그림 대소동 퀴즈 작전!
+                폭풍을 부르는 그림 그림 대소동 퀴즈 작전!
                 </p>
                 <div className="flex gap-4 justify-between">
-                  <button className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-                    게임 정보
-                  </button>
-                  <button
-                    onClick={() => navigate("/catch-mind")}
-                    className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                  >
-                    게임 보기
-                  </button>
+                <button className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                게임 정보
+                </button>
+                <button
+                onClick={() => navigate("/catch-mind")}
+                className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                >
+                게임 보기
+                </button>
                 </div>
-              </div> */}
+                </div> */}
 
-              <GameCard imgUrl={CatchMindMainImg} title={"캐치마인드"} description={"폭풍을 부르는 그림 그림 대소동 퀴즈 작전!"}/>
-
+              <GameCard
+                imgUrl={CatchMindMainImg}
+                title={"캐치마인드"}
+                description={"폭풍을 부르는 그림 그림 대소동 퀴즈 작전!"}
+              />
             </div>
           </div>
         </div>
       </div>
-
-      <CreateRoomModal
-        isOpen={isCreateRoomModalOpen}
-        onClose={() => setCreateRoomModalOpen(false)}
-        onCreateRoom={handleCreateRoom}
-      />
 
       {/* 부루마불 */}
       {isCreateBurumabulRoomModalOpen &&

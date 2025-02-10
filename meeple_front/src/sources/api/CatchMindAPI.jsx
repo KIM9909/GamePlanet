@@ -33,7 +33,7 @@ API.interceptors.request.use(
 // 응답 인터셉터 개선
 API.interceptors.response.use(
   (response) => {
-    // HTML 응답 체크를 더 엄격하게
+    // HTML 응답 체크를 더 엄격하게 함
     if (
       response.data &&
       typeof response.data === "string" &&
@@ -95,8 +95,8 @@ export const CatchMindAPI = {
       }
 
       const config = {
-        // baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
-        baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
+        baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
+        // baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -106,16 +106,26 @@ export const CatchMindAPI = {
       };
 
       // axios 요청 및 응답 로깅
-      try {
-        const response = await axios.post(
-          `${config.baseURL}/catch-mind/create-room`,
-          roomData,
-          config
+      const response = await axios.post(
+        `${config.baseURL}/catch-mind/create-room`,
+        roomData,
+        config
+      );
+
+      // 방 생성 성공 후 입장할 때 비밀번호 전달
+      if (response.data.roomId) {
+        await CatchMindAPI.joinRoom(
+          response.data.roomId,
+          roomData.creator,
+          roomData.isPrivate ? roomData.password : ""
         );
-        return response.data;
-      } catch (error) {
-        throw error;
+        return {
+          ...response.data,
+          joined: true,
+        };
       }
+
+      return response.data;
     } catch (error) {
       console.error("Create room error:", {
         requestData: roomData,
@@ -155,59 +165,31 @@ export const CatchMindAPI = {
   },
 
   // 방 비밀번호 확인
-  checkRoomPassword: async (roomId, password) => {
-    try {
-      // joinRoom API를 사용해 비밀번호 검증
-      const joinRequest = {
-        roomId: parseInt(roomId),
-        password: password,
-        playerName: localStorage.getItem("userNickname"), // 로그인한 사용자의 닉네임
-      };
+  // checkRoomPassword: async (roomId, password) => {
+  //   try {
+  //     // joinRoom API를 사용해 비밀번호 검증
+  //     const joinRequest = {
+  //       roomId: parseInt(roomId),
+  //       password: password,
+  //       playerName: localStorage.getItem("userNickname"), // 로그인한 사용자의 닉네임
+  //     };
 
-      const response = await API.post("/catch-mind/join-room", joinRequest);
+  //     const response = await API.post("/catch-mind/join-room", joinRequest);
 
-      // response.code가 200이면 비밀번호 일치, 400이면 불일치
-      return { isCorrect: response.code === 200 };
-    } catch (error) {
-      return { isCorrect: false };
-    }
-  },
+  //     // response.code가 200이면 비밀번호 일치, 400이면 불일치
+  //     return { isCorrect: response.code === 200 };
+  //   } catch (error) {
+  //     return { isCorrect: false };
+  //   }
+  // },
 
   // 방 입장 API
   joinRoom: async (roomId, playerName, password = "") => {
-    try {
-      const joinRequest = {
-        roomId: String(roomId),
-        playerName: playerName,
-        password: password || "",
-      };
-
-      const response = await API.post("/catch-mind/join-room", joinRequest);
-
-      // 기존 로직 유지
-      if (response?.code === 200) {
-        const roomInfo = response.roomInfo || {};
-        return {
-          success: true,
-          roomInfo: {
-            ...roomInfo,
-            roomId: String(roomInfo.roomId),
-          },
-        };
-      } else {
-        console.error("방 입장 실패:", response);
-        return {
-          success: false,
-          message: response?.message || "방 입장에 실패했습니다.",
-        };
-      }
-    } catch (error) {
-      console.error("방 입장 요청 실패:", error);
-      return {
-        success: false,
-        message: "서버 오류가 발생했습니다.",
-      };
-    }
+    return {
+      roomId: parseInt(roomId),
+      playerName: playerName,
+      password: password || "",
+    };
   },
 
   requestQuiz: async (roomId) => {
@@ -218,7 +200,8 @@ export const CatchMindAPI = {
       }
 
       const config = {
-        baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
+        baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
+        // baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-type": "application/json",

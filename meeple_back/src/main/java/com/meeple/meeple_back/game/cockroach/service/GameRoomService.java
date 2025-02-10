@@ -2,6 +2,7 @@ package com.meeple.meeple_back.game.cockroach.service;
 
 import com.meeple.meeple_back.game.cockroach.model.entity.Room;
 import com.meeple.meeple_back.game.cockroach.model.request.RequestCreateRoom;
+import com.meeple.meeple_back.game.cockroach.model.request.RequestJoinRoom;
 import com.meeple.meeple_back.game.cockroach.model.response.ResponseCockroachRoom;
 import com.meeple.meeple_back.game.cockroach.model.response.ResponseCreateRoom;
 import com.meeple.meeple_back.game.cockroach.repository.RoomRepository;
@@ -9,7 +10,11 @@ import com.meeple.meeple_back.game.cockroach.repository.RoomRepository;
 import java.time.LocalDateTime;
 
 import com.meeple.meeple_back.game.game.model.Game;
+import com.meeple.meeple_back.game.openVidu.service.OpenViduService;
 import com.meeple.meeple_back.game.repo.GameRepository;
+import io.openvidu.java.client.OpenViduHttpException;
+import io.openvidu.java.client.OpenViduJavaClientException;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -18,22 +23,16 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor
 public class GameRoomService {
 
-    private static final String ROOM_KEY = "GAME_ROOMS";
+    private static final String ROOM_KEY = "COCKROACH_GAME_ROOMS";
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final RoomRepository roomRepository;
     private final GameRepository gameRepository;
+    private final OpenViduService openViduService;
 
-    @Autowired
-    public GameRoomService(RedisTemplate<String, Object> redisTemplate,
-                           RoomRepository roomRepository,
-                           GameRepository gameRepository) {
-        this.redisTemplate = redisTemplate;
-        this.roomRepository = roomRepository;
-        this.gameRepository = gameRepository;
-    }
 
     public ResponseCreateRoom createRoom(RequestCreateRoom request) {
         Map<String, Object> roomInfo = new HashMap<>();
@@ -42,7 +41,17 @@ public class GameRoomService {
 
         Optional<Game> game = gameRepository.findById(request.getGameId());
 
+        try {
+            String sessionId = openViduService.createSession();
+            roomInfo.put("sessionId", sessionId);
+        } catch (OpenViduJavaClientException e) {
+            throw new RuntimeException(e);
+        } catch (OpenViduHttpException e) {
+            throw new RuntimeException(e);
+        }
+
         roomInfo.put("players", players);
+        roomInfo.put("roomTitle", request.getRoomTitle());
         roomInfo.put("gameData", new HashMap<>());
         roomInfo.put("gameType", game.get().getGameName());
         roomInfo.put("isPrivate", request.isPrivate());
@@ -66,6 +75,7 @@ public class GameRoomService {
 
         ResponseCreateRoom response = ResponseCreateRoom.builder()
                 .roomId(savedRoom.getRoomId())
+                .roomInfo(roomInfo)
                 .build();
         return response;
     }
@@ -85,12 +95,11 @@ public class GameRoomService {
         }
     }
 
-    public ResponseCockroachRoom addPlayer(String roomId, String playerName, String password) {
-        Map<String, Object> room = getRoom(roomId);
-        System.out.println(roomId + "방 " + playerName + " 유저 참가 서비스");
+    public ResponseCockroachRoom addPlayer(RequestJoinRoom request) {
+        Map<String, Object> room = getRoom(request.getRoomId() + "");
         boolean isPrivate = Boolean.parseBoolean(String.valueOf(room.get("isPrivate")));
         if (isPrivate) {
-            if (!room.get("password").equals(password)) {
+            if (!room.get("password").equals(request.getPassword())) {
                 ResponseCockroachRoom response = ResponseCockroachRoom.builder()
                         .code(400)
                         .message("비밀번호 불일치")
@@ -101,9 +110,9 @@ public class GameRoomService {
 
         if (room != null) {
             List<String> players = (List<String>) room.get("players");
-            players.add(playerName);
+            players.add(request.getPlayerName());
             room.put("players", players);
-            redisTemplate.opsForHash().put(ROOM_KEY, roomId, room);
+            redisTemplate.opsForHash().put(ROOM_KEY, request.getRoomId() + "", room);
         }
 
         ResponseCockroachRoom response =  ResponseCockroachRoom.builder()

@@ -57,7 +57,7 @@ const UserDeletePage = ({ userId, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-zinc-900/80 backdrop-blur-sm flex items-center justify-center">
-      <div className="bg-zinc-800 rounded-xl p-8 max-w-md w-full shadow-xl">
+      <div className="bg-zinc-800 rounded-xl p-8 max-w-[460px] w-full shadow-xl">
         <h2 className="text-2xl font-bold text-white mb-6">회원 탈퇴</h2>
 
         <div className="bg-rose-500/10 border border-rose-500/20 rounded-lg p-6 mb-8">

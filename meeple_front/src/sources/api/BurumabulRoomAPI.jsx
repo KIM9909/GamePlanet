@@ -1,7 +1,9 @@
 import React from "react";
 import axios from "axios";
 
-// const BURUMABUL_API_BASE_URL =  `${import.meta.env.VITE_API_BASE_URL}/game/blue-marble/rooms` // 배포 API
+// const BURUMABUL_API_BASE_URL = `${
+//   import.meta.env.VITE_API_BASE_URL
+// }/game/blue-marble/rooms`; // 배포 API
 const BURUMABUL_API_BASE_URL = `${
   import.meta.env.VITE_LOCAL_API_BASE_URL
 }/game/blue-marble/rooms`; // 로컬 API
@@ -21,7 +23,7 @@ export const createBurumabulRoom = async (userId, roomData) => {
   try {
     console.log("Request payload:", roomData);
     const response = await axios.post(
-      `${BURUMABUL_API_BASE_URL}/${userId}`,
+      `${BURUMABUL_API_BASE_URL}/${userId}/create`,
       roomData
     );
     return response.data;
@@ -100,10 +102,22 @@ export const putBurumabulRoom = async (roomData, roomId) => {
 export const findBurumabulRoom = async (roomId) => {
   try {
     const response = await axios.get(`${BURUMABUL_API_BASE_URL}/${roomId}`);
-
     return response.data;
   } catch (error) {
     console.error("방 상세 조회에 실패했습니다. : ", error);
+    throw error;
+  }
+};
+
+// 게임방 이름으로 검색
+export const searchBurumabulRoomname = async (searchName) => {
+  try {
+    const response = await axios.get(
+      `${BURUMABUL_API_BASE_URL}/${searchName}/search`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("방 이름으로 검색 실패 :", error);
     throw error;
   }
 };

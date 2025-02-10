@@ -11,4 +11,5 @@ public class RequestJoinRoom {
     private String playerName;
     @Schema(description = "방 비밀번호", example = "pass01")
     private String password;
+
 }

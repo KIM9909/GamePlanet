@@ -2,7 +2,6 @@ import React from "react";
 import virgo from "../../../../assets/burumabul_images/virgo.png";
 
 const PlayerCard = ({ playerInfo }) => {
-  console.log(playerInfo);
   //  백엔드 연결 필요
   return (
     <div className="md:w-44 md:h-60 lg:w-52 lg:h-64  bg-white rounded-lg flex flex-col justify-center items-center">

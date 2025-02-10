@@ -1,25 +1,6 @@
 version: '3.8'
 
 services:
-  openvidu-server:
-    image: openvidu/openvidu-server-kms:2.22.0
-    ports:
-      - "4443:4443"               # HTTPS
-      - "3478:3478/udp"          # STUN/TURN 등
-      - "49152-65535:49152-65535/udp"  # 미디어 스트리밍 포트
-    environment:
-      - OPENVIDU_PUBLICURL=https://boardjjigae.duckdns.org
-      - DOMAIN_OR_PUBLIC_IP=boardjjigae.duckdns.org
-      - OPENVIDU_COTURN_IP=boardjjigae.duckdns.org
-      - OPENVIDU_COTURN_PORT=3478
-      # - OPENVIDU_SECRET=YOUR_SECRET
-      - CERT_TYPE=letsencrypt
-      - LETSENCRYPT_EMAIIL=aruesin2@gmail.com
-      - LETSENCRYPT_DOMAIN=boardjjigae.duckdns.org
-    restart: unless-stopped
-    networks:
-      - meeple_network
-
   redis:
     image: redis:latest
     ports:
@@ -57,7 +38,6 @@ services:
       - meeple_front
       - meeple_back
       - certbot
-      - openvidu-server
     networks:
       - meeple_network
 
@@ -67,7 +47,7 @@ services:
     volumes:
       - cert-data:/etc/letsencrypt
       - ./webroot:/var/www/certbot
-    entrypoint: "/bin/sh -c 'if [ ! -f /etc/letsencrypt/live/boardjjigae.duckdns.org/fullchain.pem ]; then certbot certonly --webroot --webroot-path=/var/www/certbot -d boardjjigae.duckdns.org -d www.boardjjigae.duckdns.org --email aruesin2@example.com --agree-tos --non-interactive; fi'"
+    entrypoint: "/bin/sh -c 'if [ ! -f /etc/letsencrypt/live/boardjjigae.duckdns.org/fullchain.pem ]; then certbot certonly --webroot --webroot-path=/var/www/certbot -d boardjjigae.duckdns.org -d www.boardjjigae.duckdns.org --email aruesin2@gmail.com --agree-tos --non-interactive; fi'"
     networks:
       - meeple_network
 

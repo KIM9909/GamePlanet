@@ -3,14 +3,14 @@ import { OpenVidu } from "openvidu-browser";
 import { Camera, CameraOff, Mic, MicOff } from "lucide-react";
 import axios from "axios";
 
-const OPENVIDU_SERVER_URL = "https://localhost:4443";
+const OPENVIDU_SERVER_URL = "https://boardjjigae.duckdns.org:4443";
 const OPENVIDU_SERVER_SECRET = "MY_SECRET";
 const HEADERS = {
   Authorization: "Basic " + btoa(`OPENVIDUAPP:${OPENVIDU_SERVER_SECRET}`),
   "Content-Type": "application/json",
 };
 
-const VideoChat = ({ playerCount, userId }) => {
+const VideoChat = ({ playerCount, userId, players }) => {
   const [session, setSession] = useState(null);
   const [publisher, setPublisher] = useState(null);
   const [isMicOn, setIsMicOn] = useState(true);
@@ -213,7 +213,7 @@ const VideoChat = ({ playerCount, userId }) => {
 
           {!publisher && !error && (
             <div className="text-gray-500 text-sm">
-              {isConnecting ? "연결 중..." : "내 비디오"}
+              {isConnecting ? "연결 중..." : "카메라 연결 실패"}
             </div>
           )}
 
@@ -245,11 +245,9 @@ const VideoChat = ({ playerCount, userId }) => {
       );
     }
 
-    // 나머지 칸은 다른 참가자의 비디오 (subscribers)
-    const subscriber = subscribers.find((sub) => sub.slotIndex === index);
-    const subscriberData = subscriber?.stream?.connection?.data
-      ? JSON.parse(subscriber.stream.connection.data).clientData
-      : `Player ${index}`;
+    // 나머지 칸들은 다른 참가자들의 공간
+    const otherPlayers = players?.filter(player => player !== userId) || [];
+    const playerForThisSlot = otherPlayers[index - 1];  // index 0은 자신이므로 1을 빼줌
 
     return (
       <div
@@ -258,10 +256,12 @@ const VideoChat = ({ playerCount, userId }) => {
         className="relative bg-gray-900 rounded-lg flex items-center justify-center h-40 overflow-hidden"
       >
         <div className="absolute top-2 left-2 bg-gray-900/70 px-2 py-1 rounded text-xs text-white z-10">
-          {subscriberData}
+          {playerForThisSlot || "대기 중..."}
         </div>
-
-        {!subscriber && <div className="text-gray-500 text-sm">대기 중...</div>}
+        
+        <div className="text-gray-500 text-sm">
+          {playerForThisSlot ? "카메라 연결 실패" : "대기 중..."}
+        </div>
       </div>
     );
   };
@@ -270,10 +270,13 @@ const VideoChat = ({ playerCount, userId }) => {
     <div
       className="grid gap-2 h-full p-2"
       style={{
-        gridTemplateColumns: `repeat(${playerCount}, 1fr)`,
+        gridTemplateColumns: `repeat(${Math.max(playerCount, 1)}, 1fr)`,
       }}
     >
-      {Array(playerCount)
+      {/* 디버깅용 로그 */}
+      {console.log("VideoChat rendering:", { playerCount, subscribers })}
+
+      {Array(Math.max(playerCount, 1))
         .fill(null)
         .map((_, i) => renderVideoElement(i))}
     </div>

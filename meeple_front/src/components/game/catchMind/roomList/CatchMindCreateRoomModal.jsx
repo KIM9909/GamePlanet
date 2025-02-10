@@ -196,7 +196,7 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
               }
               className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="60">60초</option>
+              <option value="5">5초</option>
               <option value="90">90초</option>
               <option value="120">120초</option>
             </select>

@@ -62,6 +62,7 @@ public class UserService {
 				.userTier(user.getUserTier())
 				.userLevel(user.getUserLevel())
 				.userCreatedAt(user.getUserCreatedAt())
+				.userBio(user.getUserBio())
 				.build();
 	}
 
@@ -82,6 +83,9 @@ public class UserService {
 		if (request.getUserBirthday() != null) {
 			user.setUserBirthday(request.getUserBirthday());
 		}
+		if (request.getUserBio() != null) {
+			user.setUserBio(request.getUserBio());
+		}
 
 		// 수정 시간 업데이트 및 저장
 		user.setUserUpdatedAt(LocalDateTime.now());
@@ -98,6 +102,7 @@ public class UserService {
 				.userTier(savedUser.getUserTier())
 				.userLevel(savedUser.getUserLevel())
 				.userCreatedAt(savedUser.getUserCreatedAt())
+				.userBio(savedUser.getUserBio())
 				.build();
 	}
 

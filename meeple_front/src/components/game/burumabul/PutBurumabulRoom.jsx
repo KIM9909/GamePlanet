@@ -1,41 +1,34 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { FaRegEye } from "react-icons/fa";
 import { FaRegEyeSlash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { putBurumabulRoom } from "../../../sources/api/BurumabulRoomAPI";
+import { SocketContext } from "../../layout/SocketLayout";
 
 const PutBurumabulRoom = ({ onClose, originRoomData }) => {
-  const [showPassword, setShowPassword] = useState(false);
-
   console.log(originRoomData);
   const originData = originRoomData;
   const currentPlayers = Number(originData.players.length);
-  const [roomData, setRoomData] = useState(originData);
 
-  const navigate = useNavigate();
+  const [roomData, setRoomData] = useState({
+    roomName: originData.roomName,
+    isPrivate: originData.private,
+    isGameStart: false,
+    maxPlayers: originData.maxPlayers,
+  });
 
+  const { connected, updateWaitingRoom } = useContext(SocketContext);
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    try {
-      console.log(roomData);
-      const response = await putBurumabulRoom(roomData);
-      const roomId = response.roomId;
-      navigate(`/game/burumabul/waitingroom/${roomId}`, {
-        state: { roomInfo: response },
-      });
-    } catch (error) {
-      console.error("방 생성 중 오류 발생 : ", error);
+    if (connected) {
+      try {
+        updateWaitingRoom(roomData);
+        onClose();
+      } catch (error) {
+        console.error("방 정보 변경 중 에러 :", error);
+      }
     }
-  };
-
-  const handlePassword = (e) => {
-    let value = e.target.value.replace(/[^0-9]/g, ""); // 숫자만 입력 가능
-    if (value.length > 8) value = value.slice(0, 8); // 최대 8자리 제한
-    setRoomData((prevData) => ({
-      ...prevData,
-      password: value,
-    }));
   };
 
   const handleCancel = () => {
@@ -51,7 +44,7 @@ const PutBurumabulRoom = ({ onClose, originRoomData }) => {
         <div className="bg-white w-full py-3 my-3 rounded-lg">
           <form onSubmit={handleSubmit} className="text-center">
             {/* 방 제목 */}
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center ">
               <label
                 className="text-xl block mt-2 text-gray-900"
                 htmlFor="roomTitle"
@@ -70,85 +63,9 @@ const PutBurumabulRoom = ({ onClose, originRoomData }) => {
               />
             </div>
 
-            {/* 비밀방 선택 */}
-            <div className="flex flex-row justify-center items-center my-2">
-              <label
-                className="text-xl block my-2 text-gray-900"
-                htmlFor="privateCheck"
-              >
-                비밀방
-              </label>
-              <div>
-                <button
-                  className={`bg-green-500 mx-2 text-white w-14 rounded ${
-                    roomData.private ? "bg-green-500" : "bg-slate-500"
-                  }`}
-                  value={roomData.private}
-                  onClick={() =>
-                    setRoomData((prevData) => ({
-                      ...prevData,
-                      private: true,
-                      // private: true,
-                    }))
-                  }
-                  type="button"
-                >
-                  YES
-                </button>
-                <button
-                  className={`"bg-red-500" mx-2 text-white w-14 rounded ${
-                    roomData.private ? "bg-slate-500" : "bg-red-500"
-                  }`}
-                  value={roomData.private}
-                  onClick={() =>
-                    setRoomData((prevData) => ({
-                      ...prevData,
-                      private: false,
-                      password: "",
-                      // private: false,
-                    }))
-                  }
-                  type="button"
-                >
-                  NO
-                </button>
-              </div>
-            </div>
-            {/* 비밀방이면 비밀번호 설정 */}
-            <div>
-              {roomData.private && (
-                <div className="flex flex-col items-center my-3">
-                  <label className="text-lg" htmlFor="password">
-                    비밀번호 설정(숫자 8자리)
-                  </label>
-                  <hr className="w-80 border-t-2 border-gray-400 my-2" />
-                  <div className="relative">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      className="w-40 bg-slate-400 h-8 rounded-lg pl-3 pr-10"
-                      placeholder="비밀번호를 입력하세요..."
-                      value={roomData.password}
-                      onChange={handlePassword}
-                      required
-                    />
-                    <button
-                      onClick={() => setShowPassword((prev) => !prev)}
-                      className="absolute right-2 bottom-1.5 text-gray-500"
-                      type="button"
-                    >
-                      {showPassword ? (
-                        <FaRegEye size={20} />
-                      ) : (
-                        <FaRegEyeSlash size={20} />
-                      )}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
             {/* 플레이어 수 선택 */}
-            <div className="flex flex-col items-center">
-              <h2 className="text-lg">플레이어 수 선택</h2>
+            <div className="flex flex-col items-center my-5">
+              <h2 className="text-lg ">플레이어 수 선택</h2>
               <hr className="w-80 border-t-2 border-gray-400 my-2" />
               <div className="my-1">
                 {currentPlayers <= 2 && (
@@ -205,7 +122,7 @@ const PutBurumabulRoom = ({ onClose, originRoomData }) => {
                 )}
               </div>
             </div>
-            {/* 방 생성 or 취소 */}
+            {/* 방 수정 or 취소 */}
             <div className="flex flex-row justify-evenly my-3">
               <button
                 className="bg-red-500 rounded-lg text-white w-24"
@@ -213,13 +130,13 @@ const PutBurumabulRoom = ({ onClose, originRoomData }) => {
               >
                 취소
               </button>
-              {/* 일단 생성 누르면 부루마불 대기방으로 */}
+              {/* 수정 누르면 부루마불 대기방으로 */}
               <button
                 className="bg-green-500 rounded-lg text-white w-24"
                 onClick={handleSubmit}
                 type="submit"
               >
-                생성
+                수정
               </button>
             </div>
           </form>

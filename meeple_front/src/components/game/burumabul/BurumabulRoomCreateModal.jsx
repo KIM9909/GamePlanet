@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { FaRegEye } from "react-icons/fa";
-import { FaRegEyeSlash } from "react-icons/fa";
+import { EyeOff, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createBurumabulRoom } from "../../../sources/api/BurumabulRoomAPI";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { setRoomId } from "../../../sources/store/slices/BurumabulGameSlice";
 
 const BurumabulRoomCreateModal = ({ onClose }) => {
   const userId = useSelector((state) => state.user.userId);
@@ -11,12 +11,12 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
 
   const initialRoomData = {
     roomName: "",
-    private: false,
+    isPrivate: false,
     password: "",
     maxPlayers: 2,
   };
   const [roomData, setRoomData] = useState(initialRoomData);
-
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -26,9 +26,8 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
       console.log(roomData);
       const response = await createBurumabulRoom(userId, roomData);
       const roomId = response.roomId;
-      navigate(`/game/burumabul/waitingroom/${roomId}`, {
-        state: { roomInfo: response },
-      });
+      dispatch(setRoomId(roomId));
+      navigate(`/game/burumabul/start/${roomId}`);
     } catch (error) {
       console.error("방 생성 중 오류 발생 : ", error);
     }
@@ -86,13 +85,13 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
               <div>
                 <button
                   className={`bg-green-500 mx-2 text-white w-14 rounded ${
-                    roomData.private ? "bg-green-500" : "bg-slate-500"
+                    roomData.isPrivate ? "bg-green-500" : "bg-slate-500"
                   }`}
-                  value={roomData.private}
+                  value={roomData.isPrivate}
                   onClick={() =>
                     setRoomData((prevData) => ({
                       ...prevData,
-                      private: true,
+                      isPrivate: true,
                       // private: true,
                     }))
                   }
@@ -102,13 +101,13 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
                 </button>
                 <button
                   className={`"bg-red-500" mx-2 text-white w-14 rounded ${
-                    roomData.private ? "bg-slate-500" : "bg-red-500"
+                    roomData.isPrivate ? "bg-slate-500" : "bg-red-500"
                   }`}
-                  value={roomData.private}
+                  value={roomData.isPrivate}
                   onClick={() =>
                     setRoomData((prevData) => ({
                       ...prevData,
-                      private: false,
+                      isPrivate: false,
                       password: "",
                       // private: false,
                     }))
@@ -121,7 +120,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
             </div>
             {/* 비밀방이면 비밀번호 설정 */}
             <div>
-              {roomData.private && (
+              {roomData.isPrivate && (
                 <div className="flex flex-col items-center my-3">
                   <label className="text-lg" htmlFor="password">
                     비밀번호 설정(숫자 8자리)
@@ -141,11 +140,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
                       className="absolute right-2 bottom-1.5 text-gray-500"
                       type="button"
                     >
-                      {showPassword ? (
-                        <FaRegEye size={20} />
-                      ) : (
-                        <FaRegEyeSlash size={20} />
-                      )}
+                      {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
                     </button>
                   </div>
                 </div>

@@ -1,94 +1,152 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import background from "../../../../assets/burumabul_images/waitingroom.gif";
 import PlayerCard from "./PlayerCard";
 import { LockKeyhole, LockKeyholeOpen } from "lucide-react";
 import FriendSearch from "../../FriendSearch";
-import { useDispatch, useSelector } from "react-redux";
+import { connect, useDispatch, useSelector } from "react-redux";
 import { putBurumabulRoom } from "../../../../sources/api/BurumabulRoomAPI";
 import PutBurumabulRoom from "../PutBurumabulRoom";
 import PlayerAlertModal from "./PlayerAlertModal";
 import { createPortal } from "react-dom";
+import { fetchFriendList } from "../../../../sources/api/FriendApi";
+import { findBurumabulRoom } from "../../../../sources/api/BurumabulRoomAPI";
+import { SocketContext } from "../../../layout/SocketLayout";
+import ChangePasswordModal from "../play/burumabul_Modal/ChangePasswordModal";
+import WaitingChat from "../play/burumabul_Modal/WaitingChat";
 
 // 백엔드 연결 필요
-const WaitingRoom = () => {
+const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
+  console.log(roomId);
+
   const userId = Number(useSelector((state) => state.user.userId));
-  console.log(userId);
+  const [currentRoomInfo, setCurrentRoomInfo] = useState(roomInfo);
+  useEffect(() => {
+    if (roomInfo && Object.keys(roomInfo).length > 0) {
+      setCurrentRoomInfo(roomInfo);
+      setRoomName(roomInfo.roomName);
+      setMaxPlayers(roomInfo.maxPlayers);
+      setPlayerLen(roomInfo.players.length);
+    }
+  }, [roomInfo]);
 
-  const navigate = useNavigate();
-  const location = useLocation();
-  const roomInfo = location.state?.roomInfo;
-  console.log(roomInfo);
-  const playersInfo = roomInfo.players;
-  // const roomInfo = [
-  //   {
-  //     roomId: 1,
-  //     roomName: "시작해볼까! 덕진이랑 은수",
-  //     createTime: "2025-02-02T18:14:34.803Z",
-  //     creator: {
-  //       playerId: 1,
-  //       playerName: "은수",
-  //       position: 0,
-  //       balance: 0,
-  //       seedCertificateCardOwned: ["string"],
-  //     },
-  //     maxPlayers: 4,
-  //     players: [
-  //       {
-  //         playerId: 1,
-  //         playerName: "은수",
-  //         position: 0,
-  //         balance: 0,
-  //         seedCertificateCardOwned: ["string"],
-  //       },
-  //       {
-  //         playerId: 2,
-  //         playerName: "덕진",
-  //         position: 0,
-  //         balance: 0,
-  //         seedCertificateCardOwned: ["string"],
-  //       },
-  //       {
-  //         playerId: 3,
-  //         playerName: "은수2",
-  //         position: 0,
-  //         balance: 0,
-  //         seedCertificateCardOwned: ["string"],
-  //       },
-  //       // {
-  //       //   playerId: 4,
-  //       //   playerName: "덕진2",
-  //       //   position: 0,
-  //       //   balance: 0,
-  //       //   seedCertificateCardOwned: ["string"],
-  //       // },
-  //     ],
-  //     gameStart: false,
-  //     private: true,
-  //   },
-  // ];
-  const roomName = roomInfo.roomName;
-  const creatorId = Number(roomInfo.creator.playerId);
-  console.log("creatorId", creatorId);
-  const creatorName = roomInfo.creator.playerName;
-  const isPrivate = roomInfo.private;
-  const maxPlayers = roomInfo.maxPlayers;
-  const playerLen = roomInfo.players.length;
-
-  console.log(playersInfo);
+  const {
+    connected,
+    roomSocketData,
+    leaveGame,
+    createBurumabulPlay,
+    gamePlaySocketData,
+  } = useContext(SocketContext);
 
   const [showPutRoomModal, setShowPutRoomModal] = useState(false);
+  const [showAlertModal, setShowAlertModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [friendList, setFriendList] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  console.log("소켓 데이터", SocketContext);
+
+  const playersInfo = currentRoomInfo.players;
+  const [roomName, setRoomName] = useState(currentRoomInfo.roomName);
+  const [maxPlayers, setMaxPlayers] = useState(currentRoomInfo.maxPlayers);
+  const [playerLen, setPlayerLen] = useState(currentRoomInfo.players.length);
+  const creatorId = Number(currentRoomInfo.creator.playerId);
+  const isPrivate = currentRoomInfo.private;
+
+  useEffect(() => {
+    setRoomName(roomSocketData.roomName);
+    setMaxPlayers(roomSocketData.maxPlayers);
+  }, [roomSocketData]);
+
+  useEffect(() => {
+    const getFriendList = async () => {
+      if (roomId) {
+        try {
+          const response = await fetchFriendList(userId);
+          setFriendList(response);
+        } catch (error) {
+          console.log("친구 목록 로드 중 에러");
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    getFriendList();
+  }, [roomId]);
+
+  useEffect(() => {
+    const getRoomInfo = async () => {
+      if (roomId) {
+        try {
+          const response = await findBurumabulRoom(roomId);
+          setCurrentRoomInfo(response);
+        } catch (error) {
+          console.error("방 정보 조회 중 오류 발생 : ", error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    getRoomInfo();
+  }, [roomId]);
+
+  useEffect(() => {
+    if (connected && roomSocketData) {
+      setCurrentRoomInfo((prev) => ({
+        ...prev,
+        ...roomSocketData,
+      }));
+
+      if (roomSocketData.roomName) setRoomName(roomSocketData.roomName);
+      if (roomSocketData.maxPlayers) setMaxPlayers(roomSocketData.maxPlayers);
+      if (roomSocketData.players) setPlayerLen(roomSocketData.players.length);
+    }
+  }, [connected, roomSocketData]);
+
+  if (loading) {
+    return <div>Loading Room Informangition</div>;
+  }
+
+  console.log(currentRoomInfo);
 
   const handlePutRoom = () => {
     setShowPutRoomModal(true);
   };
 
-  const [showAlertModal, setShowAlertModal] = useState(false);
-
   const handleAlertModal = () => {
     setShowAlertModal(true);
   };
 
+  const showChangePassword = () => {
+    setShowPasswordModal(true);
+  };
+
+  //
+  const goToGame = () => {
+    if (connected && roomId && playersInfo) {
+      try {
+        const playerList = playersInfo.map((player) => player.playerId);
+        const playInfo = {
+          gamePlayId: roomId,
+          players: playerList,
+        };
+        console.log("게임 생성 시도", playInfo);
+        createBurumabulPlay(playInfo);
+        setPlayData(gamePlaySocketData);
+        setIsStart(true);
+      } catch (error) {
+        console.error("부루마불 플레이 생성 실패 :", error);
+      }
+    }
+  };
+
+  const leaveTheRoom = () => {
+    if (connected) {
+      leaveGame();
+      navigate("/home");
+    }
+  };
   return (
     <>
       <style>{`
@@ -102,10 +160,10 @@ const WaitingRoom = () => {
         className="h-screen w-full bg-cover bg-center relative flex justify-center items-center"
         style={{ backgroundImage: `url(${background}` }}
       >
-        <div className="h-[600px] w-[1000px] bg-white bg-opacity-70 rounded-lg flex flex-col justify-start items-center">
+        <div className="h-[600px] w-[880px] bg-white bg-opacity-70 rounded-lg flex flex-col justify-start items-center">
           {/* 친구 검색해서 친구 추가 */}
           <div className="mt-5">
-            <FriendSearch />
+            <FriendSearch friendList={friendList} />
           </div>
           <div className="flex flex-col items-center my-5">
             <div className="flex flex-row justify-center items-center mt-5">
@@ -142,7 +200,7 @@ const WaitingRoom = () => {
             <div className="w-full flex flex-row justify-between my-10 px-10">
               <button
                 className="relative overflow-hidden text-lg font-semibold text-white mx-10 bg-gradient-to-r from-red-400 to-red-500 border-2 border-red-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
-                onClick={() => navigate("/home")}
+                onClick={leaveTheRoom}
               >
                 방 나가기
               </button>
@@ -150,6 +208,14 @@ const WaitingRoom = () => {
                 <div>
                   {Number(maxPlayers) === Number(playerLen) ? (
                     <div className="flex flex-row">
+                      {isPrivate && (
+                        <button
+                          className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-fuchsia-200 to-fuchsia-400 border-2 border-fuchsia-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
+                          onClick={showChangePassword}
+                        >
+                          비밀번호 변경
+                        </button>
+                      )}
                       <button
                         className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-yellow-200 to-yellow-500 border-2 border-yellow-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
                         onClick={handlePutRoom}
@@ -158,15 +224,21 @@ const WaitingRoom = () => {
                       </button>
                       <button
                         className="relative overflow-hidden text-lg font-semibold text-white mx-10 bg-gradient-to-r from-cyan-500 to-blue-500 border-2 border-blue-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
-                        onClick={() => {
-                          navigate("/game/burumabul/start");
-                        }}
+                        onClick={goToGame}
                       >
                         게임 시작
                       </button>
                     </div>
                   ) : (
                     <div className="flex flex-row">
+                      {isPrivate && (
+                        <button
+                          onClick={showChangePassword}
+                          className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-fuchsia-200 to-fuchsia-400 border-2 border-fuchsia-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
+                        >
+                          비밀번호 변경
+                        </button>
+                      )}
                       <button
                         className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-yellow-200 to-yellow-500 border-2 border-yellow-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
                         onClick={handlePutRoom}
@@ -183,32 +255,44 @@ const WaitingRoom = () => {
                   )}
                 </div>
               ) : (
-                <div>아무것도 안 떠</div>
+                <div>게임준비</div>
               )}
-
-              {showPutRoomModal && (
-                <PutBurumabulRoom
-                  originRoomData={roomInfo}
-                  onClose={() => setShowPutRoomModal(false)}
-                />
-              )}
-
-              {showAlertModal &&
-                createPortal(
-                  <div className="fixed inset-0 z-50 flex flex-row justify-center items-center ">
-                    <PlayerAlertModal
-                      className=""
-                      onClose={() => setShowAlertModal(false)}
-                    />
-                  </div>,
-                  document.body
-                )}
 
               {/* <button className="mx-3">게임 준비</button> */}
             </div>
           </div>
         </div>
+        <div className="w-[250px] bg-white ">
+          <WaitingChat roomId={roomId} players={playersInfo} />
+        </div>
       </div>
+
+      {showPutRoomModal && (
+        <PutBurumabulRoom
+          originRoomData={currentRoomInfo}
+          onClose={() => setShowPutRoomModal(false)}
+        />
+      )}
+
+      {showAlertModal &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex flex-row justify-center items-center ">
+            <PlayerAlertModal onClose={() => setShowAlertModal(false)} />
+          </div>,
+          document.body
+        )}
+
+      {isPrivate &&
+        showPasswordModal &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex flex-row justify-center items-center">
+            <ChangePasswordModal
+              onClick={showChangePassword}
+              onClose={() => setShowPasswordModal(false)}
+            />
+          </div>,
+          document.body
+        )}
     </>
   );
 };

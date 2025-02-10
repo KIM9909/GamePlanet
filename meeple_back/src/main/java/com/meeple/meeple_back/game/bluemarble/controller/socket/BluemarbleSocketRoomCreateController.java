@@ -12,11 +12,10 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 
-@Tag(name = "소켓 게임방(블루마블)")
+@Tag(name = "소켓 대기방(블루마블)")
 @Controller
-@RequestMapping("/game/blue-marble/rooms")
+@MessageMapping("/game/blue-marble/rooms")
 @Builder
 @RequiredArgsConstructor
 public class BluemarbleSocketRoomCreateController {
@@ -25,7 +24,7 @@ public class BluemarbleSocketRoomCreateController {
 	private final BluemarbleRoomService bluemarbleRoomService;
 
 	@MessageMapping("/{userId}")
-	@Operation(summary = "소켓 게임방 참가", description = "게임방에 참가합니다.")
+	@Operation(summary = "소켓 대기방 참가", description = "대기방에 참가합니다.")
 	public void join(@PathVariable Long userId, @RequestBody RoomCreate roomCreate) {
 		RoomResponse roomResponse = RoomResponse.from(
 				bluemarbleRoomService.create(userId, roomCreate));

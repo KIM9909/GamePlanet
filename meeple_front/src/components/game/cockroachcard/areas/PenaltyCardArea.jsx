@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Card from "./Card";
+import Card from "../Card";
 
 const PenaltyCardStack = ({ type, count = 3, isRoyal, isNew = false }) => {
   const [isReceiving, setIsReceiving] = useState(isNew);
@@ -13,11 +13,13 @@ const PenaltyCardStack = ({ type, count = 3, isRoyal, isNew = false }) => {
   }, [isNew]);
 
   return (
-    <div className={`
+    <div
+      className={`
       relative w-16 h-24 flex-shrink-0
       transition-all duration-300 ease-in-out
-      ${isReceiving ? 'scale-110' : 'scale-100'}
-    `}>
+      ${isReceiving ? "scale-110" : "scale-100"}
+    `}
+    >
       {Array.from({ length: count }).map((_, index) => (
         <div
           key={index}

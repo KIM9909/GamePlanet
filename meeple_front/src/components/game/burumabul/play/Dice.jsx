@@ -5,11 +5,18 @@ import {
   mergeVertices,
   mergeGeometries,
 } from "three/examples/jsm/utils/BufferGeometryUtils";
+import { setFriends } from "../../../../sources/store/slices/FriendSlice";
+import { useDispatch } from "react-redux";
+import { changeDice } from "../../../../sources/store/slices/BurumabulGameSlice";
+import useBurumabulSocket from "../../../../hooks/useBurumabulPlaySocket";
 
-const Dice = ({ onComplete, onClose }) => {
+const Dice = ({ onComplete, onClose, roomId, setFirstDice, setSecondDice }) => {
   const canvasRef = useRef(null);
   const [score, setScore] = useState("");
+  const [firstScore, setFirstScore] = useState(null);
+  const [secondScore, setSecondScore] = useState(null);
   const [totalScore, setTotalScore] = useState(0);
+  const dispatch = useDispatch();
 
   const params = {
     numberOfDice: 2,
@@ -167,8 +174,7 @@ const Dice = ({ onComplete, onClose }) => {
 
   const createDiceMesh = () => {
     const boxMaterialOuter = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      specular: 0x444444,
+      color: 0xf4cccc,
     });
     const boxMaterialInner = new THREE.MeshStandardMaterial({
       color: 0x000000,
@@ -244,11 +250,24 @@ const Dice = ({ onComplete, onClose }) => {
 
   const showRollResults = (newScore) => {
     setScore((prev) => (prev === "" ? `${newScore}` : `${prev} + ${newScore}`));
+    setFirstScore((prevFirst) => {
+      if (prevFirst === null) {
+        return newScore;
+      } else {
+        setSecondScore((prevSecond) =>
+          prevSecond === null ? newScore : prevSecond
+        );
+        return prevFirst;
+      }
+    });
     setTotalScore((prevTotalScore) => prevTotalScore + newScore);
+    console.log(firstScore, secondScore);
   };
 
   const throwDice = () => {
     setScore("");
+    setFirstScore(null);
+    setSecondScore(null);
     setTotalScore(0);
 
     const centerX = 0;
@@ -465,12 +484,16 @@ const Dice = ({ onComplete, onClose }) => {
     if (totalScore > 0) {
       // 주사위 동작이 완료된 후 약 1.7초 뒤에 모달을 닫고 'onComplete' 함수 호출
       const timer = setTimeout(() => {
+        console.log("🎲 주사위 결과 적용 완료! 모달 닫기 준비");
+        setFirstDice(firstScore);
+        setSecondDice(secondScore);
+
         onComplete(totalScore);
       }, 1700);
 
       return () => clearTimeout(timer);
     }
-  }, [totalScore, onComplete]);
+  }, [totalScore, firstScore, secondScore]);
 
   return (
     <div className="container modal">
