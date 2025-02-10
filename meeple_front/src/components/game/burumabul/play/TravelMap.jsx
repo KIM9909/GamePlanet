@@ -550,7 +550,7 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
         try {
           const buildInfo = {
             playerId: currentPlayer.playerId,
-            titleId: nextPosition,
+            tileId: nextPosition,
           };
           console.log("기지 건설 요청:", buildInfo);
           await buildBase(buildInfo);
@@ -1000,6 +1000,24 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
     });
   }, [spaceBases]);
 
+  // Portal을 위한 state
+  const [mountPortal, setMountPortal] = useState(false);
+
+  // 컴포넌트 마운트 후 Portal 활성화
+  useEffect(() => {
+    setMountPortal(true);
+  }, []);
+
+  useEffect(() => {
+    // Modal이 열릴 때 메인 Canvas의 렌더링 일시 중지
+    if (showModal) {
+      // Canvas 렌더링 일시 중지 로직
+      return () => {
+        // Canvas 렌더링 재개 로직
+      };
+    }
+  }, [showModal]);
+
   return (
     <div className="h-[100%] flex flex-col">
       {/* 이동 버튼 + 주사위 버튼 */}
@@ -1029,83 +1047,96 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
       </div>
       <div className="flex w-full h-full">
         <div className=" w-full h-full">
-          <Canvas
-            camera={{
-              position: initialCameraPosition, // 카메라 초기 위치
-              fov: 75, // 시야각 조절
-            }}
-            onCreated={({ scene }) => {
-              const texture = new TextureLoader().load(spaceBackground);
-              scene.background = texture;
-            }}
-          >
-            <ambientLight intensity={2} />
-            <pointLight position={[10, 20, 10]} intensity={0.8} color="white" />
-
-            {/* 바닥 생성 */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.18, 0]}>
-              <planeGeometry args={[16.5, 16.5]} />
-              <meshStandardMaterial map={floor} color="#ffffff" />
-            </mesh>
-
-            {/* 타임머신 탑승장 */}
-            <mesh position={[5, 0.01, -5]} rotation={[-Math.PI / 2, 0, 0]}>
-              <planeGeometry args={[5, 5]} />
-              <meshStandardMaterial
-                map={timeMachineStopTexture} // 추가 이미지 텍스처
-                transparent={true}
-              />
-            </mesh>
-
-            {/* 텔레파시 카드 */}
-            <mesh position={[5, 0.01, 4.5]} rotation={[-Math.PI / 2, 0, 0]}>
-              <planeGeometry args={[3, 5]} />
-              <meshStandardMaterial
-                map={telepathyCardTexture} // 추가 이미지 텍스처
-                transparent={true}
-              />
-            </mesh>
-
-            {/* 뉴런의 골짜기 */}
-            <mesh position={[-5, 0.01, -5]} rotation={[-Math.PI / 2, 0, 0]}>
-              <planeGeometry args={[5, 5]} />
-              <meshStandardMaterial
-                map={neuronsCardTexture} // 추가 이미지 텍스처
-                transparent={true}
-              />
-            </mesh>
-
-            {/* OrbitControls로 카메라 이동 및 확대/축소 제어 */}
-            <OrbitControls
-              ref={orbitControlsRef}
-              target={initialTarget}
-              makeDefault
-              maxPolarAngle={Math.PI / 2.5} // 위쪽으로 카메라 제한
-              minDistance={1} // 최소 줌 거리
-              maxDistance={15} // 최대 줌 거리
-              mouseButtons={{
-                LEFT: 0,
-                MIDDLE: 1,
-                RIGHT: 2,
+          {!showModal && (
+            <Canvas
+              camera={{
+                position: initialCameraPosition, // 카메라 초기 위치
+                fov: 75, // 시야각 조절
               }}
-              enablePan={true}
-              zoomToCursor={true}
-              rotateSpeed={0.15}
-            />
-
-            {renderCells()}
-            {players.slice(0, numPlayers).map((player, index) => (
-              <BlueRobot
-                key={player.id}
-                position={getPlayerPosition(playersPositions[index], index)}
-                scale={0.005}
+              onCreated={({ scene, gl }) => {
+                const texture = new TextureLoader().load(spaceBackground);
+                scene.background = texture;
+                gl.setClearColor("#000000", 0);
+                // WebGL 컨텍스트 손실 처리
+                gl.domElement.addEventListener("webglcontextlost", (event) => {
+                  event.preventDefault();
+                  console.warn("Main canvas context lost");
+                });
+              }}
+            >
+              <ambientLight intensity={2} />
+              <pointLight
+                position={[10, 20, 10]}
+                intensity={0.8}
+                color="white"
               />
-            ))}
-            {renderSpaceBases}
-          </Canvas>
+
+              {/* 바닥 생성 */}
+              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.18, 0]}>
+                <planeGeometry args={[16.5, 16.5]} />
+                <meshStandardMaterial map={floor} color="#ffffff" />
+              </mesh>
+
+              {/* 타임머신 탑승장 */}
+              <mesh position={[5, 0.01, -5]} rotation={[-Math.PI / 2, 0, 0]}>
+                <planeGeometry args={[5, 5]} />
+                <meshStandardMaterial
+                  map={timeMachineStopTexture} // 추가 이미지 텍스처
+                  transparent={true}
+                />
+              </mesh>
+
+              {/* 텔레파시 카드 */}
+              <mesh position={[5, 0.01, 4.5]} rotation={[-Math.PI / 2, 0, 0]}>
+                <planeGeometry args={[3, 5]} />
+                <meshStandardMaterial
+                  map={telepathyCardTexture} // 추가 이미지 텍스처
+                  transparent={true}
+                />
+              </mesh>
+
+              {/* 뉴런의 골짜기 */}
+              <mesh position={[-5, 0.01, -5]} rotation={[-Math.PI / 2, 0, 0]}>
+                <planeGeometry args={[5, 5]} />
+                <meshStandardMaterial
+                  map={neuronsCardTexture} // 추가 이미지 텍스처
+                  transparent={true}
+                />
+              </mesh>
+
+              {/* OrbitControls로 카메라 이동 및 확대/축소 제어 */}
+              <OrbitControls
+                ref={orbitControlsRef}
+                target={initialTarget}
+                makeDefault
+                maxPolarAngle={Math.PI / 2.5} // 위쪽으로 카메라 제한
+                minDistance={1} // 최소 줌 거리
+                maxDistance={15} // 최대 줌 거리
+                mouseButtons={{
+                  LEFT: 0,
+                  MIDDLE: 1,
+                  RIGHT: 2,
+                }}
+                enablePan={true}
+                zoomToCursor={true}
+                rotateSpeed={0.15}
+              />
+
+              {renderCells()}
+              {players.slice(0, numPlayers).map((player, index) => (
+                <BlueRobot
+                  key={player.id}
+                  position={getPlayerPosition(playersPositions[index], index)}
+                  scale={0.005}
+                />
+              ))}
+              {renderSpaceBases}
+            </Canvas>
+          )}
         </div>
       </div>
-      {showModal &&
+      {mountPortal &&
+        showModal &&
         createPortal(
           <div className="fixed inset-0 z-50 w-2/3 text-center flex items-center justify-center">
             <Dice
@@ -1118,7 +1149,8 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
           </div>,
           document.body
         )}
-      {showBuyLand &&
+      {mountPortal &&
+        showBuyLand &&
         showCardId &&
         currentPlayerIndex === myColorIndex &&
         createPortal(
@@ -1133,7 +1165,8 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
           document.body
         )}
 
-      {showBuildBase &&
+      {mountPortal &&
+        showBuildBase &&
         showCardId &&
         currentPlayerIndex === myColorIndex &&
         createPortal(
@@ -1144,7 +1177,8 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
               cardId={showCardId}
               cardInfo={cards?.[showCardId]}
             />
-          </div>
+          </div>,
+          document.body
         )}
     </div>
   );

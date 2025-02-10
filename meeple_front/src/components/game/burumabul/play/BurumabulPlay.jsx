@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { SocketContext } from "../../../layout/SocketLayout";
 import QuestBuyLand from "./burumabul_Modal/QuestBuyLand";
 import QuestBuildBase from "./burumabul_Modal/QuestBuildBase.";
+import SeedCard from "./burumabul_Modal/SeedCard";
 
 const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
   console.log("부루마불 플레이 현재 방 정보 :", currentRoomInfo);
@@ -215,6 +216,12 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     }
   }, [players, board, cards, buyLandSocketData]);
 
+  const [showCard, setShowCard] = useState(null);
+
+  const handleShowCard = () => {
+    setShowCard(!showCard);
+  };
+
   const handlePlayerBasesRef = useCallback((getBases) => {
     console.log("플레이어 베이스 정보 : ", getBases);
     setPlayerBases(getBases);
@@ -341,16 +348,32 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
                   <div className="flex flex-col justify-center items-center">
                     <div className="flex flex-col justify-center items-center">
                       내 기지
-                      {myInfo?.cardOwned?.map((playerCard, cardIndex) => (
-                        <div key={cardIndex}>
-                          <p>{playerCard.name}</p>
+                      {myInfo?.cardOwned?.map((card, cardIndex) => (
+                        <div
+                          key={cardIndex}
+                          className="flex justify-center items-center"
+                        >
+                          <p>{card.name}</p>
                         </div>
                       ))}
                     </div>
                     <div>
-                      <button className="bg-white rounded-lg w-44 h-10">
-                        내 카드 더 보기
+                      <button
+                        className="bg-white rounded-lg w-44 h-10"
+                        onClick={handleShowCard}
+                      >
+                        내 카드 더 보기/
                       </button>
+                      {showCard &&
+                        createPortal(
+                          <div>
+                            <SeedCard
+                              cardList={myInfo?.cardOwned}
+                              onClose={() => setShowCard(false)}
+                            />
+                          </div>,
+                          document.body
+                        )}
                     </div>
                   </div>
                 </div>
