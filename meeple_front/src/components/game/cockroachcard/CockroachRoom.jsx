@@ -8,17 +8,34 @@ import { fetchProfile } from "../../../sources/store/slices/ProfileSlice";
 
 const CockroachRoom = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const [isCreateRoomModalOpen, setCreateRoomModalOpen] = useState(false);
   const [error, setError] = useState(null);
-  const userId = useSelector((state) => state.user.userId);
-  const profileData = useSelector((state) => state.profile.profileData);
+  const userId = useSelector((state) => state.user.userId);  // 리덕스에서 userId만 가져오기
+  const [profileData, setProfileData] = useState(null);
 
   useEffect(() => {
-    if (userId) {
-      dispatch(fetchProfile(userId));
-    }
-  }, [userId, dispatch]);
+    const fetchProfile = async () => {
+      if (!userId) {
+        navigate('/home');
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          // `${import.meta.env.VITE_LOCAL_API_BASE_URL}/profile/${userId}`
+          `${import.meta.env.VITE_API_BASE_URL}/profile/${userId}`
+        );
+        if (!response.ok) throw new Error("프로필을 가져오는데 실패했습니다.");
+        const data = await response.json();
+        setProfileData(data);
+      } catch (error) {
+        console.error("프로필 조회 오류:", error);
+        setError(error.message);
+      }
+    };
+
+    fetchProfile();
+  }, [userId, navigate]);
 
   const handleCreateRoom = async (roomData) => {
     try {
@@ -28,14 +45,9 @@ const CockroachRoom = () => {
         throw new Error("사용자 정보를 불러올 수 없습니다.");
       }
 
-      console.log("Creating room with data:", {
-        ...roomData,
-        creator: profileData.userNickname,
-      });
-
       const response = await fetch(
-        `${import.meta.env.VITE_LOCAL_API_BASE_URL}/game/create-room`,
-        // `${import.meta.env.VITE_API_BASE_URL}/game/create-room`,
+        // `${import.meta.env.VITE_LOCAL_API_BASE_URL}/game/create-room`,
+        `${import.meta.env.VITE_API_BASE_URL}/game/create-room`,
         {
           method: "POST",
           headers: {
@@ -45,7 +57,7 @@ const CockroachRoom = () => {
             ...roomData,
             creator: profileData.userNickname,
           }),
-          credentials: "include", // 필요한 경우 추가
+          credentials: "include",
         }
       );
 
@@ -60,21 +72,21 @@ const CockroachRoom = () => {
         throw new Error("방 ID가 없습니다.");
       }
 
-      // Redux 상태 업데이트
-      dispatch(
-        setRoomData({
-          roomId: data.roomId,
-          creator: profileData.userNickname,
-          roomTitle: roomData.roomTitle,
-          roomInfo: data.roomInfo || {},
-        })
-      );
+      // 세션스토리지에 방 정보 저장
+      sessionStorage.setItem(`room_${data.roomId}`, JSON.stringify({
+        roomId: data.roomId,
+        creator: profileData.userNickname,
+        roomTitle: roomData.roomTitle,
+        roomInfo: data.roomInfo || {},
+      }));
 
-      // 모달 닫기
       setCreateRoomModalOpen(false);
 
-      // 방으로 이동
-      navigate(`/game/cockroach/${data.roomId}`);
+      // 잠시 대기 후 페이지 이동
+      setTimeout(() => {
+        navigate(`/game/cockroach/${data.roomId}`);
+      }, 500);
+
     } catch (error) {
       console.error("방 생성 오류:", error);
       setError(error.message);

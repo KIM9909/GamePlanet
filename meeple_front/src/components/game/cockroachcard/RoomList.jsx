@@ -23,8 +23,8 @@ const RoomList = () => {
     setRefreshing(true);
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_LOCAL_API_BASE_URL}/game/rooms`,
-        // `${import.meta.env.VITE_API_BASE_URL}/game/rooms`,
+        // `${import.meta.env.VITE_LOCAL_API_BASE_URL}/game/rooms`,
+        `${import.meta.env.VITE_API_BASE_URL}/game/rooms`,
         {
           credentials: "include",
         }
@@ -55,7 +55,8 @@ const RoomList = () => {
   useEffect(() => {
     const client = new Client({
       webSocketFactory: () =>
-        new SockJS(`${import.meta.env.VITE_SOCKET_LOCAL_API_BASE_URL}`),
+        // new SockJS(`${import.meta.env.VITE_SOCKET_LOCAL_API_BASE_URL}`),
+        new SockJS(`${import.meta.env.VITE_SOCKET_API_BASE_URL}`),
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
