@@ -75,19 +75,11 @@ export const GameInfoAPI = {
   // `${GAMEINFO_API_BASE_URL}/review`
   getReviews: async (gameInfoId) => {
     try {
-      const response = await axios.get(
-        `${GAMEINFO_API_BASE_URL}/reivew,`,
-        {},
-        {
-          params: {
-            gameInfoId: gameInfoId,
-          },
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
+      const response = await axios.get(`${GAMEINFO_API_BASE_URL}/review`,
+        {params :{
+          gameInfoId:gameInfoId
         }
-      );
+      })
       return response.data;
     } catch (error) {
       throw error;
@@ -126,14 +118,10 @@ export const GameInfoAPI = {
   // `${GAMEINFO_API_BASE_URL}/${gameInfoId}`
   deleteReview: async (gameInfoId, reviewId) => {
     try {
-      const response = await axios.delete(
-        `${GAMEINFO_API_BASE_URL}/review/${reviewId}`,
-        {},
-        {
-          params: {
-            gameInfoId: gameInfoId,
-          },
-        }
+      const response = await axios.delete(`${GAMEINFO_API_BASE_URL}/review/${reviewId}`,
+        {params :{
+          gameInfoId:gameInfoId
+        }}
       );
       return response.data;
     } catch (error) {

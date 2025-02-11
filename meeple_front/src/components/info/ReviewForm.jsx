@@ -47,6 +47,10 @@ const ReviewForm = ({ initialData, onSuccess }) => {
       setIsSubmitting(true);
       
       if (isEditing) {
+        const reviewUpdateData={
+          gameReviewStar: rating,
+          gameReviewContent: content,
+        }
         await GameInfoAPI.updateReview(initialData.gameReviewId, reviewData);
         alert('리뷰가 성공적으로 수정되었습니다.');
       } else {

@@ -62,39 +62,50 @@ const ReviewPage = () => {
 
   return (
     <div>
-      <section>
-        {data.starAvg 
-          ? `별점 ${data.starAvg}` 
-          : "아직 별점을 등록한 사람이 없어요"
-        }
-      </section>
-      
-      {!editingReviewId && (
-        <ReviewForm 
-          gameInfoId={gameInfoId}
-          onSuccess={fetchReviews}
-        />
-      )}
+      <div className="min-h-screen relative overflow-hidden">
+      <div className="min-h-screen p-8 relative z-5">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-indigo-500/30">
+            <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+              게임 리뷰
+            </h1>
+            <section className="text-white">
+              {data.starAvg 
+                ? `별점 ${data.starAvg}` 
+                : "아직 별점을 등록한 사람이 없어요"
+              }
+            </section>
+            
+            {!editingReviewId && (
+              <ReviewForm 
+                gameInfoId={gameInfoId}
+                onSuccess={fetchReviews}
+              />
+            )}
 
-      <section>
-        {data.reviewList?.map((item) => (
-          editingReviewId === item.gameReviewId ? (
-            <ReviewForm 
-              key={item.gameReviewId}
-              initialData={item}
-              onSuccess={handleEditSuccess}
-            />
-          ) : (
-            <ReviewItem 
-              key={item.gameReviewId}
-              {...item}
-              isAuthor={currentUserId === item.userId}
-              onEditClick={() => handleEditClick(item.gameReviewId)}
-              onDeleteClick={() => handleDeleteClick(item.gameReviewId)}
-            />
-          )
-        ))}
-      </section>
+            <section>
+              {data.reviewList?.map((item) => (
+                editingReviewId === item.gameReviewId ? (
+                  <ReviewForm 
+                    key={item.gameReviewId}
+                    initialData={item}
+                    onSuccess={handleEditSuccess}
+                  />
+                ) : (
+                  <ReviewItem 
+                    key={item.gameReviewId}
+                    {...item}
+                    isAuthor={String(currentUserId) === String(item.user.userId)}
+                    onEditClick={() => handleEditClick(item.gameReviewId)}
+                    onDeleteClick={() => handleDeleteClick(item.gameReviewId)}
+                  />
+                )
+              ))}
+            </section>
+                </div>
+              </div>
+            </div>
+          </div>
     </div>
   );
 };

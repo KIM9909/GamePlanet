@@ -16,7 +16,9 @@ const ReviewList = () => {
   
   const { token } = useSelector((state) => state.user);
   const currentUserId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
-
+  
+  console.log(currentUserId)
+  
   const fetchReviews = async () => {
     try {
       setLoading(true);
@@ -88,7 +90,7 @@ const ReviewList = () => {
             <ReviewItem 
               key={item.gameReviewId}
               {...item}
-              isAuthor={currentUserId === item.userId}
+              isAuthor={String(currentUserId) === String(item.userId)}
               onEditClick={() => handleEditClick(item.gameReviewId)}
               onDeleteClick={() => handleDeleteClick(item.gameReviewId)}
             />
