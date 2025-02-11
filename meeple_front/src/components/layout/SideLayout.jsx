@@ -10,7 +10,7 @@ const SideLayout = ({ children }) => {
 
   const notShowSidebar =
     !location.pathname.includes("/game-info") &&
-    !location.pathname.includes("/proposal");
+    !location.pathname.includes("/custom");
   const [activeLink, setActiveLink] = useState(location.pathname);
 
   const linkStyle =
@@ -157,17 +157,17 @@ const SideLayout = ({ children }) => {
                   {/* CUSTOM */}
                   <div className="m-2">
                     <Link
-                      to={`/game-info/${gameInfo.gameInfoId}/proposal`}
+                      to={`/game-info/${gameInfo.gameInfoId}/custom`}
                       className={linkStyle}
                       onClick={() =>
                         setActiveLink(
-                          `/game-info/${gameInfo.gameInfoId}/proposal`
+                          `/game-info/${gameInfo.gameInfoId}/custom`
                         )
                       }
                       state={{ gameInfo }}
                       style={
                         activeLink ===
-                        `/game-info/${gameInfo.gameInfoId}/proposal`
+                        `/game-info/${gameInfo.gameInfoId}/custom`
                           ? {
                               color: "#D7C3F1",
                               textShadow: textShadow,
