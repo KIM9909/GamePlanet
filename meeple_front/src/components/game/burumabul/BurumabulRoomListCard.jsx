@@ -8,6 +8,7 @@ import { createPortal } from "react-dom";
 import EnterSecretRoom from "../../game/burumabul/play/burumabul_Modal/EnterSecretRoom";
 import { CircleX } from "lucide-react";
 import WrongPasswordModal from "./play/burumabul_Modal/WrongPasswordModal";
+import { setLoading } from "../../../sources/store/slices/BoardSlice";
 const BurumabulRoomListCard = ({ roomInfo }) => {
   const {
     enterSecretWaitingRoom,
@@ -24,6 +25,7 @@ const BurumabulRoomListCard = ({ roomInfo }) => {
   const [passwordModal, setPasswordModal] = useState(false);
   const [enterPassword, setEnterPassword] = useState(null);
   const [errorMessage, setErrorMessage] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const goToGeneralWaitingRoom = async (roomId) => {
     dispatch(setRoomId(roomInfo.roomId));
@@ -33,21 +35,26 @@ const BurumabulRoomListCard = ({ roomInfo }) => {
   const goToSecretWaitingRoom = async (roomId) => {
     dispatch(setRoomId(roomInfo.roomId));
     setPasswordModal(true);
-    setEnterPassword(null);
   };
 
-  useEffect(() => {
-    if (enterPassword !== null) {
-      enterSecretWaitingRoom(enterPassword);
+  const handlePasswordSubmit = async (password) => {
+    try {
+      setIsLoading(true);
+      await enterSecretWaitingRoom(password);
+    } catch (error) {
+      setErrorMessage(true);
+    } finally {
+      setIsLoading(false);
+      setPasswordModal(false);
     }
-  }, [enterPassword]);
+  };
 
   useEffect(() => {
     console.log("socketStatus 값:", socketStatus);
     if (socketStatus && socketStatus === 500) {
       setErrorMessage(true);
+      setSocketStatus(null);
     }
-    setSocketStatus(null);
   }, [socketStatus]);
 
   useEffect(() => {
@@ -97,8 +104,9 @@ const BurumabulRoomListCard = ({ roomInfo }) => {
         createPortal(
           <div className="fixed inset-0 z-50 w-full text-center flex items-center justify-center">
             <EnterSecretRoom
-              setEnterPassword={setEnterPassword}
+              onSubmit={handlePasswordSubmit}
               onClose={() => setPasswordModal(false)}
+              isLoading={isLoading}
             />
           </div>,
           document.body

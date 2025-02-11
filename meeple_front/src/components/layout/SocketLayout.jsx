@@ -91,11 +91,20 @@ const SocketLayout = ({ children }) => {
   const userId = useSelector((state) => state.user.userId);
   const rawToken = localStorage.getItem("token");
   const token = rawToken ? rawToken.trim() : "";
+  const isSubscribed = useRef(false);
 
   useEffect(() => {
-    if (!roomId) {
+    if (!roomId || isSubscribed.current) {
       console.warn("방 ID가 없습니다.");
       return;
+    }
+
+    if (stompClientRef.current?.connected) {
+      if (isSubscribed.current) {
+        isSubscribed.current.unSubscribe();
+      }
+      stompClientRef.current.deactivate();
+      stompClientRef.current = null;
     }
 
     console.log("🌐 STOMP Client 생성 중...");
@@ -113,6 +122,7 @@ const SocketLayout = ({ children }) => {
       },
       debug: (str) => {
         console.log("🛠 STOMP Debug:", str); // 강제 디버깅 출력
+        console.log("roomId : ", roomId);
       },
     });
 
@@ -122,6 +132,9 @@ const SocketLayout = ({ children }) => {
 
       if (roomId) {
         try {
+          if (isSubscribed.current) {
+            isSubscribed.current.unSubscribe();
+          }
           console.log("구독 시도:", `/topic/rooms/${roomId}`);
           console.log("부루마불 구독 시작");
           stompClient.subscribe(`/topic/rooms/${roomId}`, (message) => {
@@ -214,8 +227,14 @@ const SocketLayout = ({ children }) => {
     stompClientRef.current = stompClient;
 
     return () => {
+      if (isSubscribed.current) {
+        isSubscribed.current.unSubscribe();
+        isSubscribed.current = null;
+      }
       if (stompClientRef.current && stompClientRef.current.connected) {
         stompClientRef.current.deactivate();
+        stompClientRef.current = null;
+        isSubscribed.current = false;
         setConnected(false);
       }
     };
@@ -459,7 +478,7 @@ const SocketLayout = ({ children }) => {
       return;
     }
     try {
-      console.log("턴을 시작합니다.");
+      console.log("턴을 시작합니다.!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
       stompClientRef.current.publish({
         destination: `/app/game/blue-marble/game-plays/${roomId}/start-turn`,
       });
@@ -492,6 +511,28 @@ const SocketLayout = ({ children }) => {
     [roomId, userId]
   );
 
+  // 카드 뽑기
+  const drawCard = useCallback(
+    (drawInfo) => {
+      if (!stompClientRef.current?.connected) {
+        console.error("웹소켓에 연결되어 있지 않습니다.");
+        return;
+      }
+      try {
+        console.log("카드를 뽑습니다.");
+        stompClientRef.current.publish({
+          destination: `/app/game/blue-marble/game-plays/${roomId}/draw-card`,
+          body: JSON.stringify(drawInfo),
+        });
+        console.log("카드 뽑기에 성공했습니다. ");
+      } catch (error) {
+        console.error("카드 뽑기에 실패했습니다. :", error);
+        setError("카드 뽑기에 실패했습니다. ");
+      }
+    },
+    [roomId, userId]
+  );
+
   // 종료 조건 확인
   const checkEnd = useCallback(
     (endInfo) => {
@@ -499,6 +540,9 @@ const SocketLayout = ({ children }) => {
         console.warn("웹소켓에 연결되어 있지 않습니다.");
         return;
       }
+      console.log(
+        "🚀 checkEnd 요청 실행됨!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      );
       try {
         console.log("종료조건을 확인합니다.");
         stompClientRef.current.publish({
@@ -546,6 +590,7 @@ const SocketLayout = ({ children }) => {
           socketBoard,
           socketCards,
           socketNext,
+          setSocketNext,
           socketUserUpdate,
           socketTileUpdate,
           buildBaseSocketData,
@@ -568,6 +613,7 @@ const SocketLayout = ({ children }) => {
           startTurn,
           payToll,
           checkEnd,
+          drawCard,
         }}
       >
         {children}

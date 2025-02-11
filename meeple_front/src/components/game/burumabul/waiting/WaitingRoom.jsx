@@ -55,8 +55,15 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
   const isPrivate = currentRoomInfo.private;
 
   useEffect(() => {
-    setRoomName(roomSocketData.roomName);
-    setMaxPlayers(roomSocketData.maxPlayers);
+    if (!roomSocketData) return;
+    setCurrentRoomInfo((prev) => ({
+      ...prev,
+      ...roomSocketData,
+    }));
+
+    if (roomSocketData.roomName) setRoomName(roomSocketData.roomName);
+    if (roomSocketData.maxPlayers) setMaxPlayers(roomSocketData.maxPlayers);
+    if (roomSocketData.players) setPlayerLen(roomSocketData.players.length);
   }, [roomSocketData]);
 
   useEffect(() => {
