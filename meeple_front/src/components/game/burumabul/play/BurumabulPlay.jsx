@@ -1,14 +1,13 @@
 import React, { useCallback, useEffect, useState, useContext } from "react";
 import TravelMap from "../play/TravelMap";
 import { createPortal } from "react-dom";
-import GameSidebar from "../../../sidebar/GameSidebar";
+import BurumabulSidebar from "../../../sidebar/burumabul/BurumabulSidebar";
 import { Menu, X } from "lucide-react";
-import DiceImage from "../../../../assets/burumabul_images/Dice.png";
+
 import PlayerVideo from "../../../../components/game/burumabul/play/PlayerVideo";
 import { useDispatch, useSelector } from "react-redux";
 import { SocketContext } from "../../../layout/SocketLayout";
-import QuestBuyLand from "./burumabul_Modal/QuestBuyLand";
-import QuestBuildBase from "./burumabul_Modal/QuestBuildBase.";
+
 import SeedCard from "./burumabul_Modal/SeedCard";
 
 const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
@@ -52,8 +51,11 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     setCurrentPlayData(playData);
     setBoard(socketBoard);
     setCards(socketCards);
-    setCurrentPlayerIndex(currentPlayerSocketIndex);
   }, [playData]);
+
+  useEffect(() => {
+    setCurrentPlayerIndex(currentPlayerSocketIndex);
+  }, [currentPlayerSocketIndex]);
 
   console.log("소켓에서 받아오는 현재 플레이어 순서", currentPlayerIndex);
 
@@ -268,7 +270,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
               ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} 
               relative`}
         >
-          <GameSidebar />
+          <BurumabulSidebar playerInfoList={playerInfoList} />
           {isSidebarOpen && (
             <button
               onClick={toggleSidebar}
@@ -299,7 +301,6 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
         }`}
       >
         <div className="h-screen w-full flex">
-          {/* <div className="text-4xl font-bold text-center">BurumablePage</div> */}
           <div className="w-2/3">
             <TravelMap
               onBasesInfo={handlePlayerBasesRef}
