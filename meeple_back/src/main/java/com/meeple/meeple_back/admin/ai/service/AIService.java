@@ -1,9 +1,7 @@
 package com.meeple.meeple_back.admin.ai.service;
 
 import com.meeple.meeple_back.admin.ai.model.request.RequestLogin;
-import com.meeple.meeple_back.admin.ai.model.response.ResponseCreateVoiceLog;
-import com.meeple.meeple_back.admin.ai.model.response.ResponseLogin;
-import com.meeple.meeple_back.admin.ai.model.response.ResponseLogout;
+import com.meeple.meeple_back.admin.ai.model.response.*;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface AIService {
@@ -13,4 +11,8 @@ public interface AIService {
         String convertResult, String userNickname);
 
     ResponseLogout logout(String userNickname);
+
+    ResponseVoiceLogList voiceLogList();
+
+    ResponseVoiceLog voiceLog(long voiceLogId);
 }

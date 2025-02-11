@@ -2,15 +2,15 @@ package com.meeple.meeple_back.admin.ai.service;
 
 import com.meeple.meeple_back.admin.ai.model.entity.VoiceLog;
 import com.meeple.meeple_back.admin.ai.model.request.RequestLogin;
-import com.meeple.meeple_back.admin.ai.model.response.ResponseCreateVoiceLog;
-import com.meeple.meeple_back.admin.ai.model.response.ResponseLogin;
-import com.meeple.meeple_back.admin.ai.model.response.ResponseLogout;
+import com.meeple.meeple_back.admin.ai.model.response.*;
 import com.meeple.meeple_back.admin.ai.repo.VoiceLogRepository;
 import com.meeple.meeple_back.aws.s3.service.S3Service;
 import com.meeple.meeple_back.user.model.User;
 import com.meeple.meeple_back.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -53,6 +53,33 @@ public class AIServiceImpl implements AIService{
 
             return response;
         }
+    }
+
+    @Override
+    public ResponseVoiceLogList voiceLogList() {
+        List<VoiceLog> voiceLogList = voiceLogRepository.findAll();
+
+        ResponseVoiceLogList response = ResponseVoiceLogList.builder()
+                .code(200)
+                .message("정상 작동")
+                .voiceLogList(voiceLogList)
+                .build();
+
+        return response;
+    }
+
+    @Override
+    public ResponseVoiceLog voiceLog(long voiceLogId) {
+        VoiceLog voiceLog = voiceLogRepository.findById(voiceLogId)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 음성 로그입니다."));
+
+        ResponseVoiceLog response = ResponseVoiceLog.builder()
+                .code(200)
+                .message("정상 작동")
+                .voiceLog(voiceLog)
+
+                .build();
+        return response;
     }
 
     @Override
