@@ -144,7 +144,7 @@ const TopNavbar = () => {
   return (
     <nav
       ref={navbarRef}
-      className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-gray-800 to-gray-800 text-white p-1 shadow-lg"
+      className="fixed top-0 left-0 right-0 z-50 bg-gray-900/40 text-white p-1 shadow-xl"
     >
       <div className="container mx-auto px-4">
         {/* Desktop Navigation */}
@@ -299,6 +299,8 @@ const TopNavbar = () => {
           </div>
         )}
       </div>
+
+      <div className="border-b border-cyan-700/40 border-[1px]" />
 
       {/* Character Info Popup */}
       {selectedCharacter !== null && (

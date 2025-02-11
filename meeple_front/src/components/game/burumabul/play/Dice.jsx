@@ -18,6 +18,7 @@ const Dice = ({ onComplete, onClose, roomId, setFirstDice, setSecondDice }) => {
   const [totalScore, setTotalScore] = useState(0);
   const dispatch = useDispatch();
 
+  const animationFrameId = useRef(null);
   const params = {
     numberOfDice: 2,
     segments: 40,
@@ -393,7 +394,29 @@ const Dice = ({ onComplete, onClose, roomId, setFirstDice, setSecondDice }) => {
       alpha: true,
       antialias: true,
       canvas: canvasRef.current,
+      powerPreference: "high-performance", // 성능 우선
+      preserveDrawingBuffer: true, // 드로잉 버퍼 보존
     });
+
+    // 컨텍스트 손실 처리
+    const handleContextLost = (event) => {
+      event.preventDefault();
+      console.warn("WebGL context lost");
+      cancelAnimationFrame(animationFrameId.current);
+    };
+
+    const handleContextRestored = () => {
+      console.log("WebGL context restored");
+      // 씬 재초기화
+      initScene();
+      animate();
+    };
+
+    canvasRef.current.addEventListener("webglcontextlost", handleContextLost);
+    canvasRef.current.addEventListener(
+      "webglcontextrestored",
+      handleContextRestored
+    );
     state.renderer.shadowMap.enabled = true;
     state.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
@@ -433,6 +456,16 @@ const Dice = ({ onComplete, onClose, roomId, setFirstDice, setSecondDice }) => {
 
     updateSceneSize();
     throwDice();
+    return () => {
+      canvasRef.current?.removeEventListener(
+        "webglcontextlost",
+        handleContextLost
+      );
+      canvasRef.current?.removeEventListener(
+        "webglcontextrestored",
+        handleContextRestored
+      );
+    };
   };
 
   const updateSceneSize = () => {
@@ -450,33 +483,90 @@ const Dice = ({ onComplete, onClose, roomId, setFirstDice, setSecondDice }) => {
 
   const animate = () => {
     const { current: state } = gameState;
-
+    if (!state.renderer || !state.scene || !state.camera) return;
     state.physicsWorld.fixedStep();
 
     for (const dice of state.diceArray) {
-      dice.mesh.position.copy(dice.body.position);
-      dice.mesh.quaternion.copy(dice.body.quaternion);
+      if (dice.mesh && dice.body) {
+        dice.mesh.position.copy(dice.body.position);
+        dice.mesh.quaternion.copy(dice.body.quaternion);
+      }
     }
 
     state.renderer.render(state.scene, state.camera);
-    requestAnimationFrame(animate);
+    animationFrameId.current = requestAnimationFrame(animate);
+  };
+
+  const cleanup = () => {
+    const { current: state } = gameState;
+
+    // 애니메이션 프레임 정리
+    if (animationFrameId.current) {
+      cancelAnimationFrame(animationFrameId.current);
+    }
+
+    // 물리 엔진 정리
+    if (state.physicsWorld) {
+      state.physicsWorld.bodies.forEach((body) => {
+        state.physicsWorld.removeBody(body);
+      });
+    }
+
+    // Three.js 리소스 정리
+    if (state.scene) {
+      state.scene.traverse((object) => {
+        if (object.geometry) {
+          object.geometry.dispose();
+        }
+        if (object.material) {
+          if (Array.isArray(object.material)) {
+            object.material.forEach((material) => material.dispose());
+          } else {
+            object.material.dispose();
+          }
+        }
+      });
+    }
+
+    // 렌더러 정리
+    if (state.renderer) {
+      state.renderer.forceContextLoss();
+      state.renderer.dispose();
+      state.renderer.domElement = null;
+    }
+
+    // 참조 초기화
+    state.scene = null;
+    state.camera = null;
+    state.diceMesh = null;
+    state.diceArray = [];
+    state.physicsWorld = null;
   };
 
   useEffect(() => {
-    initPhysics();
-    initScene();
+    let cleanupInitScene;
+    try {
+      initPhysics();
+      cleanupInitScene = initScene();
+      animate();
+    } catch (error) {
+      console.error("Failed to initialize scene:", error);
+    }
 
-    const handleResize = () => updateSceneSize();
+    const handleResize = () => {
+      try {
+        updateSceneSize();
+      } catch (error) {
+        console.error("Failed to resize:", error);
+      }
+    };
+
     window.addEventListener("resize", handleResize);
-    const animationId = requestAnimationFrame(animate);
 
     return () => {
       window.removeEventListener("resize", handleResize);
-      cancelAnimationFrame(animationId);
-
-      const { current: state } = gameState;
-      if (state.renderer) state.renderer.dispose();
-      if (state.scene) state.scene.clear();
+      if (cleanupInitScene) cleanupInitScene();
+      cleanup();
     };
   }, []);
 
