@@ -26,7 +26,7 @@ const SideLayout = ({ children }) => {
       {!notShowSidebar && gameInfo ? (
         <div style={{ userSelect: "none" }} className="h-screen">
           <div className="flex flex-row">
-            <div className="flex w-2/7 bg-gradient-to-r from-gray-800 to-gray-800 h-screen border-2">
+            <div className="flex w-2/7 bg-gradient-to-r from-gray-900/60 to-gray-900/60 h-screen border border-">
               <div className="flex-1 m-2 border-2 box-border">
                 <div className="flex flex-col m-2 text-center py-2 text-[33px]">
                   {/* GAME INFO */}

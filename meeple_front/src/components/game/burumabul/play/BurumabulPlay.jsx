@@ -12,7 +12,7 @@ import QuestBuildBase from "./burumabul_Modal/QuestBuildBase.";
 import SeedCard from "./burumabul_Modal/SeedCard";
 
 const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
-  console.log("부루마불 플레이 현재 방 정보 :", currentRoomInfo);
+  // console.log("부루마불 플레이 현재 방 정보 :", currentRoomInfo);
   const userId = Number(useSelector((state) => state.user.userId));
   // 소켓 사용
   const socketContext = useContext(SocketContext);
@@ -53,20 +53,20 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     setBoard(socketBoard);
     setCards(socketCards);
     setCurrentPlayerIndex(currentPlayerSocketIndex);
-  }, [playData, socketBoard, socketCards, currentPlayerSocketIndex]);
+  }, [playData]);
 
   console.log("소켓에서 받아오는 현재 플레이어 순서", currentPlayerIndex);
 
   const currentPlayer = players?.[currentPlayData?.currentPlayerIndex];
-  console.log("현재 플레이어: ", currentPlayer);
+  // console.log("현재 플레이어: ", currentPlayer);
   const playerInfoList = currentPlayData.players;
 
   const myInfo = players?.find((player) => Number(player.playerId) === userId);
-  console.log("내 정보 출력 ==================", myInfo);
+  // console.log("내 정보 출력 ==================", myInfo);
   const myColorIndex = players?.findIndex(
     (player) => Number(player.playerId) === Number(userId)
   );
-  console.log(players);
+  // console.log(players);
   const colors = ["#FF3EA5", "#7695FF", "#00FF9C", "#EBF400"];
 
   const [playerBases, setPlayerBases] = useState(
@@ -133,7 +133,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
                   }
                 : player
             ) || [];
-          console.log("Player update:", newPlayers);
+          // console.log("Player update:", newPlayers);
           return newPlayers;
         });
       }
@@ -152,7 +152,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
                   }
                 : tile
             ) || [];
-          console.log("Board update:", newBoard);
+          // console.log("Board update:", newBoard);
           return newBoard;
         });
       }
@@ -179,7 +179,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
                   }
                 : player
             ) || [];
-          console.log("Player update:", newPlayers);
+          // console.log("Player update:", newPlayers);
           return newPlayers;
         });
       }
@@ -198,7 +198,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
                   }
                 : tile
             ) || [];
-          console.log("Board update:", newBoard);
+          // console.log("Board update:", newBoard);
           return newBoard;
         });
       }
@@ -209,10 +209,10 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
   // 상태 변화를 모니터링하기 위한 별도의 useEffect
   useEffect(() => {
     if (buyLandSocketData) {
-      console.log("상태 업데이트 확인:");
-      console.log("Updated Players:", players);
-      console.log("Updated Cards:", cards);
-      console.log("Updated Board:", board);
+      // console.log("상태 업데이트 확인:");
+      // console.log("Updated Players:", players);
+      // console.log("Updated Cards:", cards);
+      // console.log("Updated Board:", board);
     }
   }, [players, board, cards, buyLandSocketData]);
 
@@ -223,7 +223,8 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
   };
 
   const handlePlayerBasesRef = useCallback((getBases) => {
-    console.log("플레이어 베이스 정보 : ", getBases);
+    // console.log("플레이어 베이스 정보 : ", getBases);
+
     setPlayerBases(getBases);
   }, []);
 
@@ -241,15 +242,15 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     return <>{loadingMessage}</>;
   }
 
-  console.log("currentPlayerIndex:", currentPlayerIndex);
-  console.log("myColorIndex:", myColorIndex);
-  console.log("rollDice 존재 여부:", !!rollDice);
-  console.log("현재 게임 데이터", currentPlayData);
-  console.log("현재 타일(보드 정보)", board);
-  console.log("현재 카드 정보", cards);
+  // console.log("currentPlayerIndex:", currentPlayerIndex);
+  // console.log("myColorIndex:", myColorIndex);
+  // console.log("rollDice 존재 여부:", !!rollDice);
+  // console.log("현재 게임 데이터", currentPlayData);
+  // console.log("현재 타일(보드 정보)", board);
+  // console.log("현재 카드 정보", cards);
 
-  console.log("currentPlayerIndex:", currentPlayerIndex);
-  console.log("myColorIndex:", myColorIndex);
+  // console.log("currentPlayerIndex:", currentPlayerIndex);
+  // console.log("myColorIndex:", myColorIndex);
 
   return (
     <>
@@ -301,7 +302,6 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
           {/* <div className="text-4xl font-bold text-center">BurumablePage</div> */}
           <div className="w-2/3">
             <TravelMap
-              onRollDice={handleRollDiceRef}
               onBasesInfo={handlePlayerBasesRef}
               gameData={currentPlayData}
               roomId={roomId}
@@ -382,7 +382,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-row justify-center items-center">
+                {/* <div className="flex flex-row justify-center items-center">
                   {currentPlayerIndex !== null &&
                     currentPlayerIndex !== undefined &&
                     currentPlayerIndex === myColorIndex && (
@@ -414,7 +414,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
                         </div>
                       </button>
                     )}
-                </div>
+                </div> */}
               </div>
             </div>
           </div>

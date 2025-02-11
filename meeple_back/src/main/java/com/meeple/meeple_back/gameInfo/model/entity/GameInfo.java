@@ -23,6 +23,9 @@ public class GameInfo {
     @Column(name = "game_rule")
     private String gameRule;
 
+    @Column(name = "game_info_file")
+    private String gameInfoFile;
+
     @OneToOne
     @JoinColumn(name = "game_id")
     Game game;

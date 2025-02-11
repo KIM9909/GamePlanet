@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-const EnterSecretRoom = ({ setEnterPassword, onClose }) => {
+const EnterSecretRoom = ({ onSubmit, onClose, isLoading }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
@@ -16,7 +16,7 @@ const EnterSecretRoom = ({ setEnterPassword, onClose }) => {
       setError("비밀번호를 입력해주세요.");
       return;
     }
-    setEnterPassword(password);
+    onSubmit(password);
     console.log("입력된 비밀번호:", password);
     onClose();
     setPassword("");

@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../sources/store/slices/UserSlice";
 import { useNavigate } from "react-router-dom";
 import Twinkle from "../../assets/images/decorate_twinkle.png";
-import { Bell, Menu, X } from "lucide-react";
+import { Bell, Menu, X, Settings } from "lucide-react";
 
 import EunSoo from "../../assets/images/pixel_character/pixel-eunsoo.png";
 import HeeJun from "../../assets/images/pixel_character/pixel-heejun.png";
@@ -14,6 +14,7 @@ import JinHyuk from "../../assets/images/pixel_character/pixel-jinhyuk.png";
 import SungHyun from "../../assets/images/pixel_character/pixel-sunghyun.png";
 import useFriendSocket from "../../hooks/useFriendSocket";
 import NotificationList from "../notification/NotificationList";
+import SettingsPopup from "./SettingsPopup";
 
 const TopNavbar = () => {
   const dispatch = useDispatch();
@@ -34,6 +35,7 @@ const TopNavbar = () => {
   );
 
   const notificationRef = useRef(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const characterInfo = {
     0: {
@@ -168,7 +170,6 @@ const TopNavbar = () => {
               </span>
             </div>
           </div>
-
           {/* Character Icons */}
           <div className="flex-1 flex justify-center space-x-9">
             {[EunSoo, HeeJun, JinHyuk, HongBeom, JaeEun, SungHyun].map(
@@ -202,7 +203,6 @@ const TopNavbar = () => {
               )
             )}
           </div>
-
           {/* Navigation Links */}
           <div className="flex items-center space-x-6">
             <div className="relative" ref={notificationRef}>
@@ -233,6 +233,17 @@ const TopNavbar = () => {
             >
               LOGOUT
             </button>
+            <div className="relative">
+              <Settings
+                className="cursor-pointer hover:text-cyan-300 transition-all duration-300"
+                size={24}
+                onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+              />
+              <SettingsPopup
+                isOpen={isSettingsOpen}
+                onClose={() => setIsSettingsOpen(false)}
+              />
+            </div>
           </div>
         </div>
 

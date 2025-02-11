@@ -6,6 +6,7 @@ import com.meeple.meeple_back.admin.ai.model.response.ResponseCreateVoiceLog;
 import com.meeple.meeple_back.admin.ai.model.response.ResponseLogin;
 import com.meeple.meeple_back.admin.ai.model.response.ResponseLogout;
 import com.meeple.meeple_back.admin.ai.repo.VoiceLogRepository;
+import com.meeple.meeple_back.aws.s3.service.S3Service;
 import com.meeple.meeple_back.user.model.User;
 import com.meeple.meeple_back.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -24,6 +25,7 @@ public class AIServiceImpl implements AIService{
     private final VoiceLogRepository voiceLogRepository;
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final S3Service s3Service;
 
 
     /* redis에 클라이언트 켜짐 추가 */
@@ -69,11 +71,13 @@ public class AIServiceImpl implements AIService{
         String userNickname) {
         User user = userRepository.findByUserNickname(userNickname);
 
+        String fileUrl = s3Service.uploadFile(audio);
+
         VoiceLog voiceLog = new VoiceLog();
         voiceLog.setUser(user);
         voiceLog.setVoiceLog(convertResult);
         voiceLog.setVoiceTime(LocalDateTime.now());
-        voiceLog.setVoiceFileUrl("S3 필요");
+        voiceLog.setVoiceFileUrl(fileUrl);
 
         VoiceLog savedvoiceLog = voiceLogRepository.save(voiceLog);
 
