@@ -6,7 +6,7 @@ import BurumabulPage from "./pages/game/burumabul/BurumabulPage";
 import GameInfoPage from "./pages/gameInfo/GameInfoPage";
 import HomePage from "./pages/home/HomePage";
 import ProfilePage from "./pages/profile/ProfilePage";
-import ProposalPage from "./pages/proposal/ProposalPage";
+import CustomPage from "./pages/proposal/CustomPage";
 import CockroachPokerPage from "./pages/game/CockroachPokerPage";
 import MainPage from "./pages/main/MainPage";
 import TopLayout from "./components/layout/TopLayout";
@@ -30,6 +30,7 @@ import EditArticlePage from "./pages/gameInfo/board/EditArticlePage";
 import FallingStars from "./components/background/FallingStars";
 
 import ErrorPage from "./pages/error/ErrorPage";
+import CustomEditor from "./components/info/gamecustom/CustomEditor";
 
 function App() {
   return (
@@ -109,15 +110,13 @@ function App() {
               {/* Profile */}
               <Route path="/profile/:userId" element={<ProfilePage />} />
 
-              {/* Proposal */}
+              {/* custom */}
               <Route
-                path="/game-info/:gameInfoId/proposal"
-                element={<ProposalPage />}
+                path="/game-info/:gameInfoId/custom"
+                element={<CustomPage />}
               />
-              <Route
-                path="/game-info/:gameInfoId/proposal/:proposalId"
-                element={<ProposalPage />}
-              />
+              <Route path="game-info/:gameInfoId/custom/editor" 
+              element={<CustomEditor/>}/>
 
               {/* Cockroach Room List */}
               <Route path="/test/cockroach" element={<CockroachRoom />} />
