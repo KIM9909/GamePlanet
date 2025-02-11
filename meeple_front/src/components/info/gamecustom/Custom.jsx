@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Gamepad2, Plus } from 'lucide-react';
 import buruMabulImage from '../../../assets/images/games/MainImage/BuruMabul.png';
-import CustomTutorial from './CustomTutorial';
+import CustomTutorial from './modal/TutorialModal';
 
 
 const Custom = () => {

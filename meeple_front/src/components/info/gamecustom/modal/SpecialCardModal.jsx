@@ -1,6 +1,6 @@
 import { X } from 'lucide-react';
 
-const CardModal = ({ onClose, cardId, type }) => (
+const SpecialCardModal = ({ onClose, cardId, type }) => (
     <div className="bg-slate-800 rounded-lg w-11/12 max-w-6xl h-5/6 p-8 relative">
       <button onClick={onClose} className="absolute right-4 top-4 text-gray-400 hover:text-white">
         <X size={24} />
@@ -11,4 +11,4 @@ const CardModal = ({ onClose, cardId, type }) => (
     </div>
    );
    
-   export default CardModal;
+   export default SpecialCardModal;

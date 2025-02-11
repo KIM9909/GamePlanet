@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 //모달
 import TileModal from './modal/TileModal';
 import BankCardModal from './modal/BankCardModal';
-import CardModal from './modal/CardModal';
+import SpecialCardModal from './modal/SpecialCardModal';
 
 
 const SlideSection = ({ title, currentIndex, setIndex, totalItems = 30, onCardClick, type }) => {
@@ -117,7 +117,7 @@ const SlideSection = ({ title, currentIndex, setIndex, totalItems = 30, onCardCl
             {modalType === 'tile' && <TileModal onClose={() => setShowModal(false)} cardId={selectedCard} />}
             {modalType === 'bank' && <BankCardModal onClose={() => setShowModal(false)} cardId={selectedCard} />}
             {(modalType === 'telepathy' || modalType === 'neuron') && (
-              <CardModal 
+              <SpecialCardModal 
                 onClose={() => setShowModal(false)} 
                 cardId={selectedCard} 
                 type={modalType} 
