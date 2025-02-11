@@ -9,8 +9,7 @@ const SideLayout = ({ children }) => {
   const gameInfo = location.state?.gameInfo;
 
   const notShowSidebar =
-    !location.pathname.includes("/game-info") &&
-    !location.pathname.includes("/custom");
+    !location.pathname.includes("/game-info")
   const [activeLink, setActiveLink] = useState(location.pathname);
 
   const linkStyle =
