@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { CatchMindAPI } from "../../../../sources/api/CatchMindAPI";
 import CatchMindCreateRoomModal from "./CatchMindCreateRoomModal";
 import CatchMindPasswordModal from "./CatchMindPasswordModal";
+import CatchMindImg from "../../../../assets/images/games/MainImage/CatchMind.jpg";
 
 const CatchMindListPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -106,7 +107,7 @@ const CatchMindListPage = () => {
                 >
                   <div className="bg-blue-950 h-32 flex items-center justify-center">
                     <span className="text-blue-300 font-semibold">
-                      Game Image
+                      <img src={CatchMindImg} alt="캐치마인드 이미지" />
                     </span>
                   </div>
 
@@ -144,12 +145,18 @@ const CatchMindListPage = () => {
                       <span className="text-sm text-blue-300">
                         방장: {room.creator}
                       </span>
-                      <button
-                        onClick={() => handleEnterRoom(room)}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105"
-                      >
-                        입장하기
-                      </button>
+                      {room.players.length < room.maxPeople ? (
+                        <button
+                          onClick={() => handleEnterRoom(room)}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105"
+                        >
+                          입장하기
+                        </button>
+                      ) : (
+                        <button className="px-4 py-2 bg-gray-500/60 text-white rounded-lg transition-all duration-300 transform cursor-not-allowed">
+                          입장하기
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -168,9 +168,9 @@ const LoginModal = () => {
             <div className="text-right mb-4">
               <button
                 type="button"
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 hover:text-gray-700 text-[14px]"
               >
-                ID / PW 찾기
+                Forgot PassWord
               </button>
             </div>
 
@@ -184,9 +184,9 @@ const LoginModal = () => {
               {isLoading ? "로그인 중..." : "LOGIN"}
             </button>
 
-            <hr />
+            {/* <hr /> */}
 
-            <div className="text-center text-gray-500 mt-4">또는</div>
+            {/* <div className="text-center text-gray-500 mt-4">또는</div>
 
             <div className="flex justify-center space-x-6 mt-4">
               <button type="button" className="w-12 h-12">
@@ -217,7 +217,7 @@ const LoginModal = () => {
                   className="w-full h-full"
                 />
               </button>
-            </div>
+            </div> */}
           </form>
         </Dialog.Panel>
       </div>

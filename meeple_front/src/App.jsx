@@ -31,11 +31,15 @@ import FallingStars from "./components/background/FallingStars";
 
 import ErrorPage from "./pages/error/ErrorPage";
 import CustomEditor from "./components/info/gamecustom/CustomEditor";
+import CustomDetail from "./components/info/gamecustom/CustomDetail";
+import BackgroundMusic from "./components/background/BackGroundMusic";
+
 
 function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <BackgroundMusic />
       <TopLayout>
         <SideLayout>
           <FallingStars />
@@ -100,13 +104,12 @@ function App() {
               <Route path="/catch-mind/:roomId" element={<CatchMindPage />} />
               <Route path="/catch-mind" element={<CatchMindListPage />} />
 
-
               {/* Home & Main */}
               <Route path="/home" element={<HomePage />} />
               <Route path="/" element={<MainPage />} />
 
-            {/* GameInfo */}
-            <Route path="/game/:gameId" element={<GameInfoPage />} />
+              {/* GameInfo */}
+              <Route path="/game/:gameId" element={<GameInfoPage />} />
 
               {/* Profile */}
               <Route path="/profile/:userId" element={<ProfilePage />} />
@@ -116,19 +119,22 @@ function App() {
                 path="/game-info/:gameInfoId/custom"
                 element={<CustomPage />}
               />
-              <Route path="game-info/:gameInfoId/custom/editor" 
+              <Route path="/game-info/:gameInfoId/custom/editor" 
               element={<CustomEditor/>}/>
+              <Route path="/game-info/:gameInfoId/custom/detail/:customId"
+              element={<CustomDetail/>}/>
 
-            {/* Cockroach Room List */}
-            <Route path="/test/cockroach" element={<CockroachRoom />} />
 
-            {/* INTRODUCE */}
-            <Route path="/introduce" element={<Introduce />} />
+              {/* Cockroach Room List */}
+              <Route path="/test/cockroach" element={<CockroachRoom />} />
 
-            {/* ERROR */}
-              <Route path="/errorpage" element={<ErrorPage/>} />
-          </Routes>
-        </FriendModalLayout>
+              {/* INTRODUCE */}
+              <Route path="/introduce" element={<Introduce />} />
+
+              {/* ERROR */}
+              <Route path="/errorpage" element={<ErrorPage />} />
+            </Routes>
+          </FriendModalLayout>
         </SideLayout>
       </TopLayout>
     </BrowserRouter>

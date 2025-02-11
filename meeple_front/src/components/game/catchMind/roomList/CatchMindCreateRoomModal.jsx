@@ -12,6 +12,9 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
   const profileData = useSelector((state) => state.profile.profileData);
   const token = useSelector((state) => state.user.token);
 
+  // 폼 제출 상태 추가
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // 컴포넌트 마운트 시 프로필 정보 가져오기
   useEffect(() => {
     if (userId) {
@@ -20,7 +23,7 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
   }, [userId, dispatch]);
 
   const [formData, setFormData] = useState({
-    roomTitle: "", // roomTitle이 아닌 roomTitle으로 통일
+    roomTitle: "",
     isPrivate: false,
     password: "",
     maxPeople: "2",
@@ -31,12 +34,18 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // 이미 제출 중이면 추가 제출 방지
+    if (isSubmitting) return;
+
+    // 제출 시작
+    setIsSubmitting(true);
+
     try {
       // 리덕스의 토큰과 localStorage의 토큰 확인
       const localToken = localStorage.getItem("token");
       if (!localToken || !token || localToken !== token) {
         console.error("토큰이 유효하지 않습니다.");
-        // 토큰 갱신 또는 로그인 처리
+        setIsSubmitting(false);
         return;
       }
 
@@ -65,8 +74,9 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
 
       if (error.response?.status === 401) {
         localStorage.removeItem("token");
-        // 토큰 갱신 또는 로그인 페이지로 리다이렉트
       }
+      // 에러 발생 시 제출 상태 초기화
+      setIsSubmitting(false);
     }
   };
 
@@ -226,9 +236,14 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
           {/* 제출 버튼 */}
           <button
             type="submit"
-            className="w-full py-2 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            disabled={isSubmitting}
+            className={`w-full py-2 px-4 text-white rounded-lg transition-colors ${
+              isSubmitting
+                ? "bg-blue-300 cursor-not-allowed"
+                : "bg-blue-500 hover:bg-blue-600"
+            }`}
           >
-            방 만들기
+            {isSubmitting ? "방 생성 중..." : "방 만들기"}
           </button>
         </form>
       </div>

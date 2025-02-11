@@ -56,8 +56,8 @@ const HomePage = () => {
 
   const GameCard = ({ gameInfo }) => {
     return (
-      <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-lg overflow-hidden group relative border border-indigo-500 hover:border-indigo-300 transition-all duration-300 h-full">
-        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-lg overflow-hidden group relative border border-cyan-500/60 hover:border-cyan-300 transition-all duration-300 h-full">
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-cyan-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="relative h-48 overflow-hidden">
           <img
             src={
@@ -77,7 +77,7 @@ const HomePage = () => {
                   state: { gameInfo: gameInfo },
                 })
               }
-              className="px-6 py-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-colors transform hover:scale-105 duration-300"
+              className="px-6 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors transform hover:scale-105 duration-300"
             >
               GAME INFO
             </button>
@@ -89,7 +89,7 @@ const HomePage = () => {
                   ? navigate("/burumabul/room-list")
                   : navigate("/catch-mind")
               }
-              className="px-6 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors transform hover:scale-105 duration-300"
+              className="px-6 py-2 bg-cyan-600 text-white rounded-full hover:bg-cyan-700 transition-colors transform hover:scale-105 duration-300"
             >
               GAME PLAY
             </button>
@@ -98,7 +98,7 @@ const HomePage = () => {
         <div className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <Star className="w-5 h-5 text-yellow-400" />
-            <h2 className="text-xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+            <h2 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-cyan-400 bg-clip-text text-transparent">
               {gameInfo.game.gameName}
             </h2>
           </div>
@@ -106,7 +106,7 @@ const HomePage = () => {
           {gameInfo.game.gameId === 2 && (
             <button
               onClick={() => setIsCreateBurumabulRoomModalOpen(true)}
-              className="w-full px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full hover:from-indigo-500 hover:to-purple-500 transition-all duration-300 transform hover:scale-105"
+              className="w-full px-4 py-2 bg-gradient-to-r from-cyan-600 to-cyan-600 text-white rounded-full hover:from-cyan-500 hover:to-cyan-500 transition-all duration-300 transform hover:scale-105"
             >
               방 만들기
             </button>
@@ -120,8 +120,8 @@ const HomePage = () => {
     <div className="min-h-screen relative overflow-hidden">
       <div className="min-h-screen p-8 relative z-5">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-indigo-500/30">
-            <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+          <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-cyan-500/50">
+            <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
               게임 목록
             </h1>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

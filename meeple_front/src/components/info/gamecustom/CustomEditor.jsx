@@ -7,7 +7,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 //모달
 import TileModal from './modal/TileModal';
 import BankCardModal from './modal/BankCardModal';
-import CardModal from './modal/CardModal';
+import SpecialCardModal from './modal/SpecialCardModal';
+import ConfirmModal from './modal/ConfirmModal';
 
 
 const SlideSection = ({ title, currentIndex, setIndex, totalItems = 30, onCardClick, type }) => {
@@ -65,11 +66,21 @@ const SlideSection = ({ title, currentIndex, setIndex, totalItems = 30, onCardCl
     const [showModal, setShowModal] = useState(false);
     const [modalType, setModalType] = useState(null);
     const [selectedCard, setSelectedCard] = useState(null);
+    const [showConfirm, setShowConfirm] = useState(false)
    
     const handleCardClick = (cardId, type) => {
       setSelectedCard(cardId);
       setModalType(type);
       setShowModal(true);
+    };
+
+    const handleComplete = () => {
+      setShowConfirm(true);
+    };
+
+    const handleConfirm = () => {
+      // 완료 처리 로직
+      navigate(`/game-info/${gameInfo.gameInfoId}/custom`, { state: { gameInfo } });
     };
    
     return (
@@ -117,7 +128,7 @@ const SlideSection = ({ title, currentIndex, setIndex, totalItems = 30, onCardCl
             {modalType === 'tile' && <TileModal onClose={() => setShowModal(false)} cardId={selectedCard} />}
             {modalType === 'bank' && <BankCardModal onClose={() => setShowModal(false)} cardId={selectedCard} />}
             {(modalType === 'telepathy' || modalType === 'neuron') && (
-              <CardModal 
+              <SpecialCardModal 
                 onClose={() => setShowModal(false)} 
                 cardId={selectedCard} 
                 type={modalType} 
@@ -126,14 +137,21 @@ const SlideSection = ({ title, currentIndex, setIndex, totalItems = 30, onCardCl
           </div>
         )}
    
-        <div className="text-center">
-            <button 
-                onClick={() => navigate(`/game-info/${gameInfo.gameInfoId}/custom`, { state: { gameInfo } })}
-                className="px-8 py-4 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg text-lg font-semibold"
-                >
-                커스터마이징 완료
-            </button>   
-        </div>
+   <div className="text-center mt-8">
+        <button
+          onClick={handleComplete}
+          className="px-8 py-4 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors text-lg font-semibold"
+        >
+          커스터마이징 완료
+        </button>
+      </div>
+
+      {showConfirm && (
+        <ConfirmModal 
+          onClose={() => setShowConfirm(false)}
+          onConfirm={handleConfirm}
+        />
+      )}
       </div>
     );
    };

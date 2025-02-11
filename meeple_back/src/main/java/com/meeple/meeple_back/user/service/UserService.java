@@ -1,6 +1,7 @@
 package com.meeple.meeple_back.user.service;
 
 
+import com.meeple.meeple_back.aws.s3.service.S3Service;
 import com.meeple.meeple_back.user.model.PasswordUpdateRequest;
 import com.meeple.meeple_back.user.model.User;
 import com.meeple.meeple_back.user.model.UserProfileResponse;
@@ -9,21 +10,20 @@ import com.meeple.meeple_back.user.model.UserUpdateRequest;
 import com.meeple.meeple_back.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
+
+import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
+@AllArgsConstructor
 public class UserService {
 
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
-
-	public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-		this.userRepository = userRepository;
-		this.passwordEncoder = passwordEncoder;
-	}
-
+	private final S3Service s3Service;
 
 	public void regist(UserRegistDto user) {
 		userRepository.save(User.builder()
@@ -68,7 +68,8 @@ public class UserService {
 
 	// 프로필 정보 수정
 	@Transactional
-	public UserProfileResponse updateUserProfile(Long userId, UserUpdateRequest request) {
+	public UserProfileResponse updateUserProfile(Long userId, UserUpdateRequest request
+			, MultipartFile userProfilePicture) {
 		// 사용자 조회
 		User user = userRepository.findById(userId)
 				.orElseThrow(() -> new EntityNotFoundException("User not found"));
@@ -86,6 +87,10 @@ public class UserService {
 		if (request.getUserBio() != null) {
 			user.setUserBio(request.getUserBio());
 		}
+		if (userProfilePicture != null && !userProfilePicture.isEmpty()) {
+			String imgUrl = s3Service.uploadFile(userProfilePicture);
+			user.setUserProfilePictureUrl(imgUrl);
+		}
 
 		// 수정 시간 업데이트 및 저장
 		user.setUserUpdatedAt(LocalDateTime.now());
@@ -102,6 +107,7 @@ public class UserService {
 				.userTier(savedUser.getUserTier())
 				.userLevel(savedUser.getUserLevel())
 				.userCreatedAt(savedUser.getUserCreatedAt())
+				.userProfilePictureUrl(savedUser.getUserProfilePictureUrl())
 				.userBio(savedUser.getUserBio())
 				.build();
 	}
