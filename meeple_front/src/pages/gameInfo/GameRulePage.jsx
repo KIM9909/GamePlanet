@@ -30,11 +30,20 @@ const GameRulePage = () => {
   if (!data) return <div>데이터가 없습니다.</div>;
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">규칙</h1>
-      <div className="prose prose-lg">
-        {data.gameRule}
+    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen p-8 relative z-5">
+      <div className="max-w-7xl mx-auto h-full">
+        <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-indigo-500/30">
+          <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+            {data.game.gameName} 규칙
+          </h1>
+          <p className='text-white'>
+            {data.gameRule}
+          </p>
+          
+        </div>
       </div>
+    </div>
     </div>
   );
 };
