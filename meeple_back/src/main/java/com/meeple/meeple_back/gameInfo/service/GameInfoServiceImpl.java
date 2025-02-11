@@ -285,6 +285,20 @@ public class GameInfoServiceImpl implements GameInfoService {
     }
 
     @Override
+    public ResponseCommunity findCommunity(int gameInfoId, int gameCommunityId) {
+        GameCommunity gameCommunity = gameCommunityRepository.findById(gameCommunityId)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 커뮤니티 게시글입니다."));
+
+        ResponseCommunity response = ResponseCommunity.builder()
+                .code(200)
+                .message("조회 성공")
+                .gameCommunity(gameCommunity)
+                .build();
+
+        return response;
+    }
+
+    @Override
     public ResponseCreateComment createComment(RequestCreateComment request) {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 회원"));

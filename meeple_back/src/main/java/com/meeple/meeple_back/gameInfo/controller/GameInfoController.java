@@ -78,6 +78,21 @@ public class GameInfoController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{gameInfoId}/{gameCommunityId}")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "게임 정보가 성공적으로 수정됨"),
+            @ApiResponse(responseCode = "404", description = "게임 정보를 찾을 수 없음"),
+            @ApiResponse(responseCode = "400", description = "요청 데이터가 올바르지 않음")
+    })
+    public ResponseEntity<ResponseCommunity> findcommunity(
+            @PathVariable int gameInfoId,
+            @PathVariable int gameCommunityId
+    ) {
+        ResponseCommunity response = gameInfoService.findCommunity(gameInfoId, gameCommunityId);
+
+        return ResponseEntity.ok(response);
+    }
+
     @Operation(summary = "게임 정보 수정", description = "특정 게임 정보를 수정합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "게임 정보가 성공적으로 수정됨"),
