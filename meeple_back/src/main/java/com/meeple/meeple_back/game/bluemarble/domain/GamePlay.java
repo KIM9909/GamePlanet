@@ -5,19 +5,20 @@ import com.meeple.meeple_back.game.bluemarble.controller.response.BuildBaseRespo
 import com.meeple.meeple_back.game.bluemarble.controller.response.BuyLandResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DiceRollResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DrawCardResponse;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuildBaseRequest;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.request.PayFeeRequest;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.request.TurnEndRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.*;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.PayFeeResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import com.meeple.meeple_back.game.bluemarble.util.ExcelReader;
+import com.meeple.meeple_back.game.bluemarble.util.SeedCertificateCardParser;
+import com.meeple.meeple_back.game.bluemarble.util.TelepathyCardParser;
+import com.meeple.meeple_back.game.bluemarble.util.TileParser;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Getter
 @Builder
@@ -46,27 +47,32 @@ public class GamePlay {
 	}
 
 	private static List<Card> createCards() {
-		List<Card> cards = new ArrayList<>();
 
-		for (int i = 0; i <= 37; i++) {
-			SeedCertificateCard card = new SeedCertificateCard(
-					i,
-					i,// id
-					"Seed Certificate Card " + i,                  // name
-					"Color" + (i % 5 + 1),
-					// cardColor (예: Color1 ~ Color5)
-					i * 10,
-					// seedCount (예시: 10, 20, 30, ...)
-					"This is a description for card number " + i,  // description
-					100 + i * 10,
-					// baseConstructionCost (예: 110, 120, 130, ...)
-					50 + i * 5,
-					// headquartersUsageFee (예: 55, 60, 65, ...)
-					20 + i * 2
-					// baseUsageFee (예: 22, 24, 26, ...)
-			);
-			cards.add(card);
-		}
+		ExcelReader<SeedCertificateCard> seedCertificateCardParser = new SeedCertificateCardParser();
+		List<SeedCertificateCard> seedCards = seedCertificateCardParser.readExcelFile();
+		List<TelepathyCard> telepathyCards = new TelepathyCardParser().readExcelFile();
+		List<Card> cards = new ArrayList<>();
+		cards.addAll(seedCards);
+		cards.addAll(telepathyCards);
+//		for (int i = 0; i <= 37; i++) {
+//			SeedCertificateCard card = new SeedCertificateCard(
+//					i,
+//					i,// id
+//					"Seed Certificate Card " + i,                  // name
+//					"Color" + (i % 5 + 1),
+//					// cardColor (예: Color1 ~ Color5)
+//					i * 10,
+//					// seedCount (예시: 10, 20, 30, ...)
+//					"This is a description for card number " + i,  // description
+//					100 + i * 10,
+//					// baseConstructionCost (예: 110, 120, 130, ...)
+//					50 + i * 5,
+//					// headquartersUsageFee (예: 55, 60, 65, ...)
+//					20 + i * 2
+//					// baseUsageFee (예: 22, 24, 26, ...)
+//			);
+//			cards.add(card);
+//		}
 
 		return cards;
 	}
@@ -107,22 +113,22 @@ public class GamePlay {
 	}
 
 	private static List<Tile> createTiles() {
-		List<Tile> tiles = new ArrayList<>();
+		ExcelReader<Tile> tileParser = new TileParser();
+		return tileParser.readExcelFile();
 
-		for (int i = 0; i <= 40; i++) {
-			Tile tile = new Tile(
-					i,                                        // id
-					"Tile " + i,                              // name
-					0,                                        // owner (0은 미소유)
-					i * 50,                                   // toll (예시로 i에 따라 증가)
-					false,                                    // hasBase (기본값: 없음)
-					TileType.SEED_CERTIFICATE_CARD,
-					"image:url",                                   // price (예시로 i에 따라 증가),
-					1 + i * 10
-			);
-			tiles.add(tile);
-		}
-		return tiles;
+//		for (int i = 0; i <= 40; i++) {
+//			Tile tile = new Tile(
+//					i,                                        // id
+//					"Tile " + i,                              // name
+//					0,                                        // owner (0은 미소유)
+//					i * 50,                                   // toll (예시로 i에 따라 증가)
+//					false,                                    // hasBase (기본값: 없음)
+//					TileType.SEED_CERTIFICATE_CARD,
+//					"image:url",                                   // price (예시로 i에 따라 증가),
+//					1 + i * 10
+//			);
+//			tiles.add(tile);
+//		}
 	}
 
 	private Optional<Player> findPlayerById(int playerId) {
@@ -343,7 +349,7 @@ public class GamePlay {
 	}
 
 	private PayFeeResponse handleInsufficientBalance(Player paidPlayer, Player receivedPlayer,
-			int tollPrice) {
+	                                                 int tollPrice) {
 		final int availablePayment = paidPlayer.getBalance();
 		final int remainingToll = tollPrice - paidPlayer.getBalance();
 		paidPlayer.payMoney(availablePayment);
@@ -354,7 +360,7 @@ public class GamePlay {
 	}
 
 	private PayFeeResponse handleSufficientBalance(Player paidPlayer, Player receivedPlayer,
-			int tollPrice) {
+	                                               int tollPrice) {
 		final int previousBalance = paidPlayer.getBalance();
 
 		paidPlayer.payMoney(tollPrice);
