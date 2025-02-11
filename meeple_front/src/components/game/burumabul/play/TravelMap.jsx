@@ -71,6 +71,7 @@ import { SocketContext } from "../../../layout/SocketLayout";
 import QuestBuildBase from "./burumabul_Modal/QuestBuildBase.";
 import QuestBuyLand from "./burumabul_Modal/QuestBuyLand";
 import PayTollModal from "./burumabul_Modal/PayTollModal";
+import DiceVersion2 from "./DiceVersion2";
 
 const Cell = ({
   position,
@@ -147,7 +148,7 @@ const Cell = ({
   );
 };
 
-const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
+const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
   // cities 배열
   const cities = [
     "지구 Start",
@@ -481,31 +482,33 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
   const [nextPosition, setNextPosition] = useState(null);
 
   useEffect(() => {
-    setPrevPosition(rollDiceSocketData.prevPosition);
-    setNextPosition(rollDiceSocketData.nextPosition);
+    if (rollDiceSocketData) {
+      setPrevPosition(rollDiceSocketData.prevPosition);
+      setNextPosition(rollDiceSocketData.nextPosition);
+    }
   }, [rollDiceSocketData]);
+
+  const [onRollDice, setOnRollDice] = useState(false);
 
   // 주사위 버튼을 눌렀는지 안 눌렀는지 추적
   useEffect(() => {
     if (onRollDice) {
-      onRollDice(() => {
-        const alertRoll = async () => {
-          try {
-            const rollInfo = {
-              playerId: currentPlayer.playerId,
-              diceRolled: "true",
-            };
+      const alertRoll = async () => {
+        try {
+          const rollInfo = {
+            playerId: currentPlayer.playerId,
+            diceRolled: "true",
+          };
 
-            await roll(rollInfo);
-            setShowModal(true);
-            setIsDiceRolling(true);
-            setHasRolledDice(true);
-          } catch (error) {
-            console.error("주사위 알림 전달 실패 :", error);
-          }
-        };
-        alertRoll();
-      });
+          await roll(rollInfo);
+          setOnRollDice(false);
+          setIsDiceRolling(true);
+          setHasRolledDice(true);
+        } catch (error) {
+          console.error("주사위 알림 전달 실패 :", error);
+        }
+      };
+      alertRoll();
     }
   }, [onRollDice, currentPlayer]);
 
@@ -564,6 +567,8 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
           await rollDice(diceInfo);
           setIsDiceRolling(false);
           setSocketNext(null);
+          setFirstDice(null);
+          setSecondDice(null);
         } catch (error) {
           console.error("주사위 굴리기에 실패했습니다.", error);
           setSocketNext(null);
@@ -595,9 +600,12 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
       !showBuyLand &&
       myIndex === currentPlayerIndex
     ) {
-      setShowCardId(nextPosition);
-      setShowBuyLand(true);
-      setSocketNext(null);
+      if (showCardId !== nextPosition) {
+        // 중복 실행 방지
+        setShowCardId(nextPosition);
+        setShowBuyLand(true);
+        setSocketNext(null);
+      }
     }
   }, [nextAction, nextPosition]);
 
@@ -813,14 +821,13 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
   }, [rollDiceSocketData, players, isAnimating]);
 
   // 주사위 굴린 후 플레이어 이동 처리
-  const handleDiceComplete = async (score) => {
-    const startPosition = playersPositions[currentPlayerIndex];
-    const targetPosition = rollDiceSocketData?.nextPosition ?? 0;
+  // const handleDiceComplete = async (score) => {
+  //   const startPosition = playersPositions[currentPlayerIndex];
+  //   const targetPosition = rollDiceSocketData?.nextPosition ?? 0;
 
-    // console.log(`🎲 Player ${currentPlayerIndex + 1} rolled: ${score}`);
-    // console.log(`➡️ Moving to position: ${targetPosition}`);
-    setShowModal(false);
-  };
+  //   // console.log(`🎲 Player ${currentPlayerIndex + 1} rolled: ${score}`);
+  //   // console.log(`➡️ Moving to position: ${targetPosition}`);
+  // };
 
   const [positions, setPositions] = useState([]);
   const [cellSizes, setCellSizes] = useState([]);
@@ -1084,25 +1091,25 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
       case 0:
         return [
           basePosition[0] - offset,
-          basePosition[1],
+          basePosition[1] + 0.7,
           basePosition[2] - offset,
         ];
       case 1:
         return [
           basePosition[0] + offset,
-          basePosition[1],
+          basePosition[1] + 0.7,
           basePosition[2] - offset,
         ];
       case 2:
         return [
           basePosition[0] - offset,
-          basePosition[1],
+          basePosition[1] + 0.7,
           basePosition[2] + offset,
         ];
       case 3:
         return [
           basePosition[0] + offset,
-          basePosition[1],
+          basePosition[1] + 0.7,
           basePosition[2] + offset,
         ];
     }
@@ -1173,6 +1180,7 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
 
   // Portal을 위한 state
   const [mountPortal, setMountPortal] = useState(false);
+  console.log(firstDice, secondDice);
 
   // 컴포넌트 마운트 후 Portal 활성화
   useEffect(() => {
@@ -1190,22 +1198,22 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
   }, [showModal]);
 
   return (
-    <div className="h-[100%] flex flex-col">
+    <div className="h-[100%] flex flex-col bg-black">
       {/* 이동 버튼 + 주사위 버튼 */}
       <div className="flex justify-center mb-5">
-        {/* <button
-          onClick={moveToken}
-          className="mt-5 mx-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Move Token
-        </button> */}
-
         <button
           onClick={resetCamera}
           className="mt-5 mx-3 px-4 py-2 bg-yellow-300 text-white rounded hover:bg-blue-600"
         >
           Reset Camera
         </button>
+        {currentPlayerIndex === myIndex && (
+          <DiceVersion2
+            setOnRollDice={setOnRollDice}
+            setFirstDice={setFirstDice}
+            setSecondDice={setSecondDice}
+          />
+        )}
       </div>
       <div className="flex w-full h-full">
         <div className=" w-full h-full">
@@ -1216,7 +1224,7 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
                 fov: 75,
               }}
               dpr={[0.5, 1]}
-              style={{ maxWidth: "800px", maxHeight: "800px" }}
+              style={{ maxWidth: "1200px", maxHeight: "1000px" }}
               performance={{ min: 0.5 }}
               gl={{
                 powerPreference: "high-performance",
@@ -1316,7 +1324,7 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
           )}
         </div>
       </div>
-      {mountPortal &&
+      {/* {mountPortal &&
         showModal &&
         createPortal(
           <div className="fixed inset-0 z-50 w-2/3 text-center flex items-center justify-center">
@@ -1329,13 +1337,13 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
             />
           </div>,
           document.body
-        )}
+        )} */}
       {mountPortal &&
         showBuyLand &&
         showCardId &&
         currentPlayerIndex === myColorIndex &&
         createPortal(
-          <div className="fixed inset-0 z-50 w-full text-center flex items-center justify-center">
+          <div className="fixed inset-0 z-50 w-2/3 text-center flex items-center justify-center">
             <QuestBuyLand
               setIsBuyLand={setIsBuyLand}
               onClose={closeBuyLand}
@@ -1351,7 +1359,7 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
         showCardId &&
         currentPlayerIndex === myColorIndex &&
         createPortal(
-          <div className="fixed inset-0 z-50 w-full text-center flex items-center justify-center">
+          <div className="fixed inset-0 z-50 w-2/3 text-center flex items-center justify-center">
             <QuestBuildBase
               setIsBuildBase={setIsBuildBase}
               onClose={closeBuildBase}
@@ -1364,7 +1372,7 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
       {mountPortal &&
         showPayTollModal &&
         createPortal(
-          <div className="fixed inset-0 z-50 w-full text-center flex items-center justify-center">
+          <div className="fixed inset-0 z-50 w-2/3 text-center flex items-center justify-center">
             <PayTollModal
               onClose={closePayToll}
               tollPrice={tollPrice}

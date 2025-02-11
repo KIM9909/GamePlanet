@@ -12,7 +12,7 @@ const PayTollModal = ({ onClose, tollPrice, paidPlayer, receivedPlayer }) => {
       >
         <div className="text-center">
           <p className="text-lg font-semibold">
-            {paidPlayer.playerName}님이 {receivedPlayer.playerName}님에게
+            {paidPlayer?.playerName}님이 {receivedPlayer?.playerName}님에게
           </p>
           <p className="text-2xl font-bold mt-2 text-red-500">
             {tollPrice} 마불

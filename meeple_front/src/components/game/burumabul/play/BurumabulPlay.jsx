@@ -302,7 +302,6 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
           {/* <div className="text-4xl font-bold text-center">BurumablePage</div> */}
           <div className="w-2/3">
             <TravelMap
-              onRollDice={handleRollDiceRef}
               onBasesInfo={handlePlayerBasesRef}
               gameData={currentPlayData}
               roomId={roomId}
@@ -383,7 +382,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-row justify-center items-center">
+                {/* <div className="flex flex-row justify-center items-center">
                   {currentPlayerIndex !== null &&
                     currentPlayerIndex !== undefined &&
                     currentPlayerIndex === myColorIndex && (
@@ -415,7 +414,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
                         </div>
                       </button>
                     )}
-                </div>
+                </div> */}
               </div>
             </div>
           </div>

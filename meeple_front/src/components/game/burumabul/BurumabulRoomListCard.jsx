@@ -9,6 +9,7 @@ import EnterSecretRoom from "../../game/burumabul/play/burumabul_Modal/EnterSecr
 import { CircleX } from "lucide-react";
 import WrongPasswordModal from "./play/burumabul_Modal/WrongPasswordModal";
 import { setLoading } from "../../../sources/store/slices/BoardSlice";
+
 const BurumabulRoomListCard = ({ roomInfo }) => {
   const {
     enterSecretWaitingRoom,
@@ -16,16 +17,15 @@ const BurumabulRoomListCard = ({ roomInfo }) => {
     socketStatus,
     setSocketStatus,
   } = useContext(SocketContext);
-  console.log("socketStatus 값:", socketStatus);
   const navigate = useNavigate();
   const roomId = roomInfo.roomId;
-  console.log(roomId);
   const dispatch = useDispatch();
   const userId = useSelector((state) => state.user.userId);
   const [passwordModal, setPasswordModal] = useState(false);
   const [enterPassword, setEnterPassword] = useState(null);
   const [errorMessage, setErrorMessage] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
 
   const goToGeneralWaitingRoom = async (roomId) => {
     dispatch(setRoomId(roomInfo.roomId));
@@ -50,7 +50,6 @@ const BurumabulRoomListCard = ({ roomInfo }) => {
   };
 
   useEffect(() => {
-    console.log("socketStatus 값:", socketStatus);
     if (socketStatus && socketStatus === 500) {
       setErrorMessage(true);
       setSocketStatus(null);
@@ -65,41 +64,65 @@ const BurumabulRoomListCard = ({ roomInfo }) => {
 
   return (
     <>
-      {roomInfo?.maxPlayers !== roomInfo?.players?.length && (
-        <div className="flex justify-center items-center border-4 border-indigo-900 bg-white rounded-lg w-[400px] h-[120px] mx-2">
-          <div className="flex items-center justify-between p-4 border-4 border-indigo-900 rounded-lg w-[350px] h-[80px]">
-            <div className="break-words w-full max-w-[200px]">
-              <div className="text-xl flex w-full">
-                <div>Room.{roomId}</div>
-                <div className="mx-3 overflow-hidden truncate ">
-                  {roomInfo.roomName}
+      {
+        <div className="bg-white bg-opacity-70 rounded-lg w-[300px] shadow-lg overflow-hidden">
+          {/* 카드 내용을 감싸는 컨테이너 */}
+          <div className="w-full h-[120px] flex items-center justify-center">
+            {/* 여기에 게임 관련 이미지나 아이콘을 추가*/}
+          </div>
+
+          {/* 방 정보 영역 */}
+          <div className="bg-gray-800 bg-opacity-90 p-4 w-full">
+            <div className="flex justify-between items-start">
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-white">Room.{roomId}</span>
+                  <div
+                    className="relative"
+                    onMouseEnter={() => setShowTooltip(true)}
+                    onMouseLeave={() => setShowTooltip(false)}
+                  >
+                    <div className="text-white overflow-hidden truncate max-w-[120px]">
+                      {roomInfo.roomName}
+                    </div>
+                    {/* 커스텀 툴팁 */}
+                    {showTooltip && roomInfo.roomName.length > 7 && (
+                      <div className="absolute left-0 top-[-30px] bg-black text-white px-2 py-1 rounded text-sm whitespace-nowrap z-10">
+                        {roomInfo.roomName}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="text-gray-300 mt-1">
+                  방장 : {roomInfo.creator.playerName}
                 </div>
               </div>
-              <div>방장 : {roomInfo.creator.playerName}</div>
-            </div>
-            <div className="flex items-center ">
-              <div className="mx-4 text-lg">
-                {roomInfo.players.length}/{roomInfo.maxPlayers}
+
+              <div className="flex items-center gap-4">
+                <div className="text-white">
+                  {roomInfo.players.length}/{roomInfo.maxPlayers}
+                </div>
+                {!roomInfo.private ? (
+                  <button
+                    onClick={() => goToGeneralWaitingRoom(roomId)}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors"
+                  >
+                    입장
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => goToSecretWaitingRoom(roomId)}
+                    className="bg-indigo-600 hover:bg-indigo-700 p-2 rounded-lg transition-colors"
+                  >
+                    <LockKeyhole size={24} color="#ffffff" />
+                  </button>
+                )}
               </div>
-              {!roomInfo.private ? (
-                <button
-                  onClick={() => goToGeneralWaitingRoom(roomId)}
-                  className="bg-indigo-800 text-white text-xl w-[52px] h-[52px] flex justify-center items-center rounded-lg"
-                >
-                  입장
-                </button>
-              ) : (
-                <button
-                  onClick={() => goToSecretWaitingRoom(roomId)}
-                  className="bg-indigo-800 w-[52px] h-[52px] flex justify-center items-center rounded-lg"
-                >
-                  <LockKeyhole size={44} color="#ffffff" strokeWidth={3} />
-                </button>
-              )}
             </div>
           </div>
         </div>
-      )}
+      }
+
       {passwordModal &&
         createPortal(
           <div className="fixed inset-0 z-50 w-full text-center flex items-center justify-center">
@@ -113,7 +136,7 @@ const BurumabulRoomListCard = ({ roomInfo }) => {
         )}
       {errorMessage &&
         createPortal(
-          <div className="fixed inset-0 z-50 flex flex-row justify-center items-center ">
+          <div className="fixed inset-0 z-50 flex flex-row justify-center items-center">
             <WrongPasswordModal onClose={() => setErrorMessage(false)} />
           </div>,
           document.body

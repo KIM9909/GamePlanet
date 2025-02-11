@@ -167,14 +167,14 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
         className="h-screen w-full bg-cover bg-center relative flex justify-center items-center"
         style={{ backgroundImage: `url(${background}` }}
       >
-        <div className="h-[600px] w-[880px] bg-white bg-opacity-70 rounded-lg flex flex-col justify-start items-center">
+        <div className="min-h-[600px] w-[880px] bg-black bg-opacity-30 rounded-lg flex flex-col justify-start items-center">
           {/* 친구 검색해서 친구 추가 */}
           <div className="mt-5">
             <FriendSearch friendList={friendList} />
           </div>
           <div className="flex flex-col items-center my-5">
             <div className="flex flex-row justify-center items-center mt-5">
-              <h1 className="text-3xl mx-2 text-center break-words w-[400px] truncate">
+              <h1 className="text-white text-3xl mx-2 text-center break-words w-[400px] truncate">
                 {roomName}
               </h1>
               <span className="mx-2">
@@ -191,7 +191,7 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
                   />
                 )}
               </span>
-              <span className="mx-1 ">
+              <span className="mx-1 text-white text-nowrap">
                 {playerLen} / {maxPlayers}
               </span>
             </div>
