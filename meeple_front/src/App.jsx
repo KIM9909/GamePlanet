@@ -6,7 +6,7 @@ import BurumabulPage from "./pages/game/burumabul/BurumabulPage";
 import GameInfoPage from "./pages/gameInfo/GameInfoPage";
 import HomePage from "./pages/home/HomePage";
 import ProfilePage from "./pages/profile/ProfilePage";
-import ProposalPage from "./pages/proposal/ProposalPage";
+import CustomPage from "./pages/proposal/CustomPage";
 import CockroachPokerPage from "./pages/game/CockroachPokerPage";
 import MainPage from "./pages/main/MainPage";
 import TopLayout from "./components/layout/TopLayout";
@@ -30,7 +30,7 @@ import EditArticlePage from "./pages/gameInfo/board/EditArticlePage";
 import FallingStars from "./components/background/FallingStars";
 
 import ErrorPage from "./pages/error/ErrorPage";
-import CustomEditor from "./components/info/gameproposal/CustomEditor";
+import CustomEditor from "./components/info/gamecustom/CustomEditor";
 
 function App() {
   return (
@@ -114,7 +114,7 @@ function App() {
               {/* custom */}
               <Route
                 path="/game-info/:gameInfoId/custom"
-                element={<ProposalPage />}
+                element={<CustomPage />}
               />
               <Route path="game-info/:gameInfoId/custom/editor" 
               element={<CustomEditor/>}/>
