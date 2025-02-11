@@ -208,9 +208,16 @@ public class GameInfoServiceImpl implements GameInfoService {
 
         GameReview savedGameReview = gameReviewRepository.save(gameReview);
 
-        mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
 
-        return mapper.map(savedGameReview, ResponseUpdateReview.class);
+        ResponseUpdateReview response = ResponseUpdateReview.builder()
+                .gameReviewId(savedGameReview.getGameReviewId())
+                .gameReviewContent(savedGameReview.getGameReviewContent())
+                .gameReviewStar(savedGameReview.getGameReviewStar())
+                .gameInfo(savedGameReview.getGameInfo())
+                .user(savedGameReview.getUser())
+                .build();
+
+        return response;
     }
 
     @Override
