@@ -132,119 +132,134 @@ const GameInfo = React.memo(
     };
 
     return (
-      <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-lg shadow-xl border border-gray-700">
-        <CatchMindUpdateRoomModal
-          isOpen={isUpdateModalOpen}
-          onClose={() => setIsUpdateModalOpen(false)}
-          roomInfo={roomInfo}
-          client={client}
-        />
-        <div className="p-6">
-          <div className="flex items-center justify-between">
-            {/* Room Title Section */}
-            <div className="flex items-center space-x-3">
-              <h2 className="text-2xl font-bold text-white tracking-tight">
-                {roomInfo?.roomTitle}
-              </h2>
-              {roomInfo?.isPrivate && (
-                <div className="group relative">
-                  <Lock className="w-5 h-5 text-yellow-400" />
-                  <div className="absolute hidden group-hover:block bg-gray-800 text-white text-sm px-2 py-1 rounded -bottom-8 left-1/2 transform -translate-x-1/2">
-                    Private Room
+      <div className="relative">
+        {" "}
+        {/* 컨테이너에 relative 추가 */}
+        <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-lg shadow-xl border border-gray-700">
+          <CatchMindUpdateRoomModal
+            isOpen={isUpdateModalOpen}
+            onClose={() => setIsUpdateModalOpen(false)}
+            roomInfo={roomInfo}
+            client={client}
+          />
+          <div className="p-6">
+            <div className="flex items-center justify-between">
+              {/* Room Title Section */}
+              <div className="flex items-center space-x-3">
+                <h2 className="text-2xl font-bold text-white tracking-tight">
+                  {roomInfo?.roomTitle}
+                </h2>
+                {roomInfo?.isPrivate && (
+                  <div className="group relative">
+                    <Lock className="w-5 h-5 text-yellow-400" />
+                    <div className="absolute hidden group-hover:block bg-gray-800 text-white text-sm px-2 py-1 rounded -bottom-8 left-1/2 transform -translate-x-1/2">
+                      Private Room
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-
-            {/* Game Controls Section */}
-            <div className="flex items-center space-x-4">
-              {/* Round Badge */}
-              <div className="flex items-center px-4 py-1.5 bg-gray-800/50 rounded-full">
-                <Flag className="w-4 h-4 mr-2 text-blue-400" />
-                <span className="text-sm font-medium text-white">
-                  Round {round}/{roomInfo?.quizCount || 10}
-                </span>
+                )}
               </div>
 
-              {/* Timer Badge */}
-              <div
-                className={`flex items-center px-4 py-1.5 bg-gray-800/50 rounded-full ${getTimeColor()}`}
-              >
-                <Timer className="w-4 h-4 mr-2" />
-                <span className="text-sm font-medium">{timeLeft}s</span>
-              </div>
-
-              {/* Current Word */}
-              {word && (
-                <div className="px-6 py-2 bg-blue-500/20 rounded-full border border-blue-400/30">
-                  <span className="text-lg font-semibold text-blue-100">
-                    {word}
+              {/* Game Controls Section */}
+              <div className="flex items-center space-x-4">
+                {/* Round Badge */}
+                <div className="flex items-center px-4 py-1.5 bg-gray-800/50 rounded-full">
+                  <Flag className="w-4 h-4 mr-2 text-blue-400" />
+                  <span className="text-md font-medium text-white">
+                    Round {round}/{roomInfo?.quizCount || 10}
                   </span>
                 </div>
-              )}
-            </div>
 
-            {/* Right Controls Section */}
-            <div className="flex items-center space-x-4">
-              {/* Players Count */}
-              <div className="flex items-center px-3 py-1.5 bg-gray-800/50 rounded-full">
-                <Users className="w-4 h-4 mr-2 text-blue-400" />
-                <span className="text-sm text-gray-200">
-                  {roomInfo?.players?.length || 0}/{roomInfo?.maxPeople}
-                </span>
+                {/* Timer Badge */}
+                <div
+                  className={`flex items-center px-4 py-1.5 bg-gray-800/50 rounded-full ${getTimeColor()}`}
+                >
+                  <Timer className="w-4 h-4 mr-2" />
+                  <span className="text-md font-medium">{timeLeft}s</span>
+                </div>
               </div>
 
-              {/* Creator Controls */}
-              {!roomInfo?.isGameStarted && (
-                <div className="flex space-x-2">
-                  {isCreator ? (
-                    <>
+              {/* Right Controls Section */}
+              <div className="flex items-center space-x-4">
+                {/* Players Count */}
+                <div className="flex items-center px-3 py-1.5 bg-gray-800/50 rounded-full">
+                  <Users className="w-4 h-4 mr-2 text-blue-400" />
+                  <span className="text-md text-gray-200">
+                    {roomInfo?.players?.length || 0}/{roomInfo?.maxPeople}
+                  </span>
+                </div>
+
+                {/* Creator Controls */}
+                {!roomInfo?.isGameStarted && (
+                  <div className="flex space-x-2">
+                    {isCreator ? (
+                      <>
+                        {roomInfo?.players?.length > 1 ? (
+                          <button
+                            onClick={handleStartGame}
+                            className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200"
+                          >
+                            <PlayCircle className="w-4 h-4 mr-2" />
+                            <span>Start Game</span>
+                          </button>
+                        ) : (
+                          <button
+                            className="flex items-center px-4 py-2 bg-green-300 text-white rounded-lg cursor-not-allowed opacity-70 hover:bg-green-300"
+                            disabled
+                          >
+                            <PlayCircle className="w-4 h-4 mr-2" />
+                            <span>Start Game</span>
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setIsUpdateModalOpen(true)}
+                          className="flex items-center px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg transition-colors duration-200 border border-gray-600"
+                        >
+                          <Settings className="w-4 h-4 mr-2" />
+                          <span>Settings</span>
+                        </button>
+                      </>
+                    ) : (
                       <button
-                        onClick={handleStartGame}
-                        className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200"
+                        onClick={() =>
+                          client?.publish({
+                            destination: `/app/ready/${roomInfo.roomId}`,
+                            body: "",
+                            headers: { "content-type": "text/plain" },
+                          })
+                        }
+                        className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
                       >
                         <PlayCircle className="w-4 h-4 mr-2" />
-                        <span>Start Game</span>
+                        <span>Ready</span>
                       </button>
-                      <button
-                        onClick={() => setIsUpdateModalOpen(true)}
-                        className="flex items-center px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg transition-colors duration-200 border border-gray-600"
-                      >
-                        <Settings className="w-4 h-4 mr-2" />
-                        <span>Settings</span>
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      onClick={() =>
-                        client?.publish({
-                          destination: `/app/ready/${roomInfo.roomId}`,
-                          body: "",
-                          headers: { "content-type": "text/plain" },
-                        })
-                      }
-                      className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
-                    >
-                      <PlayCircle className="w-4 h-4 mr-2" />
-                      <span>Ready</span>
-                    </button>
-                  )}
-                </div>
-              )}
+                    )}
+                  </div>
+                )}
 
-              {/* Exit Button */}
-              {!roomInfo?.isGameStarted && (
-                <button
-                  onClick={handleExitRoom}
-                  className="flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  <span>Exit</span>
-                </button>
-              )}
+                {/* Exit Button */}
+                {!roomInfo?.isGameStarted && (
+                  <button
+                    onClick={handleExitRoom}
+                    className="flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    <span>Exit</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
+        {/* Floating Word Display */}
+        {word && (
+          <div className="absolute left-1/2 -bottom-[120px] transform -translate-x-1/2 z-50">
+            <div className="px-6 py-3 bg-blue-800/60 backdrop-blur-sm rounded-2xl border-2 border-blue-400/70 shadow-lg">
+              <span className="text-xl sm:text-2xl font-bold text-white">
+                {word}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -534,7 +549,7 @@ const MainLayout = () => {
           />
 
           <div className="flex-1 bg-white/5 rounded-lg border border-gray-700 shadow-lg">
-            <div className="p-6 h-full">
+            <div className="p-4 h-full">
               <div className="h-full bg-white rounded-xl border border-gray-200 shadow-lg">
                 <Canvas />
               </div>
