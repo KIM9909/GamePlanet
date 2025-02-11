@@ -53,30 +53,6 @@ const SideLayout = ({ children }) => {
                     </Link>
                   </div>
 
-                  {/* GAME RULE */}
-                  <div className="m-2">
-                    <Link
-                      to={`/game-info/${gameInfo.gameInfoId}/rule`}
-                      className={linkStyle}
-                      onClick={() =>
-                        setActiveLink(`/game-info/${gameInfo.gameInfoId}/rule`)
-                      }
-                      state={{ gameInfo }}
-                      style={
-                        activeLink === `/game-info/${gameInfo.gameInfoId}/rule`
-                          ? {
-                              color: "#D7C3F1",
-                              textShadow: textShadow,
-                            }
-                          : {
-                              textShadow: textShadow,
-                            }
-                      }
-                    >
-                      GAME RULE
-                    </Link>
-                  </div>
-
                   {/* COMMUNITY */}
                   <div className="m-2">
                     <Link

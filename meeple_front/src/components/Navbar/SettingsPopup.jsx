@@ -29,6 +29,8 @@ const SettingsPopup = ({ isOpen, onClose }) => {
     setVolume(newVolume);
     if (audioElement) {
       audioElement.volume = newVolume / 100;
+      // localStorage에 볼륨 값 저장
+      localStorage.setItem("bgmVolume", newVolume / 100);
     }
   };
 
@@ -36,6 +38,8 @@ const SettingsPopup = ({ isOpen, onClose }) => {
     if (audioElement) {
       audioElement.muted = !audioElement.muted;
       setIsMuted(!isMuted);
+      // localStorage에 음소거 상태 저장
+      localStorage.setItem("bgmMuted", !isMuted);
     }
   };
 
