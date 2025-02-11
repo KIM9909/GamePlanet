@@ -30,22 +30,15 @@ const GameInfoPage = () => {
   if (!data) return <div>데이터가 없습니다.</div>;
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-    <div className="min-h-screen p-8 relative z-5">
-      <div className="max-w-7xl mx-auto h-full">
-        <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-indigo-500/30">
-          <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-            {data.game.gameName}
-          </h1>
-          <p className="text-white">
-            {data.gameInfoContent}
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            
-          </div>
+    <div className="max-w-4xl mx-auto p-6">
+      <section className="mb-6">
+        <h1 className="text-2xl font-bold">{data.game.gameName}</h1>
+      </section>
+      <section className="prose prose-lg">
+        <div className="whitespace-pre-wrap">
+          {data.gameInfoContent}
         </div>
-      </div>
-    </div>
+      </section>
     </div>
   );
 };
