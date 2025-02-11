@@ -113,7 +113,7 @@ public class CatchMindServiceImpl implements CatchMindService {
 
     @Override
     public ResponseJoinRoom joinRoom(RequestJoinRoom request) {
-        if (!redisTemplate.opsForHash().get(AI_KEY, request.getPassword()).equals("ON")
+        if (!redisTemplate.opsForHash().get(AI_KEY, request.getPlayerName()).equals("ON")
         ) {
             new EntityNotFoundException("AI 기능을 켜주세요");
         }
