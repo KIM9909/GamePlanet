@@ -80,7 +80,8 @@ dependencies {
     // Springdoc OpenAPI
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
 
-
+    // aws S3
+    implementation 'com.amazonaws:aws-java-sdk-s3:1.12.510'
 }
 
 bootJar {
