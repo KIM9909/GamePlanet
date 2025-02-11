@@ -31,11 +31,13 @@ import FallingStars from "./components/background/FallingStars";
 
 import ErrorPage from "./pages/error/ErrorPage";
 import CustomEditor from "./components/info/gamecustom/CustomEditor";
+import BackgroundMusic from "./components/background/BackGroundMusic";
 
 function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <BackgroundMusic />
       <TopLayout>
         <SideLayout>
           <FallingStars />
@@ -100,13 +102,12 @@ function App() {
               <Route path="/catch-mind/:roomId" element={<CatchMindPage />} />
               <Route path="/catch-mind" element={<CatchMindListPage />} />
 
-
               {/* Home & Main */}
               <Route path="/home" element={<HomePage />} />
               <Route path="/" element={<MainPage />} />
 
-            {/* GameInfo */}
-            <Route path="/game/:gameId" element={<GameInfoPage />} />
+              {/* GameInfo */}
+              <Route path="/game/:gameId" element={<GameInfoPage />} />
 
               {/* Profile */}
               <Route path="/profile/:userId" element={<ProfilePage />} />
@@ -116,19 +117,21 @@ function App() {
                 path="/game-info/:gameInfoId/custom"
                 element={<CustomPage />}
               />
-              <Route path="game-info/:gameInfoId/custom/editor" 
-              element={<CustomEditor/>}/>
+              <Route
+                path="game-info/:gameInfoId/custom/editor"
+                element={<CustomEditor />}
+              />
 
-            {/* Cockroach Room List */}
-            <Route path="/test/cockroach" element={<CockroachRoom />} />
+              {/* Cockroach Room List */}
+              <Route path="/test/cockroach" element={<CockroachRoom />} />
 
-            {/* INTRODUCE */}
-            <Route path="/introduce" element={<Introduce />} />
+              {/* INTRODUCE */}
+              <Route path="/introduce" element={<Introduce />} />
 
-            {/* ERROR */}
-              <Route path="/errorpage" element={<ErrorPage/>} />
-          </Routes>
-        </FriendModalLayout>
+              {/* ERROR */}
+              <Route path="/errorpage" element={<ErrorPage />} />
+            </Routes>
+          </FriendModalLayout>
         </SideLayout>
       </TopLayout>
     </BrowserRouter>

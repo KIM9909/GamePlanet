@@ -4,21 +4,32 @@ import { useSelector } from "react-redux";
 import { SocketContext } from "../../../../layout/SocketLayout";
 
 const WaitingChat = ({ roomId, players }) => {
-  const [messages, setMessages] = useState([
-    {
-      type: "system",
-      sender: "system",
-      content: "대기방에성 유저들과 소통하세요!!",
-    },
-  ]);
   const [newMessage, setNewMessage] = useState("");
   const chatBoxRef = useRef(null);
   const userId = Number(useSelector((state) => state.user.userId));
 
-  // 소켓 컨텍스트에서 chatWaitingRoom과 roomSocketData를 가져옵니다
-  const { connected, chatMessage, chatWaitingRoom } = useContext(SocketContext);
+  const { connected, chatMessage, chatWaitingRoom, roomNotifi, setRoomNotifi } =
+    useContext(SocketContext);
 
-  // 채팅 메시지를 받았을 때의 핸들러
+  const [messages, setMessages] = useState([
+    {
+      type: "system",
+      sender: "system",
+      content: "유저들과 소통하세요!!",
+    },
+  ]);
+
+  useEffect(() => {
+    if (roomNotifi) {
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { type: "system", sender: "system", content: roomNotifi },
+      ]);
+      setRoomNotifi("");
+    }
+  }, [roomNotifi]);
+
+  // 채팅 메시지
   useEffect(() => {
     if (chatMessage && chatMessage.type === "chat") {
       const { sender, content } = chatMessage;

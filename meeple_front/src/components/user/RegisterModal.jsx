@@ -55,6 +55,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
     terms: false, // 이용약관 동의
     privacy: false, // 개인정보 동의
     device: false, // 기기접근 동의
+    AI: false,
   });
 
   // 모달 닫기 시 초기화
@@ -490,10 +491,23 @@ const RegisterModal = ({ isOpen, onClose }) => {
                 <hr className="my-4" />
 
                 <div className="p-3 bg-gray-50 rounded-md text-sm text-gray-600">
-                  본 서비스는 원활한 소통을 위해 화상 카메라와 마이크 사용이
-                  필수적입니다. 서비스 이용을 위한 카메라 및 마이크 기기 접근과
-                  사용에 동의해주세요.
+                  1️⃣ 본 서비스는 화상 카메라 및 마이크 사용이 필수적입니다.{" "}
+                  <br></br>
+                  <br></br>
+                  2️⃣ 이용을 위한 카메라 및 마이크 기기 접근에 동의해주세요.{" "}
+                  <br></br>
+                  <br></br>
+                  3️⃣ 청정한 소통 위한 욕설감지 AI프로그램 설치에 동의해주세요.
                 </div>
+
+                <span className="text-red-500">
+                  <div className="text-center text-xl">⚠️주의⚠️</div>
+                  <div className="text-center text-sm">
+                    서비스 이용시 욕설을 할 경우 음성이 녹음될 수 있습니다.
+                  </div>
+                </span>
+
+                <hr className="my-4" />
 
                 <div className="space-y-4">
                   <div className="flex items-center">
@@ -550,6 +564,25 @@ const RegisterModal = ({ isOpen, onClose }) => {
                     />
                     <label htmlFor="deviceAgreement" className="text-sm">
                       [필수] 화상/음성 채팅 이용 동의
+                    </label>
+                  </div>
+
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="privacyAgreement"
+                      className="mr-2"
+                      checked={termsAgreed.AI}
+                      onChange={(e) =>
+                        setTermsAgreed((prev) => ({
+                          ...prev,
+                          AI: e.target.checked,
+                        }))
+                      }
+                      required
+                    />
+                    <label htmlFor="privacyAgreement" className="text-sm">
+                      [필수] AI 욕설 감지 프로그램 설치 동의
                     </label>
                   </div>
                 </div>

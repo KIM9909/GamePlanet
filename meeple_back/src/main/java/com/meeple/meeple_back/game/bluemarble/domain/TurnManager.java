@@ -79,6 +79,7 @@ public class TurnManager {
 		}
 
 		if (rolledDouble()) {
+			doubleCount = 2;
 			return TurnEndResponse.diceDoubleOneMoreTurn(getCurrentPlayer(), currentPlayerIndex,
 					round);
 		}
