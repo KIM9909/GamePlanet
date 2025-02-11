@@ -88,8 +88,10 @@ public class GameInfoServiceImpl implements GameInfoService {
         GameInfo gameInfo = gameInfoRepository.findById(gameInfoId).get();
 
         ResponseGameInfo response = ResponseGameInfo.builder()
+                .gameInfoId(gameInfo.getGameInfoId())
                 .gameInfoContent(gameInfo.getGameInfoContent())
                 .gameRule(gameInfo.getGameRule())
+                .gameInfoFile(gameInfo.getGameInfoFile())
                 .game(gameInfo.getGame())
                 .build();
 
