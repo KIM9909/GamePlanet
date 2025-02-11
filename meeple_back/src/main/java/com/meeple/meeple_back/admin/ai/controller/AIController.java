@@ -3,6 +3,7 @@ package com.meeple.meeple_back.admin.ai.controller;
 import com.meeple.meeple_back.admin.ai.model.request.RequestCreateVoiceLog;
 import com.meeple.meeple_back.admin.ai.model.request.RequestGiveStream;
 import com.meeple.meeple_back.admin.ai.model.request.RequestLogin;
+import com.meeple.meeple_back.admin.ai.model.request.RequestProcessVoiceLog;
 import com.meeple.meeple_back.admin.ai.model.response.*;
 import com.meeple.meeple_back.admin.ai.service.AIService;
 import lombok.AllArgsConstructor;
@@ -31,11 +32,11 @@ public class AIController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping( value = "/voice-log", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/voice-log", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ResponseCreateVoiceLog> createVoiceLog(
-        @RequestPart("audio") MultipartFile audio,
-        @RequestPart("voiceLog") String convertResult,
-        @RequestPart("userNickname") String userNickname
+            @RequestPart("audio") MultipartFile audio,
+            @RequestPart("voiceLog") String convertResult,
+            @RequestPart("userNickname") String userNickname
     ) {
         ResponseCreateVoiceLog response = aiService.createVoiceLog(audio, convertResult, userNickname);
 
@@ -58,9 +59,18 @@ public class AIController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/voice-log")
+    public ResponseEntity<ResponseProcessVoiceLog> processVoiceLog(
+            @RequestBody RequestProcessVoiceLog request
+    ) {
+        ResponseProcessVoiceLog response = aiService.processVoiceLog(request);
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/logout")
     public ResponseEntity<ResponseLogout> logout(
-        @RequestParam String userNickname
+            @RequestParam String userNickname
     ) {
         ResponseLogout response = aiService.logout(userNickname);
 

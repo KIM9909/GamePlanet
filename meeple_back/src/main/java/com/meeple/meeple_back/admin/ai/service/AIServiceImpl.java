@@ -2,12 +2,14 @@ package com.meeple.meeple_back.admin.ai.service;
 
 import com.meeple.meeple_back.admin.ai.model.entity.VoiceLog;
 import com.meeple.meeple_back.admin.ai.model.request.RequestLogin;
+import com.meeple.meeple_back.admin.ai.model.request.RequestProcessVoiceLog;
 import com.meeple.meeple_back.admin.ai.model.response.*;
 import com.meeple.meeple_back.admin.ai.repo.VoiceLogRepository;
 import com.meeple.meeple_back.aws.s3.service.S3Service;
 import com.meeple.meeple_back.user.model.User;
 import com.meeple.meeple_back.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -19,9 +21,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @AllArgsConstructor
-public class AIServiceImpl implements AIService{
+public class AIServiceImpl implements AIService {
     private static final String ROOM_KEY = "AI_APP_STATUS";
-    private final UserRepository  userRepository;
+    private final UserRepository userRepository;
     private final VoiceLogRepository voiceLogRepository;
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, Object> redisTemplate;
@@ -83,19 +85,46 @@ public class AIServiceImpl implements AIService{
     }
 
     @Override
+    public ResponseProcessVoiceLog processVoiceLog(RequestProcessVoiceLog request) {
+        VoiceLog voiceLog = voiceLogRepository.findById(request.getVoiceLogId())
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 음성 로그입니다."));
+
+        if (request.getVoiceLogProcessStatus().equals("BAN")) {
+            User user = userRepository.findById(voiceLog.getUser().getUserId())
+                    .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 회원입니다."));
+
+            user.setUserDeletedAt(LocalDateTime.now());
+
+            voiceLog.setVoiceProcessStatus("Y");
+
+            userRepository.save(user);
+        }
+        voiceLog.setVoiceProcessStatus("Y");
+        VoiceLog savedVoiceLog = voiceLogRepository.save(voiceLog);
+
+        ResponseProcessVoiceLog response = ResponseProcessVoiceLog.builder()
+                .code(200)
+                .message("처리완료")
+                .voiceLog(savedVoiceLog)
+                .build();
+
+        return response;
+    }
+
+    @Override
     public ResponseLogout logout(String userNickname) {
         redisTemplate.opsForHash().delete(ROOM_KEY, userNickname);
         ResponseLogout response = ResponseLogout.builder()
-            .code(200)
-            .message("로그아웃 성공")
-            .build();
+                .code(200)
+                .message("로그아웃 성공")
+                .build();
 
         return response;
     }
 
     @Override
     public ResponseCreateVoiceLog createVoiceLog(MultipartFile audio, String convertResult,
-        String userNickname) {
+                                                 String userNickname) {
         User user = userRepository.findByUserNickname(userNickname);
 
         String fileUrl = s3Service.uploadFile(audio);
@@ -104,15 +133,16 @@ public class AIServiceImpl implements AIService{
         voiceLog.setUser(user);
         voiceLog.setVoiceLog(convertResult);
         voiceLog.setVoiceTime(LocalDateTime.now());
+        voiceLog.setVoiceProcessStatus("N");
         voiceLog.setVoiceFileUrl(fileUrl);
 
         VoiceLog savedvoiceLog = voiceLogRepository.save(voiceLog);
 
         ResponseCreateVoiceLog response = ResponseCreateVoiceLog.builder()
-            .code(200)
-            .message("저장 성공")
-            .voiceLog(savedvoiceLog)
-            .build();
+                .code(200)
+                .message("저장 성공")
+                .voiceLog(savedvoiceLog)
+                .build();
 
         return response;
     }
