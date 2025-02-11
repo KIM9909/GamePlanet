@@ -111,7 +111,7 @@ const TileModal = ({ onClose, cardId }) => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full p-2 bg-slate-600 text-white rounded border border-slate-500 focus:border-cyan-400 outline-none"
-              placeholder="예: 금성"
+              placeholder="이름을 입력해주세요"
             />
           </div>
 
@@ -123,13 +123,14 @@ const TileModal = ({ onClose, cardId }) => {
                 type="number"
                 value={price}
                 onChange={(e) => {
-                  const value = Math.min(100, parseInt(e.target.value) || 0);
+                  const value = Math.min(60, parseInt(e.target.value) || 0);
                   setPrice(value);
                 }}
                 min="0"   
-                max="100" 
-                className="flex-1 p-2 bg-slate-600 text-white rounded border border-slate-500 focus:border-cyan-400 outline-none"
-                placeholder="예: 10"
+                max="60" 
+                className="flex-1 p-2 bg-slate-600 text-white rounded border border-slate-500 focus:border-cyan-400 outline-none
+                [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                placeholder="최대 60"
               />
               <input
                 type="color"
