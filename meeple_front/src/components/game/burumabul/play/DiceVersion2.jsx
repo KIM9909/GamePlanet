@@ -6,10 +6,12 @@ const DiceVersion2 = ({
   setFirstDice,
   setSecondDice,
   onComplete,
+  disabled,
 }) => {
   const [diceValues, setDiceValues] = useState([1, 1]);
   const [isRolling, setIsRolling] = useState(false);
   const [finalValues, setFinalValues] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const diceIcons = {
     1: Dice1,
@@ -23,13 +25,16 @@ const DiceVersion2 = ({
   useEffect(() => {
     if (!isRolling && finalValues) {
       // 주사위 굴리기가 끝났을 때 최종 값을 부모 컴포넌트에 전달
-      setDiceValues(finalValues);
-      setFirstDice(finalValues[0]);
-      setSecondDice(finalValues[1]);
-      if (onComplete) {
-        onComplete(finalValues[0] + finalValues[1]);
-      }
-      setFinalValues(null);
+      const updateDiceValues = async () => {
+        setDiceValues(finalValues);
+        setFirstDice(finalValues[0]);
+        setSecondDice(finalValues[1]);
+        if (onComplete) {
+          await onComplete(finalValues[0] + finalValues[1]);
+        }
+        setFinalValues(null);
+        setIsProcessing(false);
+      };
     }
   }, [isRolling, finalValues, setFirstDice, setSecondDice, onComplete]);
 

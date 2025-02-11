@@ -72,6 +72,7 @@ import QuestBuildBase from "./burumabul_Modal/QuestBuildBase.";
 import QuestBuyLand from "./burumabul_Modal/QuestBuyLand";
 import PayTollModal from "./burumabul_Modal/PayTollModal";
 import DiceVersion2 from "./DiceVersion2";
+import HeartPlayer from "./HeartPlayer";
 
 const Cell = ({
   position,
@@ -546,7 +547,11 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
       turnStart();
     }
   }, [nextAction]);
-  console.log(currentPlayerIndex, myIndex);
+  console.log("현재 순서랑 내 차례", currentPlayerIndex, myIndex);
+
+  // 주사위 액션 다음에 nextAction
+  const [isMovementComplete, setIsMovementComplete] = useState(true);
+  const [pendingAction, setPendingAction] = useState(null);
 
   // 주사위 굴리기
   useEffect(() => {
@@ -555,7 +560,8 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
         isDiceRolling &&
         hasRolledDice &&
         firstDice !== null &&
-        secondDice !== null
+        secondDice !== null &&
+        isMovementComplete // 말 이동이 완료된 후에만 처리
       ) {
         try {
           const diceInfo = {
@@ -1180,7 +1186,6 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
 
   // Portal을 위한 state
   const [mountPortal, setMountPortal] = useState(false);
-  console.log(firstDice, secondDice);
 
   // 컴포넌트 마운트 후 Portal 활성화
   useEffect(() => {
@@ -1223,7 +1228,7 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
                 position: initialCameraPosition,
                 fov: 75,
               }}
-              dpr={[0.5, 1]}
+              dpr={[1, 1.5]}
               style={{ maxWidth: "1200px", maxHeight: "1000px" }}
               performance={{ min: 0.5 }}
               gl={{
@@ -1253,19 +1258,25 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
                 }
               }}
             >
-              <ambientLight intensity={2} />
-              <pointLight
+              <ambientLight intensity={1} /> {/* 주변광 밝기 증가 */}
+              <directionalLight
                 position={[10, 20, 10]}
-                intensity={0.8}
-                color="white"
+                intensity={3}
+                castShadow
+              />{" "}
+              {/* 태양광 추가 */}
+              <pointLight position={[10, 20, 10]} intensity={3} color="white" />
+              <spotLight
+                position={[0, 10, 0]}
+                angle={0.6}
+                penumbra={0.5}
+                intensity={3}
               />
-
               {/* 바닥 생성 */}
               <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.18, 0]}>
                 <planeGeometry args={[16.5, 16.5]} />
                 <meshStandardMaterial map={floor} color="#ffffff" />
               </mesh>
-
               {/* 타임머신 탑승장 */}
               <mesh position={[5, 0.01, -5]} rotation={[-Math.PI / 2, 0, 0]}>
                 <planeGeometry args={[5, 5]} />
@@ -1274,7 +1285,6 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
                   transparent={true}
                 />
               </mesh>
-
               {/* 텔레파시 카드 */}
               <mesh position={[5, 0.01, 4.5]} rotation={[-Math.PI / 2, 0, 0]}>
                 <planeGeometry args={[3, 5]} />
@@ -1283,7 +1293,6 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
                   transparent={true}
                 />
               </mesh>
-
               {/* 뉴런의 골짜기 */}
               <mesh position={[-5, 0.01, -5]} rotation={[-Math.PI / 2, 0, 0]}>
                 <planeGeometry args={[5, 5]} />
@@ -1292,7 +1301,6 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
                   transparent={true}
                 />
               </mesh>
-
               {/* OrbitControls로 카메라 이동 및 확대/축소 제어 */}
               <OrbitControls
                 ref={orbitControlsRef}
@@ -1310,13 +1318,13 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
                 zoomToCursor={true}
                 rotateSpeed={0.15}
               />
-
               {renderCells()}
               {players.slice(0, numPlayers).map((player, index) => (
-                <BlueRobot
+                <HeartPlayer
                   key={player.id}
                   position={getPlayerPosition(playersPositions[index], index)}
-                  scale={0.005}
+                  color={colors[index]} // 플레이어 색상 적용
+                  scale={0.6} // 하트 크기 조절
                 />
               ))}
               {renderSpaceBases}
