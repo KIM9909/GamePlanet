@@ -35,10 +35,13 @@ const DiceVersion2 = ({
         setFinalValues(null);
         setIsProcessing(false);
       };
+      updateDiceValues();
     }
   }, [isRolling, finalValues, setFirstDice, setSecondDice, onComplete]);
 
   const rollDice = () => {
+    if (isProcessing || disabled) return;
+    setIsProcessing(true);
     setIsRolling(true);
     setOnRollDice(true);
 
@@ -63,14 +66,14 @@ const DiceVersion2 = ({
   };
 
   return (
-    <div className="flex flex-col items-center gap-6 p-6 bg-white rounded-lg shadow-lg">
+    <div className="flex flex-row items-center gap-6 p-4  rounded-lg shadow-lg">
       <div className="flex gap-8">
         {diceValues.map((value, index) => {
           const DiceIcon = diceIcons[value];
           return (
             <div
               key={index}
-              className={`transform transition-all duration-200 ${
+              className={`transform transition-all duration-200 bg-white rounded-lg${
                 isRolling ? "animate-bounce" : ""
               }`}
             >
