@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import CommentList from '../../../components/info/CommentList';
+import CommentList from '../../../components/info/board/CommentList';
 import { GameInfoAPI } from '../../../sources/api/GameInfoAPI';
 
 const ArticleDetailPage = () => {

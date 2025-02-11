@@ -3,7 +3,7 @@ import ReviewForm from "../info/ReviewForm"
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import ReviewItem from "./ReviewItem";
-import { GameInfoAPI } from '../../sources/api/GameInfoAPI';
+import { GameInfoAPI } from '../../../sources/api/GameInfoAPI';
 import { useSelector } from 'react-redux';
 
 const ReviewList = () => {

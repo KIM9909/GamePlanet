@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GameInfoAPI } from '../../sources/api/GameInfoAPI';
+import { GameInfoAPI } from '../../../sources/api/GameInfoAPI';
 
 const CommentForm = ({ initialData, articleId, commentId, userId, onSuccess }) => {
   const [content, setContent] = useState('');

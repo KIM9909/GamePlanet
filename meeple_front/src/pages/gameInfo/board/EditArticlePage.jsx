@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import BoardHeader from "../../../components/info/BoardHeader";
-import ArticleForm from "../../../components/info/ArticleForm";
+import BoardHeader from "../../../components/info/board/BoardHeader";
+import ArticleForm from "../../../components/info/board/ArticleForm";
 import { GameInfoAPI } from '../../../sources/api/GameInfoAPI';
 
 const EditArticlePage = () => {
