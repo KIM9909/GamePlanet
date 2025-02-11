@@ -31,7 +31,9 @@ import FallingStars from "./components/background/FallingStars";
 
 import ErrorPage from "./pages/error/ErrorPage";
 import CustomEditor from "./components/info/gamecustom/CustomEditor";
+import CustomDetail from "./components/info/gamecustom/CustomDetail";
 import BackgroundMusic from "./components/background/BackGroundMusic";
+
 
 function App() {
   return (
@@ -117,10 +119,11 @@ function App() {
                 path="/game-info/:gameInfoId/custom"
                 element={<CustomPage />}
               />
-              <Route
-                path="game-info/:gameInfoId/custom/editor"
-                element={<CustomEditor />}
-              />
+              <Route path="/game-info/:gameInfoId/custom/editor" 
+              element={<CustomEditor/>}/>
+              <Route path="/game-info/:gameInfoId/custom/detail/:customId"
+              element={<CustomDetail/>}/>
+
 
               {/* Cockroach Room List */}
               <Route path="/test/cockroach" element={<CockroachRoom />} />
