@@ -3,9 +3,8 @@ package com.meeple.meeple_back.admin.ai.controller;
 import com.meeple.meeple_back.admin.ai.model.request.RequestCreateVoiceLog;
 import com.meeple.meeple_back.admin.ai.model.request.RequestGiveStream;
 import com.meeple.meeple_back.admin.ai.model.request.RequestLogin;
-import com.meeple.meeple_back.admin.ai.model.response.ResponseCreateVoiceLog;
-import com.meeple.meeple_back.admin.ai.model.response.ResponseLogin;
-import com.meeple.meeple_back.admin.ai.model.response.ResponseLogout;
+import com.meeple.meeple_back.admin.ai.model.request.RequestProcessVoiceLog;
+import com.meeple.meeple_back.admin.ai.model.response.*;
 import com.meeple.meeple_back.admin.ai.service.AIService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,13 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
@@ -39,20 +32,45 @@ public class AIController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping( value = "/voice-log", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/voice-log", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ResponseCreateVoiceLog> createVoiceLog(
-        @RequestPart("audio") MultipartFile audio,
-        @RequestPart("voiceLog") String convertResult,
-        @RequestPart("userNickname") String userNickname
+            @RequestPart("audio") MultipartFile audio,
+            @RequestPart("voiceLog") String convertResult,
+            @RequestPart("userNickname") String userNickname
     ) {
         ResponseCreateVoiceLog response = aiService.createVoiceLog(audio, convertResult, userNickname);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @GetMapping("/voice-log")
+    public ResponseEntity<ResponseVoiceLogList> voiceLogList() {
+        ResponseVoiceLogList response = aiService.voiceLogList();
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/voice-log/{voiceLogId}")
+    public ResponseEntity<ResponseVoiceLog> voiceLog(
+            @PathVariable long voiceLogId
+    ) {
+        ResponseVoiceLog response = aiService.voiceLog(voiceLogId);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/voice-log")
+    public ResponseEntity<ResponseProcessVoiceLog> processVoiceLog(
+            @RequestBody RequestProcessVoiceLog request
+    ) {
+        ResponseProcessVoiceLog response = aiService.processVoiceLog(request);
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/logout")
     public ResponseEntity<ResponseLogout> logout(
-        @RequestParam String userNickname
+            @RequestParam String userNickname
     ) {
         ResponseLogout response = aiService.logout(userNickname);
 

@@ -36,6 +36,9 @@ public class VoiceLog {
     @Column(name = "voice_file_url")
     private String voiceFileUrl;
 
+    @Column(name = "voice_process_status")
+    private String voiceProcessStatus;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
