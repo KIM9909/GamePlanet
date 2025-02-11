@@ -48,7 +48,12 @@ const Custom = () => {
           <div 
             key={game.id}
             className="bg-slate-800 rounded-lg overflow-hidden hover:transform hover:scale-105 transition-transform cursor-pointer"
-            // 클릭시 디테일로
+            onClick={() => navigate(`/game-info/${gameInfo.gameInfoId}/custom/detail/${game.id}`, {
+              state: { 
+                gameInfo,
+                customGame: game 
+              }
+            })}
           >
             <img 
               src={game.thumbnail} 
