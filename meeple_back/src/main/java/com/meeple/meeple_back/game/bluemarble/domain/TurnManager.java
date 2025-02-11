@@ -1,12 +1,13 @@
 package com.meeple.meeple_back.game.bluemarble.domain;
 
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
+import lombok.Getter;
+import org.springframework.data.annotation.PersistenceConstructor;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
-import lombok.Getter;
-import org.springframework.data.annotation.PersistenceConstructor;
 
 /**
  * 턴 관리 클래스. 플레이어 순서를 관리하고, 더블 카운트, 현재 라운드를 관리한다.
@@ -31,7 +32,7 @@ public class TurnManager {
 	private static Logger logger = Logger.getLogger(TurnManager.class.getName());
 	private int initialPlayerCount;
 	private List<Player> players;
-	private double doubleCount;
+	private int doubleCount;
 	private int round;
 	private int currentPlayerIndex;
 
@@ -39,8 +40,8 @@ public class TurnManager {
 	}
 
 	@PersistenceConstructor
-	private TurnManager(List<Player> players, double doubleCount, int round,
-			int currentPlayerIndex) {
+	private TurnManager(List<Player> players, int doubleCount, int round,
+	                    int currentPlayerIndex) {
 		this.players = players;
 		this.doubleCount = doubleCount;
 		this.round = round;

@@ -5,6 +5,7 @@ import com.meeple.meeple_back.game.bluemarble.domain.*;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.redis.core.RedisHash;
 
 import java.util.List;
@@ -28,6 +29,7 @@ public class GamePlayEntity {
 
 	}
 
+	@PersistenceConstructor
 	public GamePlayEntity(int gamePlayId, List<Player> players,
 	                      String gameStatus, int round, List<Tile> board, List<Card> cards,
 	                      TurnManager turnManager
