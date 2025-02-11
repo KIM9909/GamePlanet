@@ -3,7 +3,7 @@ import axios from "axios";
 const GAMEINFO_API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/game-info`; // 배포 API 주소
 // const GAMEINFO_API_BASE_URL = `${import.meta.env.VITE_LOCAL_API_BASE_URL}/game-info`; // 로컬 API 주소
 
-const config = { "Content-Type": "application/json" };
+const config = {"Content-Type": 'application/json'};
 
 export const GameInfoAPI = {
   //게임 목록 조회
