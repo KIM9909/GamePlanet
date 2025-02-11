@@ -3,7 +3,7 @@ import { useState } from 'react';
 import CommentItem from './CommentItem';
 import CommentForm from './CommentForm';
 import { useSelector } from 'react-redux';
-import { GameInfoAPI } from '../../sources/api/GameInfoAPI';
+import { GameInfoAPI } from '../../../sources/api/GameInfoAPI';
 
 const CommentList = ({ articleId, commentListData, onCommentUpdate }) => {
   const [content, setContent] = useState('');

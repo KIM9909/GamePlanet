@@ -1,4 +1,4 @@
-import ArticleItem from "../../../components/info/ArticleItem"
+import ArticleItem from "../../../components/info/board/ArticleItem"
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { GameInfoAPI } from '../../../sources/api/GameInfoAPI';

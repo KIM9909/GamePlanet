@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaStar } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { GameInfoAPI } from '../../sources/api/GameInfoAPI';
+import { GameInfoAPI } from '../../../sources/api/GameInfoAPI';
 
 const ReviewForm = ({ initialData, onSuccess }) => {
   const [rating, setRating] = useState(0);

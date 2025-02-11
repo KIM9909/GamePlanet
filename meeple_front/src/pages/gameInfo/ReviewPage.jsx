@@ -1,8 +1,8 @@
 // ReviewList.jsx
-import ReviewForm from "../../components/info/ReviewForm"
+import ReviewForm from "../../components/info/gamereview/ReviewForm"
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import ReviewItem from "../../components/info/ReviewItem";
+import ReviewItem from "../../components/info/gamereview/ReviewItem";
 import { GameInfoAPI } from '../../sources/api/GameInfoAPI';
 import { useSelector } from 'react-redux';
 
