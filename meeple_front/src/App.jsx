@@ -33,6 +33,9 @@ import ErrorPage from "./pages/error/ErrorPage";
 import CustomEditor from "./components/info/gamecustom/CustomEditor";
 import BackGroundMusic from "./components/background/BackGroundMusic";
 import CustomDetail from "./components/info/gamecustom/CustomDetail";
+import BackgroundMusic from "./components/background/BackGroundMusic";
+import ReportDetail from "./components/admin/ReportDetail";
+
 
 
 function App() {
@@ -47,6 +50,7 @@ function App() {
             <Routes>
               {/* Admin */}
               <Route path="/admin" element={<AdminPage />} />
+              <Route path="/admin/report/:reportId" element={<ReportDetail />} />
 
               {/* Board */}
               <Route path="/board" element={<BoardPage />} />
