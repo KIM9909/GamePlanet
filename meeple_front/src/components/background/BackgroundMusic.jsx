@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 
-const BackgroundMusic = () => {
+const BackGroundMusic = () => {
   const audioRef = useRef(null);
   const location = useLocation();
 
@@ -59,4 +59,4 @@ const BackgroundMusic = () => {
   return <audio ref={audioRef} src="../src/assets/bgm/MainBGM.mp3" autoPlay />;
 };
 
-export default BackgroundMusic;
+export default BackGroundMusic;

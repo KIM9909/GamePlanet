@@ -31,13 +31,13 @@ import FallingStars from "./components/background/FallingStars";
 
 import ErrorPage from "./pages/error/ErrorPage";
 import CustomEditor from "./components/info/gamecustom/CustomEditor";
-import BackgroundMusic from "./components/background/BackGroundMusic";
+import BackGroundMusic from "./components/background/BackGroundMusic";
 
 function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
-      <BackgroundMusic />
+      <BackGroundMusic />
       <TopLayout>
         <SideLayout>
           <FallingStars />

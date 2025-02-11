@@ -96,13 +96,25 @@ const HomePage = () => {
           </div>
         </div>
         <div className="p-6">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-2">
             <Star className="w-5 h-5 text-yellow-400" />
             <h2 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-cyan-400 bg-clip-text text-transparent">
               {gameInfo.game.gameName}
             </h2>
           </div>
-          <p className="text-gray-300 mb-4">{gameInfo.gameInfoContent}</p>
+          {/* <p className="text-gray-300 mb-4">{gameInfo.gameInfoContent}</p> */}
+          <div className="text-white ml-7 ">
+            {(() => {
+              switch (gameInfo.game.gameName) {
+                case "바퀴벌레 포커":
+                  return <div>바퀴벌레 포커 입니다.</div>;
+                case "부루마불":
+                  return <div>부루마불 입니다.</div>;
+                default:
+                  return <div>캐치마인드 입니다.</div>;
+              }
+            })()}
+          </div>
           {gameInfo.game.gameId === 2 && (
             <button
               onClick={() => setIsCreateBurumabulRoomModalOpen(true)}
