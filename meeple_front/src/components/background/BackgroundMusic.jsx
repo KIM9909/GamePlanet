@@ -62,7 +62,13 @@ const BackGroundMusic = () => {
     return null;
   }
 
-  return <audio ref={audioRef} src="../src/assets/bgm/MainBGM.mp3" autoPlay />;
+  return (
+    <audio
+      ref={audioRef}
+      src="https://meeple-file-server.s3.ap-northeast-2.amazonaws.com/static-files/MainBGM.mp3"
+      autoPlay
+    />
+  );
 };
 
 export default BackGroundMusic;

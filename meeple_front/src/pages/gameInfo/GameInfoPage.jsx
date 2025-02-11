@@ -13,11 +13,11 @@ const FormattedLine = ({ line }) => {
         <h1 className="text-3xl font-bold text-cyan-400 flex items-center gap-4 mt">
           <Star className="w-6 h-6 text-yellow-400" />
           {korName}
-          {engName && (
+          {/* {engName && (
             <span className="flex items-center gap-2 text-2xl text-gray-400">
               {engName}
             </span>
-          )}
+          )} */}
         </h1>
       </div>
     );
