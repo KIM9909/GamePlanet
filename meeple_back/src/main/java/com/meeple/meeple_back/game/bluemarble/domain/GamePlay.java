@@ -8,10 +8,7 @@ import com.meeple.meeple_back.game.bluemarble.controller.response.DrawCardRespon
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.*;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.PayFeeResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
-import com.meeple.meeple_back.game.bluemarble.util.ExcelReader;
-import com.meeple.meeple_back.game.bluemarble.util.SeedCertificateCardParser;
-import com.meeple.meeple_back.game.bluemarble.util.TelepathyCardParser;
-import com.meeple.meeple_back.game.bluemarble.util.TileParser;
+import com.meeple.meeple_back.game.bluemarble.util.*;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
@@ -51,9 +48,11 @@ public class GamePlay {
 		ExcelReader<SeedCertificateCard> seedCertificateCardParser = new SeedCertificateCardParser();
 		List<SeedCertificateCard> seedCards = seedCertificateCardParser.readExcelFile();
 		List<TelepathyCard> telepathyCards = new TelepathyCardParser().readExcelFile();
+		List<NeuronsValleyCard> neuronsValleyCards = new NeuronsValleyParser().readExcelFile();
 		List<Card> cards = new ArrayList<>();
 		cards.addAll(seedCards);
 		cards.addAll(telepathyCards);
+		cards.addAll(neuronsValleyCards);
 //		for (int i = 0; i <= 37; i++) {
 //			SeedCertificateCard card = new SeedCertificateCard(
 //					i,
@@ -275,13 +274,26 @@ public class GamePlay {
 		Player player = getValidatedPlayer(cardDrawRequest.getPlayerId());
 
 		Tile tile = findTileById(cardDrawRequest.getTileId());
+		// 타일 타입별로 카드 뽑기
+		TileType tileType = tile.getType();
+		if (tileType == TileType.TELEPATHY_CARD) {
+			// 텔레파시 카드 뽑기
+			TelepathyCard card = (TelepathyCard) findAndRemoveCardByNumberAndType(tile.getId(),
+					CardType.TELEPATHY_CARD);
+			player.addCardOwned(card);
+			return DrawCardResponse.from(player.getPlayerId(), player, card, ActionType.CHECK_END,
+					getCards());
+		}
 
-		// 카드 뽑아오기
-		Card card = findAndRemoveCardByNumberAndType(tile.getId(),
-				CardType.valueOf(tile.getType().name()));
-
-		player.addCardOwned(card);
-		return DrawCardResponse.from(player.getPlayerId(), player, card, ActionType.USE_CARD,
+		if (tileType == TileType.NEURONS_VALLEY_CARD) {
+			// 뉴런의 골짜기 카드 뽑기
+			NeuronsValleyCard card = (NeuronsValleyCard) findAndRemoveCardByNumberAndType(tile.getId(),
+					CardType.NEURONS_VALLEY_CARD);
+			player.addCardOwned(card);
+			return DrawCardResponse.from(player.getPlayerId(), player, card, ActionType.CHECK_END,
+					getCards());
+		}
+		return DrawCardResponse.from(player.getPlayerId(), player, null, ActionType.CHECK_END,
 				getCards());
 	}
 
