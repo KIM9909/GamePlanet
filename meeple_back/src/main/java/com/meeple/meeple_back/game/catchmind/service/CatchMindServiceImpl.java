@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class CatchMindServiceImpl implements CatchMindService {
     private static final String ROOM_KEY = "CATCH_MIND_GAME_ROOMS";
+    private static final String AI_KEY = "AI_APP_STATUS";
     private final RedisTemplate<String, Object> redisTemplate;
     private final ChatMessageRespository chatMessageRespository;
     private final RoomRepository roomRepository;
@@ -45,6 +46,11 @@ public class CatchMindServiceImpl implements CatchMindService {
     /* 게임방 로직 */
     @Override
     public ResponseCreateRoom createRoom(RequestCreateRoom request) {
+        if (redisTemplate.opsForHash().get(AI_KEY, request.getCreator()).equals(null)
+        ) {
+            new EntityNotFoundException("AI 기능을 켜주세요");
+        }
+
         Map<String, Object> roomInfo = new HashMap<>();
 
         List<String> players = new ArrayList<>();
@@ -107,6 +113,10 @@ public class CatchMindServiceImpl implements CatchMindService {
 
     @Override
     public ResponseJoinRoom joinRoom(RequestJoinRoom request) {
+        if (redisTemplate.opsForHash().get(AI_KEY, request.getPassword()).equals(null)
+        ) {
+            new EntityNotFoundException("AI 기능을 켜주세요");
+        }
         // 명시적 문자열 변환
         String roomIdStr = String.valueOf(request.getRoomId());
 

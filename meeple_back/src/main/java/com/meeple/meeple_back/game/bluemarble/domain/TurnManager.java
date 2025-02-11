@@ -1,12 +1,12 @@
 package com.meeple.meeple_back.game.bluemarble.domain;
 
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
-import lombok.Getter;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
+import lombok.Getter;
+import org.springframework.data.annotation.PersistenceConstructor;
 
 /**
  * 턴 관리 클래스. 플레이어 순서를 관리하고, 더블 카운트, 현재 라운드를 관리한다.
@@ -38,33 +38,31 @@ public class TurnManager {
 	public TurnManager() {
 	}
 
-	public TurnManager(List<Player> players, double doubleCount, int round, int turnCount) {
+	@PersistenceConstructor
+	private TurnManager(List<Player> players, double doubleCount, int round,
+			int currentPlayerIndex) {
 		this.players = players;
 		this.doubleCount = doubleCount;
 		this.round = round;
-		this.currentPlayerIndex = turnCount;
+		this.currentPlayerIndex = currentPlayerIndex;
 		this.initialPlayerCount = players.size();
 	}
 
-	private TurnManager(List<Player> players) {
-		this.players = players;
-		this.doubleCount = 0;
-		this.round = 1;
-		this.currentPlayerIndex = 0;
-		this.initialPlayerCount = players.size();
-	}
 
 	public static TurnManager init(List<Player> players) {
-		return new TurnManager(new ArrayList<>(players));
+		return new TurnManager(new ArrayList<>(players), 0, 1, 0);
 	}
 
 	public Player nextTurn() {
 		if (players.isEmpty()) {
 			return null;
 		}
-		Player currentElement = players.get(currentPlayerIndex);
+		if (currentPlayerIndex + 1 >= players.size()) {
+			round++;
+		}
 		currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
-		return currentElement;
+
+		return players.get(currentPlayerIndex);
 	}
 
 
@@ -75,13 +73,14 @@ public class TurnManager {
 	/**
 	 * 턴 끝내기. 턴 끝내는 조건 확인하고 다음턴 준비하기.
 	 */
-	public TurnEndResponse endTurn(List<Tile> board) {
+	public synchronized TurnEndResponse endTurn(List<Tile> board) {
 		if (checkWinnerByPlayerSize()) {
 			return TurnEndResponse.gameEnd(determineWinner(board));
 		}
 
 		if (rolledDouble()) {
-			return TurnEndResponse.diceDoubleOneMoreTurn(getCurrentPlayer(), currentPlayerIndex, round);
+			return TurnEndResponse.diceDoubleOneMoreTurn(getCurrentPlayer(), currentPlayerIndex,
+					round);
 		}
 		doubleCount = 0;
 
@@ -89,13 +88,12 @@ public class TurnManager {
 			return TurnEndResponse.gameEnd(getCurrentPlayer());
 		}
 
-
 		if (isCurrentPlayerBankrupt()) {
 			return handleBankruptCurrentPlayer(board);
 		}
 
 		Player nextPlayer = nextTurn();
-		logger.info("Current Player : " + players);
+
 		return TurnEndResponse.nextTurn(null, nextPlayer, currentPlayerIndex, round,
 				ActionType.START_TURN);
 	}

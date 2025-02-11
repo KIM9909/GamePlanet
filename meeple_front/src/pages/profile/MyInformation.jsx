@@ -365,7 +365,7 @@ const MyInformation = () => {
         </form>
       ) : (
         <>
-          <div className="flex flex-col space-y-7">
+          <div className="flex flex-col space-y-7 rounded-xl p-7 bg-zinc-900/60 shadow-lg backdrop-blur-sm border border-zinc-700/50">
             <h2 className="text-xl font-bold text-white">기본 정보</h2>
 
             <div className="grid grid-cols-2 gap-4">
@@ -378,7 +378,10 @@ const MyInformation = () => {
                 },
                 { label: "레벨", value: profile.userLevel },
               ].map(({ label, value }) => (
-                <div key={label} className="p-3 bg-zinc-900 rounded-lg">
+                <div
+                  key={label}
+                  className="p-3 bg-zinc-900 rounded-lg border border-zinc-700/50"
+                >
                   <p className="text-zinc-400 mb-1 text-sm">{label}</p>
                   <p className="text-white text-base">{value}</p>
                 </div>

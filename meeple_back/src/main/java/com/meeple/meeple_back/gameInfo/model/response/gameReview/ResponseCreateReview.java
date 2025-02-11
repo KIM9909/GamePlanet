@@ -4,8 +4,11 @@ import com.meeple.meeple_back.gameInfo.model.entity.GameInfo;
 import com.meeple.meeple_back.user.model.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
+import lombok.Data;
+import lombok.Getter;
 
 @Builder
+@Data
 public class ResponseCreateReview {
     @Schema(description = "게임 리뷰 PK", example = "1", required = true)
     private int reviewId;
