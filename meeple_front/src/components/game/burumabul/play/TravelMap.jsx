@@ -491,6 +491,10 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
 
   const [onRollDice, setOnRollDice] = useState(false);
 
+  // 이동 끝났는지 체크 (말)
+
+  const [isMovementComplete, setIsMovementComplete] = useState(false);
+
   // 주사위 버튼을 눌렀는지 안 눌렀는지 추적
   useEffect(() => {
     if (onRollDice) {
@@ -517,14 +521,14 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
     setCurrentPlayerIndex(currentPlayerSocketIndex);
     setIsDiceRolling(false);
     setHasRolledDice(false);
-    setFirstDice(null);
-    setSecondDice(null);
     setShowModal(false);
   }, [currentPlayerSocketIndex]);
 
   // 다음행동 유추
   useEffect(() => {
-    setNextAction(socketNext);
+    if (socketNext) {
+      setNextAction(socketNext);
+    }
   }, [socketNext]);
 
   // 턴 시작
@@ -549,19 +553,24 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
   }, [nextAction]);
   console.log("현재 순서랑 내 차례", currentPlayerIndex, myIndex);
 
-  // 주사위 액션 다음에 nextAction
-  const [isMovementComplete, setIsMovementComplete] = useState(true);
-  const [pendingAction, setPendingAction] = useState(null);
-
   // 주사위 굴리기
   useEffect(() => {
+    console.log("🔍 주사위 굴리기 감지:", {
+      nextAction,
+      isDiceRolling,
+      hasRolledDice,
+      firstDice,
+      secondDice,
+      myIndex,
+      currentPlayerIndex,
+      isMovementComplete,
+    });
     const handleDiceResult = async () => {
       if (
         isDiceRolling &&
         hasRolledDice &&
         firstDice !== null &&
-        secondDice !== null &&
-        isMovementComplete // 말 이동이 완료된 후에만 처리
+        secondDice !== null
       ) {
         try {
           const diceInfo = {
@@ -572,9 +581,6 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
           console.log("주사위 정보 :", diceInfo);
           await rollDice(diceInfo);
           setIsDiceRolling(false);
-          setSocketNext(null);
-          setFirstDice(null);
-          setSecondDice(null);
         } catch (error) {
           console.error("주사위 굴리기에 실패했습니다.", error);
           setSocketNext(null);
@@ -599,8 +605,20 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
     rollDice,
   ]);
 
+  useEffect(() => {
+    if (!isDiceRolling) {
+      console.log("♻️ 주사위 값 초기화 (턴 종료 후)");
+      setTimeout(() => {
+        setFirstDice(null);
+        setSecondDice(null);
+      }, 1000); // 1초 후 초기화
+    }
+  }, [isDiceRolling]);
+
   // 땅 구매
   useEffect(() => {
+    if (!isMovementComplete) return;
+
     if (
       nextAction === "DO_YOU_WANT_TO_BUY_THE_LAND" &&
       !showBuyLand &&
@@ -613,7 +631,7 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
         setSocketNext(null);
       }
     }
-  }, [nextAction, nextPosition]);
+  }, [isMovementComplete, nextAction, nextPosition]);
 
   useEffect(() => {
     const handleBuyLand = async () => {
@@ -631,7 +649,6 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
 
           console.log("구매 요청 보내기 :", buyInfo);
           await buyLand(buyInfo);
-          setSocketNext(null);
 
           // 구매 요청이 성공적으로 보내진 후 상태 초기화
           setShowBuyLand(false);
@@ -652,6 +669,7 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
 
   // 기지 건설
   useEffect(() => {
+    if (!isMovementComplete) return;
     if (
       nextAction === "DO_YOU_WANT_TO_BUILD_THE_BASE" &&
       !showBuildBase &&
@@ -662,7 +680,7 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
       setSocketNext(null);
       return;
     }
-  }, [nextAction, showBuildBase]);
+  }, [isMovementComplete, nextAction, showBuildBase]);
 
   useEffect(() => {
     const handleBuildBase = async () => {
@@ -679,7 +697,6 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
           };
           console.log("기지 건설 요청:", buildInfo);
           await buildBase(buildInfo);
-          setSocketNext(null);
           setShowBuildBase(false);
           setShowCardId(null);
           setIsBuildBase(false);
@@ -707,7 +724,6 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
           playerId: currentPlayer.playerId,
         };
         checkEnd(endInfo);
-        setSocketNext(null);
         console.log("종료 조건 체크");
       } catch (error) {
         console.error("종료 조건 체크 실패 : ", error);
@@ -718,6 +734,7 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
 
   // 통행료 지불
   useEffect(() => {
+    if (!isMovementComplete) return;
     if (
       nextAction &&
       nextAction === "PAY_TOLL" &&
@@ -729,15 +746,16 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
           tileId: nextPosition,
         };
         payToll(payInfo);
-        setSocketNext(null);
         console.log("통행료 지불 성공");
       } catch (error) {
         console.log("통행료 지불 실패: ", error);
         setSocketNext(null);
       }
-      setShowPayTollModal(true);
+      if (isMovementComplete) {
+        setShowPayTollModal(true);
+      }
     }
-  }, [nextAction]);
+  }, [isMovementComplete, nextAction]);
 
   // 카드 뽑기 -> 모달
   useEffect(() => {
@@ -752,7 +770,6 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
           tileId: nextPosition,
         };
         drawCard(drawInfo);
-        setSocketNext(null);
         console.log("카드 뽑기 성공");
       } catch (error) {
         console.error("카드 뽑기 실패 :", error);
@@ -764,13 +781,13 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
   const closeBuyLand = () => {
     setShowBuyLand(false);
     setShowCardId(null);
-    setSocketNext(null);
+    setSocketNext("CHECK_END");
   };
 
   const closeBuildBase = () => {
     setShowBuildBase(false);
     setShowCardId(null);
-    setSocketNext(null);
+    setSocketNext("CHECK_END");
   };
 
   const closePayToll = () => {
@@ -778,7 +795,7 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
     setPaidPlayer(null);
     setReceivedPlayer(null);
     setTollPrice(null);
-    setSocketNext(null);
+    setSocketNext("CHECK_END");
   };
 
   // 플레이어 위치 초기화
@@ -790,27 +807,21 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
   // console.log(playersPositions);
 
   useEffect(() => {
-    if (
-      rollDiceSocketData &&
-      rollDiceSocketData.nextPosition !== undefined &&
-      !isAnimating
-    ) {
+    if (rollDiceSocketData && rollDiceSocketData.nextPosition !== undefined) {
       const playerIndex = players.findIndex(
         (player) => player.playerId === rollDiceSocketData.playerId
       );
 
       const startPosition = playersPositions[playerIndex];
       const targetPosition = rollDiceSocketData.nextPosition;
-
+      console.log("🚀 이동 시작:", { startPosition, targetPosition });
+      setIsMovementComplete(false); // 이동 시작 시 false 설정
       setIsAnimating(true);
 
       const animateMovement = async () => {
         let current = startPosition;
-        const moveOneStep = async () => {
-          if (current === targetPosition) {
-            setIsAnimating(false);
-            return;
-          }
+
+        while (current !== targetPosition) {
           current = (current + 1) % totalCells;
           setPlayersPositions((prev) => {
             const newPositions = [...prev];
@@ -818,22 +829,21 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
             return newPositions;
           });
           await new Promise((resolve) => setTimeout(resolve, 300));
-          await moveOneStep();
-        };
-        await moveOneStep();
+        }
+
+        setIsAnimating(false);
+        setTimeout(() => setIsMovementComplete(true), 200); // 이동이 끝난 후 true로 변경
       };
+
       animateMovement();
     }
-  }, [rollDiceSocketData, players, isAnimating]);
+  }, [rollDiceSocketData]);
 
-  // 주사위 굴린 후 플레이어 이동 처리
-  // const handleDiceComplete = async (score) => {
-  //   const startPosition = playersPositions[currentPlayerIndex];
-  //   const targetPosition = rollDiceSocketData?.nextPosition ?? 0;
-
-  //   // console.log(`🎲 Player ${currentPlayerIndex + 1} rolled: ${score}`);
-  //   // console.log(`➡️ Moving to position: ${targetPosition}`);
-  // };
+  useEffect(() => {
+    if (currentPlayerIndex === myIndex) {
+      setOnRollDice(false);
+    }
+  }, [currentPlayerIndex]);
 
   const [positions, setPositions] = useState([]);
   const [cellSizes, setCellSizes] = useState([]);
@@ -1203,12 +1213,12 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
   }, [showModal]);
 
   return (
-    <div className="h-[100%] flex flex-col bg-black">
+    <div className="h-[100%] flex flex-col bg-black bg-opacity-50">
       {/* 이동 버튼 + 주사위 버튼 */}
-      <div className="flex justify-center mb-5">
+      <div className="flex justify-center items-center mb-2">
         <button
           onClick={resetCamera}
-          className="mt-5 mx-3 px-4 py-2 bg-yellow-300 text-white rounded hover:bg-blue-600"
+          className="mt-5 mx-3 px-4 py-2 h-15 bg-yellow-300 text-white rounded hover:bg-blue-600"
         >
           Reset Camera
         </button>
