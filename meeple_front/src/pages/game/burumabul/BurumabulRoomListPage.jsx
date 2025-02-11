@@ -135,12 +135,53 @@ const BurumabulRoomList = () => {
           </button>
         </form>
       </div>
-      <button
-        className="text-2xl text-white"
-        onClick={() => setIsCreateBurumabulRoomModalOpen(true)}
-      >
-        CREATE
-      </button>
+      <div className="w-[70%] flex flex-row justify-end">
+        <button
+          className="text-4xl text-white px-5 py-2 rounded-lg font-bold
+    bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500
+    hover:from-indigo-500 hover:via-purple-500 hover:to-pink-400
+    transform hover:scale-105 transition-all duration-300
+    shadow-lg hover:shadow-xl hover:shadow-purple-500/30"
+          onClick={() => setIsCreateBurumabulRoomModalOpen(true)}
+        >
+          CREATE
+        </button>
+      </div>
+
+      {roomList.length > 0 ? (
+        <>
+          <div className="bg-white bg-opacity-50 rounded-lg w-[80%] h-[70vh] overflow-y-auto p-4 flex justify-center my-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 grid-auto-rows-[minmax(250px,auto)]">
+              {visibleRooms.map((roomInfo, index) => (
+                <div
+                  key={roomInfo.roomId || index}
+                  ref={
+                    index === visibleRooms.length - 1
+                      ? lastRoomElementRef
+                      : null
+                  }
+                  className="my-3"
+                >
+                  <BurumabulRoomListCard roomInfo={roomInfo} />
+                </div>
+              ))}
+            </div>
+          </div>
+          {loading && (
+            <div className="flex overflow-y-auto p-4 justify-center h-20">
+              <span className="text-blue-950 text-xl font-bold">
+                로딩 중...
+              </span>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="bg-white bg-opacity-50 rounded-lg w-[80%] h-[70vh] overflow-y-auto p-4 flex justify-center items-center my-3">
+          <div className="text-white text-3xl font-bold ">
+            생성된 방 목록이 없습니다.
+          </div>
+        </div>
+      )}
 
       {isCreateBurumabulRoomModalOpen &&
         createPortal(
@@ -149,36 +190,6 @@ const BurumabulRoomList = () => {
           />,
           document.body
         )}
-
-      {roomList.length > 0 ? (
-        <div className="bg-white bg-opacity-50 rounded-lg w-[60%] h-[70vh] overflow-y-auto p-4">
-          <div className="my-6 flex flex-col items-center justify-center mx-auto gap-4 ">
-            {visibleRooms.map((roomInfo, index) => {
-              if (index === visibleRooms.length - 1) {
-                return (
-                  <div key={index} ref={lastRoomElementRef}>
-                    <BurumabulRoomListCard key={index} roomInfo={roomInfo} />
-                  </div>
-                );
-              }
-              return (
-                <div key={index}>
-                  <BurumabulRoomListCard key={index} roomInfo={roomInfo} />
-                </div>
-              );
-            })}
-          </div>
-          {loading && (
-            <div className="text-center text-white mt-4">로딩 중...</div>
-          )}
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg  w-[60%] h-[70vh] flex justify-center items-center">
-          <div className="text-blue-950 text-3xl font-bold font-">
-            생성된 방 목록이 없습니다.
-          </div>
-        </div>
-      )}
     </div>
   );
 };
