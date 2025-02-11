@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, useContext } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchProfile } from "../../sources/store/slices/ProfileSlice";
+import { fetchProfile } from "../../../sources/store/slices/ProfileSlice";
 import { SocketContext } from "../../layout/SocketLayout";
 
 const BurumabulChatView = ({ playerInfoList }) => {

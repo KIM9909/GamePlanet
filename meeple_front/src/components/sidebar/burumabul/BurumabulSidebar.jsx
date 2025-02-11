@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { SocketContext } from "../../layout/SocketLayout";
 import BurumabulChatView from "./BurumabulChatView";
-import BurumabulRuleView from "./BurumabulRulView";
+import BurumabulRuleView from "./BurumabulRuleView";
 import BurumabulSettingView from "./BurumabulSettingView";
 import Galmuri9 from "../../../assets/fonts/Galmuri9.ttf";
 
