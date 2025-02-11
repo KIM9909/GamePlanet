@@ -90,10 +90,11 @@ const BoardPage = () => {
         {articles.map((item) => (
           <ArticleItem
             key={item.gameCommunityId}
-            gameCommunityContent={item.gameCommunityContent}
+            content={item.gameCommunityContent}
             createdAt={item.createAt}
             createdBy={item.user}
             comments={item.commentList}
+            articleId={item.gameCommunityId}
           />
         ))}
       </section>
