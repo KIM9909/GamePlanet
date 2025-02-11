@@ -89,7 +89,7 @@ const HomePage = () => {
                   ? navigate("/burumabul/room-list")
                   : navigate("/catch-mind")
               }
-              className="px-6 py-2 bg-cyan-600 text-white rounded-full hover:bg-cyan-700 transition-colors transform hover:scale-105 duration-300"
+              className="px-6 py-2 bg-cyan-600 text-white rounded-full hover:bg-cyan-700 transition-colors transform hover:scale-105 duration-300 "
             >
               GAME PLAY
             </button>
@@ -103,26 +103,41 @@ const HomePage = () => {
             </h2>
           </div>
           {/* <p className="text-gray-300 mb-4">{gameInfo.gameInfoContent}</p> */}
-          <div className="text-white ml-7 ">
+          <div className="text-white ml-7">
             {(() => {
               switch (gameInfo.game.gameName) {
                 case "바퀴벌레 포커":
-                  return <div>바퀴벌레 포커 입니다.</div>;
+                  return (
+                    <div>
+                      거짓말처럼 솔직한 당신의 표정,<br></br> 바퀴벌레와
+                      함께라면 포커페이스도 순삭!
+                    </div>
+                  );
                 case "부루마불":
-                  return <div>부루마불 입니다.</div>;
+                  return (
+                    <div>
+                      내 세금으로 지은 지하철로 순삭이동!<br></br> 현실에선
+                      못하는 부동산 재테크의 꿈
+                    </div>
+                  );
                 default:
-                  return <div>캐치마인드 입니다.</div>;
+                  return (
+                    <div>
+                      손은 뻣뻣해도 마음은 피카소,<br></br> 그림 재능은 선택이
+                      아닌 필수!
+                    </div>
+                  );
               }
             })()}
           </div>
-          {gameInfo.game.gameId === 2 && (
+          {/* {gameInfo.game.gameId === 2 && (
             <button
               onClick={() => setIsCreateBurumabulRoomModalOpen(true)}
               className="w-full px-4 py-2 bg-gradient-to-r from-cyan-600 to-cyan-600 text-white rounded-full hover:from-cyan-500 hover:to-cyan-500 transition-all duration-300 transform hover:scale-105"
             >
               방 만들기
             </button>
-          )}
+          )} */}
         </div>
       </div>
     );
@@ -132,7 +147,7 @@ const HomePage = () => {
     <div className="min-h-screen relative overflow-hidden">
       <div className="min-h-screen p-8 relative z-5">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-cyan-500/50">
+          <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-cyan-500/50 h-[650px]">
             <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
               게임 목록
             </h1>
@@ -140,6 +155,12 @@ const HomePage = () => {
               {gameList.map((gameInfo) => (
                 <GameCard key={gameInfo.gameInfoId} gameInfo={gameInfo} />
               ))}
+            </div>
+
+            <div className="mt-[80px] text-center">
+              <p className="text-gray-400 text-3xl font-medium italic animate-pulse">
+                🛠️ ... COMMING SOON ... 🛠️
+              </p>
             </div>
           </div>
         </div>

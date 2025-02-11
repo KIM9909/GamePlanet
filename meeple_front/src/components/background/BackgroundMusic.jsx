@@ -18,10 +18,16 @@ const BackGroundMusic = () => {
 
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = 0.3;
+      // localStorage에서 저장된 볼륨 값을 가져옴
+      const savedVolume = localStorage.getItem("bgmVolume");
+      const savedMuted = localStorage.getItem("bgmMuted") === "true";
+
+      // 저장된 값이 있으면 적용, 없으면 기본값 사용
+      audioRef.current.volume = savedVolume ? parseFloat(savedVolume) : 0.1;
+      audioRef.current.muted = savedMuted;
       audioRef.current.loop = true;
     }
-  });
+  }, []);
 
   // 페이지 변경 시 BGM 상태 관리
   useEffect(() => {
