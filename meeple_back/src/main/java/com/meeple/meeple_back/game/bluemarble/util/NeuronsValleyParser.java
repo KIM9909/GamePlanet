@@ -1,7 +1,7 @@
 package com.meeple.meeple_back.game.bluemarble.util;
 
 import com.meeple.meeple_back.game.bluemarble.domain.CardType;
-import com.meeple.meeple_back.game.bluemarble.domain.TelepathyCard;
+import com.meeple.meeple_back.game.bluemarble.domain.NeuronsValleyCard;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -12,21 +12,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-
-/**
- * private int id;
- * private int number;
- * private String name;
- * private CardType type;
- * private String description;
- */
-public class TelepathyCardParser implements ExcelReader<TelepathyCard> {
-
+public class NeuronsValleyParser implements ExcelReader<NeuronsValleyCard> {
 	@Override
-	public List<TelepathyCard> readExcelFile() {
-		List<TelepathyCard> cards = new ArrayList<>();
+	public List<NeuronsValleyCard> readExcelFile() {
+		List<NeuronsValleyCard> cards = new ArrayList<>();
 
-		try (InputStream fis = getClass().getResourceAsStream("/game-element/telepathy.xlsx");
+		try (InputStream fis = getClass().getResourceAsStream("/game-element/neurons-valley.xlsx");
 		     Workbook workbook = new XSSFWorkbook(fis)) {
 
 			Sheet sheet = workbook.getSheetAt(0);
@@ -42,13 +33,12 @@ public class TelepathyCardParser implements ExcelReader<TelepathyCard> {
 				String name = row.getCell(2).getStringCellValue();
 				String description = row.getCell(3).getStringCellValue();
 
-				cards.add(new TelepathyCard(id, number, name, CardType.TELEPATHY_CARD, description));
+				cards.add(new NeuronsValleyCard(id, number, name, CardType.NEURONS_VALLEY_CARD, description));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
 		return cards;
-
 	}
 }
