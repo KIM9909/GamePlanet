@@ -14,6 +14,7 @@ public class ResponseReport {
     private LocalDateTime reportTime;
     @Schema(description = "신고 사유", example = "CHAT")
     private ReportReason reportReason;
+    @Schema(description = "신고 상태", example = "WAITING")
     private String processStatus;
     @Schema(description = "신고 제목", example = "부적절한 내용")
     private String reportTitle;

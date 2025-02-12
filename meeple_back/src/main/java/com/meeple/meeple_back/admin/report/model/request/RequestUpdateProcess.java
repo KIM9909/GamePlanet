@@ -9,5 +9,7 @@ public class RequestUpdateProcess {
     private int reportProcessId;
     @Schema(description = "처리 결과", example = "BAN")
     private String reportResult;
+    @Schema(description = "관리자 메모", example = "처리사유..")
+    private String reportMemo;
 
 }
