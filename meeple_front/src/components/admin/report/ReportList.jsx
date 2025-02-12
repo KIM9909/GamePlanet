@@ -102,9 +102,9 @@ const ReportList = () => {
       case "대기중":
         return "bg-red-500";
       case "완료(제재)":
-        return "bg-red-500";
+        return "bg-green-500";
       case "완료(경고)":
-        return "bg-yellow-500";
+        return "bg-green-500";
       case "완료(무혐의)":
         return "bg-green-500";
       default:
