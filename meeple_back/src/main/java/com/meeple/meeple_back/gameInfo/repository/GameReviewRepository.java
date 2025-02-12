@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface GameReviewRepository extends JpaRepository<GameReview, Integer> {
     List<GameReview> findByGameInfo_GameInfoId(int gameInfoId);
+
+    boolean existsByUser_UserId(long userId);
 }

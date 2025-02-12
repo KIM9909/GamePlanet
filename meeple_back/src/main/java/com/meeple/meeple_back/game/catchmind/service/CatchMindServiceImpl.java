@@ -48,7 +48,12 @@ public class CatchMindServiceImpl implements CatchMindService {
     public ResponseCreateRoom createRoom(RequestCreateRoom request) {
         if (!redisTemplate.opsForHash().get(AI_KEY, request.getCreator()).equals("ON")
         ) {
-            new EntityNotFoundException("AI 기능을 켜주세요");
+            ResponseCreateRoom response = ResponseCreateRoom.builder()
+                    .code(400)
+                    .message("AI 프로그램을 켰는지 확인해주세요")
+                    .build();
+
+            return response;
         }
 
         Map<String, Object> roomInfo = new HashMap<>();
@@ -98,6 +103,8 @@ public class CatchMindServiceImpl implements CatchMindService {
         redisTemplate.opsForHash().put(ROOM_KEY, savedRoom.getRoomId() + "", roomInfo);
 
         ResponseCreateRoom response = ResponseCreateRoom.builder()
+                .code(200)
+                .message("방 생성 성공")
                 .roomId(savedRoom.getRoomId())
                 .creator(request.getCreator())
                 .isPrivate(request.isPrivate())
@@ -115,7 +122,12 @@ public class CatchMindServiceImpl implements CatchMindService {
     public ResponseJoinRoom joinRoom(RequestJoinRoom request) {
         if (!redisTemplate.opsForHash().get(AI_KEY, request.getPlayerName()).equals("ON")
         ) {
-            new EntityNotFoundException("AI 기능을 켜주세요");
+            ResponseJoinRoom response = ResponseJoinRoom.builder()
+                    .code(400)
+                    .message("AI 프로그램을 켰는지 확인해주세요")
+                    .build();
+
+            return response;
         }
         // 명시적 문자열 변환
         String roomIdStr = String.valueOf(request.getRoomId());
@@ -132,7 +144,7 @@ public class CatchMindServiceImpl implements CatchMindService {
 
         boolean isPrivate = Boolean.parseBoolean(String.valueOf(roomInfo.get("isPrivate")));
 
-        if (isPrivate) {
+        if (!roomInfo.getOrDefault("password", "").equals("")) {
             if (!roomInfo.get("password").equals(request.getPassword())) {
                 return ResponseJoinRoom.builder()
                         .code(400)
