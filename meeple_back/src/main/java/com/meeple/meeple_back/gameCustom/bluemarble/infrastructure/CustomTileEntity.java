@@ -6,25 +6,24 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-// 3. CustomCard Entity
 @Entity
-@Table(name = "tbl_custom_card")
+@Table(name = "tbl_custom_tile")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CustomCard {
+public class CustomTileEntity {
 
 	@EmbeddedId
-	private CustomCardId id;
+	private CustomTileId id;
 
 	@ManyToOne
 	@MapsId("customId")
 	@JoinColumn(name = "custom_id")
-	private CustomElement customElement;
+	private CustomElementEntity customElement;
 
 	@ManyToOne
-	@MapsId("cardId")
-	@JoinColumn(name = "card_id")
-	private Card card;
+	@MapsId("tileId")
+	@JoinColumn(name = "tile_id")
+	private TileEntity tileEntity;
 }

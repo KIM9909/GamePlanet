@@ -108,7 +108,7 @@ public class GamePlay {
 		return board.stream()
 				.filter(tile -> tile.getId() == tileId)
 				.findFirst()
-				.orElseThrow(() -> new IllegalArgumentException("Tile not found"));
+				.orElseThrow(() -> new IllegalArgumentException("TileEntity not found"));
 	}
 
 	private static List<Tile> createTiles() {
@@ -116,9 +116,9 @@ public class GamePlay {
 		return tileParser.readExcelFile();
 
 //		for (int i = 0; i <= 40; i++) {
-//			Tile tile = new Tile(
+//			TileEntity tileEntity = new TileEntity(
 //					i,                                        // id
-//					"Tile " + i,                              // name
+//					"TileEntity " + i,                              // name
 //					0,                                        // owner (0은 미소유)
 //					i * 50,                                   // toll (예시로 i에 따라 증가)
 //					false,                                    // hasBase (기본값: 없음)
@@ -126,7 +126,7 @@ public class GamePlay {
 //					"image:url",                                   // price (예시로 i에 따라 증가),
 //					1 + i * 10
 //			);
-//			tiles.add(tile);
+//			tiles.add(tileEntity);
 //		}
 	}
 
@@ -165,7 +165,7 @@ public class GamePlay {
 		Tile currentTile = board.stream()
 				.filter(tile -> tile.getId() == currentPosition)
 				.findFirst()
-				.orElseThrow(() -> new IllegalArgumentException("Tile not found"));
+				.orElseThrow(() -> new IllegalArgumentException("TileEntity not found"));
 		// 행성에 도착할 경우.
 		if (TileType.SEED_CERTIFICATE_CARD == currentTile.getType()) {
 			return processLandingOnPlanetEvent(currentPlayer, currentTile);
@@ -228,14 +228,14 @@ public class GamePlay {
 		Tile tile = board.stream()
 				.filter(t -> t.getId() == tileId)
 				.findFirst()
-				.orElseThrow(() -> new IllegalArgumentException("Tile not found"));
+				.orElseThrow(() -> new IllegalArgumentException("TileEntity not found"));
 
 		if (tile.getOwnerId() != 0) {
-			throw new IllegalArgumentException("Tile already owned");
+			throw new IllegalArgumentException("TileEntity already owned");
 		}
 
 		if (tile.getType() != TileType.SEED_CERTIFICATE_CARD) {
-			throw new IllegalArgumentException("Tile is not a seed certificate card");
+			throw new IllegalArgumentException("TileEntity is not a seed certificate card");
 		}
 
 		// 원래 금액
