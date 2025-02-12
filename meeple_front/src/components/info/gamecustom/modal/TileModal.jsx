@@ -8,27 +8,25 @@ const TileModal = ({ onClose, cardId }) => {
   const [priceColor, setPriceColor] = useState('#FFFFFF');
   const [uploadedImage, setUploadedImage] = useState(null);
   const canvasRef = useRef(null);
+  const [isImageLoading, setIsImageLoading] = useState(false);
 
-  const addText = () => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    const width = canvas.width;
-    const height = canvas.height;
-  
-    // 이름 텍스트 (더 위로)
+  const addText = (ctx, width, height) => {
+    if (!ctx) return;
+    
+    // 이름 텍스트
     ctx.fillStyle = 'white';
     ctx.textAlign = 'center';
     ctx.font = 'bold 48px DungGeunMo';
-    ctx.fillText(name, width / 2, height / 3 - 100);  // 위치 더 위로
+    ctx.fillText(name, width / 2, height / 3 - 100);
     
-    // 가격 텍스트 위치 조정
+    // 가격 텍스트
     ctx.font = 'bold 72px DungGeunMo';  
     ctx.fillStyle = priceColor;    
-    ctx.fillText(price, width / 2 - 60, height / 3 - 20);  // 숫자 왼쪽으로
+    ctx.fillText(price, width / 2 - 60, height / 3 - 20);
     
     ctx.font = 'bold 36px DungGeunMo';  
     ctx.fillStyle = 'white';       
-    ctx.fillText('만마불', width / 2 + 80, height / 3 - 20);  // "만마불" 오른쪽으로
+    ctx.fillText('만마불', width / 2 + 80, height / 3 - 20);
   };
 
   const generateImage = () => {
@@ -47,21 +45,38 @@ const TileModal = ({ onClose, cardId }) => {
     ctx.fillStyle = backgroundColor;
     ctx.fillRect(0, 0, width, height / 3);
 
-    // 이미지가 있으면 그리기
     if (uploadedImage) {
+      setIsImageLoading(true);
       const img = new Image();
       img.onload = () => {
         ctx.drawImage(img, 0, height / 3, width, (height / 3) * 2);
-        addText();
+        addText(ctx, width, height);
+        setIsImageLoading(false);
       };
       img.src = uploadedImage;
     } else {
-      addText();
+      addText(ctx, width, height);
     }
   };
 
+  const handleSave = () => {
+    if (isImageLoading) return;
+    
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // 이미지 다운로드
+    const link = document.createElement('a');
+    link.download = `tile-${cardId}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    
+    onClose();
+  };
+
   useEffect(() => {
-    if (canvasRef.current) {
+    const canvas = canvasRef.current;
+    if (canvas) {
       generateImage();
     }
   }, [name, price, backgroundColor, priceColor, uploadedImage]);
@@ -163,18 +178,17 @@ const TileModal = ({ onClose, cardId }) => {
               className="h-[400px] w-auto object-contain" 
             />
           </div>
-          <div className="mt-4 flex justify-end gap-4">
+          <div className="mt-4 flex justify-end">
             <button
-              onClick={generateImage}
-              className="px-4 py-2 bg-cyan-500 text-white rounded hover:bg-cyan-600 transition-colors"
+              onClick={handleSave}
+              disabled={isImageLoading}
+              className={`px-4 py-2 text-white rounded transition-colors ${
+                isImageLoading 
+                  ? 'bg-slate-500 cursor-not-allowed' 
+                  : 'bg-cyan-500 hover:bg-cyan-600'
+              }`}
             >
-              이미지 생성
-            </button>
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-700 transition-colors"
-            >
-              저장
+              {isImageLoading ? '이미지 로딩 중...' : '저장'}
             </button>
           </div>
         </div>
