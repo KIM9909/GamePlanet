@@ -14,7 +14,6 @@ public class CustomElementService implements CrudService<CustomElementRequest, C
 	private final CustomElementJpaRepository customElementRepository;
 
 
-
 	@Override
 	public CustomElementResponse create(CustomElementRequest customElementRequest) {
 		return CustomElementResponse.from(customElementRepository.save(CustomElementEntity.from(customElementRequest)));

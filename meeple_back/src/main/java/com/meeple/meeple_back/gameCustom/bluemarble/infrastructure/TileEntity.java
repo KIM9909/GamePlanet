@@ -1,7 +1,5 @@
 package com.meeple.meeple_back.gameCustom.bluemarble.infrastructure;
 
-import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomTileRequest;
-import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.TileResponse;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,25 +30,4 @@ public class TileEntity {
 	private Integer tilePrice;
 
 	private Integer tileNumber;
-
-	public TileEntity update(CustomTileRequest customTileRequest) {
-		return TileEntity.builder()
-			.tileName(customTileRequest.getTileName())
-			.tileType(this.tileType)
-			.tileImageUrl(customTileRequest.getTileImageUrl())
-			.tilePrice(customTileRequest.getTilePrice())
-			.tileNumber(this.tileNumber)
-			.build();
-	}
-
-	public static TileResponse toResponse(TileEntity tileEntity) {
-		return TileResponse.builder()
-			.tileId(tileEntity.getTileId())
-			.tileName(tileEntity.getTileName())
-			.tileType(tileEntity.getTileType())
-			.tileImageUrl(tileEntity.getTileImageUrl())
-			.tilePrice(tileEntity.getTilePrice())
-			.tileNumber(tileEntity.getTileNumber())
-			.build();
-	}
 }
