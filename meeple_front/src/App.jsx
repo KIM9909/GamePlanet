@@ -139,6 +139,9 @@ function App() {
 
               {/* ERROR */}
               <Route path="/errorpage" element={<ErrorPage />} />
+              
+              {/* etc */}
+              <Route path="*" element={<ErrorPage />} />
             </Routes>
           </FriendModalLayout>
         </SideLayout>
