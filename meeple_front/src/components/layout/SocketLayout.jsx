@@ -86,6 +86,24 @@ const SocketLayout = ({ children }) => {
   // 오픈비두
   const [socketBurumabulOpenVidu, setSocketBurumabulOpenVidu] = useState("");
 
+  // 카드 뽑은 후
+  const [socketDrawCardData, setSocketDrawCardData] = useState(null);
+
+  // 뽑은 카드
+  const [socketPickedCard, setSocketPickedCard] = useState(null);
+
+  // 카드 뽑기 전 위치
+  const [socketDrawPrevPosition, setSocketDrawPrevPosition] = useState(null);
+
+  // 카드 뽑고 나서 위치
+  const [socketDrawNextPosition, setSocketDrawNextPosition] = useState(null);
+
+  // 카드 뽑기 전 돈
+  const [socketDrawPrevBalance, setSocketDrawPrevBalance] = useState(null);
+
+  // 카드 뽑기 후 돈
+  const [socketDrawNextBalance, setSocketDrawNextBalance] = useState(null);
+
   const location = useLocation();
 
   const stompClientRef = useRef(null);
@@ -105,8 +123,8 @@ const SocketLayout = ({ children }) => {
     const stompClient = new Client({
       webSocketFactory: () => {
         console.log("🌍 SockJS WebSocket 팩토리 실행됨!");
-        // return new SockJS(`${import.meta.env.VITE_SOCKET_LOCAL_API_BASE_URL}`);
-        return new SockJS(`${import.meta.env.VITE_SOCKET_API_BASE_URL}`);
+        return new SockJS(`${import.meta.env.VITE_SOCKET_LOCAL_API_BASE_URL}`);
+        // return new SockJS(`${import.meta.env.VITE_SOCKET_API_BASE_URL}`);
       },
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
@@ -142,7 +160,6 @@ const SocketLayout = ({ children }) => {
             } else if (receivedData.type === "create") {
               setGamePlaySocketData(receivedData.data);
               setSocketBurumabulOpenVidu(String(receivedData.message)); // 💡 강제 변환
-
               setSocketNext(receivedData.data.nextAction);
               setCurrentPlayerSocketIndex(receivedData.data.currentPlayerIndex);
               setSocketCurrentRound(receivedData.data.round);
@@ -186,6 +203,15 @@ const SocketLayout = ({ children }) => {
               setSocketReceivedPlayer(receivedData.data.receivedPlayer);
               setGameSocketNotifi(receivedData.message);
               setSocketNext(receivedData.data.nextAction);
+            } else if (receivedData.type === "draw-card") {
+              setSocketDrawCardData(receivedData.data);
+              setSocketPickedCard(receivedData.data.pickedCard);
+              setSocketDrawPrevPosition(receivedData.data.prevPosition);
+              setSocketDrawNextPosition(receivedData.data.nextPosition);
+              setSocketDrawPrevBalance(receivedData.data.prevBalance);
+              setSocketDrawNextBalance(receivedData.data.nextBalance);
+              setGameSocketNotifi(receivedData.message);
+              // setSocketNext(receivedData.data.nextAction);
             }
             if (receivedData.status) {
               setSocketStatus(receivedData.status);
@@ -583,8 +609,16 @@ const SocketLayout = ({ children }) => {
           socketStatus,
           setSocketStatus,
           socketPayTollData,
+          setSocketPayTollData,
           socketTollPrice,
           socketReceivedPlayer,
+          socketDrawCardData,
+          setSocketDrawCardData,
+          socketPickedCard,
+          socketDrawPrevPosition,
+          socketDrawNextPosition,
+          socketDrawPrevBalance,
+          socketDrawNextBalance,
           enterWaitingRoom,
           chatWaitingRoom,
           changePassword,
