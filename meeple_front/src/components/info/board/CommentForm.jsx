@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GameInfoAPI } from '../../../sources/api/GameInfoAPI';
 
-const CommentForm = ({ initialData, articleId, commentId, userId, onSuccess }) => {
+const CommentForm = ({ initialData, gameCommunityId, commentId, userId, onSuccess }) => {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditing = !!commentId;
@@ -22,7 +22,7 @@ const CommentForm = ({ initialData, articleId, commentId, userId, onSuccess }) =
 
     const commentData = {
       content,
-      gameCommunityId: articleId,
+      gameCommunityId: gameCommunityId,
       userId
     };
 
