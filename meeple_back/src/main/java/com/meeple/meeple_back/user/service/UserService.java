@@ -32,6 +32,8 @@ public class UserService {
 				.userEmail(user.getUserEmail())
 				.userBirthday(user.getUserBirthday())
 				.userNickname(user.getUserNickname())
+				.userCreatedAt(LocalDateTime.now())
+				.userProfilePictureUrl("https://meeple-file-server.s3.ap-northeast-2.amazonaws.com/static-files/pixel-heejun.png")
 				.build());
 	}
 
