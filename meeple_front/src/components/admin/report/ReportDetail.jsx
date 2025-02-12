@@ -218,5 +218,5 @@ const ReportDetail = () => {
     </div>
   );
 };
-
+// HOTFIX
 export default ReportDetail;

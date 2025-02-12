@@ -32,7 +32,7 @@ import ErrorPage from "./pages/error/ErrorPage";
 import CustomEditor from "./components/info/gamecustom/CustomEditor";
 import BackGroundMusic from "./components/background/BackGroundMusic";
 import CustomDetail from "./components/info/gamecustom/CustomDetail";
-import ReportDetail from "./components/admin/report/ReportDetail";
+import ReportDetail from "./components/admin/report/ReportDetail"
 
 function App() {
   return (
