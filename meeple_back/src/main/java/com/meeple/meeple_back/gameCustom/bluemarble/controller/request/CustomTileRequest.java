@@ -29,8 +29,8 @@ public class CustomTileRequest {
 	private Integer tilePrice;
 
 	@JsonCreator
-	public CustomTileRequest(@JsonProperty("customId") int customId,@JsonProperty("tileNumber") Integer tileNumber,@JsonProperty("tileName") String tileName, @JsonProperty("tileType") String tileType,
-			@JsonProperty("tileImageUrl") String tileImageUrl,@JsonProperty("tilePrice") Integer tilePrice) {
+	public CustomTileRequest(@JsonProperty("customId") int customId, @JsonProperty("tileNumber") Integer tileNumber, @JsonProperty("tileName") String tileName, @JsonProperty("tileType") String tileType,
+	                         @JsonProperty("tileImageUrl") String tileImageUrl, @JsonProperty("tilePrice") Integer tilePrice) {
 		this.customId = customId;
 		this.tileNumber = tileNumber;
 		this.tileName = tileName;
