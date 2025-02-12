@@ -126,9 +126,9 @@ const GameInfoPage = () => {
               <div className="h-96 overflow-hidden rounded-xl border border-cyan-500/60 transition-all duration-300">
                 <div className="w-full h-full flex items-center justify-center bg-gray-800 text-gray-400">
                   <img
-                    src={data.game.gameInfoFile}
+                    src={data.gameInfoFile}
                     alt="게임 사진"
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain "
                   />
                 </div>
               </div>

@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import PasswordChangePage from "./PasswordChangePage";
 import UserDeletePage from "./UserDeletePage";
 import Heejun from "../../assets/images/pixel_character/pixel-heejun.png";
+import ProfilePicture from "./ProfilePicture";
 
 // Redux 액션들과 API 임포트
 import {
@@ -67,6 +68,8 @@ const ProfilePage = () => {
     }
   }, [profile]);
 
+  console.log("프로필 정보 : ", profile);
+
   // 에러 발생 시 처리
   useEffect(() => {
     if (error) {
@@ -94,7 +97,7 @@ const ProfilePage = () => {
                 <div className="relative w-36 h-36">
                   <div className="w-full h-full bg-white rounded-full overflow-hidden border-4 border-cyan-500 shadow-xl">
                     <img
-                      src={Heejun}
+                      src={profile.userProfilePictureUrl}
                       alt="프로필"
                       className="w-full h-full object-cover"
                     />
@@ -117,10 +120,20 @@ const ProfilePage = () => {
                         initialBio={profile?.userBio}
                         onSave={async (newBio) => {
                           try {
+                            const formDataToSend = new FormData();
+                            const userInfo = { userBio: newBio };
+                            const userInfoBlob = new Blob(
+                              [JSON.stringify(userInfo)],
+                              {
+                                type: "application/json",
+                              }
+                            );
+                            formDataToSend.append("userInfo", userInfoBlob);
+
                             await dispatch(
                               updateProfile({
                                 userId,
-                                data: { userBio: newBio },
+                                data: formDataToSend,
                               })
                             ).unwrap();
                           } catch (error) {
