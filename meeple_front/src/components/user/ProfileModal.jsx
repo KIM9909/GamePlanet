@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
-import Heejun from "../../assets/images/pixel_character/pixel-heejun.png";
 import { Siren, CheckCircle2, XCircle } from "lucide-react";
 import { useSelector } from "react-redux";
 import {
@@ -9,6 +8,7 @@ import {
 } from "../../sources/api/FriendApi";
 import axios from "axios";
 import ReportFormModal from "./ReportFormModal";
+import Heejun from "../../assets/images/pixel_character/pixel-heejun.png";
 
 /**
  * 커스텀 알림 컴포넌트
@@ -46,6 +46,34 @@ const ProfileModal = ({
   const [isLoading, setIsLoading] = useState(false);
   const [alert, setAlert] = useState({ show: false, message: "", type: "" });
   const [showReportForm, setShowReportForm] = useState(false);
+  const [profileData, setProfileData] = useState(null);
+
+  // 유저 프로필 정보 가져오기
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetch(
+          `${
+            import.meta.env.VITE_API_BASE_URL
+          }/friend/search?userNickName=${userNickname}`
+        );
+        const data = await response.json();
+        if (data.code === 200) {
+          const profileResponse = await fetch(
+            `${import.meta.env.VITE_API_BASE_URL}/profile/${data.userId}`
+          );
+          const profileData = await profileResponse.json();
+          setProfileData(profileData);
+        }
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    };
+
+    if (userNickname) {
+      fetchUserProfile();
+    }
+  }, [userNickname]);
 
   const updatePosition = () => {
     const anchorRect = getAnchorRect();
@@ -229,9 +257,13 @@ const ProfileModal = ({
               {/* 프로필 이미지 */}
               <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-cyan-500/50 shadow-lg shadow-cyan-500/20">
                 <img
-                  src={Heejun}
+                  src={profileData?.userProfilePictureUrl}
                   alt={userNickname}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = { Heejun }; // 기본 프로필 이미지 경로로 설정
+                  }}
                 />
               </div>
 

@@ -7,6 +7,8 @@ import { setToken } from "../../sources/store/slices/UserSlice";
 
 const RegisterModal = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
+  const INSTALLER_URL =
+    "https://meeple-file-server.s3.ap-northeast-2.amazonaws.com/static-files/Meeple+Setup+1.4.3.exe";
 
   // 유효성 검사용 정규식
   // email: 이메일 형식
@@ -49,6 +51,8 @@ const RegisterModal = ({ isOpen, onClose }) => {
   const [validations, setValidations] = useState(initialValidations);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [emailCheckMessage, setEmailCheckMessage] = useState("");
+  const [nicknameCheckMessage, setNicknameCheckMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [termsAgreed, setTermsAgreed] = useState({
@@ -105,6 +109,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
         emailChecked: false,
         validEmail: isValid,
       }));
+      setEmailCheckMessage("");
     } else if (name === "userNickname") {
       setValidations((prev) => ({
         ...prev,
@@ -112,6 +117,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
         nicknameChecked: false,
         validNickname: isValid,
       }));
+      setNicknameCheckMessage("");
     } else if (name === "userName") {
       setValidations((prev) => ({
         ...prev,
@@ -145,7 +151,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
         email: !isDuplicate,
         emailChecked: true,
       }));
-      setError(
+      setEmailCheckMessage(
         isDuplicate
           ? "이미 사용 중인 이메일입니다."
           : "사용 가능한 이메일입니다."
@@ -169,7 +175,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
         nickname: !isDuplicate,
         nicknameChecked: true,
       }));
-      setError(
+      setNicknameCheckMessage(
         isDuplicate
           ? "이미 사용 중인 닉네임입니다."
           : "사용 가능한 닉네임입니다."
@@ -192,11 +198,16 @@ const RegisterModal = ({ isOpen, onClose }) => {
       formData.userBirthday && // 생년월일
       termsAgreed.terms && // 이용약관
       termsAgreed.privacy && // 개인정보
-      termsAgreed.device // 기기접근
+      termsAgreed.device && // 기기접근
+      termsAgreed.AI // AI 프로그램 설치
     );
   };
 
-  // 회원가입 제출 처리
+  const downloadInstaller = () => {
+    window.location.href = INSTALLER_URL;
+  };
+
+  // 회원가입 제출
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -204,6 +215,9 @@ const RegisterModal = ({ isOpen, onClose }) => {
       setError("모든 필드를 올바르게 입력해주세요.");
       return;
     }
+
+    // 먼저 설치 파일 다운로드 시작
+    downloadInstaller();
 
     setIsLoading(true);
     try {
@@ -220,7 +234,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
         userBirthday: formattedBirthday,
       };
 
-      // 회원가입 API 호출
+      // 회원가입 및 자동 로그인 시도
       const success = await UserAPI.register(userData);
       if (success) {
         // 회원가입 성공 시 자동 로그인
@@ -361,6 +375,17 @@ const RegisterModal = ({ isOpen, onClose }) => {
                       닉네임은 2-10자의 한글, 영문, 숫자만 가능합니다.
                     </p>
                   )}
+                  {nicknameCheckMessage && (
+                    <p
+                      className={`mt-1 text-sm ${
+                        nicknameCheckMessage.includes("사용 가능")
+                          ? "text-green-500"
+                          : "text-red-500"
+                      }`}
+                    >
+                      {nicknameCheckMessage}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -399,6 +424,17 @@ const RegisterModal = ({ isOpen, onClose }) => {
                   {formData.userEmail && !validations.validEmail && (
                     <p className="mt-1 text-sm text-red-500">
                       유효한 이메일 형식이 아닙니다.
+                    </p>
+                  )}
+                  {emailCheckMessage && (
+                    <p
+                      className={`mt-1 text-sm ${
+                        emailCheckMessage.includes("사용 가능")
+                          ? "text-green-500"
+                          : "text-red-500"
+                      }`}
+                    >
+                      {emailCheckMessage}
                     </p>
                   )}
                 </div>
@@ -570,7 +606,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
                   <div className="flex items-center">
                     <input
                       type="checkbox"
-                      id="privacyAgreement"
+                      id="AIAgreement"
                       className="mr-2"
                       checked={termsAgreed.AI}
                       onChange={(e) =>
@@ -581,7 +617,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
                       }
                       required
                     />
-                    <label htmlFor="privacyAgreement" className="text-sm">
+                    <label htmlFor="AIAgreement" className="text-sm">
                       [필수] AI 욕설 감지 프로그램 설치 동의
                     </label>
                   </div>
@@ -594,7 +630,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
                   disabled={isLoading || !isFormValid()}
                   className="w-full rounded-md text-xl py-2 text-white bg-gradient-to-tr from-cyan-500 to-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
                 >
-                  {isLoading ? "처리중..." : "SIGNUP"}
+                  {isLoading ? "SIGNING UP..." : "SIGNUP"}
                 </button>
               </form>
             </div>

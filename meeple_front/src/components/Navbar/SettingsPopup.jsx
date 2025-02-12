@@ -1,8 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 
 const SettingsPopup = ({ isOpen, onClose }) => {
-  const [volume, setVolume] = useState(30);
-  const [isMuted, setIsMuted] = useState(false);
+  // 로컬스토리지에서 초기값을 가져오도록 수정
+  const [volume, setVolume] = useState(() => {
+    const savedVolume = localStorage.getItem("bgmVolume");
+    return savedVolume ? parseFloat(savedVolume) * 100 : 10; // 기본값 10%
+  });
+  const [isMuted, setIsMuted] = useState(() => {
+    return localStorage.getItem("bgmMuted") === "true";
+  });
   const [audioElement, setAudioElement] = useState(null);
   const popupRef = useRef(null);
 
@@ -10,8 +16,18 @@ const SettingsPopup = ({ isOpen, onClose }) => {
     const audio = document.querySelector("audio");
     if (audio) {
       setAudioElement(audio);
-      setVolume(audio.volume * 100);
-      setIsMuted(audio.muted);
+      // 로컬스토리지의 값을 우선적으로 사용
+      const savedVolume = localStorage.getItem("bgmVolume");
+      const savedMuted = localStorage.getItem("bgmMuted") === "true";
+
+      if (savedVolume) {
+        const volumeValue = parseFloat(savedVolume) * 100;
+        setVolume(volumeValue);
+        audio.volume = parseFloat(savedVolume);
+      }
+
+      setIsMuted(savedMuted);
+      audio.muted = savedMuted;
     }
 
     const handleClickOutside = (event) => {

@@ -49,7 +49,22 @@ const PlayerCard = ({
       <div className="p-3 bg-gray-700/90 backdrop-blur-md border-t border-gray-600">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-gray-200">{userNickname}</span>
+            {isCurrentUser ? (
+              <span className="flex items-center gap-2 group">
+                <div className="font-medium text-cyan-300/90 transition-colors duration-200">
+                  {userNickname}
+                </div>
+                <div className="px-2 py-0.5 text-sm bg-cyan-400/10 rounded-full">
+                  <span className="bg-gradient-to-r from-cyan-300 to-cyan-300 bg-clip-text text-transparent font-semibold">
+                    Me
+                  </span>
+                </div>
+              </span>
+            ) : (
+              <span className="font-medium text-gray-200 hover:text-gray-100 transition-colors duration-200">
+                {userNickname}
+              </span>
+            )}
             {!isCurrentUser && (
               <button
                 ref={buttonRef}
