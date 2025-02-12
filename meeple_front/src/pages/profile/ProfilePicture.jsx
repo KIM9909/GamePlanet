@@ -22,10 +22,10 @@ const ProfilePicture = ({ initialImageUrl, onSave, defaultImageUrl }) => {
 
     try {
       const formDataToSend = new FormData();
-      formDataToSend.append("profileImage", file);
+      // userProfilePicture로 키 이름 변경
+      formDataToSend.append("userProfilePicture", file);
 
-      // 기존 방식과 동일하게 Blob 처리
-      const userInfo = { userProfilePictureUrl: file.name }; // 실제로는 백엔드에서 처리될 것
+      const userInfo = {};
       const userInfoBlob = new Blob([JSON.stringify(userInfo)], {
         type: "application/json",
       });
