@@ -142,6 +142,21 @@ export const GameInfoAPI = {
     }
   },
 
+  //단일 글 조회
+
+  getCommunityPost: async (gameInfoId,gameCommunityId) => {
+    try {
+      const response = await axios.get(
+        `${GAMEINFO_API_BASE_URL}/${gameInfoId}/${gameCommunityId}`
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+
+
   //글 작성
 
   createCommunityPost: async (postData) => {
