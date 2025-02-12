@@ -26,10 +26,10 @@ public class TelepathyCardParser implements ExcelReader<TelepathyCard> {
 	public List<TelepathyCard> readExcelFile() {
 		List<TelepathyCard> cards = new ArrayList<>();
 
-		try (InputStream fis = getClass().getResourceAsStream("/game-element/telepathy.xlsx");
+		try (InputStream fis = getClass().getResourceAsStream("/game-element/telepathy-cards.xlsx");
 		     Workbook workbook = new XSSFWorkbook(fis)) {
 
-			Sheet sheet = workbook.getSheetAt(2);
+			Sheet sheet = workbook.getSheetAt(0);
 			Iterator<Row> rowIterator = sheet.iterator();
 
 			// 첫 번째 행(헤더) 건너뛰기
