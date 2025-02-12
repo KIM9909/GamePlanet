@@ -183,20 +183,33 @@ const MyInformation = () => {
       return;
     }
 
-    // API 요청을 위한 데이터 준비
-    const apiData = {
-      ...formData,
+    // FormData 생성
+    const formDataToSend = new FormData();
+
+    // userInfo JSON을 Blob으로 변환하여 추가
+    const userInfo = {
+      userName: formData.userName,
+      userNickname: formData.userNickname,
       userBirthday: formatDateForApi(formData.userBirthday),
     };
+
+    console.log("유저 인포 :", userInfo);
+
+    const userInfoBlob = new Blob([JSON.stringify(userInfo)], {
+      type: "application/json",
+    });
+
+    formDataToSend.append("userInfo", userInfoBlob);
 
     try {
       await dispatch(
         updateProfile({
           userId,
-          data: apiData,
+          data: formDataToSend,
         })
       ).unwrap();
       alert("프로필이 성공적으로 수정되었습니다.");
+      dispatch(setEditing(false)); // 수정 모드 종료
     } catch (error) {
       alert(error.message || "프로필 수정에 실패했습니다.");
     }

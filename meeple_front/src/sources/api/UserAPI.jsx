@@ -8,9 +8,9 @@ import axios from "axios";
 const API = axios.create({
   // baseURL: `${import.meta.env.VITE_LOCAL_API_BASE_URL}`,
   baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  // headers: {
+  //   "Content-Type": "application/json",
+  // },
   withCredentials: true,
 });
 
@@ -167,7 +167,13 @@ export const UserAPI = {
    */
   updateProfile: async (userId, data) => {
     try {
-      const response = await API.put(`/profile/${userId}`, data);
+      const response = await API.put(`/profile/${userId}`, data, {
+        headers: {
+          // FormData를 사용할 때는 Content-Type을 multipart/form-data로 설정하지 않음
+          // 브라우저가 자동으로 설정하도록 기존 Content-Type을 삭제
+          "Content-Type": undefined,
+        },
+      });
       return response;
     } catch (error) {
       throw error || "프로필 수정에 실패했습니다.";
