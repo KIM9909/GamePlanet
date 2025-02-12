@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import UserList from './UserList';
 import CustomList from './CustomList';
-import ReportList from './Report/ReportList';
+import ReportList from './report/ReportList';
 import RecordList from './record/RecordList';
 
 import { Outlet } from 'react-router-dom';
