@@ -9,13 +9,13 @@ import lombok.Getter;
 @Data
 @Builder
 public class CustomElementResponse {
-	private int customId;
+	private int id;
 	private String customName;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 	public static CustomElementResponse from(CustomElementEntity entity) {
 		return CustomElementResponse.builder()
-			.customId(entity.getCustomId())
+			.id(entity.getCustomId())
 			.customName(entity.getCustomName())
 			.createdAt(entity.getCreatedAt())
 			.updatedAt(entity.getUpdatedAt())

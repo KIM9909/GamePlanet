@@ -1,7 +1,5 @@
 package com.meeple.meeple_back.gameCustom.bluemarble.infrastructure;
 
-import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomElementRequest;
-import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomElementResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.domain.CustomElementCreate;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -29,25 +27,11 @@ public class CustomElementEntity {
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 
-	public static CustomElementEntity from(CustomElementRequest request) {
+	public static CustomElementEntity from(CustomElementCreate create) {
 		return CustomElementEntity.builder()
-			.customName(request.getCustomName())
+			.customName(create.getCustomName())
 			.createdAt(LocalDateTime.now())
 			.updatedAt(LocalDateTime.now())
 			.build();
-	}
-
-	public static CustomElementResponse to(CustomElementEntity customElementEntity){
-		return CustomElementResponse.builder()
-			.customId(customElementEntity.getCustomId())
-			.customName(customElementEntity.getCustomName())
-			.createdAt(customElementEntity.getCreatedAt())
-			.updatedAt(customElementEntity.getUpdatedAt())
-			.build();
-	}
-
-	public void update(CustomElementRequest customElementRequest) {
-		this.customName = customElementRequest.getCustomName();
-		this.updatedAt = LocalDateTime.now();
 	}
 }
