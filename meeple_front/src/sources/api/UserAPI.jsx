@@ -15,7 +15,7 @@ const API = axios.create({
 });
 
 /**
- * 요청 인터셉터 설정
+ * 요청 인터셉터를 설정
  * 모든 요청에 Authorization 헤더 자동 추가
  */
 API.interceptors.request.use(
