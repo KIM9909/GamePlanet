@@ -29,7 +29,8 @@ const BurumabulSidebar = ({ playerInfoList }) => {
 
   const handleExit = () => {
     if (connected) {
-      // lea;
+      leaveGame();
+      navigate("/home");
     }
   };
 
