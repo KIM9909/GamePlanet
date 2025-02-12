@@ -73,6 +73,7 @@ import QuestBuyLand from "./burumabul_Modal/QuestBuyLand";
 import PayTollModal from "./burumabul_Modal/PayTollModal";
 import DiceVersion2 from "./DiceVersion2";
 import HeartPlayer from "./HeartPlayer";
+import PickedCardModal from "./burumabul_Modal/PickedCardModal";
 
 const Cell = ({
   position,
@@ -220,6 +221,9 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
     socketPayTollData,
     setBuyLandSocketData,
     setBuildBaseSocketData,
+    socketDrawCardData,
+    socketPickedCard,
+    setSocketDrawCardData,
     setSocketPayTollData,
     socketTollPrice,
     socketReceivedPlayer,
@@ -439,6 +443,32 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
     }
   }, [socketPayTollData]);
 
+  // 카드 뽑고 나서 플레이어 업데이트
+  useEffect(() => {
+    if (socketDrawCardData) {
+      const { player } = socketDrawCardData;
+
+      if (player) {
+        setPlayers((prevPlayers) => {
+          const newPlayers =
+            prevPlayers?.map((prevPlayer) =>
+              prevPlayer.playerId === player.playerId
+                ? {
+                    ...prevPlayer,
+                    balance: player.balance,
+                    cardOwned: player.cardOwned,
+                    landOwned: player.landOwned,
+                    position: player.position,
+                  }
+                : prevPlayer
+            ) || [];
+
+          return newPlayers;
+        });
+      }
+    }
+  }, [socketDrawCardData]);
+
   // 상태 변화를 모니터링하기 위한 별도의 useEffect
   useEffect(() => {
     if (buyLandSocketData) {
@@ -467,6 +497,9 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
 
   // 통행료 알림 모달 오픈
   const [showPayTollModal, setShowPayTollModal] = useState(false);
+
+  // 뽑은 카드 모달 오픈
+  const [showPickedCardModal, setShowPickedCardModal] = useState(false);
 
   // 나는 몇 번째 순서인지
   const myIndex = players.findIndex((player) => player.playerId === userId);
@@ -628,7 +661,6 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
         // 중복 실행 방지
         setShowCardId(nextPosition);
         setShowBuyLand(true);
-        setSocketNext(null);
       }
     }
   }, [isMovementComplete, nextAction, nextPosition]);
@@ -657,7 +689,6 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
         } catch (error) {
           console.error("땅 구매 요청 실패 :", error);
           setSocketNext(null);
-
           setShowBuyLand(false);
           setShowCardId(null);
           setIsBuyLand(false);
@@ -677,7 +708,6 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
     ) {
       setShowCardId(nextPosition);
       setShowBuildBase(true);
-      setSocketNext(null);
       return;
     }
   }, [isMovementComplete, nextAction, showBuildBase]);
@@ -775,8 +805,11 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
         console.error("카드 뽑기 실패 :", error);
         setSocketNext(null);
       }
+      if (isMovementComplete) {
+        setShowPickedCardModal(true);
+      }
     }
-  }, [nextAction]);
+  }, [isMovementComplete, nextAction]);
 
   const closeBuyLand = () => {
     setShowBuyLand(false);
@@ -796,6 +829,11 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
     setReceivedPlayer(null);
     setTollPrice(null);
     setSocketNext("CHECK_END");
+  };
+
+  const closePickedCard = () => {
+    setShowPickedCardModal(false);
+    setSocketDrawCardData(null);
   };
 
   // 플레이어 위치 초기화
@@ -1366,7 +1404,7 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
               setIsBuyLand={setIsBuyLand}
               onClose={closeBuyLand}
               cardId={showCardId}
-              cardInfo={cards?.[showCardId]}
+              cardInfo={cards?.find((card) => card.id === showCardId)}
             />
           </div>,
           document.body
@@ -1382,7 +1420,7 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
               setIsBuildBase={setIsBuildBase}
               onClose={closeBuildBase}
               cardId={showCardId}
-              cardInfo={cards?.[showCardId]}
+              cardInfo={cards?.find((card) => card.id === showCardId)}
             />
           </div>,
           document.body
@@ -1396,6 +1434,17 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
               tollPrice={tollPrice}
               receivedPlayer={receivedPlayer}
               paidPlayer={paidPlayer}
+            />
+          </div>,
+          document.body
+        )}
+      {mountPortal &&
+        showPickedCardModal &&
+        createPortal(
+          <div className="fixed inset-0 z-50 w-2/3 text-center flex items-center justify-center">
+            <PickedCardModal
+              onClose={closePickedCard}
+              cardInfo={socketPickedCard}
             />
           </div>,
           document.body
