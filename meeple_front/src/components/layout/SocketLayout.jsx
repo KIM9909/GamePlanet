@@ -11,13 +11,13 @@ const SocketLayout = ({ children }) => {
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState(null);
   // 대기방 정보
-  const [roomSocketData, setRoomSocketData] = useState({});
+  const [roomSocketData, setRoomSocketData] = useState(null);
   const [roomNotifi, setRoomNotifi] = useState("");
   // 채팅
-  const [chatMessage, setChatMessage] = useState({});
+  const [chatMessage, setChatMessage] = useState(null);
 
   // 게임 정보
-  const [gamePlaySocketData, setGamePlaySocketData] = useState({});
+  const [gamePlaySocketData, setGamePlaySocketData] = useState(null);
 
   // 지금 플레이어는 누군지
   const [currentPlayerSocketIndex, setCurrentPlayerSocketIndex] =
@@ -27,7 +27,7 @@ const SocketLayout = ({ children }) => {
   const [socketRoll, setSocektRoll] = useState(null);
 
   // 주사위 굴린 후 정보
-  const [rollDiceSocketData, setRollDiceSocketData] = useState({});
+  const [rollDiceSocketData, setRollDiceSocketData] = useState(null);
 
   //  다음 행동
   const [socketNext, setSocketNext] = useState(null);
@@ -51,10 +51,10 @@ const SocketLayout = ({ children }) => {
   const [socketCards, setSocketCards] = useState(null);
 
   // 게임 공지 메시지
-  const [gameSocketNotifi, setGameSocketNotifi] = useState({});
+  const [gameSocketNotifi, setGameSocketNotifi] = useState(null);
 
   // 땅 구매 후 정보
-  const [buyLandSocketData, setBuyLandSocketData] = useState({});
+  const [buyLandSocketData, setBuyLandSocketData] = useState(null);
 
   // 유저 업데이트 정보
   const [socketUserUpdate, setSocketUserUpdate] = useState(null);
@@ -82,6 +82,9 @@ const SocketLayout = ({ children }) => {
 
   // 돈을 받는 사람
   const [socketReceivedPlayer, setSocketReceivedPlayer] = useState(null);
+
+  // 오픈비두
+  const [socketBurumabulOpenVidu, setSocketBurumabulOpenVidu] = useState("");
 
   const location = useLocation();
 
@@ -138,7 +141,8 @@ const SocketLayout = ({ children }) => {
               setRoomNotifi(receivedData.message);
             } else if (receivedData.type === "create") {
               setGamePlaySocketData(receivedData.data);
-              setGameSocketNotifi(receivedData.message);
+              setSocketBurumabulOpenVidu(String(receivedData.message)); // 💡 강제 변환
+
               setSocketNext(receivedData.data.nextAction);
               setCurrentPlayerSocketIndex(receivedData.data.currentPlayerIndex);
               setSocketCurrentRound(receivedData.data.round);
@@ -551,6 +555,7 @@ const SocketLayout = ({ children }) => {
         value={{
           connected,
           error,
+          socketBurumabulOpenVidu,
           roomSocketData,
           roomNotifi,
           setRoomNotifi,

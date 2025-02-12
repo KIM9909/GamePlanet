@@ -18,6 +18,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
   const {
     connected,
     roomSocketData,
+    socketBurumabulOpenVidu,
     createBurumabulPlay,
     gamePlaySocketData,
     currentPlayerSocketIndex,
@@ -58,6 +59,18 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
   }, [currentPlayerSocketIndex]);
 
   console.log("소켓에서 받아오는 현재 플레이어 순서", currentPlayerIndex);
+
+  // 오픈비두 세션 아이디 저장하기
+  const [burumabulOpenViduId, setBurumabulOpenVidu] = useState(
+    socketBurumabulOpenVidu
+  );
+  useEffect(() => {
+    if (socketBurumabulOpenVidu) {
+      setBurumabulOpenVidu(socketBurumabulOpenVidu);
+    }
+  }, [socketBurumabulOpenVidu]);
+
+  console.log(burumabulOpenViduId);
 
   const currentPlayer = players?.[currentPlayData?.currentPlayerIndex];
   // console.log("현재 플레이어: ", currentPlayer);
@@ -338,7 +351,11 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
                 <div className="p-4">
                   <div className="grid grid-cols-2 gap-3">
                     {playerInfoList.map((player, index) => (
-                      <PlayerVideo key={index} playerInfo={player} />
+                      <PlayerVideo
+                        key={index}
+                        playerInfo={player}
+                        sessionId={burumabulOpenViduId}
+                      />
                     ))}
                   </div>
                 </div>
