@@ -72,7 +72,7 @@ const ArticleItem = ({ content, createdAt, createdBy, comments, articleId }) => 
     <>
       <div 
         onClick={handleClick}
-        className="grid grid-cols-12 gap-4 py-3 border-b hover:bg-gray-50 cursor-pointer"
+        className="grid grid-cols-12 gap-4 py-3 border-b text-white hover:bg-gray-50 cursor-pointer hover:text-black"
       >
         <div className="col-span-8 text-center truncate">
           {content}
