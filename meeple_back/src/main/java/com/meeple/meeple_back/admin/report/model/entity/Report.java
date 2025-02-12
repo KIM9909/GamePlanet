@@ -45,6 +45,9 @@ public class Report {
     @Column(name = "report_content")
     private String reportContent;
 
+    @Column(name = "report_memo")
+    private String reportMemo;
+
     @Column(name = "process_status")
     private String processStatus;
 
