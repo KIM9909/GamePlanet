@@ -19,9 +19,6 @@ const SocketLayout = ({ children }) => {
   // 게임 정보
   const [gamePlaySocketData, setGamePlaySocketData] = useState({});
 
-  // 오픈 비두
-  const [socketOpenViduSessionId, setSocketOpenViduSessionId] = useState(null);
-
   // 지금 플레이어는 누군지
   const [currentPlayerSocketIndex, setCurrentPlayerSocketIndex] =
     useState(null);
@@ -86,12 +83,6 @@ const SocketLayout = ({ children }) => {
   // 돈을 받는 사람
   const [socketReceivedPlayer, setSocketReceivedPlayer] = useState(null);
 
-  // 카드 뽑고 나서 유저 업데이트
-  const [socketDrawCardData, setSocketDrawCardData] = useState(null);
-
-  // 뽑은 카드
-  const [socketPickedCard, setSocketPickedCard] = useState(null);
-
   const location = useLocation();
 
   const stompClientRef = useRef(null);
@@ -111,8 +102,8 @@ const SocketLayout = ({ children }) => {
     const stompClient = new Client({
       webSocketFactory: () => {
         console.log("🌍 SockJS WebSocket 팩토리 실행됨!");
-        return new SockJS(`${import.meta.env.VITE_SOCKET_LOCAL_API_BASE_URL}`);
-        // return new SockJS(`${import.meta.env.VITE_SOCKET_API_BASE_URL}`);
+        // return new SockJS(`${import.meta.env.VITE_SOCKET_LOCAL_API_BASE_URL}`);
+        return new SockJS(`${import.meta.env.VITE_SOCKET_API_BASE_URL}`);
       },
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
@@ -147,7 +138,7 @@ const SocketLayout = ({ children }) => {
               setRoomNotifi(receivedData.message);
             } else if (receivedData.type === "create") {
               setGamePlaySocketData(receivedData.data);
-              setSocketOpenViduSessionId(receivedData.message);
+              setGameSocketNotifi(receivedData.message);
               setSocketNext(receivedData.data.nextAction);
               setCurrentPlayerSocketIndex(receivedData.data.currentPlayerIndex);
               setSocketCurrentRound(receivedData.data.round);
@@ -191,11 +182,6 @@ const SocketLayout = ({ children }) => {
               setSocketReceivedPlayer(receivedData.data.receivedPlayer);
               setGameSocketNotifi(receivedData.message);
               setSocketNext(receivedData.data.nextAction);
-            } else if (receivedData.type === "draw-card") {
-              setSocketPickedCard(receivedData.data.pickedCard);
-              setSocketDrawCardData(receivedData.data);
-              setSocketNext(receivedData.data.nextAction);
-              setGameSocketNotifi(receivedData.message);
             }
             if (receivedData.status) {
               setSocketStatus(receivedData.status);
@@ -570,7 +556,6 @@ const SocketLayout = ({ children }) => {
           setRoomNotifi,
           chatMessage,
           gamePlaySocketData,
-          socketOpenViduSessionId,
           gameSocketNotifi,
           currentPlayerSocketIndex,
           rollDiceSocketData,
@@ -595,9 +580,6 @@ const SocketLayout = ({ children }) => {
           socketPayTollData,
           socketTollPrice,
           socketReceivedPlayer,
-          socketDrawCardData,
-          socketPickedCard,
-          setSocketDrawCardData,
           enterWaitingRoom,
           chatWaitingRoom,
           changePassword,
