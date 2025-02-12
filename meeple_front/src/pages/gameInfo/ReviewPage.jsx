@@ -5,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import ReviewItem from "../../components/info/gamereview/ReviewItem";
 import { GameInfoAPI } from '../../sources/api/GameInfoAPI';
 import { useSelector } from 'react-redux';
+import { h2, p } from "framer-motion/client";
 
 const ReviewPage = () => {
   const { gameInfoId } = useParams();
@@ -60,52 +61,88 @@ const ReviewPage = () => {
   if (error) return <div>에러가 발생했습니다.</div>;
   if (!data) return null;
 
+  const getCurrentUserReview = () => {
+    return data.reviewList?.find(
+      review => String(review.user.userId) === String(currentUserId)
+    );
+  };
+
+  const getOtherReviews = () => {
+    return data.reviewList?.filter(
+      review => String(review.user.userId) !== String(currentUserId)
+    );
+  };
+
   return (
     <div>
       <div className="min-h-screen relative overflow-hidden">
-      <div className="min-h-screen p-8 relative z-5">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-indigo-500/30">
-            <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-              게임 리뷰
-            </h1>
-            <section className="text-white">
-              {data.starAvg 
-                ? `별점 ${data.starAvg}` 
-                : "아직 별점을 등록한 사람이 없어요"
-              }
-            </section>
-            
-            {!editingReviewId && (
-              <ReviewForm 
-                gameInfoId={gameInfoId}
-                onSuccess={fetchReviews}
-              />
-            )}
+        <div className="min-h-screen p-8 relative z-5">
+          <div className="max-w-7xl mx-auto">
+            <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-indigo-500/30">
+              <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                게임 리뷰
+              </h1>
+              <section className="text-white">
+                {data.starAvg 
+                  ? `별점 ${data.starAvg}` 
+                  : "아직 별점을 등록한 사람이 없어요"
+                }
+              </section>
+              
+              {/* 현재 유저의 리뷰가 없다면 */}
+              {!editingReviewId && !getCurrentUserReview() && (
+                <p>
+                <h2 className="text-white">이 게임에 작성하신 리뷰가 없어요! 플레이 하시고 직접 리뷰를 작성해보세요</h2>
+                </p>
+              )}
 
-            <section>
-              {data.reviewList?.map((item) => (
-                editingReviewId === item.gameReviewId ? (
-                  <ReviewForm 
-                    key={item.gameReviewId}
-                    initialData={item}
-                    onSuccess={handleEditSuccess}
-                  />
-                ) : (
-                  <ReviewItem 
-                    key={item.gameReviewId}
-                    {...item}
-                    isAuthor={String(currentUserId) === String(item.user.userId)}
-                    onEditClick={() => handleEditClick(item.gameReviewId)}
-                    onDeleteClick={() => handleDeleteClick(item.gameReviewId)}
-                  />
-                )
-              ))}
-            </section>
+              {/* 현재 유저의 리뷰 */}
+              {getCurrentUserReview() && (
+                <div className="mt-8 mb-8">
+                  <h2 className="text-xl font-semibold text-white mb-4">내 리뷰</h2>
+                  <div className="border border-indigo-500/30 rounded-lg p-4">
+                    {editingReviewId === getCurrentUserReview().gameReviewId ? (
+                      <ReviewForm 
+                        initialData={getCurrentUserReview()}
+                        onSuccess={handleEditSuccess}
+                      />
+                    ) : (
+                      <ReviewItem 
+                        {...getCurrentUserReview()}
+                        isAuthor={true}
+                        onEditClick={() => handleEditClick(getCurrentUserReview().gameReviewId)}
+                        onDeleteClick={() => handleDeleteClick(getCurrentUserReview().gameReviewId)}
+                      />
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* 다른 사용자들의 리뷰 */}
+              <section className="mt-8">
+                <h2 className="text-xl font-semibold text-white mb-4">전체 리뷰</h2>
+                {getOtherReviews()?.map((item) => (
+                  editingReviewId === item.gameReviewId ? (
+                    <ReviewForm 
+                      key={item.gameReviewId}
+                      initialData={item}
+                      onSuccess={handleEditSuccess}
+                    />
+                  ) : (
+                    <ReviewItem 
+                      key={item.gameReviewId}
+                      {...item}
+                      isAuthor={String(currentUserId) === String(item.user.userId)}
+                      onEditClick={() => handleEditClick(item.gameReviewId)}
+                      onDeleteClick={() => handleDeleteClick(item.gameReviewId)}
+                    />
+                  )
+                ))}
+              </section>
             </div>
           </div>
+        </div>
+      </div>
     </div>
   );
 };
