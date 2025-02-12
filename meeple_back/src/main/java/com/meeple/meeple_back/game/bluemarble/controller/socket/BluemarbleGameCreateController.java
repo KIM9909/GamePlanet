@@ -4,6 +4,9 @@ import com.meeple.meeple_back.game.bluemarble.controller.port.BluemarbleGameServ
 import com.meeple.meeple_back.game.bluemarble.controller.response.GamePlayResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.SocketResponse;
 import com.meeple.meeple_back.game.bluemarble.domain.GamePlayCreate;
+import com.meeple.meeple_back.game.openVidu.service.OpenViduService;
+import io.openvidu.java.client.OpenViduHttpException;
+import io.openvidu.java.client.OpenViduJavaClientException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Builder;
@@ -22,14 +25,17 @@ public class BluemarbleGameCreateController {
 
 	private final BluemarbleGameService bluemarbleGameService;
 	private final SimpMessagingTemplate messagingTemplate;
+	private final OpenViduService openViduService;
 
 	@MessageMapping("/create")
 	@Operation(summary = "부루마불 환경이 생성됐습니다.", description = "게임환경을 생성합니다.")
-	public void create(@RequestBody GamePlayCreate gamePlayCreate) {
+	public void create(@RequestBody GamePlayCreate gamePlayCreate)
+			throws OpenViduJavaClientException, OpenViduHttpException {
+		String sessionId = openViduService.createSession();
 		SocketResponse<GamePlayResponse> socketGamePlayResponse = SocketResponse.from(
 				"create",
 				bluemarbleGameService.create(gamePlayCreate),
-				"부루마불 환경이 생성되었습니다.");
+				sessionId);
 		messagingTemplate.convertAndSend("/topic/rooms/" + gamePlayCreate.getGamePlayId(),
 				socketGamePlayResponse);
 	}
