@@ -16,7 +16,6 @@ import ScrollToTop from "./components/layout/ScrollToTop";
 import CatchMindPage from "./pages/game/CatchMindPage";
 import FriendModalLayout from "./components/layout/FriendModalLayout";
 import CatchMindListPage from "./components/game/catchMind/roomList/CatchMindListPage";
-
 import NewArticlePage from "./pages/gameInfo/board/NewArticlePage";
 import GameRulePage from "./pages/gameInfo/GameRulePage";
 import ArticleDetailPage from "./pages/gameInfo/board/ArticleDetailPage";
@@ -33,10 +32,7 @@ import ErrorPage from "./pages/error/ErrorPage";
 import CustomEditor from "./components/info/gamecustom/CustomEditor";
 import BackGroundMusic from "./components/background/BackGroundMusic";
 import CustomDetail from "./components/info/gamecustom/CustomDetail";
-import BackgroundMusic from "./components/background/BackGroundMusic";
 import ReportDetail from "./components/admin/ReportDetail";
-
-
 
 function App() {
   return (
@@ -50,7 +46,10 @@ function App() {
             <Routes>
               {/* Admin */}
               <Route path="/admin" element={<AdminPage />} />
-              <Route path="/admin/report/:reportId" element={<ReportDetail />} />
+              <Route
+                path="/admin/report/:reportId"
+                element={<ReportDetail />}
+              />
 
               {/* Board */}
               <Route path="/board" element={<BoardPage />} />
@@ -123,11 +122,14 @@ function App() {
                 path="/game-info/:gameInfoId/custom"
                 element={<CustomPage />}
               />
-              <Route path="/game-info/:gameInfoId/custom/editor" 
-              element={<CustomEditor/>}/>
-              <Route path="/game-info/:gameInfoId/custom/detail/:customId"
-              element={<CustomDetail/>}/>
-
+              <Route
+                path="/game-info/:gameInfoId/custom/editor"
+                element={<CustomEditor />}
+              />
+              <Route
+                path="/game-info/:gameInfoId/custom/detail/:customId"
+                element={<CustomDetail />}
+              />
 
               {/* Cockroach Room List */}
               <Route path="/test/cockroach" element={<CockroachRoom />} />
