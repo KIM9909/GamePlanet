@@ -1,5 +1,6 @@
 package com.meeple.meeple_back.gameCustom.bluemarble.infrastructure;
 
+import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomTileRequest;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,7 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CustomTile {
+public class CustomTileEntity {
 
 	@EmbeddedId
 	private CustomTileId id;
@@ -20,10 +21,11 @@ public class CustomTile {
 	@ManyToOne
 	@MapsId("customId")
 	@JoinColumn(name = "custom_id")
-	private CustomElement customElement;
+	private CustomElementEntity customElement;
 
 	@ManyToOne
 	@MapsId("tileId")
 	@JoinColumn(name = "tile_id")
-	private Tile tile;
+	private TileEntity tileEntity;
+
 }
