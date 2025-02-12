@@ -17,8 +17,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 
-@RestController("/custom-element/tile")
-@RequestMapping
+@RestController
+@RequestMapping("/custom-element/tile")
 @RequiredArgsConstructor
 public class CustomTileController {
 	private final CustomTileService customTileService;
@@ -30,7 +30,7 @@ public class CustomTileController {
 	// CREATE
 	@PostMapping(value = "/{customId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<?> createCustomTile(@PathVariable Integer customId,
-	                                          @RequestParam("tileName") String tileName, @RequestParam("tileNumber") Integer tileNumber, @RequestParam("tileType") String tileType, @RequestParam("tilePrice") Integer tilePrice, @RequestPart("tileImage") MultipartFile tileImage) {
+	                                          @RequestParam("tileName") String tileName, @RequestParam("tileColor") String tileColor, @RequestParam("tileNumber") Integer tileNumber, @RequestParam("tileType") String tileType, @RequestParam("tilePrice") Integer tilePrice, @RequestPart("tileImage") MultipartFile tileImage) {
 		if (tileImage.isEmpty()) {
 			return ResponseEntity.badRequest().body("파일이 전송되지 않았습니다.");
 		}
@@ -48,7 +48,7 @@ public class CustomTileController {
 
 			String fileUrl = amazonS3.getUrl(bucketName, fileName).toString();
 
-			CustomTileResponse response = customTileService.create(CustomTileRequest.builder().customId(customId).tileName(tileName).tileNumber(tileNumber).tileType(tileType).tileImageUrl(fileUrl).tilePrice(tilePrice).build());
+			CustomTileResponse response = customTileService.create(CustomTileRequest.builder().customId(customId).tileName(tileName).tileNumber(tileNumber).tileType(tileType).tileImageUrl(fileUrl).tilePrice(tilePrice).build(), tileColor);
 			return ResponseEntity.ok(response);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
