@@ -110,4 +110,8 @@ public class Player {
 	public void setBroken() {
 		this.balance = -1;
 	}
+
+	public void removeCardOwned(SeedCertificateCard card) {
+		this.cardOwned.remove(card);
+	}
 }

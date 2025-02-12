@@ -362,11 +362,37 @@ public class GamePlay {
 
 	private PayFeeResponse handleInsufficientBalance(Player paidPlayer, Player receivedPlayer,
 	                                                 int tollPrice) {
+		int available = paidPlayer.getBalance();
+		int maxValue = board.stream().mapToInt(Tile::getPrice).max().orElse(0);
+
+		if (available + maxValue >= tollPrice) {
+			Tile mostExpeisiveTile = board.stream().filter(tile -> tile.getPrice() == maxValue && tile.getOwnerId() == paidPlayer.getPlayerId()).findFirst().orElseThrow();
+			SeedCertificateCard card = (SeedCertificateCard) paidPlayer.getCardOwnedByTileId(mostExpeisiveTile.getId());
+			paidPlayer.addMoney(card.getSeedCount());
+			cards.add(card);
+			paidPlayer.removeCardOwned(card);
+			paidPlayer.payMoney(tollPrice);
+			receivedPlayer.addMoney(tollPrice);
+			mostExpeisiveTile.update(0, 0, card.getSeedCount());
+			return PayFeeResponse.from(available, paidPlayer.getBalance(), tollPrice, false,
+					paidPlayer, receivedPlayer, ActionType.CHECK_END);
+		}
 		final int availablePayment = paidPlayer.getBalance();
 		final int remainingToll = tollPrice - paidPlayer.getBalance();
 		paidPlayer.payMoney(availablePayment);
 		receivedPlayer.addMoney(availablePayment);
 		paidPlayer.setBroken();
+	
+
+		paidPlayer.getLandOwned().forEach(tileId -> {
+			Tile tile = findTileById(tileId);
+			tile.update(0, 0, tile.getPrice());
+			SeedCertificateCard card = (SeedCertificateCard) paidPlayer.getCardOwnedByTileId(tileId);
+			cards.add(card);
+			paidPlayer.removeCardOwned(card);
+		});
+
+
 		return PayFeeResponse.from(availablePayment, paidPlayer.getBalance(), remainingToll, true,
 				paidPlayer, receivedPlayer, ActionType.CHECK_END);
 	}
