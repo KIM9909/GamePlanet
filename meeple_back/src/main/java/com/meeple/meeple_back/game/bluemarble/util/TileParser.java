@@ -16,7 +16,7 @@ public class TileParser implements ExcelReader<Tile> {
 
 	@Override
 	public List<Tile> readExcelFile() {
-		String excelFilePath = "resources/bluemarble-tileEntity.xlsx";
+		String excelFilePath = "resources/bluemarble-tile.xlsx";
 		List<Tile> tiles = new ArrayList<>();
 
 		try (InputStream fis = getClass().getResourceAsStream("/game-element/bluemarble-tile.xlsx");

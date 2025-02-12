@@ -1,6 +1,5 @@
 package com.meeple.meeple_back.gameCustom.bluemarble.infrastructure;
 
-import com.meeple.meeple_back.gameCustom.bluemarble.domain.CustomElementCreate;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,7 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CustomElementEntity {
+public class CustomElement {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,12 +25,4 @@ public class CustomElementEntity {
 
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
-
-	public static CustomElementEntity from(CustomElementCreate create) {
-		return CustomElementEntity.builder()
-			.customName(create.getCustomName())
-			.createdAt(LocalDateTime.now())
-			.updatedAt(LocalDateTime.now())
-			.build();
-	}
 }
