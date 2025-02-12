@@ -32,4 +32,6 @@ public class ResponseReportList {
     private ReportReason reportReason;
     @Schema(description = "신고 제목", example = "부적절한 내용신고")
     private String reportTitle;
+    @Schema(description = "신고 제목", example = "부적절한 내용신고")
+    private String processStatus;
 }
