@@ -1,26 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Play, Pause } from 'lucide-react';
-import Pagination from './Pagination';
+import { AdminAPI } from "../../../sources/api/AdminAPI";
+import Pagination from '../Pagination';
 
 const RecordList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [playing, setPlaying] = useState(null);
+  const [records, setRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [audioElement, setAudioElement] = useState(null);
   const itemsPerPage = 10;
 
-  // 더미 데이터
-  const [records] = useState(Array.from({ length: 25 }, (_, index) => ({
-    id: index + 1,
-    nickname: `Player${index + 1}`,
-    text: `부적절한 언어 사용 ${index + 1}...`,
-    recordUrl: `record${index + 1}.mp3`,
-    timestamp: new Date(2024, 1, 1 + index).toLocaleString()
-  })));
+  // API로 음성 로그 목록 가져오기
+  useEffect(() => {
+    const fetchVoiceLogs = async () => {
+      try {
+        setLoading(true);
+        const response = await AdminAPI.getVoiceLogList();
+        // response에서 voiceLogList를 추출
+        if (response && response.voiceLogList) {
+          setRecords(response.voiceLogList);
+          console.log('음성 로그 데이터:', response); // 데이터 확인용 로그
+        } else {
+          setRecords([]);
+          console.log('응답 전체:', response); // 응답 구조 확인용 로그
+        }
+        setError(null);
+      } catch (err) {
+        setError('음성 로그 목록을 불러오는데 실패했습니다.');
+        console.error('Error fetching voice logs:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchVoiceLogs();
+  }, []);
 
   // 검색 필터링
   const filteredRecords = records.filter(record => {
     if (!searchTerm) return true;
-    return record.nickname.toLowerCase().includes(searchTerm.toLowerCase());
+    return record.userNickname.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   const getCurrentPageData = () => {
@@ -34,15 +56,44 @@ const RecordList = () => {
     setCurrentPage(1);
   };
 
-  const handlePlayRecord = (recordId) => {
-    if (playing === recordId) {
-      setPlaying(null);
-      // 음성 재생 중지 로직
-    } else {
-      setPlaying(recordId);
-      // 음성 재생 로직
+  const handlePlayRecord = async (record) => {
+    try {
+      if (playing === record.voiceLogId) {
+        if (audioElement) {
+          audioElement.pause();
+          audioElement.currentTime = 0;
+        }
+        setPlaying(null);
+      } else {
+        if (audioElement) {
+          audioElement.pause();
+          audioElement.currentTime = 0;
+        }
+        
+        // voiceFileUrl을 사용하도록 수정
+        const audio = new Audio(record.voiceFileUrl);
+        setAudioElement(audio);
+        
+        audio.addEventListener('ended', () => {
+          setPlaying(null);
+        });
+        
+        await audio.play();
+        setPlaying(record.voiceLogId);
+      }
+    } catch (err) {
+      console.error('Error playing audio:', err);
+      alert('음성 파일 재생에 실패했습니다.');
     }
   };
+
+  if (loading) {
+    return <div className="text-center py-8 text-gray-300">음성 로그를 불러오는 중...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-8 text-red-400">{error}</div>;
+  }
 
   return (
     <div>
@@ -85,22 +136,22 @@ const RecordList = () => {
           </thead>
           <tbody className="divide-y divide-slate-600">
             {getCurrentPageData().map((record) => (
-              <tr key={record.id} className="hover:bg-slate-600 transition-colors">
+              <tr key={record.voiceLogId} className="hover:bg-slate-600 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                  {record.timestamp}
+                  {new Date(record.voiceTime).toLocaleString()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                  {record.nickname}
+                  {record.user.userName}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-300">
-                  {record.text}
+                  {record.voiceLog}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <button 
-                    onClick={() => handlePlayRecord(record.id)}
+                    onClick={() => handlePlayRecord(record)}
                     className="px-3 py-2 bg-slate-800 text-cyan-400 rounded-lg hover:bg-slate-700 transition-colors flex items-center gap-2"
                   >
-                    {playing === record.id ? (
+                    {playing === record.voiceLogId ? (
                       <>
                         <Pause size={16} />
                         일시정지
