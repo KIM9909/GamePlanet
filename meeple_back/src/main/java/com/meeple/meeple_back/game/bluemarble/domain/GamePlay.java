@@ -16,6 +16,7 @@ import lombok.Getter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 @Getter
 @Builder
@@ -171,8 +172,8 @@ public class GamePlay {
 			return processLandingOnPlanetEvent(currentPlayer, currentTile);
 		}
 		// TODO 3: 특수카드일 경우 처리
-		if (TileType.NEURONS_VALLEY_CARD == currentTile.getType()) {
-
+		if (TileType.NEURONS_VALLEY_CARD == currentTile.getType() || TileType.TELEPATHY_CARD == currentTile.getType()) {
+			return ActionType.DRAW_CARD;
 		}
 
 		return ActionType.CHECK_END;
@@ -272,29 +273,112 @@ public class GamePlay {
 	public DrawCardResponse drawCard(CardDrawRequest cardDrawRequest) {
 
 		Player player = getValidatedPlayer(cardDrawRequest.getPlayerId());
+		int prevPosition = player.getPosition();
+		int prevBalance = player.getBalance();
+
 
 		Tile tile = findTileById(cardDrawRequest.getTileId());
-		// 타일 타입별로 카드 뽑기
 		TileType tileType = tile.getType();
+		Card pickedCard = null; // 뽑은 카드 저장
+
 		if (tileType == TileType.TELEPATHY_CARD) {
-			// 텔레파시 카드 뽑기
-			TelepathyCard card = (TelepathyCard) findAndRemoveCardByNumberAndType(tile.getId(),
-					CardType.TELEPATHY_CARD);
-			player.addCardOwned(card);
-			return DrawCardResponse.from(player.getPlayerId(), player, card, ActionType.CHECK_END,
-					getCards());
+			TelepathyCard card = (TelepathyCard) findAndRemoveRandomCardByType(CardType.TELEPATHY_CARD);
+			pickedCard = card;
+			switch (card.getNumber()) {
+				case 3:
+					int blackHoleIndex = getBlackHoleTileIndex();  // 예: board 내에 type이 "BLACK_HOLE"인 타일의 인덱스를 반환
+					player.setPosition(blackHoleIndex);
+					break;
+
+				case 7:
+					int earthIndex = getEarthTileIndex(); // 예: 지구 타일의 인덱스 (보통 0번)
+					player.setPosition(earthIndex);
+					player.setBalance(player.getBalance() + 200000);
+					break;
+
+				case 10:
+					final int FEE_COST = 100000;
+					List<Player> allPlayers = getAllPlayers(); // 전체 플레이어 목록 반환
+					for (Player other : allPlayers) {
+						if (other.getPlayerId() != player.getPlayerId()) {
+							other.setBalance(other.getBalance() - FEE_COST);
+							player.setBalance(player.getBalance() + FEE_COST);
+						}
+					}
+					break;
+
+				case 11:
+					player.setBalance(player.getBalance() - 250000);
+					int newPos = player.getPosition() - 3;
+					int boardSize = getBoardSize();
+					if (newPos < 0) {
+						newPos += boardSize;
+					}
+					player.setPosition(newPos);
+					break;
+
+				default:
+					break;
+			}
+
 		}
 
 		if (tileType == TileType.NEURONS_VALLEY_CARD) {
 			// 뉴런의 골짜기 카드 뽑기
-			NeuronsValleyCard card = (NeuronsValleyCard) findAndRemoveCardByNumberAndType(tile.getId(),
+			NeuronsValleyCard card = (NeuronsValleyCard) findAndRemoveRandomCardByType(
 					CardType.NEURONS_VALLEY_CARD);
-			player.addCardOwned(card);
-			return DrawCardResponse.from(player.getPlayerId(), player, card, ActionType.CHECK_END,
-					getCards());
+			pickedCard = card;
 		}
-		return DrawCardResponse.from(player.getPlayerId(), player, null, ActionType.CHECK_END,
-				getCards());
+		int nextPosition = player.getPosition();
+		int nextBalance = player.getBalance();
+
+		List<Card> updatedCards = getCards();
+
+		return DrawCardResponse.from(
+				player.getPlayerId(),
+				pickedCard,
+				player,
+				updatedCards,
+				prevPosition,
+				nextPosition,
+				prevBalance,
+				nextBalance,
+				ActionType.CHECK_END
+		);
+	}
+
+	private Card findAndRemoveRandomCardByType(CardType cardType) {
+		// 해당 타입의 카드 목록 필터링
+		List<Card> filteredCards = cards.stream()
+				.filter(c -> c.checkType(cardType))
+				.toList();
+		// 해당 카드가 없으면 예외 발생
+		if (filteredCards.isEmpty()) {
+			throw new IllegalArgumentException("Card not found");
+		}
+		// 무작위 인덱스 선택
+		int randomIndex = new Random().nextInt(filteredCards.size());
+		Card card = filteredCards.get(randomIndex);
+
+		// 원본 카드 목록에서 제거
+		cards.remove(card);
+		return card;
+	}
+
+	private int getBoardSize() {
+		return this.board.size();
+	}
+
+	private List<Player> getAllPlayers() {
+		return this.players;
+	}
+
+	private int getEarthTileIndex() {
+		return 0;
+	}
+
+	private int getBlackHoleTileIndex() {
+		return 20;
 	}
 
 	/**
@@ -382,7 +466,7 @@ public class GamePlay {
 		paidPlayer.payMoney(availablePayment);
 		receivedPlayer.addMoney(availablePayment);
 		paidPlayer.setBroken();
-	
+
 
 		paidPlayer.getLandOwned().forEach(tileId -> {
 			Tile tile = findTileById(tileId);
