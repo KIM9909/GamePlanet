@@ -94,15 +94,23 @@ const ProfilePage = () => {
             <div className="rounded-xl p-7 bg-zinc-900/60 shadow-lg backdrop-blur-sm border border-zinc-700/50">
               <div className="flex items-start gap-8">
                 {/* 프로필 이미지 */}
-                <div className="relative w-36 h-36">
-                  <div className="w-full h-full bg-white rounded-full overflow-hidden border-4 border-cyan-500 shadow-xl">
-                    <img
-                      src={profile.userProfilePictureUrl}
-                      alt="프로필"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                </div>
+                <ProfilePicture
+                  initialImageUrl={profile.userProfilePictureUrl}
+                  defaultImageUrl={Heejun}
+                  onSave={async (formData) => {
+                    try {
+                      await dispatch(
+                        updateProfile({
+                          userId,
+                          data: formData,
+                        })
+                      ).unwrap();
+                    } catch (error) {
+                      console.error("프로필 이미지 업데이트 실패:", error);
+                      alert("프로필 이미지 업데이트에 실패했습니다.");
+                    }
+                  }}
+                />
 
                 {/* 사용자 정보 */}
                 <div className="flex-1">
