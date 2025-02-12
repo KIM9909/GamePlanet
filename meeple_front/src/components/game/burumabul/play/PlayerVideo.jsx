@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Camera, CameraOff, Mic, MicOff } from "lucide-react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Camera, CameraOff, Mic, MicOff, UserSearch } from "lucide-react";
 import { OpenVidu } from "openvidu-browser";
 import axios from "axios";
 import { useSelector } from "react-redux";
+import ProfileModal from "../../../user/ProfileModal";
+import ReportFormModal from "../../../user/ReportFormModal";
 
 const PlayerVideo = ({ playerInfo, sessionId }) => {
   const [session, setSession] = useState(null);
@@ -42,28 +44,6 @@ const PlayerVideo = ({ playerInfo, sessionId }) => {
     }
   };
 
-  const handleReconnection = async () => {
-    if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-      setConnectionError("최대 재연결 시도 횟수를 초과했습니다.");
-      return;
-    }
-
-    setReconnectAttempts((prev) => prev + 1);
-    setConnectionError(
-      `재연결 시도 중... (${reconnectAttempts + 1}/${MAX_RECONNECT_ATTEMPTS})`
-    );
-
-    // 이전 재연결 타임아웃 제거
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-    }
-
-    // 일정 시간 후 재연결 시도
-    reconnectTimeoutRef.current = setTimeout(() => {
-      connectToSession();
-    }, RECONNECT_DELAY);
-  };
-
   const connectToSession = async () => {
     if (!sessionId || !playerInfo || isConnecting) return;
 
@@ -79,7 +59,6 @@ const PlayerVideo = ({ playerInfo, sessionId }) => {
       const currentSession = OV.initSession();
       setSession(currentSession);
 
-      // 스트림 생성 이벤트 핸들러
       currentSession.on("streamCreated", (event) => {
         const connectionData = JSON.parse(event.stream.connection.data);
         if (
@@ -87,11 +66,8 @@ const PlayerVideo = ({ playerInfo, sessionId }) => {
           !isMyStream
         ) {
           const subscriber = currentSession.subscribe(event.stream, undefined);
-          setSubscribers((prev) => {
-            const newSubscribers = [...prev, subscriber];
-            setCurrentStream(subscriber.stream);
-            return newSubscribers;
-          });
+          setSubscribers((prev) => [...prev, subscriber]);
+          setCurrentStream(subscriber.stream);
         }
       });
 
@@ -104,13 +80,6 @@ const PlayerVideo = ({ playerInfo, sessionId }) => {
         }
       });
 
-      // 연결 끊김 이벤트 핸들러 추가
-      currentSession.on("sessionDisconnected", (event) => {
-        if (event.reason === "networkDisconnect") {
-          handleReconnection();
-        }
-      });
-
       // 토큰 가져오기
       if (!tokenRef.current) {
         const response = await axios.post(
@@ -118,10 +87,7 @@ const PlayerVideo = ({ playerInfo, sessionId }) => {
             import.meta.env.VITE_API_BASE_URL
           }/api/video/generate-token/${sessionId}`,
           {},
-          {
-            headers: { "Content-Type": "application/json" },
-            timeout: 30000,
-          }
+          { headers: { "Content-Type": "application/json" }, timeout: 30000 }
         );
 
         if (!response.data?.token) {
@@ -130,36 +96,16 @@ const PlayerVideo = ({ playerInfo, sessionId }) => {
         tokenRef.current = response.data.token;
       }
 
-      // 세션 연결
       await currentSession.connect(tokenRef.current, {
         clientData: playerInfo.playerName,
       });
 
-      // 본인의 스트림인 경우에만 Publisher 생성
       if (isMyStream) {
         const newPublisher = await OV.initPublisher(undefined, {
-          audioSource: undefined,
-          videoSource: undefined,
           publishAudio: true,
           publishVideo: true,
           resolution: "640x480",
           frameRate: 30,
-          insertMode: "APPEND",
-          mirror: false,
-          publisherProperties: {
-            mediaConstraints: {
-              audio: {
-                echoCancellation: true,
-                noiseSuppression: true,
-                autoGainControl: true,
-              },
-              video: {
-                width: { ideal: 640 },
-                height: { ideal: 480 },
-                frameRate: { ideal: 30 },
-              },
-            },
-          },
         });
 
         newPublisher.on("streamPropertyChanged", (event) => {
@@ -175,13 +121,11 @@ const PlayerVideo = ({ playerInfo, sessionId }) => {
         setCurrentStream(newPublisher.stream);
       }
 
-      // 연결 성공 시 상태 초기화
       setConnectionError(null);
       setReconnectAttempts(0);
     } catch (error) {
       console.error("Error in video connection:", error);
       setConnectionError(error.message);
-      handleReconnection();
     } finally {
       setIsConnecting(false);
     }
@@ -215,6 +159,24 @@ const PlayerVideo = ({ playerInfo, sessionId }) => {
     }
   };
 
+  // 프로필 모달 관련 상태
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showReportForm, setShowReportForm] = useState(false);
+  const buttonRef = useRef();
+
+  const getAnchorRect = useCallback(() => {
+    return buttonRef.current?.getBoundingClientRect();
+  }, []);
+
+  const handleReport = () => {
+    setIsModalOpen(false);
+    setShowReportForm(true);
+  };
+
+  const handleReportSubmit = async (formData) => {
+    setShowReportForm(false);
+  };
+
   return (
     <div className="bg-white rounded-md w-full flex flex-col h-32 border-2 border-violet-400">
       <div className="relative bg-black w-full rounded-t-sm h-28 sm:h-20 md:h-24 overflow-hidden">
@@ -240,16 +202,19 @@ const PlayerVideo = ({ playerInfo, sessionId }) => {
             </div>
           </div>
         )}
-        {!videoEnabled && currentStream && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-            <div className="text-white text-sm">카메라 꺼짐</div>
-          </div>
-        )}
       </div>
+
       <div className="flex justify-between items-center px-3 py-1 flex-shrink-0">
-        <p className="text-sm truncate">
+        {/* 🟢 이름을 누르면 프로필 모달이 열리도록 수정 */}
+        <button
+          ref={buttonRef}
+          onClick={() => setIsModalOpen(true)}
+          className="text-sm font-bold text-blue-500 hover:underline flex items-center gap-1"
+        >
           {playerInfo.playerName} {isMyStream ? "(나)" : ""}
-        </p>
+          {!isMyStream && <UserSearch className="w-4 h-4 text-gray-400" />}
+        </button>
+
         {isMyStream && (
           <div className="flex flex-row items-center space-x-1">
             <button
@@ -275,6 +240,23 @@ const PlayerVideo = ({ playerInfo, sessionId }) => {
           </div>
         )}
       </div>
+
+      {isModalOpen && (
+        <ProfileModal
+          onClose={() => setIsModalOpen(false)}
+          userNickname={playerInfo.playerName}
+          userLevel={1}
+          getAnchorRect={getAnchorRect}
+          onReport={handleReport}
+        />
+      )}
+
+      {showReportForm && (
+        <ReportFormModal
+          onClose={() => setShowReportForm(false)}
+          onSubmit={handleReportSubmit}
+        />
+      )}
     </div>
   );
 };
