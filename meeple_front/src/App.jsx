@@ -32,7 +32,8 @@ import ErrorPage from "./pages/error/ErrorPage";
 import CustomEditor from "./components/info/gamecustom/CustomEditor";
 import BackGroundMusic from "./components/background/BackGroundMusic";
 import CustomDetail from "./components/info/gamecustom/CustomDetail";
-import ReportDetail from "./components/admin/report/ReportDetail";
+import ReportDetail from "./components/admin/report/ReportDetail"
+import RecordDetail from "./components/admin/record/RecordDetail";
 
 function App() {
   return (
@@ -49,6 +50,10 @@ function App() {
               <Route
                 path="/admin/report/:reportId"
                 element={<ReportDetail />}
+              />
+              <Route
+                path="/admin/record/:recordId"
+                element={<RecordDetail />}
               />
 
               {/* Board */}
@@ -139,6 +144,9 @@ function App() {
 
               {/* ERROR */}
               <Route path="/errorpage" element={<ErrorPage />} />
+              
+              {/* etc */}
+              <Route path="*" element={<ErrorPage />} />
             </Routes>
           </FriendModalLayout>
         </SideLayout>

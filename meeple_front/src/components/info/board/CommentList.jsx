@@ -5,7 +5,7 @@ import CommentForm from './CommentForm';
 import { useSelector } from 'react-redux';
 import { GameInfoAPI } from '../../../sources/api/GameInfoAPI';
 
-const CommentList = ({ articleId, commentListData, onCommentUpdate }) => {
+const CommentList = ({ gameCommunityId, commentListData, onCommentUpdate }) => {
   const [content, setContent] = useState('');
   const [editingComment, setEditingComment] = useState(null);
   const { token } = useSelector((state) => state.user);
@@ -18,7 +18,7 @@ const CommentList = ({ articleId, commentListData, onCommentUpdate }) => {
     try {
       await GameInfoAPI.createComment({
         content,
-        gameCommunityId: articleId,
+        gameCommunityId: gameCommunityId,
         userId
       });
       setContent('');
@@ -55,7 +55,7 @@ const CommentList = ({ articleId, commentListData, onCommentUpdate }) => {
             <CommentForm
               key={comment.communityCommentId}
               initialData={comment.content}
-              articleId={articleId}
+              gameCommunityId={gameCommunityId}
               commentId={comment.communityCommentId}
               userId={userId}
               onSuccess={() => {
@@ -81,7 +81,7 @@ const CommentList = ({ articleId, commentListData, onCommentUpdate }) => {
       </div>
 
       <CommentForm 
-        articleId={articleId}
+        gameCommunityId={gameCommunityId}
         userId={userId}
         content={content}
         setContent={setContent}

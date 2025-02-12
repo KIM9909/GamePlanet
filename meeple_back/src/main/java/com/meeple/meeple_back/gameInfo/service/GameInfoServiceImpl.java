@@ -149,6 +149,17 @@ public class GameInfoServiceImpl implements GameInfoService {
         GameInfo gameInfo = gameInfoRepository.findById(request.getGameInfoId())
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게임 정보입니다."));
 
+        boolean reviewExists = gameReviewRepository.existsByUser_UserId(request.getUserId());
+
+        if (reviewExists) {
+            ResponseCreateReview response = ResponseCreateReview.builder()
+                    .code(400)
+                    .message("이미 리뷰를 작성하셨습니다.")
+                    .build();
+
+            return response;
+        }
+
         GameReview gameReview = GameReview.builder()
                 .gameReviewContent(request.getGameReviewContent())
                 .gameReviewStar(request.getGameReviewStar())
