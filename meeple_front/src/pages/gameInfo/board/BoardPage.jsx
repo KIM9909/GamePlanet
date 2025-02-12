@@ -73,7 +73,7 @@ const BoardPage = () => {
 
   if (loading && articles.length === 0) return <div>로딩중...</div>;
   if (error) return <div>에러가 발생했습니다.</div>;
-  if (!articles.length) return <div>데이터가 없습니다.</div>;
+  // if (!articles.length) return <div>데이터가 없습니다.</div>;
 
   return (
     <div className="h-screen p-8">

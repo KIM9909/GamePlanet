@@ -51,7 +51,7 @@ const ReviewForm = ({ initialData, onSuccess }) => {
           gameReviewStar: rating,
           gameReviewContent: content,
         }
-        await GameInfoAPI.updateReview(initialData.gameReviewId, reviewData);
+        await GameInfoAPI.updateReview(initialData.gameReviewId, reviewUpdateData);
         alert('리뷰가 성공적으로 수정되었습니다.');
       } else {
         await GameInfoAPI.createReview(reviewData);
