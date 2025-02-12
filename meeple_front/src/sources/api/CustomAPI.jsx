@@ -1,0 +1,228 @@
+import axios from "axios";
+
+const API = axios.create({
+  baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
+  headers: {
+    "Content-Type": "application/json",
+  },
+  withCredentials: true,
+});
+
+/**
+ * 요청 인터셉터를 설정
+ * 모든 요청에 Authorization 헤더 자동 추가
+ */
+API.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    console.error("Request interceptor error:", error);
+    return Promise.reject(error);
+  }
+);
+
+/**
+ * 응답 인터셉터 설정
+ * 응답 데이터 추출 및 에러 처리 통합
+ */
+API.interceptors.response.use(
+  (response) => response.data,
+  (error) => {
+    console.error("API Error:", {
+      url: error.config?.url,
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+    return Promise.reject(error.response?.data || error);
+  }
+);
+
+export const CustomAPI = {
+  /**
+   * Custom Element API
+   */
+  createElement: async (elementData) => {
+    try {
+      const response = await API.post("/custom-element/create", elementData);
+      return response;
+    } catch (error) {
+      throw error || "커스텀 요소 생성에 실패했습니다.";
+    }
+  },
+
+  getAllElements: async () => {
+    try {
+      const response = await API.get("/custom-element");
+      return response;
+    } catch (error) {
+      throw error || "커스텀 요소 목록을 불러오는데 실패했습니다.";
+    }
+  },
+
+  getElementById: async (customId) => {
+    try {
+      const response = await API.get(`/custom-element/${customId}`);
+      return response;
+    } catch (error) {
+      throw error || "커스텀 요소를 불러오는데 실패했습니다.";
+    }
+  },
+
+  updateElement: async (customId, elementData) => {
+    try {
+      const response = await API.put(`/custom-element/${customId}/update`, elementData);
+      return response;
+    } catch (error) {
+      throw error || "커스텀 요소 수정에 실패했습니다.";
+    }
+  },
+
+  deleteElement: async (customId) => {
+    try {
+      const response = await API.delete(`/custom-element/${customId}/delete`);
+      return response;
+    } catch (error) {
+      throw error || "커스텀 요소 삭제에 실패했습니다.";
+    }
+  },
+
+  /**
+   * Custom Tile API
+   */
+  createTile: async (customId, tileData) => {
+    try {
+      const response = await API.post(`/custom-element/tile/${customId}`, tileData);
+      return response;
+    } catch (error) {
+      throw error || "커스텀 타일 생성에 실패했습니다.";
+    }
+  },
+
+  getAllTiles: async (customId) => {
+    try {
+      const response = await API.get(`/custom-element/tile/${customId}`);
+      return response;
+    } catch (error) {
+      throw error || "커스텀 타일 목록을 불러오는데 실패했습니다.";
+    }
+  },
+
+  getTileById: async (customId, tileId) => {
+    try {
+      const response = await API.get(`/custom-element/tile/${customId}/read/${tileId}`);
+      return response;
+    } catch (error) {
+      throw error || "커스텀 타일을 불러오는데 실패했습니다.";
+    }
+  },
+
+  updateTile: async (customId, tileId, tileData) => {
+    try {
+      const response = await API.put(`/custom-element/tile/${customId}/update/${tileId}`, tileData);
+      return response;
+    } catch (error) {
+      throw error || "커스텀 타일 수정에 실패했습니다.";
+    }
+  },
+
+  deleteTile: async (customId, tileId) => {
+    try {
+      const response = await API.delete(`/custom-element/tile/${customId}/delete/${tileId}`);
+      return response;
+    } catch (error) {
+      throw error || "커스텀 타일 삭제에 실패했습니다.";
+    }
+  },
+
+  /**
+   * Custom Card API
+   */
+  createSeedCard: async (customId, cardData) => {
+    try {
+      const response = await API.post(`/custom-element/${customId}/create-seed-card`, cardData);
+      return response;
+    } catch (error) {
+      throw error || "시드 카드 생성에 실패했습니다.";
+    }
+  },
+
+  createTelepathyCard: async (customId, cardData) => {
+    try {
+      const response = await API.post(`/custom-element/${customId}/create-telepathy-card`, cardData);
+      return response;
+    } catch (error) {
+      throw error || "텔레파시 카드 생성에 실패했습니다.";
+    }
+  },
+
+  createNeuronValleyCard: async (customId, cardData) => {
+    try {
+      const response = await API.post(`/custom-element/${customId}/create-neuronvalley-card`, cardData);
+      return response;
+    } catch (error) {
+      throw error || "뉴런밸리 카드 생성에 실패했습니다.";
+    }
+  },
+
+  getAllSeedCards: async (customId) => {
+    try {
+      const response = await API.get(`/custom-element/${customId}/read-all-seed-cards`);
+      return response;
+    } catch (error) {
+      throw error || "시드 카드 목록을 불러오는데 실패했습니다.";
+    }
+  },
+
+  getAllTelepathyCards: async (customId) => {
+    try {
+      const response = await API.get(`/custom-element/${customId}/read-all-telepathy-cards`);
+      return response;
+    } catch (error) {
+      throw error || "텔레파시 카드 목록을 불러오는데 실패했습니다.";
+    }
+  },
+
+  getAllNeuronValleyCards: async (customId) => {
+    try {
+      const response = await API.get(`/custom-element/${customId}/read-all-neuronvalley-cards`);
+      return response;
+    } catch (error) {
+      throw error || "뉴런밸리 카드 목록을 불러오는데 실패했습니다.";
+    }
+  },
+
+  getCardById: async (customId, cardId) => {
+    try {
+      const response = await API.get(`/custom-element/${customId}/read/${cardId}`);
+      return response;
+    } catch (error) {
+      throw error || "카드 정보를 불러오는데 실패했습니다.";
+    }
+  },
+
+  updateCard: async (customId, cardId, cardData) => {
+    try {
+      const response = await API.put(`/custom-element/${customId}/update/${cardId}`, cardData);
+      return response;
+    } catch (error) {
+      throw error || "카드 수정에 실패했습니다.";
+    }
+  },
+
+  deleteCard: async (customId, cardId) => {
+    try {
+      const response = await API.delete(`/custom-element/${customId}/delete/${cardId}`);
+      return response;
+    } catch (error) {
+      throw error || "카드 삭제에 실패했습니다.";
+    }
+  },
+};
+
+export default CustomAPI;
