@@ -41,8 +41,6 @@ public class TileParser implements ExcelReader<Tile> {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		System.out.println(tiles.toString());
-		// 변환된 객체 출력
 		return tiles;
 
 	}
@@ -64,7 +62,7 @@ public class TileParser implements ExcelReader<Tile> {
 			case "뉴런의골짜기":
 				return TileType.NEURONS_VALLEY_CARD;
 			default:
-				return TileType.SPACE_AGENCY;
+				return TileType.SEED_CERTIFICATE_CARD;
 		}
 	}
 }
