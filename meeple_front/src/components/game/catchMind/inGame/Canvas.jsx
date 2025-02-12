@@ -155,12 +155,22 @@ const Canvas = () => {
             break;
 
           case "clear":
+            // 캔버스 초기화
             context.clearRect(
               0,
               0,
               canvasRef.current.width,
               canvasRef.current.height
             );
+
+            // 그리기 도구 상태도 함께 초기화
+            setDrawingColor("#000000");
+            setDrawingWidth(2);
+            setIsEraserMode(false);
+
+            // context 스타일 초기화
+            context.strokeStyle = "#000000";
+            context.lineWidth = 2;
             break;
         }
       } catch (error) {
@@ -269,7 +279,19 @@ const Canvas = () => {
       currentPlayer &&
       prevCurrentPlayerRef.current.nickname !== currentPlayer.nickname
     ) {
+      // 캔버스 초기화
       clearCanvas();
+
+      // context 스타일 초기화
+      if (contextRef.current) {
+        contextRef.current.strokeStyle = "#000000";
+        contextRef.current.lineWidth = 2;
+      }
+
+      // 그리기 도구 상태 초기화
+      setDrawingColor("#000000"); // 색상을 검정으로 초기화
+      setDrawingWidth(2); // 선 굵기를 2px로 초기화
+      setIsEraserMode(false); // 지우개 모드 해제
     }
     prevCurrentPlayerRef.current = currentPlayer;
   }, [currentPlayer, clearCanvas]);
@@ -282,20 +304,33 @@ const Canvas = () => {
     }
   }, [getCurrentColor, getCurrentWidth]);
 
+  const getMousePosition = useCallback((canvas, event) => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    return {
+      x: (event.clientX - rect.left) * scaleX,
+      y: (event.clientY - rect.top) * scaleY,
+    };
+  }, []);
+
   // 그리기 시작
   const startDrawing = ({ nativeEvent }) => {
     if (!canDraw() || !connected) return;
 
-    const { offsetX, offsetY } = nativeEvent;
+    const canvas = canvasRef.current;
+    const { x, y } = getMousePosition(canvas, nativeEvent);
+
     contextRef.current.beginPath();
-    contextRef.current.moveTo(offsetX, offsetY);
+    contextRef.current.moveTo(x, y);
     setIsDrawing(true);
-    setLastPoint({ x: offsetX, y: offsetY });
+    setLastPoint({ x, y });
 
     sendDrawingData({
       type: "start",
-      x: offsetX,
-      y: offsetY,
+      x,
+      y,
     });
   };
 
@@ -303,38 +338,42 @@ const Canvas = () => {
   const draw = ({ nativeEvent }) => {
     if (!isDrawing || !canDraw() || !lastPoint || !connected) return;
 
-    const { offsetX, offsetY } = nativeEvent;
+    const canvas = canvasRef.current;
+    const { x, y } = getMousePosition(canvas, nativeEvent);
+
     contextRef.current.beginPath();
     contextRef.current.moveTo(lastPoint.x, lastPoint.y);
-    contextRef.current.lineTo(offsetX, offsetY);
+    contextRef.current.lineTo(x, y);
     contextRef.current.stroke();
 
     sendDrawingData({
       type: "draw",
-      x: offsetX,
-      y: offsetY,
+      x,
+      y,
       lastX: lastPoint.x,
       lastY: lastPoint.y,
     });
 
-    setLastPoint({ x: offsetX, y: offsetY });
+    setLastPoint({ x, y });
   };
 
   // 그리기 종료
   const finishDrawing = (event) => {
     if (!connected || !isDrawing || !lastPoint) return;
 
-    const { offsetX, offsetY } = event.nativeEvent || event;
+    const canvas = canvasRef.current;
+    const { x, y } = getMousePosition(canvas, event.nativeEvent || event);
+
     contextRef.current.beginPath();
     contextRef.current.moveTo(lastPoint.x, lastPoint.y);
-    contextRef.current.lineTo(offsetX, offsetY);
+    contextRef.current.lineTo(x, y);
     contextRef.current.stroke();
     contextRef.current.closePath();
 
     sendDrawingData({
       type: "end",
-      x: offsetX,
-      y: offsetY,
+      x,
+      y,
       lastX: lastPoint.x,
       lastY: lastPoint.y,
     });

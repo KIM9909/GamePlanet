@@ -14,8 +14,8 @@ const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
   const [connectionError, setConnectionError] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [players, setPlayers] = useState([]);
-  const [audioEnabled, setAudioEnabled] = useState(true);
-  const [videoEnabled, setVideoEnabled] = useState(true);
+  const [audioEnabled, setAudioEnabled] = useState(false);
+  const [videoEnabled, setVideoEnabled] = useState(false);
   const tokenRef = useRef(null);
   const stompClient = useRef(null);
 
@@ -131,14 +131,17 @@ const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
     if (publisher) {
       publisher.publishAudio(!audioEnabled);
       setAudioEnabled(!audioEnabled);
+      // players 상태도 즉시 업데이트
+      updatePlayers(publisher, subscribers);
     }
   };
 
-  // 비디오 상태 토글
   const toggleVideo = () => {
     if (publisher) {
       publisher.publishVideo(!videoEnabled);
       setVideoEnabled(!videoEnabled);
+      // players 상태도 즉시 업데이트
+      updatePlayers(publisher, subscribers);
     }
   };
 
@@ -293,6 +296,34 @@ const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
           tokenRef.current = null;
         });
 
+        currentSession.on("streamPropertyChanged", (event) => {
+          console.log("Stream property changed", {
+            propertyName: event.changedProperty,
+            newValue: event.newValue,
+            connectionId: event.stream.connection.connectionId,
+          });
+
+          // audioActive나 videoActive가 변경되었을 때만 subscribers 업데이트
+          if (
+            event.changedProperty === "videoActive" ||
+            event.changedProperty === "audioActive"
+          ) {
+            setSubscribers((prevSubscribers) => {
+              const updatedSubscribers = prevSubscribers.map((sub) => {
+                if (
+                  sub.stream.connection.connectionId ===
+                  event.stream.connection.connectionId
+                ) {
+                  // 스트림 상태 업데이트
+                  sub.stream[event.changedProperty] = event.newValue;
+                }
+                return sub;
+              });
+              return [...updatedSubscribers];
+            });
+          }
+        });
+
         if (!tokenRef.current) {
           const response = await axios.post(
             `${
@@ -429,11 +460,6 @@ const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
 
             {/* 미디어 상태 표시 */}
             <div className="absolute bottom-2 left-2 flex items-center space-x-2">
-              <div className="bg-black/50 px-2 py-1 rounded text-white">
-                {player.isCurrentUser
-                  ? `나 (${player.nickname})`
-                  : player.nickname}
-              </div>
               {!player.audioEnabled && (
                 <div className="bg-red-500/80 p-1 rounded-full">
                   <MicOff size={16} className="text-white" />

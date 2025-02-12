@@ -181,7 +181,7 @@ const LoginModal = () => {
               disabled={isLoading || !isFormValid()}
               className="w-full rounded-md bg-gradient-to-tr from-cyan-500 to-gray-500 py-3 text-white text-xl font-semibold focus:outline-none disabled:opacity-50"
             >
-              {isLoading ? "로그인 중..." : "LOGIN"}
+              {isLoading ? "LOGGING IN..." : "LOGIN"}
             </button>
 
             {/* <hr /> */}
