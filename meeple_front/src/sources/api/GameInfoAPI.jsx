@@ -131,16 +131,31 @@ export const GameInfoAPI = {
 
   //글목록 조회
 
-  getCommunityPosts: async (gameId) => {
+  getCommunityPosts: async (gameInfoId) => {
     try {
       const response = await axios.get(
-        `${GAMEINFO_API_BASE_URL}/community?gameInfoId=${gameId}`
+        `${GAMEINFO_API_BASE_URL}/community?gameInfoId=${gameInfoId}`
       );
       return response.data;
     } catch (error) {
       throw error;
     }
   },
+
+  //단일 글 조회
+
+  getCommunityPost: async (gameInfoId,gameCommunityId) => {
+    try {
+      const response = await axios.get(
+        `${GAMEINFO_API_BASE_URL}/${gameInfoId}/${gameCommunityId}`
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+
 
   //글 작성
 

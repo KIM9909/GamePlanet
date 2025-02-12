@@ -5,7 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { GameInfoAPI } from '../api/GameInfoAPI';
 
 const ArticleList = () => {
-  const { gameId } = useParams();
+  const { gameInfoId } = useParams();
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -17,9 +17,7 @@ const ArticleList = () => {
   const fetchArticles = async () => {
     try {
       setLoading(true);
-      // const response = await GameInfoAPI.getCommunityPosts(gameId);
-      // gameid 테스트용 코드
-      const response = await GameInfoAPI.getCommunityPosts(7);
+      const response = await GameInfoAPI.getCommunityPosts(gameInfoId);
       setData(response);
       setError(null);
     } catch (err) {
@@ -31,7 +29,7 @@ const ArticleList = () => {
 
   useEffect(() => {
     fetchArticles();
-  }, [gameId]);
+  }, [gameInfoId]);
 
   if (loading) return <div>로딩중...</div>;
   if (error) return <div>에러가 발생했습니다.</div>;
@@ -39,7 +37,7 @@ const ArticleList = () => {
 
   if (isWriting) {
     return <ArticleCreate 
-      gameId={gameId} 
+      gameInfoId={gameInfoId} 
       onCancel={() => setIsWriting(false)}
       onSuccess={() => {
         setIsWriting(false);
