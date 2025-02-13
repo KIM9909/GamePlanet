@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import drawCardBg from "../../../../../assets/burumabul_images/drawCardBg.jpg";
 
 const PickedCardModal = ({ onClose, cardInfo }) => {
   const [flippedCards, setFlippedCards] = useState({});
@@ -21,7 +22,7 @@ const PickedCardModal = ({ onClose, cardInfo }) => {
         <>
           <motion.div
             key={cardInfo.id}
-            className="relative bg-white w-96 h-80 p-4"
+            className="relative bg-white w-96 h-80 p-4 rounded-lg"
           >
             <motion.div
               className="relative w-full h-full cursor-pointer"
@@ -33,25 +34,31 @@ const PickedCardModal = ({ onClose, cardInfo }) => {
               {/* 앞면 */}
               <motion.div
                 className="absolute w-full h-full bg-gradient-to-br rounded-xl p-6 flex flex-col items-center justify-center shadow-xl"
-                style={{ backfaceVisibility: "hidden" }}
+                style={{
+                  backfaceVisibility: "hidden",
+                  backgroundImage: `url(${drawCardBg})`,
+                }}
               >
-                <h2 className="text-lg font-bold">{cardInfo.name}</h2>
+                <h2 className="text-2xl text-white font-bold">
+                  {cardInfo.name}
+                </h2>
                 <p className="text-gray-400 mt-8">Click!</p>
               </motion.div>
 
               {/* 뒷면 */}
               <motion.div
-                className="absolute w-full h-full bg-gradient-to-br bg-[${cardInfo.color}] rounded-xl p-6 flex flex-col gap-4 items-center justify-center shadow-xl"
+                className="absolute w-full  h-full bg-gradient-to-br bg-[${cardInfo.color}] rounded-xl p-6 flex flex-col gap-4 items-center justify-center shadow-xl"
                 style={{
                   backfaceVisibility: "hidden",
                   transform: "rotateY(180deg)",
+                  backgroundColor: "#A9B5DF",
                 }}
               >
                 <div className={`bg-[${cardInfo.color}] p-3 rounded`}>
                   <div className="mt-3">
-                    <p className="text-gray-700">{cardInfo.description}</p>
+                    <p className="text-white">{cardInfo.description}</p>
                   </div>
-                  <div className="mt-2 w-full">
+                  <div className="mt-2 w-full text-gray-400">
                     <button onClick={onClose}>확인</button>
                   </div>
                 </div>
