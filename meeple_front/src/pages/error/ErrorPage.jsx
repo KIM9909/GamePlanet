@@ -7,6 +7,7 @@ import SungHyun from "../../assets/images/pixel_character/pixel-sunghyun.png"
 import HongBeom from "../../assets/images/pixel_character/pixel-hongbeom.png"
 import JinHyuk from "../../assets/images/pixel_character/pixel-jinhyuk.png"
 import Space from "../../assets/images/errorspace.png"
+import { useNavigate } from "react-router-dom";
 
 const SpaceBackground = styled.div`
   background-image: url(${props => props.bgImage});
@@ -28,6 +29,7 @@ const StyledText = styled(motion.span)`
 `;
 
 const ErrorPage = () => {
+    const navigate = useNavigate();
     const characters = [
         { img: EunSoo, name: "은수" },
         { img: HeeJun, name: "희준" },
@@ -72,55 +74,57 @@ const ErrorPage = () => {
     };
 
     return (
-        <SpaceBackground bgImage={Space}>
-            <div className="min-h-screen flex flex-col items-center justify-center relative">
-                <motion.h1 
-                    className="text-5xl text-center mb-8 z-10 px-4"
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
-                >
-                    <StyledText 
-                        className="font-bold"
-                        animate={textAnimation.animate}
+        <SpaceBackground bgImage={Space} onClick={()=>{navigate(`/home`,{replace:true})}} className="cursor-pointer">
+            <div className="min-h-screen flex flex-col items-center justify-center relative" >
+                <div>
+                    <motion.h1 
+                        className="text-5xl text-center mb-8 z-10 px-4"
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8 }}
                     >
-                        이런, 우주 미아가 된 것 같아요!
-                    </StyledText>
-                    <br />
-                    <motion.div 
-                        className="text-4xl mt-4 text-white"
-                        animate={textAnimation.animate}
-                    >
-                        우리 친구들이 찾아드릴게요 
-                        <motion.span 
-                            className="inline-block ml-2"
-                            animate={starAnimation}
+                        <StyledText 
+                            className="font-bold"
+                            animate={textAnimation.animate}
                         >
-                            ⭐
-                        </motion.span>
-                    </motion.div>
-                </motion.h1>
-
-                <div className="absolute inset-0 flex items-center justify-center">
-                    {characters.map((char, index) => (
-                        <motion.div
-                            key={index}
-                            className="absolute"
-                            animate={getRandomMovement(index)}
-                            style={{ 
-                                left: `${Math.random() * 60 + 20}%`,
-                                top: `${Math.random() * 60 + 20}%`
-                            }}
+                            이런, 우주 미아가 된 것 같아요!
+                        </StyledText>
+                        <br />
+                        <motion.div 
+                            className="text-4xl mt-4 text-white"
+                            animate={textAnimation.animate}
                         >
-                            <div className="flex flex-col items-center">
-                                <img 
-                                    src={char.img} 
-                                    alt={char.name}
-                                    className="w-24 h-24 object-contain"
-                                />
-                            </div>
+                            우리 친구들이 찾아드릴게요 
+                            <motion.span 
+                                className="inline-block ml-2"
+                                animate={starAnimation}
+                                >
+                                ⭐
+                            </motion.span>
                         </motion.div>
-                    ))}
+                    </motion.h1>
+
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        {characters.map((char, index) => (
+                            <motion.div
+                                key={index}
+                                className="absolute"
+                                animate={getRandomMovement(index)}
+                                style={{ 
+                                    left: `${Math.random() * 60 + 20}%`,
+                                    top: `${Math.random() * 60 + 20}%`
+                                }}
+                            >
+                                <div className="flex flex-col items-center">
+                                    <img 
+                                        src={char.img} 
+                                        alt={char.name}
+                                        className="w-24 h-24 object-contain"
+                                    />
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
                 </div>
             </div>
         </SpaceBackground>
