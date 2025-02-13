@@ -585,6 +585,7 @@ public class GamePlay {
 		turnManager.resetDoubleCount();
 		player.setTimeTravel(false);
 		player.setPosition(request.getNextPosition());
-		return new ChoosePositionResponse(player.getPlayerId(), prevPosition, player.getPosition(), ActionType.CHECK_END.getAction());
+		ActionType actionType = processTileEvent(player, player.getPosition());
+		return new ChoosePositionResponse(player.getPlayerId(), prevPosition, player.getPosition(), actionType.getAction());
 	}
 }
