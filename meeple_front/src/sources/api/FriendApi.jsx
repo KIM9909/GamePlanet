@@ -39,6 +39,8 @@ export const sendFriendRequest = async (userId, friendId) => {
         `${FRIEND_API_BASE_URL}/request-friend`,
         requestBody
       );
+      console.log("친구 요청 성공");
+      return response.data;
     } catch (error) {
       console.error("친구 요청 보내기 중 오류 : ", error);
       throw error;

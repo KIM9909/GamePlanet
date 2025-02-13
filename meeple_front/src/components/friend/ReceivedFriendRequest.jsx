@@ -18,24 +18,24 @@ const ReceivedFriendRequest = ({ requestedList }) => {
 
   const { connected, responseSocket, stompClientRef } = useFriendSocket();
 
-  useEffect(() => {
-    if (connected) {
-      console.log("소켓이 연결되었습니다.");
-    } else {
-      console.error("소켓 연결 에러");
-      // 재연결 시도
-      const reconnectSocket = async () => {
-        if (stompClientRef.current) {
-          try {
-            await stompClientRef.current.activate();
-          } catch (error) {
-            console.error("재연결 실패:", error);
-          }
-        }
-      };
-      reconnectSocket();
-    }
-  }, [connected]);
+  // useEffect(() => {
+  //   if (connected) {
+  //     console.log("소켓이 연결되었습니다.");
+  //   } else {
+  //     console.error("소켓 연결 에러");
+  //     // 재연결 시도
+  //     const reconnectSocket = async () => {
+  //       if (stompClientRef.current) {
+  //         try {
+  //           await stompClientRef.current.activate();
+  //         } catch (error) {
+  //           console.error("재연결 실패:", error);
+  //         }
+  //       }
+  //     };
+  //     reconnectSocket();
+  //   }
+  // }, [connected]);
 
   useEffect(() => {
     if (responseSocket) {
@@ -78,6 +78,20 @@ const ReceivedFriendRequest = ({ requestedList }) => {
     }
   };
 
+  const handleBlock = async (friendId) => {
+    if (requestList && userId) {
+      try {
+        const requirements = "BLOCKING";
+        await processFriendRequest(friendId, requirements);
+        const response = await requestFriendList(userId);
+        setRequestList(response.requestedList);
+      } catch (error) {
+        console.error("친구 차단 중 에러:", error);
+        throw error;
+      }
+    }
+  };
+
   return (
     <div className="my-2">
       {requestList && requestList.length > 0 ? (
@@ -101,6 +115,7 @@ const ReceivedFriendRequest = ({ requestedList }) => {
                 >
                   거절
                 </button>
+                <button>차단</button>
               </div>
             </li>
           ))}
