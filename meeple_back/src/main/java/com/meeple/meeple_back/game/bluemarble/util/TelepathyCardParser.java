@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -21,6 +22,7 @@ import java.util.List;
  * private String description;
  */
 public class TelepathyCardParser implements ExcelReader<TelepathyCard> {
+	private static final AtomicInteger counter = new AtomicInteger(100);
 
 	@Override
 	public List<TelepathyCard> readExcelFile() {
@@ -41,8 +43,13 @@ public class TelepathyCardParser implements ExcelReader<TelepathyCard> {
 				int number = (int) row.getCell(1).getNumericCellValue();
 				String name = row.getCell(2).getStringCellValue();
 				String description = row.getCell(3).getStringCellValue();
-
-				cards.add(new TelepathyCard(id, number, name, CardType.TELEPATHY_CARD, description));
+				// TODO : 텔레파시 3,7,10,11 만 남기기. (추후 지원되는 카드만 넣기)
+				if (number == 3 || number == 7 || number == 10 || number == 11) {
+					for (int i = 0; i < 7; i++) {
+						int generatedId = counter.getAndIncrement();
+						cards.add(new TelepathyCard(generatedId, number, name, CardType.TELEPATHY_CARD, description));
+					}
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
