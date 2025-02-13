@@ -1,5 +1,6 @@
 package com.meeple.meeple_back.gameCustom.bluemarble.controller;
 
+import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomCardRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomNeuronValleyCardRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomSeedcardRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomTelepathyCardRequest;
@@ -22,6 +23,7 @@ public class CustomCardController {
 	// 특정 커스텀의 타일 정보를 조회, 생성, 업데이트, 삭제할 수 있따. 조회할 수 있다.
 	// pk -> CustomId, TileId
 	private final CustomCardService customCardService;
+
 
 	// CREATE seedcard
 	@PostMapping("/{customId}/create-seed-card")

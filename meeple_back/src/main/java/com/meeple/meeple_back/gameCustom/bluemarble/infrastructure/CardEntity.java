@@ -1,6 +1,6 @@
 package com.meeple.meeple_back.gameCustom.bluemarble.infrastructure;
 
-import com.meeple.meeple_back.gameCustom.bluemarble.controller.CustomCardRequest;
+import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomCardRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomNeuronValleyCardRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomSeedcardRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomTelepathyCardRequest;
@@ -21,6 +21,20 @@ public class CardEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer cardId;
+
+	public CardEntity(Integer cardNumber, String cardName, String cardDescription, String cardType, String cardColor,
+					  Integer cardSeedCount, Integer cardBaseConstructionCost, Integer cardHeadquartersUsageFee,
+					  Integer cardBaseUsageFee) {
+		this.cardNumber = cardNumber;
+		this.cardName = cardName;
+		this.cardDescription = cardDescription;
+		this.cardType = cardType;
+		this.cardColor = cardColor;
+		this.cardSeedCount = cardSeedCount;
+		this.cardBaseConstructionCost = cardBaseConstructionCost;
+		this.cardHeadquartersUsageFee = cardHeadquartersUsageFee;
+		this.cardBaseUsageFee = cardBaseUsageFee;
+	}
 
 	@Column
 	private Integer cardNumber;

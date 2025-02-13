@@ -1,6 +1,6 @@
 package com.meeple.meeple_back.gameCustom.bluemarble.service;
 
-import com.meeple.meeple_back.gameCustom.bluemarble.controller.CustomCardRequest;
+import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomCardRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomNeuronValleyCardRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomSeedcardRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomTelepathyCardRequest;
