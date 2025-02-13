@@ -50,33 +50,46 @@ const RequestFriend = () => {
   };
 
   return (
-    <>
-      <div className="my-3 text-center">
+    <div className="p-3 mt-5 bg-white/80 rounded-lg">
+      {/* 탭 버튼 영역 */}
+      <div className="flex justify-center gap-3 mb-4">
         <button
-          className={`px-4 py-2 mx-3 rounded-lg font-semibold transition-all duration-300 
+          className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 
             ${
               activeTab === "requestedList"
-                ? "bg-gradient-to-r from-blue-400 to-blue-600 text-white shadow-lg scale-105 border-2 border-blue-700"
-                : "bg-gray-500 text-gray-200 hover:bg-gray-600 hover:text-white"
+                ? "bg-[#7a90ff] text-white shadow-md transform hover:shadow-lg"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           onClick={() => handleTabChange("requestedList")}
         >
           받은 요청
         </button>
         <button
-          className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 
+          className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 
             ${
               activeTab === "requestingList"
-                ? "bg-gradient-to-r from-green-400 to-green-600 text-white shadow-lg scale-105 border-2 border-green-700"
-                : "bg-gray-500 text-gray-200 hover:bg-gray-600 hover:text-white"
+                ? "bg-[#7a90ff] text-white shadow-md transform hover:shadow-lg"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           onClick={() => handleTabChange("requestingList")}
         >
           보낸 요청
         </button>
       </div>
-      <div>{renderContent()}</div>
-    </>
+
+      {/* 콘텐츠 영역 */}
+      <div className="bg-white rounded-lg shadow-sm p-2 min-h-[300px]">
+        {/* 로딩 상태 표시 */}
+        {!response ? (
+          <div className="flex justify-center items-center h-[300px]">
+            <div className="text-gray-400">로딩 중...</div>
+          </div>
+        ) : (
+          // 실제 콘텐츠
+          <div className="h-[300px] overflow-y-auto">{renderContent()}</div>
+        )}
+      </div>
+    </div>
   );
 };
 
