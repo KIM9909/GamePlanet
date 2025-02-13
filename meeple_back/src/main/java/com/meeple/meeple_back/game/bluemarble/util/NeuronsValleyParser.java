@@ -9,10 +9,14 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class NeuronsValleyParser implements ExcelReader<NeuronsValleyCard> {
+	private static final AtomicInteger counter = new AtomicInteger(200);
+
 	@Override
 	public List<NeuronsValleyCard> readExcelFile() {
 		List<NeuronsValleyCard> cards = new ArrayList<>();
@@ -32,13 +36,16 @@ public class NeuronsValleyParser implements ExcelReader<NeuronsValleyCard> {
 				int number = (int) row.getCell(1).getNumericCellValue();
 				String name = row.getCell(2).getStringCellValue();
 				String description = row.getCell(3).getStringCellValue();
-
-				cards.add(new NeuronsValleyCard(id, number, name, CardType.NEURONS_VALLEY_CARD, description));
+				if (number == 1 || number == 2 || number == 12) {
+					for (int i = 0; i < 7; i++) {
+						cards.add(new NeuronsValleyCard(counter.getAndIncrement(), number, name, CardType.NEURONS_VALLEY_CARD, description));
+					}
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
+		Collections.shuffle(cards);
 		return cards;
 	}
 }

@@ -9,6 +9,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -54,7 +55,7 @@ public class TelepathyCardParser implements ExcelReader<TelepathyCard> {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
+		Collections.shuffle(cards);
 		return cards;
 
 	}
