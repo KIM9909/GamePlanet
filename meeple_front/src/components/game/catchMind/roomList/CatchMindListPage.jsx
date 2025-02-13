@@ -63,7 +63,7 @@ const CatchMindListPage = () => {
       <div className="flex justify-between items-center mb-5 gap-4">
         <div className="flex items-center gap-3">
           <Star className="w-8 h-8 text-blue-400 animate-pulse" />
-          <h1 className="text-3xl font-bold text-white">캐치마인드 게임방</h1>
+          <h1 className="text-3xl font-bold text-white">캐치마인드 대기방</h1>
         </div>
         <div className="flex-1 max-w-[320px] relative ml-[420px]">
           <div className="mt-1">

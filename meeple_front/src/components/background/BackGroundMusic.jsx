@@ -65,7 +65,7 @@ const BackGroundMusic = () => {
   return (
     <audio
       ref={audioRef}
-      src="https://meeple-file-server.s3.ap-northeast-2.amazonaws.com/static-files/MainBGM.mp3"
+      src="https://meeple-file-server-2.s3.ap-northeast-2.amazonaws.com/static-files/MainBGM+(1).mp3"
       autoPlay
       loop={true}
     />

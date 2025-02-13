@@ -311,7 +311,7 @@ const TopNavbar = () => {
         )}
       </div>
 
-      <div className="border-b border-cyan-700/40 border-[1px]" />
+      <div className="border-b border-cyan-700/70" />
 
       {/* Character Info Popup */}
       {selectedCharacter !== null && (

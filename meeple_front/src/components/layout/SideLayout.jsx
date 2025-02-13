@@ -8,8 +8,7 @@ const SideLayout = ({ children }) => {
   const userId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
   const gameInfo = location.state?.gameInfo;
 
-  const notShowSidebar =
-    !location.pathname.includes("/game-info")
+  const notShowSidebar = !location.pathname.includes("/game-info");
   const [activeLink, setActiveLink] = useState(location.pathname);
 
   const linkStyle =
@@ -26,9 +25,9 @@ const SideLayout = ({ children }) => {
       {!notShowSidebar && gameInfo ? (
         <div style={{ userSelect: "none" }} className="h-screen">
           <div className="flex flex-row">
-            <div className="flex w-2/7 bg-gradient-to-r from-gray-900/60 to-gray-900/60 h-screen border border-">
-              <div className="flex-1 m-2 border-2 box-border">
-                <div className="flex flex-col m-2 text-center py-2 text-[33px]">
+            <div className="flex w-2/7 bg-gradient-to-r from-gray-900/60 to-gray-900/60 h-screen border border-2 border-cyan-500/60">
+              <div className="flex-1 m-2 border-2 box-border border-cyan-500/60">
+                <div className="flex flex-col m-2 text-center py-2 text-[33px] space-y-[40px]">
                   {/* GAME INFO */}
                   <div className="m-2">
                     <Link

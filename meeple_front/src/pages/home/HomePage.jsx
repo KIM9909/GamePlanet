@@ -5,8 +5,8 @@ import BurumabulRoomCreateModal from "../../components/game/burumabul/BurumabulR
 import { useSelector } from "react-redux";
 import { GameInfoAPI } from "../../sources/api/GameInfoAPI";
 import { Star } from "lucide-react";
-import CockroachPokerRoyalMainImg from "../../assets/images/games/MainImage/Cockroach_Poker_Royal.webp";
-import BurumabulMainImg from "../../assets/images/games/MainImage/BuruMabul.png";
+import CockroachPokerRoyalMainImg from "../../assets/images/games/MainImage/Cockroach_Poker_Royal.png";
+import BurumabulMainImg from "../../assets/images/games/MainImage/BuruMabul.jpg";
 import CatchMindMainImg from "../../assets/images/games/MainImage/CatchMind.jpg";
 
 const HomePage = () => {
@@ -147,10 +147,13 @@ const HomePage = () => {
     <div className="min-h-screen relative overflow-hidden">
       <div className="min-h-screen p-8 relative z-5">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-cyan-500/50 h-[650px]">
-            <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-              게임 목록
+          <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-3 backdrop-blur-lg border border-cyan-500/50 h-[650px]">
+            <h1 className="text-[43px] font-bold mb-3 text-center bg-gradient-to-r from-cyan-500 to-cyan-500 bg-clip-text text-transparent">
+              GAME LIST
             </h1>
+
+            <div className="border-t border-cyan-500/30 pt-8"></div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {gameList.map((gameInfo) => (
                 <GameCard key={gameInfo.gameInfoId} gameInfo={gameInfo} />

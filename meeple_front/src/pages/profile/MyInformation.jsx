@@ -335,6 +335,7 @@ const MyInformation = () => {
               name="userBirthday"
               value={formData.userBirthday}
               onChange={handleChange}
+              onKeyDown={(e) => e.preventDefault()}
               className="w-full p-3 bg-zinc-900 border-2 border-zinc-700 rounded-lg text-white
                 focus:border-cyan-500 focus:outline-none transition-colors"
             />
