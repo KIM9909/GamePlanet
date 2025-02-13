@@ -1,4 +1,4 @@
-package com.meeple.meeple_back.gameCustom.bluemarble.controller;
+package com.meeple.meeple_back.gameCustom.bluemarble.controller.request;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

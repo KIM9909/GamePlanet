@@ -31,6 +31,14 @@ public class TileEntity {
 
 	private Integer tilePrice;
 
+	public TileEntity(String tileName, String tileType, String tileImageUrl, Integer tilePrice, Integer tileNumber) {
+		this.tileName = tileName;
+		this.tileType = tileType;
+		this.tileImageUrl = tileImageUrl;
+		this.tilePrice = tilePrice;
+		this.tileNumber = tileNumber;
+	}
+
 	private Integer tileNumber;
 
 	public TileEntity update(CustomTileRequest customTileRequest) {
