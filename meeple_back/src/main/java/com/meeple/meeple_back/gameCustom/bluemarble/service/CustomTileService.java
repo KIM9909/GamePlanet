@@ -20,11 +20,19 @@ public class CustomTileService {
 
 	@Transactional
 	public CustomTileResponse create(CustomTileRequest request, String tileColor) {
+		// 타일 정보 생성
 		TileEntity tile = tileJpaRepository.save(TileEntity.builder().tileName(request.getTileName()).tileNumber(request.getTileNumber()).tileType(request.getTileType()).tileImageUrl(request.getTileImageUrl()).tilePrice(request.getTilePrice()).build());
+		// 커스텀 정보 가져오기
 		CustomElementEntity customElementEntity = customElementRepository.findById(request.getCustomId()).orElseThrow();
-		CustomTileEntity customTileEntity = customTileRepository.save(CustomTileEntity.builder().customElement(customElementEntity).tileEntity(tile).build());
+		// 커스텀 타일 정보 저장
+		CustomTileId customTileId = new CustomTileId(customElementEntity.getCustomId(), tile.getTileId());
+		CustomTileEntity customTileEntity = new CustomTileEntity(customTileId, customElementEntity, tile);
+		customTileRepository.save(customTileEntity);
+		// 카드 정보 가져오기
 		CardEntity cardEntity = cardJpaRepository.findByCustomIdAndCardNumber(request.getCustomId(), request.getTileNumber()).orElseThrow();
+		// 색깔 변경
 		cardEntity.setCardColor(tileColor);
+		// 저장
 		cardJpaRepository.save(cardEntity);
 		return CustomTileResponse.from(customTileEntity);
 	}
