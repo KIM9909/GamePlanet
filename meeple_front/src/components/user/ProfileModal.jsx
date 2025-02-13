@@ -257,12 +257,12 @@ const ProfileModal = ({
               {/* 프로필 이미지 */}
               <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-cyan-500/50 shadow-lg shadow-cyan-500/20">
                 <img
-                  src={profileData?.userProfilePictureUrl}
+                  src={profileData?.userProfilePictureUrl || Heejun}
                   alt={userNickname}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     e.target.onerror = null;
-                    e.target.src = { Heejun }; // 기본 프로필 이미지 경로로 설정
+                    e.target.src = Heejun; // 기본 프로필 이미지 경로로 설정
                   }}
                 />
               </div>
