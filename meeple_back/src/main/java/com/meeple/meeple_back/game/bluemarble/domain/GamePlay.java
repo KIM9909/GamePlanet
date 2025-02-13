@@ -5,7 +5,9 @@ import com.meeple.meeple_back.game.bluemarble.controller.response.BuildBaseRespo
 import com.meeple.meeple_back.game.bluemarble.controller.response.BuyLandResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DiceRollResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DrawCardResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.ChoosePositionRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.*;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.response.ChoosePositionResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.PayFeeResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
 import com.meeple.meeple_back.game.bluemarble.util.*;
@@ -576,13 +578,13 @@ public class GamePlay {
 		return turnManager.endTurn(board);
 	}
 
-	public ActionType checkBlackHole() {
-// 현재 플레이어의 블랙홀 카운트가 0보다 크면
-		// 현재 플레이어의 블랙홀 카운트 감소하기.
-		// 다음턴을 Turn End로 두기.
-		if (turnManager.checkPlayerIsInBlackHole()) {
-			return ActionType.CHECK_END;
-		}
-		return ActionType.ROLL_DICE;
+
+	public ChoosePositionResponse choosePosition(ChoosePositionRequest request) {
+		Player player = getValidatedPlayer(request.getPlayerId());
+		int prevPosition = player.getPosition();
+		turnManager.resetDoubleCount();
+		player.setTimeTravel(false);
+		player.setPosition(request.getNextPosition());
+		return new ChoosePositionResponse(player.getPlayerId(), prevPosition, player.getPosition(), ActionType.CHECK_END.getAction());
 	}
 }

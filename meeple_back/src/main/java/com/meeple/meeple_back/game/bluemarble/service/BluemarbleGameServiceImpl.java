@@ -4,7 +4,9 @@ import com.meeple.meeple_back.common.domain.exception.ResourceNotFoundException;
 import com.meeple.meeple_back.game.bluemarble.controller.port.BluemarbleGameService;
 import com.meeple.meeple_back.game.bluemarble.controller.request.DiceRollRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.response.*;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.ChoosePositionRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.*;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.response.ChoosePositionResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.PayFeeResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
 import com.meeple.meeple_back.game.bluemarble.domain.ActionType;
@@ -104,6 +106,15 @@ public class BluemarbleGameServiceImpl implements BluemarbleGameService {
 	public GamePlayResponse startTurn(int roomId) {
 		GamePlay gamePlay = getValidateGamePlay(roomId);
 		return GamePlayResponse.from(gamePlay, ActionType.ROLL_DICE);
+	}
+
+	@Override
+	public ChoosePositionResponse choosePosition(int roomId, ChoosePositionRequest request) {
+		GamePlay gamePlay = getValidateGamePlay(roomId);
+		ChoosePositionResponse choosePositionResponse = gamePlay.choosePosition(request);
+		gamePlay = GamePlay.copyObject(gamePlay);
+		bluemarbleGameRepository.save(gamePlay);
+		return choosePositionResponse;
 	}
 
 

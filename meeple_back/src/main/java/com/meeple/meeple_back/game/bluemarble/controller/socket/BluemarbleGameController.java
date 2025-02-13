@@ -69,7 +69,7 @@ public class BluemarbleGameController {
 				"build-base",
 				bluemarbleGameService.buildBase(roomId, buildBaseRequest), "기지를 건설했습니다.");
 		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, socketBuildBaseResponse);
-		
+
 	}
 
 	/**
@@ -132,6 +132,12 @@ public class BluemarbleGameController {
 	public void startTurn(@DestinationVariable("roomId") int roomId) {
 		SocketResponse<GamePlayResponse> response = SocketResponse.from("start-turn",
 				bluemarbleGameService.startTurn(roomId), "턴을 시작합니다.");
+		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, response);
+	}
+
+	@MessageMapping("/{roomId}/choose-position")
+	public void choosePosition(@DestinationVariable("roomId") int roomId, @Payload ChoosePositionRequest request) {
+		SocketResponse<ChoosePositionResponse> response = SocketResponse.from("choose-position", bluemarbleGameService.choosePosition(roomId, request), "시간여행을 합니다!");
 		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, response);
 	}
 
