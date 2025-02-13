@@ -51,13 +51,13 @@ const CommentList = ({ gameCommunityId, commentListData, onCommentUpdate }) => {
       
       <div className="space-y-4">
         {commentListData?.map((comment) => (
-          editingComment?.id === comment.communityCommentId ? (
+          editingComment?.id === comment.gameCommunityCommentId ? (
             <CommentForm
-              key={comment.communityCommentId}
-              initialData={comment.content}
+              key={comment.gameCommunityCommentId}
+              initialData={comment.gameCommunityCommentContent}
               gameCommunityId={gameCommunityId}
-              commentId={comment.communityCommentId}
-              userId={userId}
+              commentId={comment.gameCommunityCommentId}
+              userId={comment.user.userId}
               onSuccess={() => {
                 setEditingComment(null);
                 if (onCommentUpdate) onCommentUpdate();
@@ -65,12 +65,12 @@ const CommentList = ({ gameCommunityId, commentListData, onCommentUpdate }) => {
             />
           ) : (
             <CommentItem 
-              key={comment.communityCommentId}
+              key={comment.gameCommunityCommentId}
               comment={{
-                id: comment.communityCommentId,
-                userId: comment.userId,
-                userName: comment.userName,
-                content: comment.content,
+                id: comment.gameCommunityCommentId,
+                userId: comment.user.userId,
+                userName: comment.user.userNickname,
+                content: comment.gameCommunityCommentContent,
                 createdAt: comment.createAt
               }}
               onEdit={handleEdit}

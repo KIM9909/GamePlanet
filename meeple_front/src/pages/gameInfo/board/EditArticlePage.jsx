@@ -5,7 +5,7 @@ import ArticleForm from "../../../components/info/board/ArticleForm";
 import { GameInfoAPI } from '../../../sources/api/GameInfoAPI';
 
 const EditArticlePage = () => {
-  const { gameInfoId, articleId } = useParams();
+  const { gameInfoId, gameCommunityId } = useParams();
   const navigate = useNavigate();
   const [article, setArticle] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -13,25 +13,25 @@ const EditArticlePage = () => {
   useEffect(() => {
     const fetchArticle = async () => {
       try {
-        const response = await GameInfoAPI.getCommunityPost(articleId);
+        const response = await GameInfoAPI.getCommunityPost(gameInfoId,gameCommunityId);
         setArticle(response);
       } catch (error) {
         console.error('게시글 조회 실패:', error);
         alert('게시글을 불러오는데 실패했습니다.');
-        navigate(`/game/${gameInfoId}/board`);
+        navigate(`/game-info/${gameInfoId}/board`);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchArticle();
-  }, [articleId, gameInfoId, navigate]);
+  }, [gameCommunityId, gameInfoId, navigate]);
 
   const handleSubmit = async (formData) => {
     try {
-      await GameInfoAPI.updateCommunityPost(articleId, formData);
+      await GameInfoAPI.updateCommunityPost(gameCommunityId, formData);
       alert('게시글이 수정되었습니다.');
-      navigate(`/game/${gameInfoId}/board/detail/${articleId}`);
+      navigate(`/game-info/${gameInfoId}/board/detail/${gameCommunityId}`);
     } catch (error) {
       console.error('게시글 수정 실패:', error);
       throw error;

@@ -7,6 +7,8 @@ import { GameInfoAPI } from '../../sources/api/GameInfoAPI';
 import { useSelector } from 'react-redux';
 import { h2, p } from "framer-motion/client";
 
+import Pagination from "../../components/admin/Pagination";
+
 const ReviewPage = () => {
   const { gameInfoId } = useParams();
   const navigate = useNavigate();
@@ -17,6 +19,9 @@ const ReviewPage = () => {
   
   const { token } = useSelector((state) => state.user);
   const currentUserId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const fetchReviews = async () => {
     try {
@@ -73,15 +78,21 @@ const ReviewPage = () => {
     );
   };
 
+  const getCurrentPageData = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return data.reviewList.slice(startIndex, endIndex);
+  };
+
   return (
     <div>
-      <div className="min-h-screen relative overflow-hidden">
-        <div className="min-h-screen p-8 relative z-5">
-          <div className="max-w-7xl mx-auto">
-            <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-indigo-500/30">
-              <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-                게임 리뷰
-              </h1>
+      <div className="min-h-screen p-8 bg-[#0a0a2a]/50">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-cyan-500/50 max-h-[650px] overflow-y-auto custom-scrollbar">
+            
+            <h1 className="text-5xl font-bold text-cyan-400 mb-4 tracking-wide">
+              게임 리뷰
+            </h1>
               <section className="text-white">
                 {data.starAvg 
                   ? `별점 ${data.starAvg}` 
@@ -100,7 +111,7 @@ const ReviewPage = () => {
               {getCurrentUserReview() && (
                 <div className="mt-8 mb-8">
                   <h2 className="text-xl font-semibold text-white mb-4">내 리뷰</h2>
-                  <div className="border border-indigo-500/30 rounded-lg p-4">
+                  
                     {editingReviewId === getCurrentUserReview().gameReviewId ? (
                       <ReviewForm 
                         initialData={getCurrentUserReview()}
@@ -114,21 +125,14 @@ const ReviewPage = () => {
                         onDeleteClick={() => handleDeleteClick(getCurrentUserReview().gameReviewId)}
                       />
                     )}
-                  </div>
+                  
                 </div>
               )}
 
               {/* 다른 사용자들의 리뷰 */}
               <section className="mt-8">
                 <h2 className="text-xl font-semibold text-white mb-4">전체 리뷰</h2>
-                {getOtherReviews()?.map((item) => (
-                  editingReviewId === item.gameReviewId ? (
-                    <ReviewForm 
-                      key={item.gameReviewId}
-                      initialData={item}
-                      onSuccess={handleEditSuccess}
-                    />
-                  ) : (
+                {getCurrentPageData()?.map((item) => (
                     <ReviewItem 
                       key={item.gameReviewId}
                       {...item}
@@ -136,11 +140,16 @@ const ReviewPage = () => {
                       onEditClick={() => handleEditClick(item.gameReviewId)}
                       onDeleteClick={() => handleDeleteClick(item.gameReviewId)}
                     />
-                  )
                 ))}
+                <Pagination
+                  totalItems={data.reviewList.length}
+                  itemsPerPage={itemsPerPage}
+                  currentPage={currentPage}
+                  onPageChange={setCurrentPage}
+                />
               </section>
             </div>
-          </div>
+          
         </div>
       </div>
     </div>

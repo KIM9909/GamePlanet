@@ -4,12 +4,12 @@ import { useSelector } from 'react-redux';
 
 const ArticleForm = ({ gameInfoId,initialData, onSubmit, isEditing, isSubmitting: externalIsSubmitting }) => {
   const { token } = useSelector((state) => state.user);
-  const userId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
+  const currentUserId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
   
   const [formData, setFormData] = useState({
-    // title: '',
+
     gameCommunityContent: '',
-    userId: userId,
+    userId: currentUserId,
     gameInfoId: gameInfoId,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -17,12 +17,12 @@ const ArticleForm = ({ gameInfoId,initialData, onSubmit, isEditing, isSubmitting
   useEffect(() => {
     if (initialData) {
       setFormData({
-        // title: initialData.title || '',
-        gameCommunityContent: initialData.gameCommunityContent || '',
-        userId: userId
+
+        gameCommunityContent: initialData.gameCommunity.gameCommunityContent || '',
+        userId: currentUserId
       });
     }
-  }, [initialData, userId]);
+  }, [initialData, currentUserId]);
 
   useEffect(() => {
     if (externalIsSubmitting !== undefined) {
@@ -40,7 +40,7 @@ const ArticleForm = ({ gameInfoId,initialData, onSubmit, isEditing, isSubmitting
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(userId)
+    console.log(currentUserId)
     if (!formData.gameCommunityContent.trim()) {
       alert('내용을 입력해주세요.');
       return;
@@ -48,7 +48,7 @@ const ArticleForm = ({ gameInfoId,initialData, onSubmit, isEditing, isSubmitting
 
     // 로그인 안한 사용자 필터링
 
-    if (!userId) {
+    if (!currentUserId) {
       alert('로그인이 필요합니다.');
       return;
     }
@@ -58,9 +58,9 @@ const ArticleForm = ({ gameInfoId,initialData, onSubmit, isEditing, isSubmitting
       await onSubmit(formData);
       if (!isEditing) {
         setFormData({ 
-          // title: '', 
+ 
           gameCommunityContent: '', 
-          userId :userId
+          userId :currentUserId
         });
       }
     } catch (error) {
@@ -75,20 +75,7 @@ const ArticleForm = ({ gameInfoId,initialData, onSubmit, isEditing, isSubmitting
 
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl mx-auto p-4 space-y-4">
-      {/* <div className="space-y-2">
-        <input
-          type="text"
-          name="title"
-          value={formData.title}
-          onChange={handleChange}
-          placeholder="제목을 입력하세요"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg 
-                     focus:outline-none focus:ring-2 focus:ring-blue-500 
-                     focus:border-transparent"
-          maxLength={100}
-          disabled={isSubmitting}
-        />
-      </div> */}
+
 
       <div className="space-y-2">
         <textarea
