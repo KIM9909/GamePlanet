@@ -51,16 +51,28 @@ const DiceVersion2 = ({
     setFinalValues([firstDice, secondDice]);
 
     // 애니메이션 동안 주사위 값을 랜덤하게 변경
-    const rollInterval = setInterval(() => {
-      setDiceValues([
-        Math.floor(Math.random() * 6) + 1,
-        Math.floor(Math.random() * 6) + 1,
-      ]);
-    }, 100);
+    const animateDice = () => {
+      let startTime = performance.now();
+
+      const updateAnimation = (time) => {
+        if (time - startTime < 1000) {
+          setDiceValues([
+            Math.floor(Math.random() * 6) + 1,
+            Math.floor(Math.random() * 6) + 1,
+          ]);
+          requestAnimationFrame(updateAnimation);
+        } else {
+          setDiceValues(finalValues); // 최종 값 설정
+          setIsRolling(false);
+        }
+      };
+
+      requestAnimationFrame(updateAnimation);
+    };
 
     // 1초 후에 최종 결과 확정
     setTimeout(() => {
-      clearInterval(rollInterval);
+      clearInterval(animateDice);
       setIsRolling(false);
     }, 1000);
   };

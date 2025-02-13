@@ -8,6 +8,7 @@ import io.openvidu.java.client.Session;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.java.client.TokenOptions;
 import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
@@ -18,8 +19,19 @@ public class OpenViduService {
 
 	private OpenVidu openVidu;
 	// OpenVidu 서버 접속 정보
-	private static final String OPENVIDU_URL = "https://game-planet.duckdns.org:8443/";
-	private static final String SECRET = "MY_SECRET";
+
+	@Value("${openvidu.url}")
+	private String OPENVIDU_URL;
+	@Value("${openvidu.secret}")
+	private String SECRET;
+
+	public String getOpenviduUrl() {
+		return OPENVIDU_URL;
+	}
+
+	public String getSecret() {
+		return SECRET;
+	}
 
 	/**
 	 * 서비스 초기화 메서드 Spring Boot 애플리케이션 시작 시 자동으로 실행됩니다.
@@ -28,8 +40,8 @@ public class OpenViduService {
 	public void init() {
 		try {
 			// OpenVidu 서버 연결을 위한 환경 설정
-			System.setProperty("OPENVIDU_URL", OPENVIDU_URL);
-			System.setProperty("OPENVIDU_SECRET", SECRET);
+			System.setProperty("OPENVIDU_URL", getOpenviduUrl());
+			System.setProperty("OPENVIDU_SECRET", getSecret());
 
 			this.openVidu = new OpenVidu(OPENVIDU_URL, SECRET);
 		} catch (Exception e) {
