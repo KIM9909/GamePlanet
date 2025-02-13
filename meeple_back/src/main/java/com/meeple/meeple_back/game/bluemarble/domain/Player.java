@@ -28,7 +28,7 @@ public class Player {
 	private List<Integer> landOwned = new ArrayList<>();
 
 	private int blackHoleCount;
-
+	private boolean timeTravel;
 	final static int INITIAL_BALANCE = 50;
 	final static int SALARY = 20;
 
@@ -41,6 +41,7 @@ public class Player {
 				.balance(INITIAL_BALANCE)
 				.cardOwned(new HashSet<>())
 				.landOwned(new ArrayList<>())
+				.timeTravel(false)
 				.blackHoleCount(0)
 				.build();
 	}
