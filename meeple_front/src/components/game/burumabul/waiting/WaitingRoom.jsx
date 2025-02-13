@@ -15,7 +15,6 @@ import { SocketContext } from "../../../layout/SocketLayout";
 import ChangePasswordModal from "../play/burumabul_Modal/ChangePasswordModal";
 import WaitingChat from "../play/burumabul_Modal/WaitingChat";
 
-// 백엔드 연결 필요
 const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
   const userId = Number(useSelector((state) => state.user.userId));
   const [currentRoomInfo, setCurrentRoomInfo] = useState(roomInfo);
@@ -52,6 +51,9 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
   const [playerLen, setPlayerLen] = useState(currentRoomInfo.players.length);
   const creatorId = Number(currentRoomInfo.creator.playerId);
   const isPrivate = currentRoomInfo.private;
+
+  // 준비 됐는지 안 됐는지
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     if (!roomSocketData) return;
@@ -152,6 +154,22 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
       navigate("/home");
     }
   };
+
+  // // 게임 준비 정원 => 방장은 무조건 Ready
+  // let readyPeople = 1;
+
+  // // 게임 준비 취소
+  // const handleCancel = () => {
+  //   setIsReady(false);
+  //   readyPeople -= 1
+  // };
+
+  // // 게임 준비 완료
+  // const handleReady = () => {
+  //   setIsReady(true);
+  //   ready += 1
+  // };
+
   return (
     <>
       <style>{`
@@ -260,7 +278,14 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
                   )}
                 </div>
               ) : (
-                <div>게임준비</div>
+                // <>
+                //   {(isReady && (
+                //     <button onClick={handleCancel}>게임 준비</button>
+                //   )) || <button onClick={handleReady}>게임 준비</button>}
+                // </>
+                <>
+                  <button>게임 준비</button>
+                </>
               )}
 
               {/* <button className="mx-3">게임 준비</button> */}
