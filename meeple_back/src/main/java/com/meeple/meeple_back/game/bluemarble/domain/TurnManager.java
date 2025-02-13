@@ -226,4 +226,8 @@ public class TurnManager {
 		}
 		return false;
 	}
+
+	public void resetDoubleCount() {
+		this.doubleCount = 0;
+	}
 }

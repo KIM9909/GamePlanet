@@ -184,17 +184,25 @@ public class GamePlay {
 		}
 
 		if (TileType.BLACK_HOLE == currentTile.getType()) {
-			Optional<Tile> tileWillRemove = blackHoleAction(currentPlayer);
-			// 플레이어의 완성된 기지중 하나 없앤다.
-			tileWillRemove.ifPresent(tile -> tile.update(0, 0));
-			// 플레이어의 블랙홀 카운트를 3으로 설정한다.
-			currentPlayer.removeCardOwnedByTileId(tileWillRemove.get().getId());
-			final int REST_TURN_COUNT = 3;
-			currentPlayer.setBlackHoleCount(REST_TURN_COUNT);
+			meetBlackhole(currentPlayer);
+
 			return ActionType.CHECK_END;
 		}
 
 		return ActionType.CHECK_END;
+	}
+
+	private void meetBlackhole(Player currentPlayer) {
+		Optional<Tile> tileWillRemove = blackHoleAction(currentPlayer);
+		// 플레이어의 완성된 기지중 하나 없앤다.
+		tileWillRemove.ifPresent(tile -> {
+			tile.update(0, 0);
+			currentPlayer.removeCardOwnedByTileId(tile.getId());
+		});
+		// 플레이어의 블랙홀 카운트를 3으로 설정한다.
+		final int REST_TURN_COUNT = 3;
+		turnManager.resetDoubleCount();
+		currentPlayer.setBlackHoleCount(REST_TURN_COUNT);
 	}
 
 	private Optional<Tile> blackHoleAction(Player currentPlayer) {
@@ -315,6 +323,7 @@ public class GamePlay {
 				case 3:
 					int blackHoleIndex = getBlackHoleTileIndex();  // 예: board 내에 type이 "BLACK_HOLE"인 타일의 인덱스를 반환
 					player.setPosition(blackHoleIndex);
+					meetBlackhole(player);
 					break;
 
 				case 7:
