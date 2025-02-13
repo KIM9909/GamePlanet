@@ -5,7 +5,9 @@ import com.meeple.meeple_back.game.bluemarble.controller.response.BuildBaseRespo
 import com.meeple.meeple_back.game.bluemarble.controller.response.BuyLandResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DiceRollResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DrawCardResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.ChoosePositionRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.request.*;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.response.ChoosePositionResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.PayFeeResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
 import com.meeple.meeple_back.game.bluemarble.util.*;
@@ -155,6 +157,16 @@ public class GamePlay {
 		Player currentPlayer = getValidatedPlayer(diceRollRequest.getPlayerId());
 		// 주사위 더블일때만 탈출
 		boolean isDouble = diceRollRequest.getFirstDice() == diceRollRequest.getSecondDice();
+
+		if (currentPlayer.isTimeTravel()) {
+			currentPlayer.setTimeTravel(false);
+			if (diceRollRequest.getFirstDice() + diceRollRequest.getSecondDice() >= 4) {
+				return DiceRollResponse.from(diceRollRequest.getPlayerId(), currentPlayer.getPosition(), currentPlayer.getPosition(), diceRollRequest.getFirstDice(), diceRollRequest.getSecondDice(), false, ActionType.CHOOSE_POSITION);
+			} else {
+				currentPlayer.setPosition(currentPlayer.getPosition() + 5);
+				return DiceRollResponse.from(diceRollRequest.getPlayerId(), currentPlayer.getPosition(), currentPlayer.getPosition() + 5, diceRollRequest.getFirstDice(), diceRollRequest.getSecondDice(), false, ActionType.CHOOSE_POSITION);
+			}
+		}
 		if (!isDouble && currentPlayer.getBlackHoleCount() > 0) {
 			currentPlayer.decreaseBlackholeCount();
 			return DiceRollResponse.from(diceRollRequest.getPlayerId(), currentPlayer.getPosition(), currentPlayer.getPosition(), diceRollRequest.getFirstDice(), diceRollRequest.getSecondDice(), false, ActionType.CHECK_END);
@@ -184,17 +196,30 @@ public class GamePlay {
 		}
 
 		if (TileType.BLACK_HOLE == currentTile.getType()) {
-			Optional<Tile> tileWillRemove = blackHoleAction(currentPlayer);
-			// 플레이어의 완성된 기지중 하나 없앤다.
-			tileWillRemove.ifPresent(tile -> tile.update(0, 0));
-			// 플레이어의 블랙홀 카운트를 3으로 설정한다.
-			currentPlayer.removeCardOwnedByTileId(tileWillRemove.get().getId());
-			final int REST_TURN_COUNT = 3;
-			currentPlayer.setBlackHoleCount(REST_TURN_COUNT);
+			meetBlackhole(currentPlayer);
+			return ActionType.CHECK_END;
+		}
+
+		if (TileType.TIME_TRAVEL == currentTile.getType()) {
+			currentPlayer.payMoney(300000);
+			turnManager.resetDoubleCount();
 			return ActionType.CHECK_END;
 		}
 
 		return ActionType.CHECK_END;
+	}
+
+	private void meetBlackhole(Player currentPlayer) {
+		Optional<Tile> tileWillRemove = blackHoleAction(currentPlayer);
+		// 플레이어의 완성된 기지중 하나 없앤다.
+		tileWillRemove.ifPresent(tile -> {
+			tile.update(0, 0);
+			currentPlayer.removeCardOwnedByTileId(tile.getId());
+		});
+		// 플레이어의 블랙홀 카운트를 3으로 설정한다.
+		final int REST_TURN_COUNT = 3;
+		turnManager.resetDoubleCount();
+		currentPlayer.setBlackHoleCount(REST_TURN_COUNT);
 	}
 
 	private Optional<Tile> blackHoleAction(Player currentPlayer) {
@@ -315,6 +340,7 @@ public class GamePlay {
 				case 3:
 					int blackHoleIndex = getBlackHoleTileIndex();  // 예: board 내에 type이 "BLACK_HOLE"인 타일의 인덱스를 반환
 					player.setPosition(blackHoleIndex);
+					meetBlackhole(player);
 					break;
 
 				case 7:
@@ -552,13 +578,13 @@ public class GamePlay {
 		return turnManager.endTurn(board);
 	}
 
-	public ActionType checkBlackHole() {
-// 현재 플레이어의 블랙홀 카운트가 0보다 크면
-		// 현재 플레이어의 블랙홀 카운트 감소하기.
-		// 다음턴을 Turn End로 두기.
-		if (turnManager.checkPlayerIsInBlackHole()) {
-			return ActionType.CHECK_END;
-		}
-		return ActionType.ROLL_DICE;
+
+	public ChoosePositionResponse choosePosition(ChoosePositionRequest request) {
+		Player player = getValidatedPlayer(request.getPlayerId());
+		int prevPosition = player.getPosition();
+		turnManager.resetDoubleCount();
+		player.setTimeTravel(false);
+		player.setPosition(request.getNextPosition());
+		return new ChoosePositionResponse(player.getPlayerId(), prevPosition, player.getPosition(), ActionType.CHECK_END.getAction());
 	}
 }
