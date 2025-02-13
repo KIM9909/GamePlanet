@@ -92,12 +92,37 @@ export const CustomAPI = {
     }
   },
 
-  /**
+   /**
    * Custom Tile API
    */
-  createTile: async (customId, tileData) => {
+   createTile: async (customId, tileData) => {
     try {
-      const response = await API.post(`/custom-element/tile/${customId}`, tileData);
+      const formData = new FormData();
+      
+      // Canvas Blob을 파일로 변환
+      const tileImage = new File(
+        [tileData.tileImage], 
+        `tile-${tileData.tileNumber}.png`, 
+        { type: 'image/png' }
+      );
+
+      // FormData에 필요한 데이터 추가
+      formData.append('tileName', tileData.tileName);
+      formData.append('tileColor', tileData.tileColor);
+      formData.append('tileNumber', tileData.tileNumber);
+      formData.append('tileType', tileData.tileType);
+      formData.append('tilePrice', tileData.tilePrice);
+      formData.append('tileImage', tileImage);
+
+      const response = await API.post(
+        `/custom-element/tile/${customId}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
       return response;
     } catch (error) {
       throw error || "커스텀 타일 생성에 실패했습니다.";
@@ -124,7 +149,34 @@ export const CustomAPI = {
 
   updateTile: async (customId, tileId, tileData) => {
     try {
-      const response = await API.put(`/custom-element/tile/${customId}/update/${tileId}`, tileData);
+      const formData = new FormData();
+      
+      // 이미지가 있는 경우에만 파일로 변환
+      if (tileData.tileImage) {
+        const tileImage = new File(
+          [tileData.tileImage], 
+          `tile-${tileData.tileNumber}.png`, 
+          { type: 'image/png' }
+        );
+        formData.append('tileImage', tileImage);
+      }
+
+      // 나머지 데이터 추가
+      Object.keys(tileData).forEach(key => {
+        if (key !== 'tileImage' && tileData[key] !== undefined) {
+          formData.append(key, tileData[key]);
+        }
+      });
+
+      const response = await API.put(
+        `/custom-element/tile/${customId}/update/${tileId}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
       return response;
     } catch (error) {
       throw error || "커스텀 타일 수정에 실패했습니다.";
@@ -145,61 +197,25 @@ export const CustomAPI = {
    */
   createSeedCard: async (customId, cardData) => {
     try {
-      const response = await API.post(`/custom-element/${customId}/create-seed-card`, cardData);
+      const response = await API.post(`/custom-element/card/${customId}/create-seed-card`, cardData);
       return response;
     } catch (error) {
       throw error || "시드 카드 생성에 실패했습니다.";
     }
   },
 
-  createTelepathyCard: async (customId, cardData) => {
-    try {
-      const response = await API.post(`/custom-element/${customId}/create-telepathy-card`, cardData);
-      return response;
-    } catch (error) {
-      throw error || "텔레파시 카드 생성에 실패했습니다.";
-    }
-  },
-
-  createNeuronValleyCard: async (customId, cardData) => {
-    try {
-      const response = await API.post(`/custom-element/${customId}/create-neuronvalley-card`, cardData);
-      return response;
-    } catch (error) {
-      throw error || "뉴런밸리 카드 생성에 실패했습니다.";
-    }
-  },
-
   getAllSeedCards: async (customId) => {
     try {
-      const response = await API.get(`/custom-element/${customId}/read-all-seed-cards`);
+      const response = await API.get(`/custom-element/card/${customId}/read-all-seed-cards`);
       return response;
     } catch (error) {
       throw error || "시드 카드 목록을 불러오는데 실패했습니다.";
     }
   },
 
-  getAllTelepathyCards: async (customId) => {
-    try {
-      const response = await API.get(`/custom-element/${customId}/read-all-telepathy-cards`);
-      return response;
-    } catch (error) {
-      throw error || "텔레파시 카드 목록을 불러오는데 실패했습니다.";
-    }
-  },
-
-  getAllNeuronValleyCards: async (customId) => {
-    try {
-      const response = await API.get(`/custom-element/${customId}/read-all-neuronvalley-cards`);
-      return response;
-    } catch (error) {
-      throw error || "뉴런밸리 카드 목록을 불러오는데 실패했습니다.";
-    }
-  },
-
   getCardById: async (customId, cardId) => {
     try {
-      const response = await API.get(`/custom-element/${customId}/read/${cardId}`);
+      const response = await API.get(`/custom-element/card/${customId}/read/${cardId}`);
       return response;
     } catch (error) {
       throw error || "카드 정보를 불러오는데 실패했습니다.";
@@ -208,7 +224,7 @@ export const CustomAPI = {
 
   updateCard: async (customId, cardId, cardData) => {
     try {
-      const response = await API.put(`/custom-element/${customId}/update/${cardId}`, cardData);
+      const response = await API.put(`/custom-element/card/${customId}/update/${cardId}`, cardData);
       return response;
     } catch (error) {
       throw error || "카드 수정에 실패했습니다.";
@@ -217,7 +233,7 @@ export const CustomAPI = {
 
   deleteCard: async (customId, cardId) => {
     try {
-      const response = await API.delete(`/custom-element/${customId}/delete/${cardId}`);
+      const response = await API.delete(`/custom-element/card/${customId}/delete/${cardId}`);
       return response;
     } catch (error) {
       throw error || "카드 삭제에 실패했습니다.";
