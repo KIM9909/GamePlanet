@@ -164,7 +164,7 @@ public class GamePlay {
 				return DiceRollResponse.from(diceRollRequest.getPlayerId(), currentPlayer.getPosition(), currentPlayer.getPosition(), diceRollRequest.getFirstDice(), diceRollRequest.getSecondDice(), false, ActionType.CHOOSE_POSITION);
 			} else {
 				currentPlayer.setPosition(currentPlayer.getPosition() + 5);
-				return DiceRollResponse.from(diceRollRequest.getPlayerId(), currentPlayer.getPosition(), currentPlayer.getPosition() + 5, diceRollRequest.getFirstDice(), diceRollRequest.getSecondDice(), false, ActionType.CHOOSE_POSITION);
+				return DiceRollResponse.from(diceRollRequest.getPlayerId(), currentPlayer.getPosition(), currentPlayer.getPosition() + 5, diceRollRequest.getFirstDice(), diceRollRequest.getSecondDice(), false, ActionType.CHECK_END);
 			}
 		}
 		if (!isDouble && currentPlayer.getBlackHoleCount() > 0) {
@@ -256,18 +256,12 @@ public class GamePlay {
 		// 통행료 지불 하도록 액션 추가
 		if (currentTile.getOwnerId() != EMPTY_TILE_OWNER_NUMBER
 				&& currentTile.getOwnerId() != currentPlayer.getPlayerId()) {
-			return determineBrokenOnPayFee(currentPlayer, currentTile);
+			return ActionType.PAY_TOLL;
 		}
 		// 턴 끝났는지 확인
-		return ActionType.ROLL_DICE;
+		return ActionType.CHECK_END;
 	}
 
-	private ActionType determineBrokenOnPayFee(Player player, Tile currentTile) {
-		if (player.getBalance() < currentTile.getTollPrice()) {
-			return ActionType.BROKEN;
-		}
-		return ActionType.PAY_TOLL;
-	}
 
 	/**
 	 * 플레이어가 땅 구매하는 메서드
