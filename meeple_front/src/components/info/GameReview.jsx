@@ -9,7 +9,7 @@ const GameReview = () =>{
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    axios.get(`https://boardjjigae.duckdns.org/api/game-info/review`)
+    axios.get(`https://game-planet.duckdns.org/api/game-info/review`)
       .then(response => setData(response.data))
       .catch(error => console.error(error));
   }, [params]);
