@@ -393,7 +393,7 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
       });
       // setBuildBaseSocketData(null);
     }
-  }, [buildBaseSocketData, colors]);
+  }, [buildBaseSocketData]);
 
   // 통행료 지불 후 업데이트 정보
   const [tollPrice, setTollPrice] = useState(null);

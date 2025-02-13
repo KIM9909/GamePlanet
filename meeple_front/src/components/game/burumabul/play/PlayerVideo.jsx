@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { Camera, CameraOff, Mic, MicOff, UserSearch } from "lucide-react";
 import { OpenVidu } from "openvidu-browser";
 import axios from "axios";
@@ -10,6 +16,7 @@ const PlayerVideo = ({ playerInfo, sessionId }) => {
   const [session, setSession] = useState(null);
   const [publisher, setPublisher] = useState(null);
   const [subscribers, setSubscribers] = useState([]);
+  const memoizedSubscribers = useMemo(() => subscribers, [subscribers]);
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [videoEnabled, setVideoEnabled] = useState(true);
   const [connectionError, setConnectionError] = useState(null);
@@ -24,7 +31,7 @@ const PlayerVideo = ({ playerInfo, sessionId }) => {
   const isMyStream = playerInfo.playerId === Number(userId);
 
   const MAX_RECONNECT_ATTEMPTS = 3;
-  const RECONNECT_DELAY = 3000; // 3초
+  const RECONNECT_DELAY = 10000; // 10초
 
   const cleanupSession = async (currentSession) => {
     try {
@@ -85,7 +92,7 @@ const PlayerVideo = ({ playerInfo, sessionId }) => {
         const response = await axios.post(
           `${
             import.meta.env.VITE_API_BASE_URL
-          }/api/video/generate-token/${sessionId}`,
+          }/video/generate-token/${sessionId}`,
           {},
           { headers: { "Content-Type": "application/json" }, timeout: 30000 }
         );
@@ -105,7 +112,7 @@ const PlayerVideo = ({ playerInfo, sessionId }) => {
           publishAudio: true,
           publishVideo: true,
           resolution: "640x480",
-          frameRate: 30,
+          frameRate: 10,
         });
 
         newPublisher.on("streamPropertyChanged", (event) => {
@@ -144,6 +151,26 @@ const PlayerVideo = ({ playerInfo, sessionId }) => {
       }
     };
   }, [sessionId, playerInfo.playerName, isMyStream]);
+
+  const reconnectToSession = async () => {
+    if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+      console.warn("Max reconnect attempts reached.");
+      return;
+    }
+
+    console.log(`Reconnecting... Attempt ${reconnectAttempts + 1}`);
+    setReconnectAttempts((prev) => prev + 1);
+
+    reconnectTimeoutRef.current = setTimeout(() => {
+      connectToSession();
+    }, RECONNECT_DELAY);
+  };
+
+  useEffect(() => {
+    if (connectionError) {
+      reconnectToSession();
+    }
+  }, [connectionError]);
 
   const toggleAudio = () => {
     if (publisher) {
@@ -205,7 +232,6 @@ const PlayerVideo = ({ playerInfo, sessionId }) => {
       </div>
 
       <div className="flex justify-between items-center px-3 py-1 flex-shrink-0">
-        {/* 🟢 이름을 누르면 프로필 모달이 열리도록 수정 */}
         <button
           ref={buttonRef}
           onClick={() => setIsModalOpen(true)}

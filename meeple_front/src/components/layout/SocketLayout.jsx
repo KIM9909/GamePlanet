@@ -123,8 +123,8 @@ const SocketLayout = ({ children }) => {
     const stompClient = new Client({
       webSocketFactory: () => {
         console.log("🌍 SockJS WebSocket 팩토리 실행됨!");
-        return new SockJS(`${import.meta.env.VITE_SOCKET_LOCAL_API_BASE_URL}`);
-        // return new SockJS(`${import.meta.env.VITE_SOCKET_API_BASE_URL}`);
+        // return new SockJS(`${import.meta.env.VITE_SOCKET_LOCAL_API_BASE_URL}`);
+        return new SockJS(`${import.meta.env.VITE_SOCKET_API_BASE_URL}`);
       },
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
