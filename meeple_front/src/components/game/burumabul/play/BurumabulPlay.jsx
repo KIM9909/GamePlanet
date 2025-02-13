@@ -120,7 +120,6 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     setFirstDice(socketFirstDice);
     setSecondDice(socketSecondDice);
     setIsDouble(socketDouble);
-    setNextAction(socketNext);
   }, [socketFirstDice, socketSecondDice, socketDouble, socketNext]);
 
   // 현재 라운드

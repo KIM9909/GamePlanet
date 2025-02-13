@@ -17,8 +17,6 @@ import WaitingChat from "../play/burumabul_Modal/WaitingChat";
 
 // 백엔드 연결 필요
 const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
-  console.log(roomId);
-
   const userId = Number(useSelector((state) => state.user.userId));
   const [currentRoomInfo, setCurrentRoomInfo] = useState(roomInfo);
   useEffect(() => {
@@ -27,6 +25,7 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
       setRoomName(roomInfo.roomName);
       setMaxPlayers(roomInfo.maxPlayers);
       setPlayerLen(roomInfo.players.length);
+      console.log(currentRoomInfo);
     }
   }, [roomInfo]);
 
@@ -45,7 +44,7 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  console.log("소켓 데이터", SocketContext);
+  // console.log("소켓 데이터", SocketContext);
 
   const playersInfo = currentRoomInfo.players;
   const [roomName, setRoomName] = useState(currentRoomInfo.roomName);
@@ -96,6 +95,7 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
       }
     };
     getRoomInfo();
+    console.log(roomId);
   }, [roomId]);
 
   useEffect(() => {
@@ -114,8 +114,6 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
   if (loading) {
     return <div>Loading Room Informangition</div>;
   }
-
-  console.log(currentRoomInfo);
 
   const handlePutRoom = () => {
     setShowPutRoomModal(true);
