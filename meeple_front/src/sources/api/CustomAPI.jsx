@@ -92,12 +92,37 @@ export const CustomAPI = {
     }
   },
 
-  /**
+   /**
    * Custom Tile API
    */
-  createTile: async (customId, tileData) => {
+   createTile: async (customId, tileData) => {
     try {
-      const response = await API.post(`/custom-element/tile/${customId}`, tileData);
+      const formData = new FormData();
+      
+      // Canvas Blob을 파일로 변환
+      const tileImage = new File(
+        [tileData.tileImage], 
+        `tile-${tileData.tileNumber}.png`, 
+        { type: 'image/png' }
+      );
+
+      // FormData에 필요한 데이터 추가
+      formData.append('tileName', tileData.tileName);
+      formData.append('tileColor', tileData.tileColor);
+      formData.append('tileNumber', tileData.tileNumber);
+      formData.append('tileType', tileData.tileType);
+      formData.append('tilePrice', tileData.tilePrice);
+      formData.append('tileImage', tileImage);
+
+      const response = await API.post(
+        `/custom-element/tile/${customId}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
       return response;
     } catch (error) {
       throw error || "커스텀 타일 생성에 실패했습니다.";
@@ -124,7 +149,34 @@ export const CustomAPI = {
 
   updateTile: async (customId, tileId, tileData) => {
     try {
-      const response = await API.put(`/custom-element/tile/${customId}/update/${tileId}`, tileData);
+      const formData = new FormData();
+      
+      // 이미지가 있는 경우에만 파일로 변환
+      if (tileData.tileImage) {
+        const tileImage = new File(
+          [tileData.tileImage], 
+          `tile-${tileData.tileNumber}.png`, 
+          { type: 'image/png' }
+        );
+        formData.append('tileImage', tileImage);
+      }
+
+      // 나머지 데이터 추가
+      Object.keys(tileData).forEach(key => {
+        if (key !== 'tileImage' && tileData[key] !== undefined) {
+          formData.append(key, tileData[key]);
+        }
+      });
+
+      const response = await API.put(
+        `/custom-element/tile/${customId}/update/${tileId}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
       return response;
     } catch (error) {
       throw error || "커스텀 타일 수정에 실패했습니다.";
@@ -163,7 +215,7 @@ export const CustomAPI = {
 
   createNeuronValleyCard: async (customId, cardData) => {
     try {
-      const response = await API.post(`/custom-element/${customId}/create-neuronvalley-card`, cardData);
+      const response = await API.post(`/custom-element/card/${customId}/create-neuronvalley-card`, cardData);
       return response;
     } catch (error) {
       throw error || "뉴런밸리 카드 생성에 실패했습니다.";

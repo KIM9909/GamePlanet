@@ -21,19 +21,19 @@ const CustomDetail = () => {
  const getIndex = (position) => {
     // 하단 줄 
     if (position >= 0 && position <= 10) {
-      return 10 - position; 
+      return 30 - position 
     }
     // 왼쪽 줄 
     else if (position >= 11 && position <= 19) {
-      return position 
+      return 20 + position
     }
     // 상단 줄 
     else if (position >= 20 && position <= 30) {
-      return position;
+      return position- 20 ;
     }
     // 오른쪽 줄 (31-39): 위에서 아래로
     else {
-      return position; 
+      return position - 20; 
     }
   };
 

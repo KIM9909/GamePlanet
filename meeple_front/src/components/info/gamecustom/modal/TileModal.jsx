@@ -1,7 +1,27 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { CustomAPI } from '../../../../sources/api/CustomAPI';
 
-const TileModal = ({ onClose, cardId }) => {
+const CUSTOMIZABLE_TILES = [1, 3, 4, 5, 6, 8, 9, 11, 12, 14, 16, 18, 19, 21, 22, 24, 25, 26, 27, 28, 31, 32, 34, 36, 38, 39];
+
+const getRotationInfo = (tileNumber) => {
+  if ([1, 2, 3, 4, 5, 6, 7, 8, 9].includes(tileNumber)) {
+    return { rotation: 180, type: 'vertical', width: 180, height: 250 };
+  }
+  if ([11, 12, 13, 14, 15, 16, 17, 18, 19].includes(tileNumber)) {
+    return { rotation: 270, type: 'horizontal', width: 250, height: 180 };
+  }
+  if ([20, 21, 22, 23, 24, 25, 26, 27, 28, 29].includes(tileNumber)) {
+    return { rotation: 0, type: 'vertical', width: 180, height: 250 };
+  }
+  if ([31, 32, 33, 34, 35, 36, 37, 38, 39].includes(tileNumber)) {
+    return { rotation: 90, type: 'horizontal', width: 250, height: 180 };
+  }
+  return { rotation: 0, type: 'vertical', width: 180, height: 250 };
+};
+
+const TileModal = ({ onClose, cardId, customId }) => {
+  const actualTileNumber = CUSTOMIZABLE_TILES[cardId - 1];
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [backgroundColor, setBackgroundColor] = useState('#FFD700');
@@ -10,68 +30,101 @@ const TileModal = ({ onClose, cardId }) => {
   const canvasRef = useRef(null);
   const [isImageLoading, setIsImageLoading] = useState(false);
 
+  // 기본 캔버스 생성 (모든 타일 250x180으로 통일)
+  const generateImage = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    
+    // Canvas 초기화 (180x250으로 수정)
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, 180, 250);
+    
+    // 상단 색상 영역
+    ctx.fillStyle = backgroundColor;
+    ctx.fillRect(0, 0, 180, 80); // 상단 1/3 영역
+    
+    if (uploadedImage) {
+      setIsImageLoading(true);
+      const img = new Image();
+      img.onload = () => {
+        ctx.drawImage(img, 0, 80, 180, 170); // 하단 2/3 영역
+        addText(ctx, 180, 250);
+        setIsImageLoading(false);
+      };
+      img.src = uploadedImage;
+    } else {
+      addText(ctx, 180, 250);
+    }}
+
   const addText = (ctx, width, height) => {
     if (!ctx) return;
     
     // 이름 텍스트
     ctx.fillStyle = 'white';
     ctx.textAlign = 'center';
-    ctx.font = 'bold 48px DungGeunMo';
-    ctx.fillText(name, width / 2, height / 3 - 100);
+    ctx.font = 'bold 24px DungGeunMo';
+    ctx.fillText(name, width / 2, 25);
     
     // 가격 텍스트
-    ctx.font = 'bold 72px DungGeunMo';  
-    ctx.fillStyle = priceColor;    
-    ctx.fillText(price, width / 2 - 60, height / 3 - 20);
-    
     ctx.font = 'bold 36px DungGeunMo';  
+    ctx.fillStyle = priceColor;    
+    ctx.fillText(price, width / 2 - 30, 62);
+    
+    ctx.font = 'bold 18px DungGeunMo';  
     ctx.fillStyle = 'white';       
-    ctx.fillText('만마불', width / 2 + 80, height / 3 - 20);
+    ctx.fillText('만마불', width / 2 + 25, 60);
   };
 
-  const generateImage = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  // 회전 후 저장
+  const rotateAndSaveImage = async () => {
+    const sourceCanvas = canvasRef.current;
+    if (!sourceCanvas || isImageLoading) return;
 
-    const ctx = canvas.getContext('2d');
-    const width = 400;
-    const height = 600;
+    const { rotation, type } = getRotationInfo(actualTileNumber);
+    
+    // 새 캔버스 생성 (회전용)
+    const rotatedCanvas = document.createElement('canvas');
+    rotatedCanvas.width = type === 'vertical' ? 180 : 250;
+    rotatedCanvas.height = type === 'vertical' ? 250 : 180;
+    const ctx = rotatedCanvas.getContext('2d');
 
-    // Canvas 초기화
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, width, height);
+    // 회전 처리
+    ctx.save();
+    ctx.translate(rotatedCanvas.width / 2, rotatedCanvas.height / 2);
+    ctx.rotate((rotation * Math.PI) / 180);
 
-    // 상단 색상 영역
-    ctx.fillStyle = backgroundColor;
-    ctx.fillRect(0, 0, width, height / 3);
+    // 원본 이미지 그리기
+    const drawWidth = 250;
+    const drawHeight = 180;
+    ctx.drawImage(sourceCanvas, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+    
+    ctx.restore();
 
-    if (uploadedImage) {
-      setIsImageLoading(true);
-      const img = new Image();
-      img.onload = () => {
-        ctx.drawImage(img, 0, height / 3, width, (height / 3) * 2);
-        addText(ctx, width, height);
-        setIsImageLoading(false);
-      };
-      img.src = uploadedImage;
-    } else {
-      addText(ctx, width, height);
+    try {
+      // 회전된 이미지를 Blob으로 변환
+      const blob = await new Promise(resolve => {
+        rotatedCanvas.toBlob(resolve, 'image/png');
+      });
+
+      // CustomAPI를 사용하여 서버로 전송
+      await CustomAPI.createTile(customId, {
+        tileName: name,
+        tileColor: backgroundColor,
+        tileType:'City',
+        tileNumber: cardId,
+        tilePrice: price,
+        tileImageUrl: blob
+      });
+
+      onClose();
+    } catch (error) {
+      console.error('타일 저장 실패:', error);
+      console.log(name, backgroundColor, cardId, price)
+
+      alert('타일 저장에 실패했습니다.');
     }
-  };
-
-  const handleSave = () => {
-    if (isImageLoading) return;
-    
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    // 이미지 다운로드
-    const link = document.createElement('a');
-    link.download = `tile-${cardId}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    
-    onClose();
   };
 
   useEffect(() => {
@@ -101,11 +154,11 @@ const TileModal = ({ onClose, cardId }) => {
         <X size={24} />
       </button>
       
-      <h2 className="text-2xl font-bold text-cyan-400 mb-6">타일 {cardId} 커스터마이징</h2>
+      <h2 className="text-2xl font-bold text-cyan-400 mb-6">타일 {actualTileNumber} 커스터마이징</h2>
 
       <div className="grid grid-cols-2 gap-6 h-[calc(100%-100px)]">
         <div className="space-y-6 overflow-y-auto pr-4">
-          {/* 상단 색상 선택 */}
+          {/* 입력 필드들... */}
           <div className="bg-slate-700/50 p-4 rounded-lg">
             <div className="flex items-center justify-between">
               <label className="text-white">상단 색상</label>
@@ -118,19 +171,28 @@ const TileModal = ({ onClose, cardId }) => {
             </div>
           </div>
 
-          {/* 이름 입력 */}
           <div className="bg-slate-700/50 p-4 rounded-lg">
             <label className="block text-white mb-2">이름</label>
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                const newValue = e.target.value;
+                if (newValue.length <= 20) {
+                  setName(newValue);
+                }
+              }}
+              maxLength={20}
               className="w-full p-2 bg-slate-600 text-white rounded border border-slate-500 focus:border-cyan-400 outline-none"
-              placeholder="이름을 입력해주세요"
+              placeholder="이름을 입력해주세요 (최대 20자)"
             />
+            <div className="text-right mt-1">
+              <span className={`text-sm ${name.length === 20 ? 'text-yellow-400' : 'text-slate-400'}`}>
+                {name.length} / 20자
+              </span>
+            </div>
           </div>
 
-          {/* 가격 입력 */}
           <div className="bg-slate-700/50 p-4 rounded-lg">
             <label className="block text-white mb-2">가격</label>
             <div className="flex items-center gap-2">
@@ -156,9 +218,11 @@ const TileModal = ({ onClose, cardId }) => {
             </div>
           </div>
 
-          {/* 이미지 업로드 */}
           <div className="bg-slate-700/50 p-4 rounded-lg">
-            <label className="block text-white mb-2">타일 이미지</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-white">타일 이미지</label>
+              <span className="text-sm text-cyan-400">180 x 250 픽셀</span>
+            </div>
             <input
               type="file"
               accept="image/*"
@@ -173,14 +237,14 @@ const TileModal = ({ onClose, cardId }) => {
           <div className="flex-1 bg-slate-700/50 rounded-lg p-4 flex items-center justify-center">
             <canvas 
               ref={canvasRef}
-              width="400"
-              height="600"
-              className="h-[400px] w-auto object-contain" 
+              width={180}
+              height={250}
+              className="max-h-[400px] w-auto object-contain" 
             />
           </div>
           <div className="mt-4 flex justify-end">
             <button
-              onClick={handleSave}
+              onClick={rotateAndSaveImage}
               disabled={isImageLoading}
               className={`px-4 py-2 text-white rounded transition-colors ${
                 isImageLoading 
