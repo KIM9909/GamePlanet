@@ -153,6 +153,13 @@ public class GamePlay {
 
 	public DiceRollResponse rollDices(DiceRollRequest diceRollRequest) {
 		Player currentPlayer = getValidatedPlayer(diceRollRequest.getPlayerId());
+		// 주사위 더블일때만 탈출
+		boolean isDouble = diceRollRequest.getFirstDice() == diceRollRequest.getSecondDice();
+		if (!isDouble && currentPlayer.getBlackHoleCount() > 0) {
+			currentPlayer.decreaseBlackholeCount();
+			return DiceRollResponse.from(diceRollRequest.getPlayerId(), currentPlayer.getPosition(), currentPlayer.getPosition(), diceRollRequest.getFirstDice(), diceRollRequest.getSecondDice(), false, ActionType.CHECK_END);
+		}
+
 		DiceRollResult response = currentPlayer.rollDices(diceRollRequest);
 		processDoubleRoll(response);
 

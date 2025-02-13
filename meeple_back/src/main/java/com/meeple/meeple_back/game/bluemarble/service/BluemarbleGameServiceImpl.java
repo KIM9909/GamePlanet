@@ -103,8 +103,7 @@ public class BluemarbleGameServiceImpl implements BluemarbleGameService {
 	@Transactional
 	public GamePlayResponse startTurn(int roomId) {
 		GamePlay gamePlay = getValidateGamePlay(roomId);
-		ActionType actionType = gamePlay.checkBlackHole();
-		return GamePlayResponse.from(gamePlay, actionType);
+		return GamePlayResponse.from(gamePlay, ActionType.ROLL_DICE);
 	}
 
 
