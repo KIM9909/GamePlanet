@@ -84,6 +84,7 @@ const BoardPage = () => {
         <div className="max-w-7xl mx-auto">
           <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-cyan-500/50 max-h-[650px] overflow-y-auto custom-scrollbar">
             <div className="grid grid-rows-1 gap-8 mb-8">
+              {/* 검색 영역 */}
               <div className="flex justify-end mb-6">
                 <div className="flex gap-3">
                   <select
@@ -111,58 +112,63 @@ const BoardPage = () => {
                 </div>
               </div>
 
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-slate-700 rounded-lg overflow-hidden">
-                <thead>
-                  <tr className="bg-slate-600">
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      내용
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      작성자
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      작성일
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-600">
-                  {getCurrentPageData().map((article) => (
-                    <tr 
-                      key={article.gameCommunityId} 
-                      className="hover:bg-slate-600 transition-colors cursor-pointer"
-                      onClick={() => handleArticleClick(article.gameCommunityId)}
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                        
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                        {article.gameCommunityContent}
-                        {article.commentList?.length > 0 && (
-                          <span className="text-cyan-500 ml-2">[{article.commentList.length}]</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                        {article.user.nickname}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                        {new Date(article.createAt).toLocaleDateString()}
-                      </td>
+              {/* 테이블 영역 */}
+              <div className="overflow-x-auto">
+                <table className="min-w-full bg-slate-700 rounded-lg overflow-hidden">
+                  <thead>
+                    <tr className="bg-slate-600">
+                      <th className="w-8/12 px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        내용
+                      </th>
+                      <th className="w-2/12 px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        작성자
+                      </th>
+                      <th className="w-2/12 px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        작성일
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-600">
+                    {getCurrentPageData().map((article) => (
+                      <tr 
+                        key={article.gameCommunityId} 
+                        className="hover:bg-slate-600 transition-colors cursor-pointer"
+                        onClick={() => handleArticleClick(article.gameCommunityId)}
+                      >
+                        <td className="w-8/12 px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                          {article.gameCommunityContent}
+                          {article.commentList?.length > 0 && (
+                            <span className="text-cyan-500 ml-2">[{article.commentList.length}]</span>
+                          )}
+                        </td>
+                        <td className="w-2/12 px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
+                          {article.user.nickname}
+                        </td>
+                        <td className="w-2/12 px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
+                          {new Date(article.createAt).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-            <Pagination
-              totalItems={filteredArticles.length}
-              itemsPerPage={itemsPerPage}
-              currentPage={currentPage}
-              onPageChange={setCurrentPage}
-            />
+              {/* 페이지네이션과 글쓰기 버튼 */}
+              <div className="flex justify-between items-center mt-4">
+                
+                <Pagination 
+                  totalItems={filteredArticles.length}
+                  itemsPerPage={itemsPerPage}
+                  currentPage={currentPage}
+                  onPageChange={setCurrentPage}
+                />
+                <button
+                  onClick={() => navigate(`/game-info/${gameInfoId}/board/write`)}
+                  className="px-6 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors flex items-center gap-2"
+                >
+                  글쓰기
+                </button>
+              </div>
             </div>
           </div>
         </div>
