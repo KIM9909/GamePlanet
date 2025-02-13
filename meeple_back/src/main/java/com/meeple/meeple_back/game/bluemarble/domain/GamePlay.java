@@ -340,7 +340,6 @@ public class GamePlay {
 				default:
 					break;
 			}
-
 		}
 
 		if (tileType == TileType.NEURONS_VALLEY_CARD) {
@@ -348,6 +347,21 @@ public class GamePlay {
 			NeuronsValleyCard card = (NeuronsValleyCard) findAndRemoveRandomCardByType(
 					CardType.NEURONS_VALLEY_CARD);
 			pickedCard = card;
+
+			switch (card.getNumber()) {
+				case 1:
+					final int SATURN_NUMBER = 6;
+					player.setPosition(SATURN_NUMBER);
+					break;
+				case 2:
+					final int MOON_NUMBER = 1;
+					player.setPosition(MOON_NUMBER);
+					break;
+				case 12:
+					int landDocumentCount = player.getLandOwned().size();
+					player.setPosition(prevPosition + landDocumentCount * 2);
+					break;
+			}
 		}
 		int nextPosition = player.getPosition();
 		int nextBalance = player.getBalance();
