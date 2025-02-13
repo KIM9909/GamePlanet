@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { CustomAPI } from '../../../../sources/api/CustomAPI';
 
-const BankCardModal = ({ onClose, cardId }) => {
+const BankCardModal = ({ onClose, cardId, customId }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [landPrice, setLandPrice] = useState('');
@@ -9,10 +10,50 @@ const BankCardModal = ({ onClose, cardId }) => {
   const [hqPrice, setHqPrice] = useState('');
   const [basePrice, setBasePrice] = useState('');
 
+  // 카드 데이터 불러오기
+  useEffect(() => {
+    const fetchCardData = async () => {
+      try {
+        const response = await CustomAPI.getCardById(customId, cardId);
+        setName(response.cardName || '');
+        setDescription(response.cardDescription || '');
+        setLandPrice(response.cardSeedCount || '');
+        setBaseBuildPrice(response.cardBaseConstructionCost || '');
+        setHqPrice(response.cardHeadquartersUsageFee || '');
+        setBasePrice(response.cardBaseUsageFee || '');
+      } catch (error) {
+        console.error('카드 정보를 불러오는데 실패했습니다:', error);
+      }
+    };
+
+    if (cardId && customId) {
+      fetchCardData();
+    }
+  }, [cardId, customId]);
+
   // 각 가격의 제한을 체크하는 함수
   const handlePriceChange = (value, setter, maxLimit) => {
     const numberValue = Math.min(maxLimit, parseInt(value) || 0);
     setter(numberValue);
+  };
+
+  // 저장 핸들러
+  const handleSave = async () => {
+    try {
+      const cardData = {
+        cardName: name,
+        cardDescription: description,
+        cardSeedCount: parseInt(landPrice),
+        cardBaseConstructionCost: parseInt(baseBuildPrice),
+        cardHeadquartersUsageFee: parseInt(hqPrice),
+        cardBaseUsageFee: parseInt(basePrice)
+      };
+
+      await CustomAPI.updateCard(customId, cardId, cardData);
+      onClose();
+    } catch (error) {
+      console.error('카드 수정에 실패했습니다:', error);
+    }
   };
 
   return (
@@ -109,7 +150,7 @@ const BankCardModal = ({ onClose, cardId }) => {
 
         <div className="flex justify-end">
           <button
-            onClick={onClose}
+            onClick={handleSave}
             className="px-4 py-2 bg-cyan-500 text-white rounded hover:bg-cyan-600 transition-colors"
           >
             저장

@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
-import { CustomAPI } from '../../../../sources/api/CustomAPI';
 
 const CUSTOMIZABLE_TILES = [1, 3, 4, 5, 6, 8, 9, 11, 12, 14, 16, 18, 19, 21, 22, 24, 25, 26, 27, 28, 31, 32, 34, 36, 38, 39];
 
@@ -20,54 +19,61 @@ const getRotationInfo = (tileNumber) => {
   return { rotation: 0, type: 'vertical', width: 180, height: 250 };
 };
 
-const TileModal = ({ onClose, cardId, customId }) => {
+const CustomModal = ({ onClose, cardId }) => {
   const actualTileNumber = CUSTOMIZABLE_TILES[cardId - 1];
+  
+  // 공통 state
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [backgroundColor, setBackgroundColor] = useState('#FFD700');
   const [priceColor, setPriceColor] = useState('#FFFFFF');
+  const [description, setDescription] = useState('');
+  
+  // 씨앗은행 카드 추가 state
+  const [baseBuildPrice, setBaseBuildPrice] = useState('');
+  const [hqPrice, setHqPrice] = useState('');
+  const [basePrice, setBasePrice] = useState('');
+  
+  // 타일 관련 state
   const [uploadedImage, setUploadedImage] = useState(null);
   const canvasRef = useRef(null);
   const [isImageLoading, setIsImageLoading] = useState(false);
 
-  // 기본 캔버스 생성 (모든 타일 250x180으로 통일)
+  // 타일 이미지 생성
   const generateImage = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
     
-    // Canvas 초기화 (180x250으로 수정)
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, 180, 250);
     
-    // 상단 색상 영역
     ctx.fillStyle = backgroundColor;
-    ctx.fillRect(0, 0, 180, 80); // 상단 1/3 영역
+    ctx.fillRect(0, 0, 180, 80);
     
     if (uploadedImage) {
       setIsImageLoading(true);
       const img = new Image();
       img.onload = () => {
-        ctx.drawImage(img, 0, 80, 180, 170); // 하단 2/3 영역
+        ctx.drawImage(img, 0, 80, 180, 170);
         addText(ctx, 180, 250);
         setIsImageLoading(false);
       };
       img.src = uploadedImage;
     } else {
       addText(ctx, 180, 250);
-    }}
+    }
+  };
 
   const addText = (ctx, width, height) => {
     if (!ctx) return;
     
-    // 이름 텍스트
     ctx.fillStyle = 'white';
     ctx.textAlign = 'center';
     ctx.font = 'bold 24px DungGeunMo';
     ctx.fillText(name, width / 2, 25);
     
-    // 가격 텍스트
     ctx.font = 'bold 36px DungGeunMo';  
     ctx.fillStyle = priceColor;    
     ctx.fillText(price, width / 2 - 30, 62);
@@ -75,56 +81,6 @@ const TileModal = ({ onClose, cardId, customId }) => {
     ctx.font = 'bold 18px DungGeunMo';  
     ctx.fillStyle = 'white';       
     ctx.fillText('만마불', width / 2 + 25, 60);
-  };
-
-  // 회전 후 저장
-  const rotateAndSaveImage = async () => {
-    const sourceCanvas = canvasRef.current;
-    if (!sourceCanvas || isImageLoading) return;
-
-    const { rotation, type } = getRotationInfo(actualTileNumber);
-    
-    // 새 캔버스 생성 (회전용)
-    const rotatedCanvas = document.createElement('canvas');
-    rotatedCanvas.width = type === 'vertical' ? 180 : 250;
-    rotatedCanvas.height = type === 'vertical' ? 250 : 180;
-    const ctx = rotatedCanvas.getContext('2d');
-
-    // 회전 처리
-    ctx.save();
-    ctx.translate(rotatedCanvas.width / 2, rotatedCanvas.height / 2);
-    ctx.rotate((rotation * Math.PI) / 180);
-
-    // 원본 이미지 그리기
-    const drawWidth = 250;
-    const drawHeight = 180;
-    ctx.drawImage(sourceCanvas, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
-    
-    ctx.restore();
-
-    try {
-      // 회전된 이미지를 Blob으로 변환
-      const blob = await new Promise(resolve => {
-        rotatedCanvas.toBlob(resolve, 'image/png');
-      });
-
-      // CustomAPI를 사용하여 서버로 전송
-      await CustomAPI.createTile(customId, {
-        tileName: name,
-        tileColor: backgroundColor,
-        tileType:'City',
-        tileNumber: actualTileNumber,
-        tilePrice: price,
-        tileImageUrl: blob
-      });
-
-      onClose();
-    } catch (error) {
-      console.error('타일 저장 실패:', error);
-      console.log(name, backgroundColor, cardId, price)
-
-      alert('타일 저장에 실패했습니다.');
-    }
   };
 
   useEffect(() => {
@@ -145,8 +101,14 @@ const TileModal = ({ onClose, cardId, customId }) => {
     }
   };
 
+  // 가격 제한 체크 함수
+  const handlePriceChange = (value, setter, maxLimit) => {
+    const numberValue = Math.min(maxLimit, parseInt(value) || 0);
+    setter(numberValue);
+  };
+
   return (
-    <div className="bg-slate-800 rounded-lg w-11/12 max-w-4xl h-[80vh] p-6 relative">
+    <div className="bg-slate-800 rounded-lg w-11/12 max-w-6xl h-[90vh] p-6 relative">
       <button 
         onClick={onClose}
         className="absolute right-4 top-4 text-gray-400 hover:text-white"
@@ -154,11 +116,13 @@ const TileModal = ({ onClose, cardId, customId }) => {
         <X size={24} />
       </button>
       
-      <h2 className="text-2xl font-bold text-cyan-400 mb-6">타일 {actualTileNumber} 커스터마이징</h2>
+      <h2 className="text-2xl font-bold text-cyan-400 mb-6">타일/씨앗은행카드 {actualTileNumber} 커스터마이징</h2>
 
-      <div className="grid grid-cols-2 gap-6 h-[calc(100%-100px)]">
+      <div className="grid grid-cols-3 gap-6 h-[calc(100%-100px)]">
+        {/* 공통 설정 섹션 */}
         <div className="space-y-6 overflow-y-auto pr-4">
-          {/* 입력 필드들... */}
+          <h3 className="text-lg font-semibold text-white">공통 설정</h3>
+          
           <div className="bg-slate-700/50 p-4 rounded-lg">
             <div className="flex items-center justify-between">
               <label className="text-white">상단 색상</label>
@@ -199,12 +163,9 @@ const TileModal = ({ onClose, cardId, customId }) => {
               <input
                 type="number"
                 value={price}
-                onChange={(e) => {
-                  const value = Math.min(60, parseInt(e.target.value) || 0);
-                  setPrice(value);
-                }}
-                min="0"   
-                max="60" 
+                onChange={(e) => handlePriceChange(e.target.value, setPrice, 60)}
+                min="0"
+                max="60"
                 className="flex-1 p-2 bg-slate-600 text-white rounded border border-slate-500 focus:border-cyan-400 outline-none
                 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 placeholder="최대 60"
@@ -217,7 +178,72 @@ const TileModal = ({ onClose, cardId, customId }) => {
               />
             </div>
           </div>
+        </div>
 
+        {/* 씨앗은행 카드 설정 섹션 */}
+        <div className="space-y-6 overflow-y-auto pr-4">
+          <h3 className="text-lg font-semibold text-white">씨앗은행 카드 설정</h3>
+          
+          <div className="bg-slate-700/50 p-4 rounded-lg">
+            <label className="block text-white mb-2">설명</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={4}
+              className="w-full p-3 bg-slate-600 text-white rounded border border-slate-500 focus:border-cyan-400 outline-none resize-none"
+              placeholder="카드 설명"
+            />
+          </div>
+
+          <div className="space-y-4">
+            <div className="bg-slate-700/50 p-4 rounded-lg">
+              <label className="block text-white mb-2">기지 건설비</label>
+              <input
+                type="number"
+                value={baseBuildPrice}
+                onChange={(e) => handlePriceChange(e.target.value, setBaseBuildPrice, 30)}
+                min="0"
+                max="30"
+                className="w-full p-2 bg-slate-600 text-white rounded border border-slate-500 focus:border-cyan-400 outline-none
+                [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                placeholder="최대 30"
+              />
+            </div>
+
+            <div className="bg-slate-700/50 p-4 rounded-lg">
+              <label className="block text-white mb-2">우주본부 가격</label>
+              <input
+                type="number"
+                value={hqPrice}
+                onChange={(e) => handlePriceChange(e.target.value, setHqPrice, 40)}
+                min="0"
+                max="40"
+                className="w-full p-2 bg-slate-600 text-white rounded border border-slate-500 focus:border-cyan-400 outline-none
+                [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                placeholder="최대 40"
+              />
+            </div>
+
+            <div className="bg-slate-700/50 p-4 rounded-lg">
+              <label className="block text-white mb-2">우주기지 가격</label>
+              <input
+                type="number"
+                value={basePrice}
+                onChange={(e) => handlePriceChange(e.target.value, setBasePrice, 100)}
+                min="0"
+                max="100"
+                className="w-full p-2 bg-slate-600 text-white rounded border border-slate-500 focus:border-cyan-400 outline-none
+                [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                placeholder="최대 100"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* 타일 미리보기 섹션 */}
+        <div className="space-y-6">
+          <h3 className="text-lg font-semibold text-white">타일 설정</h3>
+          
           <div className="bg-slate-700/50 p-4 rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <label className="text-white">타일 이미지</label>
@@ -230,35 +256,37 @@ const TileModal = ({ onClose, cardId, customId }) => {
               className="w-full p-2 bg-slate-600 text-white rounded file:mr-4 file:py-1.5 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-cyan-500 file:text-white hover:file:bg-cyan-600"
             />
           </div>
-        </div>
 
-        <div className="h-full flex flex-col">
-          <h3 className="text-lg text-white mb-2">미리보기</h3>
-          <div className="flex-1 bg-slate-700/50 rounded-lg p-4 flex items-center justify-center">
-            <canvas 
-              ref={canvasRef}
-              width={180}
-              height={250}
-              className="max-h-[400px] w-auto object-contain" 
-            />
-          </div>
-          <div className="mt-4 flex justify-end">
-            <button
-              onClick={rotateAndSaveImage}
-              disabled={isImageLoading}
-              className={`px-4 py-2 text-white rounded transition-colors ${
-                isImageLoading 
-                  ? 'bg-slate-500 cursor-not-allowed' 
-                  : 'bg-cyan-500 hover:bg-cyan-600'
-              }`}
-            >
-              {isImageLoading ? '이미지 로딩 중...' : '저장'}
-            </button>
+          <div className="bg-slate-700/50 rounded-lg p-4 flex flex-col">
+            <h4 className="text-white mb-4">타일 미리보기</h4>
+            <div className="flex-1 flex items-center justify-center bg-slate-800/50 rounded-lg p-4">
+              <canvas 
+                ref={canvasRef}
+                width={180}
+                height={250}
+                className="max-h-[400px] w-auto object-contain" 
+              />
+            </div>
           </div>
         </div>
+      </div>
+
+      {/* 저장 버튼 */}
+      <div className="mt-6 flex justify-end">
+        <button
+          onClick={onClose}
+          disabled={isImageLoading}
+          className={`px-6 py-2 text-white rounded transition-colors ${
+            isImageLoading 
+              ? 'bg-slate-500 cursor-not-allowed' 
+              : 'bg-cyan-500 hover:bg-cyan-600'
+          }`}
+        >
+          {isImageLoading ? '이미지 로딩 중...' : '저장'}
+        </button>
       </div>
     </div>
   );
 };
 
-export default TileModal;
+export default CustomModal;

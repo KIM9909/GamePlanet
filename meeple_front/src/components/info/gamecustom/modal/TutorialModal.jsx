@@ -38,13 +38,6 @@ const CustomTutorial = ({ onClose }) => {
               <li>• 기지 건설비(최대 30), 우주본부(최대 40), 우주기지(최대 100) 가격을 설정할 수 있습니다</li>
             </ul>
           </div>
-
-          <div className="bg-slate-700/50 p-6 rounded-lg">
-            <h3 className="text-xl font-semibold text-white mb-4">특수 카드 커스터마이징</h3>
-            <ul className="text-gray-300 space-y-2">
-              <li>• 텔레파시카드와 뉴런의골짜기카드의 제목과 내용을 설정할 수 있습니다</li>
-            </ul>
-          </div>
         </div>
 
         <div className="text-center">

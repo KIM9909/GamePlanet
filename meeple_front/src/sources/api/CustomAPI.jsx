@@ -197,61 +197,25 @@ export const CustomAPI = {
    */
   createSeedCard: async (customId, cardData) => {
     try {
-      const response = await API.post(`/custom-element/${customId}/create-seed-card`, cardData);
+      const response = await API.post(`/custom-element/card/${customId}/create-seed-card`, cardData);
       return response;
     } catch (error) {
       throw error || "시드 카드 생성에 실패했습니다.";
     }
   },
 
-  createTelepathyCard: async (customId, cardData) => {
-    try {
-      const response = await API.post(`/custom-element/${customId}/create-telepathy-card`, cardData);
-      return response;
-    } catch (error) {
-      throw error || "텔레파시 카드 생성에 실패했습니다.";
-    }
-  },
-
-  createNeuronValleyCard: async (customId, cardData) => {
-    try {
-      const response = await API.post(`/custom-element/card/${customId}/create-neuronvalley-card`, cardData);
-      return response;
-    } catch (error) {
-      throw error || "뉴런밸리 카드 생성에 실패했습니다.";
-    }
-  },
-
   getAllSeedCards: async (customId) => {
     try {
-      const response = await API.get(`/custom-element/${customId}/read-all-seed-cards`);
+      const response = await API.get(`/custom-element/card/${customId}/read-all-seed-cards`);
       return response;
     } catch (error) {
       throw error || "시드 카드 목록을 불러오는데 실패했습니다.";
     }
   },
 
-  getAllTelepathyCards: async (customId) => {
-    try {
-      const response = await API.get(`/custom-element/${customId}/read-all-telepathy-cards`);
-      return response;
-    } catch (error) {
-      throw error || "텔레파시 카드 목록을 불러오는데 실패했습니다.";
-    }
-  },
-
-  getAllNeuronValleyCards: async (customId) => {
-    try {
-      const response = await API.get(`/custom-element/${customId}/read-all-neuronvalley-cards`);
-      return response;
-    } catch (error) {
-      throw error || "뉴런밸리 카드 목록을 불러오는데 실패했습니다.";
-    }
-  },
-
   getCardById: async (customId, cardId) => {
     try {
-      const response = await API.get(`/custom-element/${customId}/read/${cardId}`);
+      const response = await API.get(`/custom-element/card/${customId}/read/${cardId}`);
       return response;
     } catch (error) {
       throw error || "카드 정보를 불러오는데 실패했습니다.";
@@ -260,7 +224,7 @@ export const CustomAPI = {
 
   updateCard: async (customId, cardId, cardData) => {
     try {
-      const response = await API.put(`/custom-element/${customId}/update/${cardId}`, cardData);
+      const response = await API.put(`/custom-element/card/${customId}/update/${cardId}`, cardData);
       return response;
     } catch (error) {
       throw error || "카드 수정에 실패했습니다.";
@@ -269,7 +233,7 @@ export const CustomAPI = {
 
   deleteCard: async (customId, cardId) => {
     try {
-      const response = await API.delete(`/custom-element/${customId}/delete/${cardId}`);
+      const response = await API.delete(`/custom-element/card/${customId}/delete/${cardId}`);
       return response;
     } catch (error) {
       throw error || "카드 삭제에 실패했습니다.";
