@@ -27,9 +27,10 @@ public class Player {
 	private Set<Card> cardOwned = new HashSet<>();
 	private List<Integer> landOwned = new ArrayList<>();
 
+	final static int INITIAL_BALANCE = 50;
+	final static int SALARY = 20;
 
 	public static Player init(User user) {
-		final int INITIAL_BALANCE = 50000000;
 		final int INITIAL_POSITION = 0;
 		return Player.builder()
 				.playerId(Math.toIntExact(user.getUserId()))
@@ -48,7 +49,7 @@ public class Player {
 		int prevPosition = this.position;
 		int nextPosition = (this.position + sum) % 40;
 		if (this.position + sum >= 40) {
-			this.balance += 200;
+			this.balance += SALARY;
 		}
 		this.position = nextPosition;
 		return new DiceRollResult(this.playerId, prevPosition, nextPosition, isDouble,
