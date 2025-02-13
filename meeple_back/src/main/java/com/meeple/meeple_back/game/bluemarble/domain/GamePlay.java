@@ -176,7 +176,27 @@ public class GamePlay {
 			return ActionType.DRAW_CARD;
 		}
 
+		if (TileType.BLACK_HOLE == currentTile.getType()) {
+			Optional<Tile> tileWillRemove = blackHoleAction(currentPlayer);
+			// 플레이어의 완성된 기지중 하나 없앤다.
+			tileWillRemove.ifPresent(tile -> tile.update(0, 0));
+			// 플레이어의 블랙홀 카운트를 3으로 설정한다.
+			currentPlayer.removeCardOwnedByTileId(tileWillRemove.get().getId());
+			final int REST_TURN_COUNT = 3;
+			currentPlayer.setBlackHoleCount(REST_TURN_COUNT);
+			return ActionType.CHECK_END;
+		}
+
 		return ActionType.CHECK_END;
+	}
+
+	private Optional<Tile> blackHoleAction(Player currentPlayer) {
+		for (Tile tile : this.board) {
+			if (tile.getOwnerId() == currentPlayer.getPlayerId() && tile.isHasBase()) {
+				return Optional.of(tile);
+			}
+		}
+		return Optional.empty();
 	}
 
 	/**
@@ -509,5 +529,15 @@ public class GamePlay {
 	 */
 	public TurnEndResponse turnEnd(TurnEndRequest turnEndRequest) {
 		return turnManager.endTurn(board);
+	}
+
+	public ActionType checkBlackHole() {
+// 현재 플레이어의 블랙홀 카운트가 0보다 크면
+		// 현재 플레이어의 블랙홀 카운트 감소하기.
+		// 다음턴을 Turn End로 두기.
+		if (turnManager.checkPlayerIsInBlackHole()) {
+			return ActionType.CHECK_END;
+		}
+		return ActionType.ROLL_DICE;
 	}
 }

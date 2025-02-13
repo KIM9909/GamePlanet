@@ -27,6 +27,8 @@ public class Player {
 	private Set<Card> cardOwned = new HashSet<>();
 	private List<Integer> landOwned = new ArrayList<>();
 
+	private int blackHoleCount;
+
 	final static int INITIAL_BALANCE = 50;
 	final static int SALARY = 20;
 
@@ -39,6 +41,7 @@ public class Player {
 				.balance(INITIAL_BALANCE)
 				.cardOwned(new HashSet<>())
 				.landOwned(new ArrayList<>())
+				.blackHoleCount(0)
 				.build();
 	}
 
@@ -114,5 +117,14 @@ public class Player {
 
 	public void removeCardOwned(SeedCertificateCard card) {
 		this.cardOwned.remove(card);
+	}
+
+	public void removeCardOwnedByTileId(int id) {
+		Card cardToRemove = cardOwned.stream().filter(card -> card.getNumber() == id).findFirst().orElseThrow();
+		this.cardOwned.remove(cardToRemove);
+	}
+
+	public void decreaseBlackholeCount() {
+		this.blackHoleCount--;
 	}
 }

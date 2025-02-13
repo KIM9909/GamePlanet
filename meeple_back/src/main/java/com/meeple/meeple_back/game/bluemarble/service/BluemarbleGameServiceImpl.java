@@ -3,16 +3,8 @@ package com.meeple.meeple_back.game.bluemarble.service;
 import com.meeple.meeple_back.common.domain.exception.ResourceNotFoundException;
 import com.meeple.meeple_back.game.bluemarble.controller.port.BluemarbleGameService;
 import com.meeple.meeple_back.game.bluemarble.controller.request.DiceRollRequest;
-import com.meeple.meeple_back.game.bluemarble.controller.response.BuildBaseResponse;
-import com.meeple.meeple_back.game.bluemarble.controller.response.BuyLandResponse;
-import com.meeple.meeple_back.game.bluemarble.controller.response.DiceRollResponse;
-import com.meeple.meeple_back.game.bluemarble.controller.response.DrawCardResponse;
-import com.meeple.meeple_back.game.bluemarble.controller.response.GamePlayResponse;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuildBaseRequest;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.request.PayFeeRequest;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.request.TurnEndRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.response.*;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.*;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.PayFeeResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
 import com.meeple.meeple_back.game.bluemarble.domain.ActionType;
@@ -21,11 +13,12 @@ import com.meeple.meeple_back.game.bluemarble.domain.GamePlayCreate;
 import com.meeple.meeple_back.game.bluemarble.domain.Player;
 import com.meeple.meeple_back.game.bluemarble.service.port.BluemarbleGameRepository;
 import com.meeple.meeple_back.user.service.UserService;
-import java.util.List;
-import java.util.logging.Logger;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.logging.Logger;
 
 @Service
 @RequiredArgsConstructor
@@ -110,7 +103,8 @@ public class BluemarbleGameServiceImpl implements BluemarbleGameService {
 	@Transactional
 	public GamePlayResponse startTurn(int roomId) {
 		GamePlay gamePlay = getValidateGamePlay(roomId);
-		return GamePlayResponse.from(gamePlay, ActionType.ROLL_DICE);
+		ActionType actionType = gamePlay.checkBlackHole();
+		return GamePlayResponse.from(gamePlay, actionType);
 	}
 
 

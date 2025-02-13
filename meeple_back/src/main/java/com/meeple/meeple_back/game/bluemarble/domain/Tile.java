@@ -28,6 +28,11 @@ public class Tile {
 		this.price = price;
 	}
 
+	public void update(int ownerId, int tollPrice) {
+		this.ownerId = ownerId;
+		this.tollPrice = tollPrice;
+	}
+
 	public void addBase() {
 		this.hasBase = true;
 	}

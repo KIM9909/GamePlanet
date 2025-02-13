@@ -158,11 +158,15 @@ public class TurnManager {
 						&& tile.isHasBase())
 				.count();
 		if (initialPlayerCount == 4) {
-			return currentPlayerBaseCount >= 6;
+			//6
+			return currentPlayerBaseCount >= 2;
 		} else if (initialPlayerCount == 3) {
-			return currentPlayerBaseCount >= 8;
+
+			//8
+			return currentPlayerBaseCount >= 2;
 		} else if (initialPlayerCount == 2) {
-			return currentPlayerBaseCount >= 10;
+			//10
+			return currentPlayerBaseCount >= 2;
 		}
 		return false;
 	}
@@ -212,5 +216,14 @@ public class TurnManager {
 
 	private Player getCurrentPlayer() {
 		return players.get(currentPlayerIndex);
+	}
+
+	public boolean checkPlayerIsInBlackHole() {
+		Player player = getCurrentPlayer();
+		if (player.getBlackHoleCount() > 0) {
+			player.decreaseBlackholeCount();
+			return true;
+		}
+		return false;
 	}
 }
