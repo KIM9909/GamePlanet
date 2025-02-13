@@ -174,11 +174,11 @@ export const GameInfoAPI = {
 
   //글 수정
 
-  updateCommunityPost: async (postId, postData) => {
+  updateCommunityPost: async (gameCommunityId, postData) => {
     try {
       const response = await axios.put(
-        `${GAMEINFO_API_BASE_URL}/community/${postId}`,
-        postData
+        `${GAMEINFO_API_BASE_URL}/community/${gameCommunityId}`,
+        {gameCommunityContent:postData.gameCommunityContent}
       );
       return response.data;
     } catch (error) {
@@ -188,10 +188,10 @@ export const GameInfoAPI = {
 
   //글 삭제
 
-  deleteCommunityPost: async (postId) => {
+  deleteCommunityPost: async (gameCommunityId) => {
     try {
       const response = await axios.delete(
-        `${GAMEINFO_API_BASE_URL}/community/${postId}`
+        `${GAMEINFO_API_BASE_URL}/community/${gameCommunityId}`
       );
       return response.data;
     } catch (error) {
@@ -219,7 +219,7 @@ export const GameInfoAPI = {
     try {
       const response = await axios.put(
         `${GAMEINFO_API_BASE_URL}/comment/${commentId}`,
-        commentData
+        {content: commentData.content}
       );
       return response.data;
     } catch (error) {
@@ -229,10 +229,10 @@ export const GameInfoAPI = {
 
   //댓글 삭제
 
-  deleteComment: async (commentId) => {
+  deleteComment: async (gameCommunityCommentId) => {
     try {
       const response = await axios.delete(
-        `${GAMEINFO_API_BASE_URL}/comment/${commentId}`
+        `${GAMEINFO_API_BASE_URL}/comment/${gameCommunityCommentId}`
       );
       return response.data;
     } catch (error) {
