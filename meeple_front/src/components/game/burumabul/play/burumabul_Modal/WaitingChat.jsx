@@ -54,7 +54,7 @@ const WaitingChat = ({ roomId, players }) => {
       console.log("현재 유저 목록:", players);
       console.log("닉네임 찾기 결과:", senderName);
     }
-  }, [chatMessage, players, userId]);
+  }, [chatMessage, players]);
 
   // 새 메시지가 추가될 때마다 스크롤을 아래로 이동
   useEffect(() => {

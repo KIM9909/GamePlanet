@@ -26,7 +26,7 @@ const ArticleCreate = ({ gameId, onCancel }) => {
     }
 
     try {
-      await axios.post(`https://boardjjigae.duckdns.org/api/game-info/community`, {
+      await axios.post(`https://game-planet.duckdns.org/api/game-info/community`, {
         gameInfoId: gameId,
         title: input.title,
         content: input.content,

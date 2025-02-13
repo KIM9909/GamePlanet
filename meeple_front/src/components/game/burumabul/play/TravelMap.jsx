@@ -221,8 +221,6 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
     socketPayTollData,
     setBuyLandSocketData,
     setBuildBaseSocketData,
-    socketDrawCardData,
-    socketPickedCard,
     setSocketDrawCardData,
     setSocketPayTollData,
     socketTollPrice,
@@ -233,11 +231,17 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
     socketDouble,
     socketCurrentRound,
     socketRoll,
+    socketDrawCardData,
+    socketPickedCard,
+    socketDrawPrevPosition,
+    socketDrawNextPosition,
+    socketDrawPrevBalance,
+    socketDrawNextBalance,
   } = useContext(SocketContext);
   const [playData, setPlayData] = useState(gameData);
 
   useEffect(() => {
-    // console.log(buyLandSocketData);
+    console.log(buyLandSocketData);
   }, [buyLandSocketData]);
 
   // 플레이어 정보
@@ -251,8 +255,6 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
 
   const [cards, setCards] = useState(null);
   const [board, setBoard] = useState(null);
-  const [updatePlayerList, setUpdatePlayerList] = useState(socketUserUpdate);
-  const [updateTileList, setUpdateTileList] = useState(socketTileUpdate);
 
   const [showBuyLand, setShowBuyLand] = useState(false);
   const [showBuildBase, setShowBuildBase] = useState(false);
@@ -326,9 +328,9 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
           return [...newBoard];
         });
       }
-      setBuyLandSocketData(null);
+      // setBuyLandSocketData(null);
     }
-  }, [buyLandSocketData, setPlayers, setBoard]);
+  }, [buyLandSocketData]);
 
   useEffect(() => {
     if (buildBaseSocketData) {
@@ -389,9 +391,9 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
           return base;
         });
       });
-      setBuildBaseSocketData(null);
+      // setBuildBaseSocketData(null);
     }
-  }, [buildBaseSocketData, players, colors]);
+  }, [buildBaseSocketData]);
 
   // 통행료 지불 후 업데이트 정보
   const [tollPrice, setTollPrice] = useState(null);
@@ -443,7 +445,46 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
     }
   }, [socketPayTollData]);
 
-  // 카드 뽑고 나서 플레이어 업데이트
+  // 카드 뽑고 나서 정보 업데이트
+
+  const [pickedCardInfo, setPickedCardInfo] = useState(socketPickedCard);
+  const [drawPrevPosition, setDrawPrevPosition] = useState(
+    socketDrawPrevPosition
+  );
+
+  const [drawNextPosition, setDrawNextPosition] = useState(
+    socketDrawNextPosition
+  );
+  const [drawPrevBalance, setDrawPrevBalance] = useState(socketDrawPrevBalance);
+  const [drawNextBalance, setDrawNextBalance] = useState(socketDrawNextBalance);
+
+  const prevPositionRef = useRef(drawPrevPosition);
+  const nextPositionRef = useRef(drawNextPosition);
+
+  useEffect(() => {
+    if (
+      socketDrawCardData &&
+      prevPositionRef.current !== socketDrawPrevPosition &&
+      nextPositionRef.current !== socketDrawNextPosition
+    ) {
+      console.log("socketPickedCard:", socketPickedCard);
+      setPickedCardInfo(socketPickedCard);
+      setDrawPrevPosition(socketDrawPrevPosition);
+      setDrawNextPosition(socketDrawNextPosition);
+      setDrawPrevBalance(socketDrawPrevBalance);
+      setDrawNextBalance(socketDrawNextBalance);
+
+      // 🔵 업데이트된 값을 useRef에 저장 (불필요한 재렌더링 방지)
+      prevPositionRef.current = socketDrawPrevPosition;
+      nextPositionRef.current = socketDrawNextPosition;
+    }
+  }, [
+    socketDrawCardData,
+    socketPickedCard,
+    socketDrawPrevPosition,
+    socketDrawNextPosition,
+  ]);
+
   useEffect(() => {
     if (socketDrawCardData) {
       const { player } = socketDrawCardData;
@@ -466,18 +507,19 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
           return newPlayers;
         });
       }
+      // setSocketDrawCardData(null);
     }
   }, [socketDrawCardData]);
 
   // 상태 변화를 모니터링하기 위한 별도의 useEffect
-  useEffect(() => {
-    if (buyLandSocketData) {
-      // console.log("상태 업데이트 확인:");
-      // console.log("Updated Players:", players);
-      // console.log("Updated Cards:", cards);
-      // console.log("Updated Board:", board);
-    }
-  }, [players, board, cards, buyLandSocketData, buildBaseSocketData]);
+  // useEffect(() => {
+  //   if (buyLandSocketData) {
+  //     console.log("상태 업데이트 확인:");
+  //     console.log("Updated Players:", players);
+  //     console.log("Updated Cards:", cards);
+  //     console.log("Updated Board:", board);
+  //   }
+  // }, [ buildBaseSocketData]);
 
   // 색상
 
@@ -503,8 +545,10 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
 
   // 나는 몇 번째 순서인지
   const myIndex = players.findIndex((player) => player.playerId === userId);
-  console.log(players);
-  console.log(myIndex);
+  // useEffect(() => {
+  //   console.log("players:", players);
+  //   console.log("myIndex:", myIndex);
+  // }, [myIndex, players]);
 
   const [nextxTurn, setNextTurn] = useState(Number(currentPlayerIndex) + 1);
   useEffect(() => {
@@ -583,8 +627,8 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
       console.log("턴을 시작합니다!!!");
       turnStart();
     }
+    console.log("현재 순서랑 내 차례", currentPlayerIndex, myIndex);
   }, [nextAction]);
-  console.log("현재 순서랑 내 차례", currentPlayerIndex, myIndex);
 
   // 주사위 굴리기
   useEffect(() => {
@@ -624,6 +668,8 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
       nextAction &&
       nextAction === "ROLL_DICE" &&
       hasRolledDice &&
+      firstDice !== null &&
+      secondDice !== null &&
       myIndex === currentPlayerIndex
     ) {
       handleDiceResult();
@@ -747,7 +793,9 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
     if (
       nextAction &&
       nextAction === "CHECK_END" &&
-      myIndex === currentPlayerIndex
+      myIndex === currentPlayerIndex &&
+      !drawIsAnimating &&
+      !isCardDrawn
     ) {
       try {
         const endInfo = {
@@ -788,28 +836,108 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
   }, [isMovementComplete, nextAction]);
 
   // 카드 뽑기 -> 모달
+  const [isCardDrawn, setIsCardDrawn] = useState(false);
+
   useEffect(() => {
-    if (
-      nextAction &&
-      nextAction === "DRAW_CARD" &&
-      myIndex === currentPlayerIndex
-    ) {
-      try {
-        const drawInfo = {
-          playerId: currentPlayer.playerId,
-          tileId: nextPosition,
-        };
-        drawCard(drawInfo);
-        console.log("카드 뽑기 성공");
-      } catch (error) {
-        console.error("카드 뽑기 실패 :", error);
-        setSocketNext(null);
+    const handleDrawCard = async () => {
+      if (
+        nextAction &&
+        nextAction === "DRAW_CARD" &&
+        myIndex === currentPlayerIndex &&
+        !isCardDrawn &&
+        isMovementComplete
+      ) {
+        try {
+          setIsCardDrawn(true);
+          const drawInfo = {
+            playerId: currentPlayer.playerId,
+            tileId: nextPosition,
+          };
+          drawCard(drawInfo);
+          console.log("카드 뽑기 성공");
+          setShowPickedCardModal(true);
+        } catch (error) {
+          console.error("카드 뽑기 실패 :", error);
+          setSocketNext(null);
+          setIsCardDrawn(false);
+        }
       }
-      if (isMovementComplete) {
-        setShowPickedCardModal(true);
+    };
+    handleDrawCard();
+  }, [nextAction, isMovementComplete]);
+
+  // 카드 뽑고 나서 position이 달라질 경우, 왔다갔다 이동하는 로직
+
+  const [currentMovePosition, setCurrentMovePosition] =
+    useState(drawPrevPosition);
+  const [drawIsMovementComplete, setDrawIsMovementComplete] = useState(true);
+  const [drawIsAnimating, setDrawIsAnimating] = useState(false);
+
+  useEffect(() => {
+    if (socketDrawCardData) {
+      if (
+        drawPrevPosition &&
+        drawNextPosition &&
+        drawPrevPosition !== drawNextPosition
+      ) {
+        const playerIndex = players.findIndex(
+          (player) => player.playerId === socketDrawCardData.player.playerId
+        );
+        const startPosition = playersPositions[playerIndex];
+        const targetPosition = playersPositions[playerIndex];
+        setDrawIsMovementComplete(false);
+        setDrawIsAnimating(true);
+
+        if (drawPrevPosition < drawNextPosition) {
+          const animateMovement = async () => {
+            let current = startPosition;
+            while (current !== targetPosition) {
+              current = (current + 1) % totalCells;
+              setPlayersPositions((prev) => {
+                const newPositions = [...prev];
+                newPositions[playerIndex] = current;
+                return newPositions;
+              });
+              await new Promise((resolve) => setTimeout(resolve, 300));
+            }
+            setDrawIsAnimating(false);
+            setTimeout(() => setDrawIsMovementComplete(true), 200);
+          };
+          animateMovement();
+          setNextAction("CHECK_END");
+        } else if (drawPrevPosition > drawNextPosition) {
+          const animateMovement = async () => {
+            let current = startPosition;
+            while (current !== targetPosition) {
+              current = (current - 1 + totalCells) % totalCells;
+              setPlayersPositions((prev) => {
+                const newPositions = [...prev];
+                newPositions[playerIndex] = current;
+                return newPositions;
+              });
+              await new Promise((resolve) => setTimeout(resolve, 300));
+            }
+            setIsAnimating(false);
+            setTimeout(() => setIsMovementComplete(true), 200);
+          };
+          animateMovement();
+          setNextAction("CHECK_END");
+        }
       }
     }
-  }, [isMovementComplete, nextAction]);
+  }, [socketDrawCardData, drawPrevPosition, drawNextPosition]);
+
+  // // 카드 뽑고 나서 통행료 지불 or 돈 받음
+  // useEffect(() => {
+  //   if (!drawIsMovementComplete) {
+  //     return
+  //   }
+  //   if (socketDrawCardData) {
+  //     if (drawPrevBalance && drawNextBalance && drawPrevBalance !== drawNextPosition) {
+
+  //     }
+  //   }
+  // })
 
   const closeBuyLand = () => {
     setShowBuyLand(false);
@@ -833,7 +961,10 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
 
   const closePickedCard = () => {
     setShowPickedCardModal(false);
-    setSocketDrawCardData(null);
+    setIsCardDrawn(false);
+    setNextAction("CHECK_END");
+    // setSocketDrawCardData(null);
+    // setSocketNext("CHECK_END");
   };
 
   // 플레이어 위치 초기화
@@ -1404,7 +1535,7 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
               setIsBuyLand={setIsBuyLand}
               onClose={closeBuyLand}
               cardId={showCardId}
-              cardInfo={cards?.find((card) => card.id === showCardId)}
+              cardInfo={cards?.find((card) => card.number === showCardId)}
             />
           </div>,
           document.body
@@ -1444,7 +1575,7 @@ const TravelMap = ({ onBasesInfo, gameData, roomId }) => {
           <div className="fixed inset-0 z-50 w-2/3 text-center flex items-center justify-center">
             <PickedCardModal
               onClose={closePickedCard}
-              cardInfo={socketPickedCard}
+              cardInfo={pickedCardInfo}
             />
           </div>,
           document.body

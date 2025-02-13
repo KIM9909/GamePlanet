@@ -68,7 +68,7 @@ public class ReportSerivceImpl implements ReportService {
         mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
 
         return reportList.stream().map(report -> mapper
-            .map(report, ResponseReportList.class))
+                .map(report, ResponseReportList.class))
             .collect(Collectors.toList());
     }
 
@@ -88,7 +88,6 @@ public class ReportSerivceImpl implements ReportService {
     public ResponseProcessReport processReport(RequestProcessReport request) {
         Report report = reportRepository.findById(request.getReportId())
             .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 신고입니다."));
-
 
         if (request.getReportResult().equals("PASS")) {
             report.setProcessStatus("PASS");
@@ -164,11 +163,9 @@ public class ReportSerivceImpl implements ReportService {
                 report.setReportMemo(request.getReportMemo());
             }
 
-            if (report.getUser().getUserDeletedAt() != null) {
-                User user = report.getUser();
-                user.setUserDeletedAt(null);
-                userRepository.save(user);
-            }
+            User user = report.getUser();
+            user.setUserDeletedAt(null);
+            userRepository.save(user);
 
             reportProcessRepository.delete(reportProcess);
 

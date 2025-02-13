@@ -58,7 +58,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     setCurrentPlayerIndex(currentPlayerSocketIndex);
   }, [currentPlayerSocketIndex]);
 
-  console.log("소켓에서 받아오는 현재 플레이어 순서", currentPlayerIndex);
+  // console.log("소켓에서 받아오는 현재 플레이어 순서", currentPlayerIndex);
 
   // 오픈비두 세션 아이디 저장하기
   const [burumabulOpenViduId, setBurumabulOpenVidu] = useState(
@@ -70,7 +70,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     }
   }, [socketBurumabulOpenVidu]);
 
-  console.log(burumabulOpenViduId);
+  // console.log(burumabulOpenViduId);
 
   const currentPlayer = players?.[currentPlayData?.currentPlayerIndex];
   // console.log("현재 플레이어: ", currentPlayer);
@@ -120,7 +120,6 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     setFirstDice(socketFirstDice);
     setSecondDice(socketSecondDice);
     setIsDouble(socketDouble);
-    setNextAction(socketNext);
   }, [socketFirstDice, socketSecondDice, socketDouble, socketNext]);
 
   // 현재 라운드
@@ -171,7 +170,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
           return newBoard;
         });
       }
-      setBuyLandSocketData(null);
+      // setBuyLandSocketData(null);
     }
   }, [buyLandSocketData]);
 
@@ -217,7 +216,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
           return newBoard;
         });
       }
-      setBuildBaseSocketData(null);
+      // setBuildBaseSocketData(null);
     }
   }, [buildBaseSocketData, players, colors]);
 

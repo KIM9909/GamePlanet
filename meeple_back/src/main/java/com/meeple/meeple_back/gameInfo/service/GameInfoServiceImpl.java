@@ -28,6 +28,7 @@ import com.meeple.meeple_back.user.model.User;
 import com.meeple.meeple_back.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
@@ -56,8 +57,8 @@ public class GameInfoServiceImpl implements GameInfoService {
         List<GameInfo> gameInfoList = gameInfoRepository.findAll();
 
         ResponseGameInfoList response = ResponseGameInfoList.builder()
-                .gameInfoList(gameInfoList)
-                .build();
+            .gameInfoList(gameInfoList)
+            .build();
 
         return response;
     }
@@ -68,17 +69,17 @@ public class GameInfoServiceImpl implements GameInfoService {
         Game game = gameRepository.findById(request.getGameId()).get();
 
         GameInfo gameInfo = GameInfo.builder()
-                .gameInfoContent(request.getGameInfoContent())
-                .gameRule(request.getGameRule())
-                .game(game)
-                .build();
+            .gameInfoContent(request.getGameInfoContent())
+            .gameRule(request.getGameRule())
+            .game(game)
+            .build();
 
         GameInfo createdGameInfo = gameInfoRepository.save(gameInfo);
 
         ResponseCreateGameInfo response = ResponseCreateGameInfo.builder()
-                .gameInfoId(createdGameInfo.getGameInfoId())
-                .game(createdGameInfo.getGame())
-                .build();
+            .gameInfoId(createdGameInfo.getGameInfoId())
+            .game(createdGameInfo.getGame())
+            .build();
 
         return response;
     }
@@ -88,12 +89,12 @@ public class GameInfoServiceImpl implements GameInfoService {
         GameInfo gameInfo = gameInfoRepository.findById(gameInfoId).get();
 
         ResponseGameInfo response = ResponseGameInfo.builder()
-                .gameInfoId(gameInfo.getGameInfoId())
-                .gameInfoContent(gameInfo.getGameInfoContent())
-                .gameRule(gameInfo.getGameRule())
-                .gameInfoFile(gameInfo.getGameInfoFile())
-                .game(gameInfo.getGame())
-                .build();
+            .gameInfoId(gameInfo.getGameInfoId())
+            .gameInfoContent(gameInfo.getGameInfoContent())
+            .gameRule(gameInfo.getGameRule())
+            .gameInfoFile(gameInfo.getGameInfoFile())
+            .game(gameInfo.getGame())
+            .build();
 
         return response;
     }
@@ -102,7 +103,7 @@ public class GameInfoServiceImpl implements GameInfoService {
     @Transactional
     public ResponseUpdateGameInfo updateGameInfo(int gameInfoId, RequestUpdateGameInfo request) {
         GameInfo gameInfo = gameInfoRepository.findById(gameInfoId)
-                .orElseThrow(() -> new EntityNotFoundException("게임 정보를 찾을 수 없습니다."));
+            .orElseThrow(() -> new EntityNotFoundException("게임 정보를 찾을 수 없습니다."));
 
         if (request.getGameInfoContent() != null) {
             gameInfo.setGameInfoContent(request.getGameInfoContent());
@@ -120,23 +121,23 @@ public class GameInfoServiceImpl implements GameInfoService {
     @Override
     public ResponseDeleteGameInfo deleteGameInfo(int gameInfoId) {
         GameInfo gameInfo = gameInfoRepository.findById(gameInfoId)
-                .orElseThrow(() -> new EntityNotFoundException("게임 정보를 찾을 수 없습니다."));
+            .orElseThrow(() -> new EntityNotFoundException("게임 정보를 찾을 수 없습니다."));
 
         try {
             gameInfoRepository.delete(gameInfo);
 
             ResponseDeleteGameInfo response = ResponseDeleteGameInfo
-                    .builder()
-                    .code(200)
-                    .message("삭제 성공")
-                    .build();
+                .builder()
+                .code(200)
+                .message("삭제 성공")
+                .build();
 
             return response;
         } catch (Exception e) {
             ResponseDeleteGameInfo response = ResponseDeleteGameInfo.builder()
-                    .code(500)
-                    .message("삭제 실패")
-                    .build();
+                .code(500)
+                .message("삭제 실패")
+                .build();
             return response;
         }
     }
@@ -144,36 +145,36 @@ public class GameInfoServiceImpl implements GameInfoService {
     @Override
     public ResponseCreateReview createReview(RequestCreateReview request) {
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 유저입니다."));
+            .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 유저입니다."));
 
         GameInfo gameInfo = gameInfoRepository.findById(request.getGameInfoId())
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게임 정보입니다."));
+            .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게임 정보입니다."));
 
         boolean reviewExists = gameReviewRepository.existsByUser_UserId(request.getUserId());
 
         if (reviewExists) {
             ResponseCreateReview response = ResponseCreateReview.builder()
-                    .code(400)
-                    .message("이미 리뷰를 작성하셨습니다.")
-                    .build();
+                .code(400)
+                .message("이미 리뷰를 작성하셨습니다.")
+                .build();
 
             return response;
         }
 
         GameReview gameReview = GameReview.builder()
-                .gameReviewContent(request.getGameReviewContent())
-                .gameReviewStar(request.getGameReviewStar())
-                .gameInfo(gameInfo)
-                .user(user)
-                .build();
+            .gameReviewContent(request.getGameReviewContent())
+            .gameReviewStar(request.getGameReviewStar())
+            .gameInfo(gameInfo)
+            .user(user)
+            .build();
 
         GameReview savedReview = gameReviewRepository.save(gameReview);
 
         ResponseCreateReview response = ResponseCreateReview.builder()
-                .reviewId(savedReview.getGameReviewId())
-                .user(user)
-                .gameInfo(gameInfo)
-                .build();
+            .reviewId(savedReview.getGameReviewId())
+            .user(user)
+            .gameInfo(gameInfo)
+            .build();
 
         return response;
     }
@@ -183,15 +184,14 @@ public class GameInfoServiceImpl implements GameInfoService {
         List<GameReview> gameReviews = gameReviewRepository.findByGameInfo_GameInfoId(gameInfoId);
 
         double averageStar = gameReviews.stream()
-                .mapToInt(GameReview::getGameReviewStar)
-                .average()
-                .orElse(0.0);
-
+            .mapToInt(GameReview::getGameReviewStar)
+            .average()
+            .orElse(0.0);
 
         ResponseReviewList response = ResponseReviewList.builder()
-                .reviewList(gameReviews)
-                .starAvg(averageStar)
-                .build();
+            .reviewList(gameReviews)
+            .starAvg(averageStar)
+            .build();
 
         return response;
     }
@@ -199,7 +199,7 @@ public class GameInfoServiceImpl implements GameInfoService {
     @Override
     public void deleteReview(int reviewId) {
         GameReview gameReview = gameReviewRepository.findById(reviewId)
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 리뷰입니다"));
+            .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 리뷰입니다"));
 
         gameReviewRepository.delete(gameReview);
     }
@@ -207,7 +207,7 @@ public class GameInfoServiceImpl implements GameInfoService {
     @Override
     public ResponseUpdateReview updateReview(int reviewId, RequestUpdateReview request) {
         GameReview gameReview = gameReviewRepository.findById(reviewId)
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 리뷰입니다"));
+            .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 리뷰입니다"));
 
         if (!request.getGameReviewContent().equals(gameReview.getGameReviewContent())) {
             gameReview.setGameReviewContent(request.getGameReviewContent());
@@ -219,14 +219,13 @@ public class GameInfoServiceImpl implements GameInfoService {
 
         GameReview savedGameReview = gameReviewRepository.save(gameReview);
 
-
         ResponseUpdateReview response = ResponseUpdateReview.builder()
-                .gameReviewId(savedGameReview.getGameReviewId())
-                .gameReviewContent(savedGameReview.getGameReviewContent())
-                .gameReviewStar(savedGameReview.getGameReviewStar())
-                .gameInfo(savedGameReview.getGameInfo())
-                .user(savedGameReview.getUser())
-                .build();
+            .gameReviewId(savedGameReview.getGameReviewId())
+            .gameReviewContent(savedGameReview.getGameReviewContent())
+            .gameReviewStar(savedGameReview.getGameReviewStar())
+            .gameInfo(savedGameReview.getGameInfo())
+            .user(savedGameReview.getUser())
+            .build();
 
         return response;
     }
@@ -236,10 +235,10 @@ public class GameInfoServiceImpl implements GameInfoService {
         GameCommunity gameCommunity = new GameCommunity();
 
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 회원"));
+            .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 회원"));
 
         GameInfo gameInfo = gameInfoRepository.findById(request.getGameInfoId())
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게임 정보"));
+            .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게임 정보"));
 
         gameCommunity.setUser(user);
         gameCommunity.setGameInfo(gameInfo);
@@ -249,11 +248,11 @@ public class GameInfoServiceImpl implements GameInfoService {
         GameCommunity savedCommunity = gameCommunityRepository.save(gameCommunity);
 
         ResponseCreateCommunity response = ResponseCreateCommunity.builder()
-                .gameCommunityId(savedCommunity.getGameCommunityId())
-                .createAt(savedCommunity.getCreateAt())
-                .user(savedCommunity.getUser())
-                .gameInfo(savedCommunity.getGameInfo())
-                .build();
+            .gameCommunityId(savedCommunity.getGameCommunityId())
+            .createAt(savedCommunity.getCreateAt())
+            .user(savedCommunity.getUser())
+            .gameInfo(savedCommunity.getGameInfo())
+            .build();
 
         return response;
     }
@@ -261,9 +260,8 @@ public class GameInfoServiceImpl implements GameInfoService {
     @Override
     public List<ResponseCommunityList> getCommunityList(int gameInfoId) {
         List<GameCommunity> gameCommunityList = gameCommunityRepository
-                .findByGameInfo_GameInfoIdAndDeletedAtIsNull(gameInfoId);
+            .findByGameInfo_GameInfoIdAndDeletedAtIsNull(gameInfoId);
         mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-
 
         return gameCommunityList.stream().map(gameCommunity -> {
             // 게시글 DTO 변환
@@ -277,7 +275,8 @@ public class GameInfoServiceImpl implements GameInfoService {
 
             // 해당 게시글의 댓글 리스트 조회
             List<GameCommunityComment> commentList = gameCommunityCommentRepository
-                    .findByGameCommunity_GameCommunityIdAndDeletedAtIsNull(gameCommunity.getGameCommunityId());
+                .findByGameCommunity_GameCommunityIdAndDeletedAtIsNull(
+                    gameCommunity.getGameCommunityId());
 
             // 댓글 DTO 변환
             List<ResponseCommentList> responseComments = commentList.stream().map(comment -> {
@@ -305,13 +304,18 @@ public class GameInfoServiceImpl implements GameInfoService {
     @Override
     public ResponseCommunity findCommunity(int gameInfoId, int gameCommunityId) {
         GameCommunity gameCommunity = gameCommunityRepository.findById(gameCommunityId)
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 커뮤니티 게시글입니다."));
+            .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 커뮤니티 게시글입니다."));
+
+        List<GameCommunityComment> gameCommunityComment = gameCommunityCommentRepository
+            .findByGameCommunity_GameCommunityIdAndDeletedAtIsNull(
+                gameCommunity.getGameCommunityId());
 
         ResponseCommunity response = ResponseCommunity.builder()
-                .code(200)
-                .message("조회 성공")
-                .gameCommunity(gameCommunity)
-                .build();
+            .code(200)
+            .message("조회 성공")
+            .gameCommunity(gameCommunity)
+            .commentList(gameCommunityComment)
+            .build();
 
         return response;
     }
@@ -319,32 +323,33 @@ public class GameInfoServiceImpl implements GameInfoService {
     @Override
     public ResponseCreateComment createComment(RequestCreateComment request) {
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 회원"));
+            .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 회원"));
         GameCommunity gameCommunity = gameCommunityRepository.findById(request.getGameCommunityId())
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게시글"));
+            .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게시글"));
 
         GameCommunityComment comment = GameCommunityComment.builder()
-                .user(user)
-                .gameCommunityCommentContent(request.getContent())
-                .gameCommunity(gameCommunity)
-                .createAt(Date.valueOf(LocalDate.now()))
-                .build();
+            .user(user)
+            .gameCommunityCommentContent(request.getContent())
+            .gameCommunity(gameCommunity)
+            .createAt(Date.valueOf(LocalDate.now()))
+            .build();
 
         GameCommunityComment savedComment = gameCommunityCommentRepository.save(comment);
 
         ResponseCreateComment response = ResponseCreateComment.builder()
-                .gameCommunityCommentId(savedComment.getGameCommunityCommentId())
-                .createdAt(savedComment.getCreateAt())
-                .userName(user.getUserNickname())
-                .build();
+            .gameCommunityCommentId(savedComment.getGameCommunityCommentId())
+            .createdAt(savedComment.getCreateAt())
+            .userName(user.getUserNickname())
+            .build();
 
         return response;
     }
 
     @Override
-    public ResponseUpdateCommunity updateCommunity(int gameCommunityId, RequestUpdateCommunity request) {
+    public ResponseUpdateCommunity updateCommunity(int gameCommunityId,
+        RequestUpdateCommunity request) {
         GameCommunity gameCommunity = gameCommunityRepository.findById(gameCommunityId)
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게시글입니다."));
+            .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게시글입니다."));
 
         if (!request.getGameCommunityContent().equals(gameCommunity.getGameCommunityContent())) {
             gameCommunity.setGameCommunityContent(request.getGameCommunityContent());
@@ -353,9 +358,9 @@ public class GameInfoServiceImpl implements GameInfoService {
         gameCommunityRepository.save(gameCommunity);
 
         ResponseUpdateCommunity response = ResponseUpdateCommunity.builder()
-                .code(200)
-                .message("성공적으로 업데이트 됨")
-                .build();
+            .code(200)
+            .message("성공적으로 업데이트 됨")
+            .build();
 
         return response;
     }
@@ -363,25 +368,27 @@ public class GameInfoServiceImpl implements GameInfoService {
     @Override
     public ResponseDeleteCommunity deleteCommunity(int gameCommunityId) {
         GameCommunity gameCommunity = gameCommunityRepository.findById(gameCommunityId)
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게시글입니다."));
+            .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게시글입니다."));
 
-        gameCommunity.setDeletedAt(Date.valueOf(LocalDate.now()));
 
+        gameCommunity.setDeletedAt(LocalDateTime.now());
         GameCommunity deletedCommunity = gameCommunityRepository.save(gameCommunity);
 
         ResponseDeleteCommunity response = ResponseDeleteCommunity.builder()
-                .code(200)
-                .message("성공적으로 삭제 됨")
-                .deletedDate(deletedCommunity.getDeletedAt())
-                .build();
+            .code(200)
+            .message("성공적으로 삭제 됨")
+            .deletedDate(deletedCommunity.getDeletedAt())
+            .build();
 
         return response;
     }
 
     @Override
-    public ResponseUpdateComment updateComment(int gameCommunityCommentId, RequestUpdateComment request) {
-        GameCommunityComment comment = gameCommunityCommentRepository.findById(gameCommunityCommentId)
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 댓글입니다."));
+    public ResponseUpdateComment updateComment(int gameCommunityCommentId,
+        RequestUpdateComment request) {
+        GameCommunityComment comment = gameCommunityCommentRepository.findById(
+                gameCommunityCommentId)
+            .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 댓글입니다."));
 
         if (!request.getContent().equals(comment.getGameCommunityCommentContent())) {
             comment.setGameCommunityCommentContent(request.getContent());
@@ -390,27 +397,28 @@ public class GameInfoServiceImpl implements GameInfoService {
         gameCommunityCommentRepository.save(comment);
 
         ResponseUpdateComment response = ResponseUpdateComment.builder()
-                .code(200)
-                .message("성공적으로 업데이트 됨")
-                .build();
+            .code(200)
+            .message("성공적으로 업데이트 됨")
+            .build();
 
         return response;
     }
 
     @Override
     public ResponseDeleteComment deleteComment(int gameCommunityCommentId) {
-        GameCommunityComment comment = gameCommunityCommentRepository.findById(gameCommunityCommentId)
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 댓글입니다."));
+        GameCommunityComment comment = gameCommunityCommentRepository.findById(
+                gameCommunityCommentId)
+            .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 댓글입니다."));
 
         comment.setDeletedAt(Date.valueOf(LocalDate.now()));
 
         GameCommunityComment deleteComment = gameCommunityCommentRepository.save(comment);
 
         ResponseDeleteComment response = ResponseDeleteComment.builder()
-                .code(200)
-                .message("성공적으로 업데이트 됨")
-                .deletedDate(deleteComment.getDeletedAt())
-                .build();
+            .code(200)
+            .message("성공적으로 업데이트 됨")
+            .deletedDate(deleteComment.getDeletedAt())
+            .build();
 
         return response;
     }

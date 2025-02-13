@@ -9,7 +9,7 @@ export const useComments = (articleId) => {
   const fetchComments = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`https://boardjjigae.duckdns.org/api/game-info/community/${articleId}/comments`);
+      const response = await axios.get(`https://game-planet.duckdns.org/api/game-info/community/${articleId}/comments`);
       setComments(response.data);
       setError(null);
     } catch (err) {
@@ -21,7 +21,7 @@ export const useComments = (articleId) => {
 
   const addComment = async ({content, gameCommunityId, userId}) => {
     try {
-      await axios.post(`https://boardjjigae.duckdns.org/api/game-info/community/${articleId}/comment`, {
+      await axios.post(`https://game-planet.duckdns.org/api/game-info/community/${articleId}/comment`, {
         content,
         userId,
         gameCommunityId,
@@ -36,7 +36,7 @@ export const useComments = (articleId) => {
 
   const updateComment = async ({commentId, content, gameCommunityId, userId}) => {
     try {
-      await axios.put(`https://boardjjigae.duckdns.org/api/game-info/community/${articleId}/comment/${commentId}`, {
+      await axios.put(`https://game-planet.duckdns.org/api/game-info/community/${articleId}/comment/${commentId}`, {
         content,
         userId,
         gameCommunityId,

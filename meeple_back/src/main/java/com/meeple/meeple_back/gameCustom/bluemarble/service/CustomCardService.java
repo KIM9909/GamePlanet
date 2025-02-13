@@ -13,6 +13,8 @@ import com.meeple.meeple_back.gameCustom.bluemarble.infrastructure.CardJpaReposi
 import com.meeple.meeple_back.gameCustom.bluemarble.infrastructure.CustomCardEntity;
 import com.meeple.meeple_back.gameCustom.bluemarble.infrastructure.CustomCardId;
 import com.meeple.meeple_back.gameCustom.bluemarble.infrastructure.CustomCardJpaRepository;
+import com.meeple.meeple_back.gameCustom.bluemarble.infrastructure.CustomElementEntity;
+import com.meeple.meeple_back.gameCustom.bluemarble.infrastructure.CustomElementJpaRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CustomCardService {
 	private final CustomCardJpaRepository customCardJpaRepository;
+	private final CustomElementJpaRepository customElementJpaRepository;
 	private final CardJpaRepository cardJpaRepository;
 
 
@@ -33,9 +36,9 @@ public class CustomCardService {
 			.customId(customId)
 			.cardId(cardEntity.getCardId())
 			.build();
-		CustomCardEntity customElementEntity = customCardJpaRepository.findById(customCardId).orElseThrow();
-		customElementEntity = customCardJpaRepository.save(customElementEntity);
-		return CustomSeedcardResponse.from(customElementEntity);
+		CustomElementEntity customElementEntity = customElementJpaRepository.findById(customId).orElseThrow();
+		CustomCardEntity customCard = new CustomCardEntity(customCardId, customElementEntity, cardEntity);
+		return CustomSeedcardResponse.from(customCard);
 	}
 
 	@Transactional
@@ -45,10 +48,9 @@ public class CustomCardService {
 				.customId(customId)
 				.cardId(cardEntity.getCardId())
 				.build();
-		CustomCardEntity customElementEntity = customCardJpaRepository.findById(customCardId).orElseThrow();
-
-		customElementEntity = customCardJpaRepository.save(customElementEntity);
-		return CustomTelepathyCardResponse.from(customElementEntity);
+		CustomElementEntity customElementEntity = customElementJpaRepository.findById(customId).orElseThrow();
+		CustomCardEntity customCard = new CustomCardEntity(customCardId, customElementEntity, cardEntity);
+		return CustomTelepathyCardResponse.from(customCard);
 	}
 
 	public CustomNeuronValleyCardResponse createNeuronValleyCard(Integer customId,
@@ -58,10 +60,9 @@ public class CustomCardService {
 				.customId(customId)
 				.cardId(cardEntity.getCardId())
 				.build();
-		CustomCardEntity customElementEntity = customCardJpaRepository.findById(customCardId).orElseThrow();
-		customElementEntity = customCardJpaRepository.save(customElementEntity);
-
-		return CustomNeuronValleyCardResponse.from(customElementEntity);
+		CustomElementEntity customElementEntity = customElementJpaRepository.findById(customId).orElseThrow();
+		CustomCardEntity customCard = new CustomCardEntity(customCardId, customElementEntity, cardEntity);
+		return CustomNeuronValleyCardResponse.from(customCard);
 	}
 
 	public List<CustomSeedcardResponse> findAllSeedCard(Integer customId) {
