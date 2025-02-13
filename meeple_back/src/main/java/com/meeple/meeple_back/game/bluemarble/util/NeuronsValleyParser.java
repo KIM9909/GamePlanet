@@ -36,7 +36,7 @@ public class NeuronsValleyParser implements ExcelReader<NeuronsValleyCard> {
 				int number = (int) row.getCell(1).getNumericCellValue();
 				String name = row.getCell(2).getStringCellValue();
 				String description = row.getCell(3).getStringCellValue();
-				if (number == 1 || number == 2 || number == 12) {
+				if (number == 1 || number == 2 || number == 14) {
 					for (int i = 0; i < 7; i++) {
 						cards.add(new NeuronsValleyCard(counter.getAndIncrement(), number, name, CardType.NEURONS_VALLEY_CARD, description));
 					}
