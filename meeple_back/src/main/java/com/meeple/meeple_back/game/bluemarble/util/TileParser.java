@@ -61,6 +61,8 @@ public class TileParser implements ExcelReader<Tile> {
 				return TileType.SPACE_AGENCY;
 			case "뉴런의골짜기":
 				return TileType.NEURONS_VALLEY_CARD;
+			case "시간여행":
+				return TileType.TIME_TRAVEL;
 			default:
 				return TileType.SEED_CERTIFICATE_CARD;
 		}
