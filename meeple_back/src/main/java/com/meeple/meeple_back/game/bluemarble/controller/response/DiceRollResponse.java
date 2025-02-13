@@ -20,6 +20,10 @@ public class DiceRollResponse {
 	private final boolean isDouble;
 	private final String nextAction;
 
+	public static DiceRollResponse from(int playerId, int prevPosition, int nextPosition, int firstDice, int secondDice, boolean isDouble, ActionType nextAction) {
+		return DiceRollResponse.builder().playerId(playerId).prevPosition(prevPosition).nextPosition(nextPosition).firstDice(firstDice).secondDice(secondDice).isDouble(isDouble).nextAction(nextAction.getAction()).build();
+	}
+
 	public static DiceRollResponse from(DiceRollResult diceRollResult, ActionType nextAction) {
 		return DiceRollResponse.builder()
 				.playerId(diceRollResult.getPlayerId())
