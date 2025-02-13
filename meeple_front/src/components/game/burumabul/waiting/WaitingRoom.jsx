@@ -221,32 +221,33 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
 
             {/* 하단 버튼 */}
             <div className="w-full flex flex-row justify-between my-10 px-10">
-              <button
-                className="relative overflow-hidden text-lg font-semibold text-white mx-10 bg-gradient-to-r from-red-400 to-red-500 border-2 border-red-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
-                onClick={leaveTheRoom}
-              >
-                방 나가기
-              </button>
               {userId && creatorId && Number(userId) === Number(creatorId) ? (
+                // 방장인 경우
                 <div>
                   {Number(maxPlayers) === Number(playerLen) ? (
                     <div className="flex flex-row">
+                      <button
+                        className="relative overflow-hidden text-lg font-semibold text-white mx-10 bg-gradient-to-r from-red-400 to-red-500 border-2 border-red-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
+                        onClick={leaveTheRoom}
+                      >
+                        방 나가기
+                      </button>
                       {isPrivate && (
                         <button
-                          className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-fuchsia-200 to-fuchsia-400 border-2 border-fuchsia-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
+                          className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-fuchsia-200 to-fuchsia-400 border-2 border-fuchsia-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
                           onClick={showChangePassword}
                         >
                           비밀번호 변경
                         </button>
                       )}
                       <button
-                        className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-yellow-200 to-yellow-500 border-2 border-yellow-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
+                        className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-yellow-200 to-yellow-500 border-2 border-yellow-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
                         onClick={handlePutRoom}
                       >
                         게임방 수정
                       </button>
                       <button
-                        className="relative overflow-hidden text-lg font-semibold text-white mx-10 bg-gradient-to-r from-cyan-500 to-blue-500 border-2 border-blue-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
+                        className="relative overflow-hidden text-lg font-semibold text-white mx-10 bg-gradient-to-r from-cyan-500 to-blue-500 border-2 border-blue-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
                         onClick={goToGame}
                       >
                         게임 시작
@@ -254,22 +255,28 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
                     </div>
                   ) : (
                     <div className="flex flex-row">
+                      <button
+                        className="relative overflow-hidden text-lg font-semibold text-white mx-10 bg-gradient-to-r from-red-400 to-red-500 border-2 border-red-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
+                        onClick={leaveTheRoom}
+                      >
+                        방 나가기
+                      </button>
                       {isPrivate && (
                         <button
                           onClick={showChangePassword}
-                          className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-fuchsia-200 to-fuchsia-400 border-2 border-fuchsia-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
+                          className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-fuchsia-200 to-fuchsia-400 border-2 border-fuchsia-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
                         >
                           비밀번호 변경
                         </button>
                       )}
                       <button
-                        className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-yellow-200 to-yellow-500 border-2 border-yellow-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
+                        className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-yellow-200 to-yellow-500 border-2 border-yellow-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
                         onClick={handlePutRoom}
                       >
                         게임방 수정
                       </button>
                       <button
-                        className="text-lg text-white mx-10 bg-gray-500 border-2 w-32 h-12 rounded "
+                        className="text-lg text-white mx-10 bg-gray-500 border-2 w-32 h-12 rounded"
                         onClick={handleAlertModal}
                       >
                         게임 시작
@@ -278,17 +285,16 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
                   )}
                 </div>
               ) : (
-                // <>
-                //   {(isReady && (
-                //     <button onClick={handleCancel}>게임 준비</button>
-                //   )) || <button onClick={handleReady}>게임 준비</button>}
-                // </>
-                <>
-                  <button>게임 준비</button>
-                </>
+                // 방장이 아닌 경우
+                <div className="flex justify-center w-full">
+                  <button
+                    className="relative overflow-hidden text-lg font-semibold text-white bg-gradient-to-r from-red-400 to-red-500 border-2 border-red-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                    onClick={leaveTheRoom}
+                  >
+                    방 나가기
+                  </button>
+                </div>
               )}
-
-              {/* <button className="mx-3">게임 준비</button> */}
             </div>
           </div>
         </div>

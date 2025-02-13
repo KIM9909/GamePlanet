@@ -50,7 +50,7 @@ const RequestFriend = () => {
   };
 
   return (
-    <div className="p-3 mt-5 bg-white/80 rounded-lg">
+    <div className="p-3 mt-5 bg-white h-[55vh] rounded-lg">
       {/* 탭 버튼 영역 */}
       <div className="flex justify-center gap-3 mb-4">
         <button

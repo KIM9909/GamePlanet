@@ -426,6 +426,7 @@ const SocketLayout = ({ children }) => {
       }
       try {
         console.log("주사위 굴리기");
+        console.log("소켓 주사위 정보: ", diceResult);
         stompClientRef.current.publish({
           destination: `/app/game/blue-marble/game-plays/${roomId}/roll-dice`,
           body: JSON.stringify(diceResult),

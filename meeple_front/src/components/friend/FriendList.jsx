@@ -43,11 +43,8 @@ const FriendList = () => {
   };
 
   return (
-    <div className="p-2">
-      <h2 className="text-xl font-semibold text-[#7a90ff] mb-4 text-center">
-        친구 목록
-      </h2>
-      <div className="bg-white rounded-lg shadow-lg h-[400px] overflow-y-auto">
+    <div className="p-2 mt-3">
+      <div className="bg-white rounded-lg shadow-lg h-[53vh] overflow-y-auto">
         <ul className="p-2 space-y-2">
           {friendList && friendList.length > 0 ? (
             friendList.map((friend, index) => (
