@@ -89,7 +89,7 @@ public class CustomElementController {
 	}
 	// READ ALL
 
-	@PostMapping(value = "/{customId}/update-tile-card", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PutMapping(value = "/{customId}/update-tile-card", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<?> updateTileAndCard(
 			@RequestParam("cardColor") String cardColor,
 			@RequestParam("name") String name,
@@ -150,6 +150,14 @@ public class CustomElementController {
 			throw new RuntimeException(e);
 		}
 	}
+
+
+	@GetMapping("/{customId}/find-tile-card/{cardNumber}")
+	public ResponseEntity<CustomTileCardResponse> findByCustomIdAndCardNumber(@PathVariable("customId") int customId, @PathVariable("cardNumber") int cardNumber){
+		CustomTileCardResponse response = customElementService.findByCustomIdAndCardNumber(customId, cardNumber);
+		return ResponseEntity.ok(response);
+	}
+
 	// 타일 이미지 미리보기 기능
 	@GetMapping("/{customId}/tile-images")
 	public ResponseEntity<List<TileImageResponse>> findTileImageUrls(@PathVariable Integer customId){

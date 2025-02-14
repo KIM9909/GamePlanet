@@ -1,13 +1,13 @@
 package com.meeple.meeple_back.gameCustom.bluemarble.service;
 
 import com.meeple.meeple_back.game.bluemarble.domain.CardType;
-import com.meeple.meeple_back.game.bluemarble.domain.Tile;
 import com.meeple.meeple_back.game.bluemarble.domain.TileType;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomElementRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomTileCardRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CardResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomElementResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomTileCardResponse;
+import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomTileResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.TileImageResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.TileResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.infrastructure.CardEntity;
@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -102,26 +103,27 @@ public class CustomElementService implements CrudService<CustomElementRequest, C
 		}
 		return result;
 	}
-
+	@Transactional
 	public String getExistingImageUrl(int customId, int number) {
 		return customElementJpaRepository.findImageUrlByCustomIdAndNumber(customId, number);
 	}
-
+	@Transactional
 	public CustomTileCardResponse updateTileAndCard(int customId, CustomTileCardRequest request) {
 		TileEntity tileEntity = tileJpaRepository.findByTileNumberAndCustomId(customId, request.getNumber());
-		// 카드 생성
 		CardEntity cardEntity = cardJpaRepository.findByCardNumberAndCustomId(customId, request.getNumber());
 
-		;
 		tileEntity = tileJpaRepository.save(tileEntity.update(request));
 		cardEntity = cardJpaRepository.save(cardEntity.update(request));
 
-		// 커스텀 타일 생성
-		// 커스텀 카드 생성
 
-		// 저장 후 tile, card 정보 담아서 return
 		TileResponse tileResponse = TileResponse.from(tileEntity);
 		CardResponse cardResponse = new CardResponse(cardEntity.getCardId(), cardEntity.getCardNumber(), cardEntity.getCardName(), cardEntity.getCardDescription(), cardEntity.getCardType(),cardEntity.getCardColor(), cardEntity.getCardSeedCount(),cardEntity.getCardBaseConstructionCost() , cardEntity.getCardHeadquartersUsageFee(),cardEntity.getCardBaseUsageFee());
 		return new CustomTileCardResponse(tileResponse, cardResponse);
+	}
+
+	public CustomTileCardResponse findByCustomIdAndCardNumber(int customId, int cardNumber) {
+		TileEntity tileEntity = tileJpaRepository.findByTileNumberAndCustomId(customId, cardNumber);
+		CardEntity cardEntity = cardJpaRepository.findByCardNumberAndCustomId(customId, cardNumber);
+		return new CustomTileCardResponse(TileResponse.from(tileEntity), CardResponse.from(cardEntity));
 	}
 }

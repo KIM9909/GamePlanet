@@ -1,5 +1,7 @@
 package com.meeple.meeple_back.gameCustom.bluemarble.infrastructure;
 
+import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomTileCardResponse;
+import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomTileResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.TileImageResponse;
 import io.lettuce.core.dynamic.annotation.Param;
 import java.util.List;
