@@ -572,6 +572,19 @@ public class CatchMindServiceImpl implements CatchMindService {
         List<GameResultDTO> response = new ArrayList<>();
 
         for (String player : playerScore.keySet()) {
+            User user = userRepository.findByUserNickname(player);
+
+            long userExp = user.getUserExp();
+
+            if (userExp == 270) {
+                user.setUserLevel(user.getUserLevel() + 1);
+                user.setUserExp(0);
+            } else {
+                user.setUserExp(userExp + 30);
+            }
+
+            userRepository.save(user);
+
             int score = playerScore.get(player);
             GameResultDTO result = GameResultDTO.builder()
                     .point(score)

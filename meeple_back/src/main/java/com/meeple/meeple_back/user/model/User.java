@@ -39,6 +39,8 @@ public class User {
     private String userProfilePictureUrl;
     @Column(name = "user_tier")
     private String userTier;
+    @Column(name = "user_exp", nullable = false)
+    private long userExp;
     @Column(name = "user_level")
     private int userLevel;
     @Column(name = "user_created_at")

@@ -172,7 +172,7 @@ public class FriendServiceImpl implements FriendService {
                     .message(friend.getUser().getUserNickname() + "님이 발송하신 친구 요청이 승인되었습니다.")
                     .build();
 
-            messagingTemplate.convertAndSend("/topic/user" + friend.getUser().getUserId(),
+            messagingTemplate.convertAndSend("/topic/user/" + friend.getUser().getUserId(),
                     friend.getFriend().getUserNickname() + "님에게 보내신 친구 요청이 승인되었습니다.");
 
             return response;
@@ -285,7 +285,7 @@ public class FriendServiceImpl implements FriendService {
                 .message("발송 성공")
                 .build();
 
-        messagingTemplate.convertAndSend("/topic/user" + user.getUserId()
+        messagingTemplate.convertAndSend("/topic/user/" + user.getUserId()
                 , sender.getUserNickname() + "님이 쪽지를 보내셨습니다.");
 
         return response;
