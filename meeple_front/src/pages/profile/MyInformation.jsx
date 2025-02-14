@@ -143,6 +143,15 @@ const MyInformation = () => {
     }
   };
 
+  // 프로필 업데이트 후 데이터를 다시 불러오는 함수
+  const refreshProfileData = async () => {
+    try {
+      await dispatch(fetchProfile(userId)).unwrap();
+    } catch (error) {
+      console.error("프로필 새로고침 실패:", error);
+    }
+  };
+
   // 폼 제출 처리 핸들러
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -202,18 +211,53 @@ const MyInformation = () => {
     formDataToSend.append("userInfo", userInfoBlob);
 
     try {
+      // FormData 생성
+      const formDataToSend = new FormData();
+      const userInfo = {
+        userName: formData.userName,
+        userNickname: formData.userNickname,
+        userBirthday: formatDateForApi(formData.userBirthday),
+      };
+
+      const userInfoBlob = new Blob([JSON.stringify(userInfo)], {
+        type: "application/json",
+      });
+
+      formDataToSend.append("userInfo", userInfoBlob);
+
+      // 프로필 업데이트 수행
       await dispatch(
         updateProfile({
           userId,
           data: formDataToSend,
         })
       ).unwrap();
+
+      // 프로필 데이터 새로고침
+      await refreshProfileData();
+
       alert("프로필이 성공적으로 수정되었습니다.");
-      dispatch(setEditing(false)); // 수정 모드 종료
+      dispatch(setEditing(false));
     } catch (error) {
       alert(error.message || "프로필 수정에 실패했습니다.");
     }
   };
+
+  // 컴포넌트 마운트 시 프로필 데이터 로드
+  useEffect(() => {
+    dispatch(fetchProfile(userId));
+  }, [dispatch, userId]);
+
+  // 프로필 데이터가 변경될 때마다 폼 데이터 업데이트
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        userName: profile.userName,
+        userNickname: profile.userNickname,
+        userBirthday: formatDateForInput(profile.userBirthday),
+      });
+    }
+  }, [profile]);
 
   // 취소 버튼 핸들러
   const handleCancel = () => {

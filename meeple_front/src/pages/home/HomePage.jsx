@@ -84,14 +84,19 @@ const HomePage = () => {
             <button
               onClick={() =>
                 gameInfo.game.gameId === 1
-                  ? navigate("/test/cockroach")
+                  ? null
                   : gameInfo.game.gameId === 2
                   ? navigate("/burumabul/room-list")
                   : navigate("/catch-mind")
               }
-              className="px-6 py-2 bg-cyan-600 text-white rounded-full hover:bg-cyan-700 transition-colors transform hover:scale-105 duration-300 "
+              disabled={gameInfo.game.gameId === 1}
+              className={`px-6 py-2 rounded-full transition-colors transform hover:scale-105 duration-300 ${
+                gameInfo.game.gameId === 1
+                  ? "bg-gray-400 text-gray-200 cursor-not-allowed w-[120px]"
+                  : "bg-cyan-600 text-white hover:bg-cyan-700"
+              }`}
             >
-              GAME PLAY
+              {gameInfo.game.gameId === 1 ? "FIXING" : "GAME PLAY"}
             </button>
           </div>
         </div>
@@ -147,7 +152,7 @@ const HomePage = () => {
     <div className="min-h-screen relative overflow-hidden">
       <div className="min-h-screen p-8 relative z-5">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-3 backdrop-blur-lg border border-cyan-500/50 h-[650px]">
+          <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-3 backdrop-blur-sm border border-cyan-500/50 h-[650px]">
             <h1 className="text-[43px] font-bold mb-3 text-center bg-gradient-to-r from-cyan-500 to-cyan-500 bg-clip-text text-transparent">
               GAME LIST
             </h1>

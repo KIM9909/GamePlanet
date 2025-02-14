@@ -276,7 +276,7 @@ const ProfileModal = ({
                     </h3>
                     <span className="inline-flex items-center text-xs text-cyan-300 bg-cyan-950/50 px-2 py-0.5 rounded-full border border-cyan-500/20">
                       <span className="mr-1">•</span>
-                      Lv.{userLevel}
+                      Lv.{profileData?.userLevel}
                     </span>
                   </div>
                   <button
