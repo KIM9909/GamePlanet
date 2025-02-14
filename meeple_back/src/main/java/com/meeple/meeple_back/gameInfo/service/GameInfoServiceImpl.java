@@ -410,13 +410,13 @@ public class GameInfoServiceImpl implements GameInfoService {
                 gameCommunityCommentId)
             .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 댓글입니다."));
 
-        comment.setDeletedAt(Date.valueOf(LocalDate.now()));
+        comment.setDeletedAt(LocalDateTime.now());
 
         GameCommunityComment deleteComment = gameCommunityCommentRepository.save(comment);
 
         ResponseDeleteComment response = ResponseDeleteComment.builder()
             .code(200)
-            .message("성공적으로 업데이트 됨")
+            .message("성공적으로 삭제 됨")
             .deletedDate(deleteComment.getDeletedAt())
             .build();
 
