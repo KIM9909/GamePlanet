@@ -117,6 +117,13 @@ public class BluemarbleGameServiceImpl implements BluemarbleGameService {
 		return choosePositionResponse;
 	}
 
+	@Override
+	public String gameEnd(int roomId) {
+		GamePlay gamePlay = getValidateGamePlay(roomId);
+		bluemarbleGameRepository.delete(gamePlay);
+		return "게임 끝";
+	}
+
 
 	private GamePlay getValidateGamePlay(int roomId) {
 		return bluemarbleGameRepository.findById(roomId)
