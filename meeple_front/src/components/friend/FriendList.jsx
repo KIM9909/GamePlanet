@@ -43,25 +43,24 @@ const FriendList = () => {
   };
 
   return (
-    <div className="p-2 mt-3">
-      <div className="bg-white rounded-lg shadow-lg h-[53vh] overflow-y-auto">
-        <ul className="p-2 space-y-2">
+    <div className="bg-gray-100 p-4 rounded-b-lg">
+      <div className="bg-white rounded-lg shadow-sm h-[50vh] overflow-y-auto">
+        <ul className="p-4 space-y-3">
           {friendList && friendList.length > 0 ? (
             friendList.map((friend, index) => (
               <li
                 key={index}
-                className="bg-white p-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex justify-between items-center border border-gray-100 hover:border-[#7a90ff]/30"
+                className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex justify-between items-center border border-gray-100 hover:border-blue-200"
               >
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-green-400" />{" "}
-                  {/* 온라인 상태 표시 */}
-                  <span className="font-medium text-gray-700 hover:text-[#7a90ff] transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-green-400" />
+                  <span className="font-medium text-gray-700 hover:text-blue-500 transition-colors">
                     {friend.friend.nickname}
                   </span>
                 </div>
                 <button
                   onClick={() => handleDeleteFriend(friend.friendId)}
-                  className="p-2 rounded-full hover:bg-red-50 transition-colors group"
+                  className="p-2 rounded-full hover:bg-red-50 transition-all duration-200 group"
                 >
                   <UserRoundMinus
                     className="text-gray-400 group-hover:text-red-500 transition-colors"
@@ -71,9 +70,9 @@ const FriendList = () => {
               </li>
             ))
           ) : (
-            <div className="flex flex-col items-center justify-center h-[300px] text-gray-500">
+            <div className="flex flex-col items-center justify-center h-[40vh] text-gray-500">
               <p>아직 친구가 없습니다</p>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-gray-400 mt-2">
                 새로운 친구를 추가해보세요!
               </p>
             </div>

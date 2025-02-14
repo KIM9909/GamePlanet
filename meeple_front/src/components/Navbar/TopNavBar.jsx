@@ -41,29 +41,29 @@ const TopNavbar = () => {
     0: {
       name: "은수",
       role: "Front-end",
-      description: "멋진 프론트엔드 개발자",
+      description: "부루마불 부술까?",
     },
     1: {
       name: "희준",
       role: "Front-end",
-      description: "열정적인 프론트엔드 개발자",
+      description: "보드찌개 먹고싶을게",
     },
     2: {
       name: "진혁",
       role: "Front-end",
-      description: "감각있는 프론트엔드 개발자",
+      description: "프론트는 처음이라",
     },
     3: {
       name: "홍범",
       role: "Full-stack",
-      description: "다재다능 풀스택 개발자",
+      description: "할 게 너무 많아 살려줘",
     },
     4: {
       name: "재은",
       role: "Back-end",
-      description: "계산적인 백엔드 개발자",
+      description: "내 AI 좀 볼래?",
     },
-    5: { name: "성현", role: "Back-end", description: "로보트 백엔드 개발자" },
+    5: { name: "성현", role: "Back-end", description: "내 새끼 돌려줘요 .." },
   };
 
   // 외부 클릭 감지 핸들러
