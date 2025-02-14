@@ -10,7 +10,7 @@ const CommentItem = ({ comment, onEdit, onDelete }) => {
     <div className="border-b pb-4">
       <div className="flex justify-between items-center mb-2">
         <div className="flex items-center gap-4">
-          <span className="font-semibold">{comment.userName}</span>
+          <span className="font-semibold text-gray-300">{comment.userName}</span>
           <span className="text-sm text-gray-500">
             {new Date(comment.createdAt).toLocaleDateString()}
           </span>
