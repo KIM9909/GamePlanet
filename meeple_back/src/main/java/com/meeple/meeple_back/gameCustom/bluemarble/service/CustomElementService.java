@@ -8,6 +8,7 @@ import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomTil
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CardResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomElementResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomTileCardResponse;
+import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.TileImageResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.TileResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.infrastructure.CardEntity;
 import com.meeple.meeple_back.gameCustom.bluemarble.infrastructure.CardJpaRepository;
@@ -21,6 +22,7 @@ import com.meeple.meeple_back.gameCustom.bluemarble.infrastructure.CustomTileId;
 import com.meeple.meeple_back.gameCustom.bluemarble.infrastructure.CustomTileJpaRepository;
 import com.meeple.meeple_back.gameCustom.bluemarble.infrastructure.TileEntity;
 import com.meeple.meeple_back.gameCustom.bluemarble.infrastructure.TileJpaRepository;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -88,4 +90,15 @@ public class CustomElementService implements CrudService<CustomElementRequest, C
 		CardResponse cardResponse = new CardResponse(cardEntity.getCardId(), cardEntity.getCardNumber(), cardEntity.getCardName(), cardEntity.getCardDescription(), cardEntity.getCardType(),cardEntity.getCardColor(), cardEntity.getCardSeedCount(),cardEntity.getCardBaseConstructionCost() , cardEntity.getCardHeadquartersUsageFee(),cardEntity.getCardBaseUsageFee());
 		return new CustomTileCardResponse(tileResponse, cardResponse);
     }
+
+	public List<TileImageResponse> findTileImageUrlByCustomId(Integer customId) {
+		// customID에 해당하는 타일의 번호에 해당하는 이미지 목록을 반환한다.
+		List<TileEntity> tileEntities = customTileJpaRepository.findTileEntitiesByCustomId(customId);
+		List<TileImageResponse> result = new ArrayList<>();
+		for(int i=0; i<tileEntities.size(); i++){
+			TileEntity tileEntity = tileEntities.get(i);
+			result.add(new TileImageResponse(tileEntity.getTileNumber(), tileEntity.getTileImageUrl()));
+		}
+		return result;
+	}
 }

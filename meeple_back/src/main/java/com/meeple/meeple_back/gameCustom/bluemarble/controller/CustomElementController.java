@@ -5,9 +5,11 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomElementRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomTileCardRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomTileRequest;
+import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.TileImageRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomElementResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomTileCardResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomTileResponse;
+import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.TileImageResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.service.CustomElementService;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
@@ -82,6 +84,14 @@ public class CustomElementController {
 		}
 	}
 	// READ ALL
+
+	// 타일 이미지 미리보기 기능
+	@GetMapping("/{customId}/tile-images")
+	public ResponseEntity<List<TileImageResponse>> findTileImageUrls(@PathVariable Integer customId){
+		// customID에 해당하는 타일의 번호에 해당하는 이미지 목록을 반환한다.
+		List<TileImageResponse> tileImageResponses = customElementService.findTileImageUrlByCustomId(customId);
+		return ResponseEntity.ok(tileImageResponses);
+	}
 	@GetMapping
 	public ResponseEntity<List<CustomElementResponse>> getAllCustomElements() {
 		return ResponseEntity.status(HttpStatus.OK).body(customElementService.findAll());
