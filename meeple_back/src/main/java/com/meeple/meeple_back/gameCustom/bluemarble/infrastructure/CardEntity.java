@@ -4,6 +4,7 @@ import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomCar
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomNeuronValleyCardRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomSeedcardRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomTelepathyCardRequest;
+import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomTileCardRequest;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,9 +19,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class CardEntity {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Integer cardId;
+
 
 	public CardEntity(Integer cardNumber, String cardName, String cardDescription, String cardType, String cardColor,
 					  Integer cardSeedCount, Integer cardBaseConstructionCost, Integer cardHeadquartersUsageFee,
@@ -35,7 +34,9 @@ public class CardEntity {
 		this.cardHeadquartersUsageFee = cardHeadquartersUsageFee;
 		this.cardBaseUsageFee = cardBaseUsageFee;
 	}
-
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer cardId;
 	@Column
 	private Integer cardNumber;
 
@@ -86,4 +87,20 @@ public class CardEntity {
 				.cardSeedCount(this.cardSeedCount).cardBaseConstructionCost(request.getCardBaseConstructionCost())
 				.cardHeadquartersUsageFee(request.getCardHeadquartersUsageFee()).cardBaseUsageFee(request.getCardBaseUsageFee()).build();
 	}
+
+	public CardEntity update(CustomTileCardRequest request) {
+		return CardEntity.builder()
+				.cardId(this.cardId)                         // 기존 cardId 유지
+				.cardType(this.cardType)                     // 기존 cardType 유지
+				.cardNumber(this.cardNumber)                 // 기존 cardNumber 유지
+				.cardName(request.getName())
+				.cardDescription(request.getDescription())
+				.cardColor(request.getCardColor())
+				.cardSeedCount(request.getSeedCount())
+				.cardBaseConstructionCost(request.getBaseConstructionCost())
+				.cardHeadquartersUsageFee(request.getHeadquartersUsageFee())
+				.cardBaseUsageFee(request.getBaseUsageFee())
+				.build();
+	}
+
 }

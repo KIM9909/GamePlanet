@@ -1,5 +1,6 @@
 package com.meeple.meeple_back.gameCustom.bluemarble.infrastructure;
 
+import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomTileCardRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomTileRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.TileResponse;
 import jakarta.persistence.*;
@@ -41,14 +42,8 @@ public class TileEntity {
 
 	private Integer tileNumber;
 
-	public TileEntity update(CustomTileRequest customTileRequest) {
-		return TileEntity.builder()
-			.tileName(customTileRequest.getTileName())
-			.tileType(this.tileType)
-			.tileImageUrl(customTileRequest.getTileImageUrl())
-			.tilePrice(customTileRequest.getTilePrice())
-			.tileNumber(this.tileNumber)
-			.build();
+	public TileEntity update(CustomTileCardRequest customTileCardRequest) {
+		return TileEntity.builder().tileId(this.tileId).tileName(customTileCardRequest.getName()).tileImageUrl(customTileCardRequest.getImageUrl()).tilePrice(customTileCardRequest.getNumber()).tileType(this.tileType).build();
 	}
 
 	public static TileResponse toResponse(TileEntity tileEntity) {

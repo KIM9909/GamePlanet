@@ -35,6 +35,7 @@ public class CustomElementService implements CrudService<CustomElementRequest, C
 	private final CardJpaRepository cardJpaRepository;
 	private final CustomTileJpaRepository customTileJpaRepository;
 	private final CustomCardJpaRepository customCardJpaRepository;
+	private final CustomElementJpaRepository customElementJpaRepository;
 
 
 	@Override
@@ -100,5 +101,27 @@ public class CustomElementService implements CrudService<CustomElementRequest, C
 			result.add(new TileImageResponse(tileEntity.getTileNumber(), tileEntity.getTileImageUrl()));
 		}
 		return result;
+	}
+
+	public String getExistingImageUrl(int customId, int number) {
+		return customElementJpaRepository.findImageUrlByCustomIdAndNumber(customId, number);
+	}
+
+	public CustomTileCardResponse updateTileAndCard(int customId, CustomTileCardRequest request) {
+		TileEntity tileEntity = tileJpaRepository.findByTileNumberAndCustomId(customId, request.getNumber());
+		// 카드 생성
+		CardEntity cardEntity = cardJpaRepository.findByCardNumberAndCustomId(customId, request.getNumber());
+
+		;
+		tileEntity = tileJpaRepository.save(tileEntity.update(request));
+		cardEntity = cardJpaRepository.save(cardEntity.update(request));
+
+		// 커스텀 타일 생성
+		// 커스텀 카드 생성
+
+		// 저장 후 tile, card 정보 담아서 return
+		TileResponse tileResponse = TileResponse.from(tileEntity);
+		CardResponse cardResponse = new CardResponse(cardEntity.getCardId(), cardEntity.getCardNumber(), cardEntity.getCardName(), cardEntity.getCardDescription(), cardEntity.getCardType(),cardEntity.getCardColor(), cardEntity.getCardSeedCount(),cardEntity.getCardBaseConstructionCost() , cardEntity.getCardHeadquartersUsageFee(),cardEntity.getCardBaseUsageFee());
+		return new CustomTileCardResponse(tileResponse, cardResponse);
 	}
 }
