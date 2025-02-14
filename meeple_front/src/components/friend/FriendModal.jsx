@@ -25,30 +25,36 @@ const FriendModal = () => {
 
   return (
     <>
-      <div className="flex justify-around items-center ">
+      <div className="flex justify-around items-center p-3 bg-white rounded-t-lg">
         <button
-          className={`rounded p-1 ${
-            activeTab === "friendList" ? "border-2 border-[#7a90ff] " : null
+          className={`p-2 rounded-lg transition-all duration-200 ${
+            activeTab === "friendList"
+              ? "bg-blue-50 shadow-md"
+              : "hover:bg-blue-50"
           }`}
           onClick={() => setActiveTab("friendList")}
         >
-          <UsersRound color="#7a90ff" strokeWidth={2.5} />
+          <UsersRound color="#3B82F6" strokeWidth={2} />
         </button>
         <button
-          className={`rounded p-1 ${
-            activeTab === "allRequest" ? "border-2 border-[#7a90ff] " : null
+          className={`p-2 rounded-lg transition-all duration-200 ${
+            activeTab === "allRequest"
+              ? "bg-blue-50 shadow-md"
+              : "hover:bg-blue-50"
           }`}
           onClick={() => setActiveTab("allRequest")}
         >
-          <Handshake color="#7a90ff" strokeWidth={2.5} />
+          <Handshake color="#3B82F6" strokeWidth={2} />
         </button>
         <button
-          className={`rounded p-1 ${
-            activeTab === "message" ? "border-2 border-[#7a90ff] " : null
+          className={`p-2 rounded-lg transition-all duration-200 ${
+            activeTab === "message"
+              ? "bg-blue-50 shadow-md"
+              : "hover:bg-blue-50"
           }`}
           onClick={() => setActiveTab("message")}
         >
-          <MessageSquareMore color="#7a90ff" strokeWidth={2.5} />
+          <MessageSquareMore color="#3B82F6" strokeWidth={2} />
         </button>
       </div>
       <div>{renderContent()}</div>

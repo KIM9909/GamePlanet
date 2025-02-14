@@ -57,26 +57,32 @@ const CatchMindUpdateRoomModal = ({ isOpen, onClose, roomInfo, client }) => {
   if (!isOpen) return null;
 
   return (
-    <div
-      className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${
-        !isOpen && "hidden"
-      }`}
-    >
-      <div className="bg-white rounded-lg p-6 w-96">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-900">방 정보 수정</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Modal Content */}
+      <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-8 w-[448px] border-2 border-cyan-400 shadow-2xl">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+            방 설정 수정
+          </h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-cyan-400 hover:text-cyan-300 transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-700"
           >
             ✕
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* 방 제목 입력 */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">
-              방 제목
+            <label className="block text-sm font-medium text-cyan-400 mb-2">
+              🎯 방 제목
             </label>
             <input
               type="text"
@@ -87,104 +93,67 @@ const CatchMindUpdateRoomModal = ({ isOpen, onClose, roomInfo, client }) => {
                   roomTitle: e.target.value,
                 }))
               }
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+              className="w-full p-3 bg-slate-700 border-2 border-cyan-400/30 rounded-lg 
+                       text-white placeholder-slate-400
+                       focus:outline-none focus:border-cyan-400 transition-colors"
               placeholder="방 제목을 입력하세요"
               required
             />
           </div>
 
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-gray-900">비밀방</label>
-            <div
-              className="relative inline-flex items-center cursor-pointer"
-              onClick={() =>
-                setFormData((prev) => ({
-                  ...prev,
-                  isPrivate: !prev.isPrivate,
-                }))
-              }
-            >
-              <div
-                className={`w-11 h-6 rounded-full transition-colors ${
-                  formData.isPrivate ? "bg-blue-500" : "bg-gray-200"
-                }`}
-              >
-                <div
-                  className={`w-5 h-5 rounded-full bg-white shadow transform transition-transform ${
-                    formData.isPrivate ? "translate-x-6" : "translate-x-1"
-                  } mt-0.5`}
-                />
-              </div>
-            </div>
-          </div>
-
-          {formData.isPrivate && (
+          {/* 게임 설정 그리드 */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* 최대 인원 선택 */}
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-1">
-                비밀번호 (숫자 최대 8자리)
+              <label className="block text-sm font-medium text-cyan-400 mb-2">
+                👥 최대 인원
               </label>
-              <input
-                type="password"
-                value={formData.password}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9]/g, "");
-                  if (value.length <= 8) {
-                    setFormData((prev) => ({
-                      ...prev,
-                      password: value,
-                    }));
-                  }
-                }}
-                className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
-                placeholder="비밀번호를 입력하세요"
-                required={formData.isPrivate}
-              />
+              <select
+                value={formData.maxPeople}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    maxPeople: e.target.value,
+                  }))
+                }
+                className="w-full p-3 bg-slate-700 border-2 border-cyan-400/30 rounded-lg 
+                         text-white appearance-none cursor-pointer
+                         focus:outline-none focus:border-cyan-400 transition-colors"
+              >
+                <option value="2">2인</option>
+                <option value="3">3인</option>
+                <option value="4">4인</option>
+              </select>
             </div>
-          )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">
-              최대 인원
-            </label>
-            <select
-              value={formData.maxPeople}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  maxPeople: e.target.value,
-                }))
-              }
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
-            >
-              <option value="2">2인</option>
-              <option value="3">3인</option>
-              <option value="4">4인</option>
-            </select>
+            {/* 제한 시간 설정 */}
+            <div>
+              <label className="block text-sm font-medium text-cyan-400 mb-2">
+                ⏱️ 제한 시간
+              </label>
+              <select
+                value={formData.timeLimit}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    timeLimit: e.target.value,
+                  }))
+                }
+                className="w-full p-3 bg-slate-700 border-2 border-cyan-400/30 rounded-lg 
+                         text-white appearance-none cursor-pointer
+                         focus:outline-none focus:border-cyan-400 transition-colors"
+              >
+                <option value="5">5초</option>
+                <option value="90">90초</option>
+                <option value="120">120초</option>
+              </select>
+            </div>
           </div>
 
+          {/* 퀴즈 개수 설정 */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">
-              제한 시간 (초)
-            </label>
-            <select
-              value={formData.timeLimit}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  timeLimit: e.target.value,
-                }))
-              }
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
-            >
-              <option value="5">5초</option>
-              <option value="90">90초</option>
-              <option value="120">120초</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">
-              퀴즈 개수
+            <label className="block text-sm font-medium text-cyan-400 mb-2">
+              📝 퀴즈 개수
             </label>
             <select
               value={formData.quizCount}
@@ -194,7 +163,9 @@ const CatchMindUpdateRoomModal = ({ isOpen, onClose, roomInfo, client }) => {
                   quizCount: e.target.value,
                 }))
               }
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+              className="w-full p-3 bg-slate-700 border-2 border-cyan-400/30 rounded-lg 
+                       text-white appearance-none cursor-pointer
+                       focus:outline-none focus:border-cyan-400 transition-colors"
             >
               <option value="5">5개</option>
               <option value="7">7개</option>
@@ -202,11 +173,17 @@ const CatchMindUpdateRoomModal = ({ isOpen, onClose, roomInfo, client }) => {
             </select>
           </div>
 
+          {/* 제출 버튼 */}
           <button
             type="submit"
-            className="w-full py-2 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="w-full py-3 px-4 rounded-lg font-medium text-white
+                     bg-gradient-to-r from-cyan-500 to-blue-500 
+                     hover:from-cyan-400 hover:to-blue-400 
+                     transform transition-all duration-300 
+                     active:scale-95
+                     border border-cyan-400/50 shadow-lg"
           >
-            수정하기
+            💾 설정 저장
           </button>
         </form>
       </div>

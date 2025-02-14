@@ -14,6 +14,7 @@ import {
   setDeleteModalOpen,
 } from "../../sources/store/slices/ProfileSlice";
 import { UserAPI } from "../../sources/api/UserAPI";
+import { Lock } from "lucide-react";
 
 const MyInformation = () => {
   // URL 파라미터에서 userId를 추출하고 Redux dispatch 함수 가져오기
@@ -142,6 +143,15 @@ const MyInformation = () => {
     }
   };
 
+  // 프로필 업데이트 후 데이터를 다시 불러오는 함수
+  const refreshProfileData = async () => {
+    try {
+      await dispatch(fetchProfile(userId)).unwrap();
+    } catch (error) {
+      console.error("프로필 새로고침 실패:", error);
+    }
+  };
+
   // 폼 제출 처리 핸들러
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -182,24 +192,72 @@ const MyInformation = () => {
       return;
     }
 
-    // API 요청을 위한 데이터 준비
-    const apiData = {
-      ...formData,
+    // FormData 생성
+    const formDataToSend = new FormData();
+
+    // userInfo JSON을 Blob으로 변환하여 추가
+    const userInfo = {
+      userName: formData.userName,
+      userNickname: formData.userNickname,
       userBirthday: formatDateForApi(formData.userBirthday),
     };
 
+    console.log("유저 인포 :", userInfo);
+
+    const userInfoBlob = new Blob([JSON.stringify(userInfo)], {
+      type: "application/json",
+    });
+
+    formDataToSend.append("userInfo", userInfoBlob);
+
     try {
+      // FormData 생성
+      const formDataToSend = new FormData();
+      const userInfo = {
+        userName: formData.userName,
+        userNickname: formData.userNickname,
+        userBirthday: formatDateForApi(formData.userBirthday),
+      };
+
+      const userInfoBlob = new Blob([JSON.stringify(userInfo)], {
+        type: "application/json",
+      });
+
+      formDataToSend.append("userInfo", userInfoBlob);
+
+      // 프로필 업데이트 수행
       await dispatch(
         updateProfile({
           userId,
-          data: apiData,
+          data: formDataToSend,
         })
       ).unwrap();
+
+      // 프로필 데이터 새로고침
+      await refreshProfileData();
+
       alert("프로필이 성공적으로 수정되었습니다.");
+      dispatch(setEditing(false));
     } catch (error) {
       alert(error.message || "프로필 수정에 실패했습니다.");
     }
   };
+
+  // 컴포넌트 마운트 시 프로필 데이터 로드
+  useEffect(() => {
+    dispatch(fetchProfile(userId));
+  }, [dispatch, userId]);
+
+  // 프로필 데이터가 변경될 때마다 폼 데이터 업데이트
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        userName: profile.userName,
+        userNickname: profile.userNickname,
+        userBirthday: formatDateForInput(profile.userBirthday),
+      });
+    }
+  }, [profile]);
 
   // 취소 버튼 핸들러
   const handleCancel = () => {
@@ -321,6 +379,7 @@ const MyInformation = () => {
               name="userBirthday"
               value={formData.userBirthday}
               onChange={handleChange}
+              onKeyDown={(e) => e.preventDefault()}
               className="w-full p-3 bg-zinc-900 border-2 border-zinc-700 rounded-lg text-white
                 focus:border-cyan-500 focus:outline-none transition-colors"
             />
@@ -364,7 +423,7 @@ const MyInformation = () => {
         </form>
       ) : (
         <>
-          <div className="flex flex-col space-y-7">
+          <div className="flex flex-col space-y-7 rounded-xl p-7 bg-zinc-900/60 shadow-lg backdrop-blur-sm border border-zinc-700/50">
             <h2 className="text-xl font-bold text-white">기본 정보</h2>
 
             <div className="grid grid-cols-2 gap-4">
@@ -377,7 +436,10 @@ const MyInformation = () => {
                 },
                 { label: "레벨", value: profile.userLevel },
               ].map(({ label, value }) => (
-                <div key={label} className="p-3 bg-zinc-900 rounded-lg">
+                <div
+                  key={label}
+                  className="p-3 bg-zinc-900 rounded-lg border border-zinc-700/50"
+                >
                   <p className="text-zinc-400 mb-1 text-sm">{label}</p>
                   <p className="text-white text-base">{value}</p>
                 </div>
@@ -388,8 +450,9 @@ const MyInformation = () => {
               <div className="flex gap-3">
                 <button
                   onClick={() => dispatch(setPasswordModalOpen(true))}
-                  className="px-4 py-2 bg-zinc-700 text-zinc-200 rounded-lg hover:bg-zinc-600 transition-colors"
+                  className="flex px-4 py-2 bg-zinc-700 text-zinc-200 rounded-lg hover:bg-zinc-600 transition-colors"
                 >
+                  <Lock className="w-4 h-4 mr-2 mt-1" />
                   비밀번호 변경
                 </button>
                 <button

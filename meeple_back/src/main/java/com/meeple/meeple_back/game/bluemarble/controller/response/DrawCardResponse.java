@@ -6,22 +6,33 @@ import com.meeple.meeple_back.game.bluemarble.domain.Player;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Builder
 public class DrawCardResponse {
 
 	private int playerId;
-	private Card card;
+	private Card pickedCard;
 	private Player player;
+	private List<Card> cards;
+	private int prevPosition;
+	private int nextPosition;
+	private int prevBalance;
+	private int nextBalance;
 	private String nextAction;
-	
-	public static DrawCardResponse from(int playerId, Player player, Card card,
-			ActionType nextAction) {
+
+	public static DrawCardResponse from(int playerId, Card pickedCard, Player player, List<Card> updatedCards, int prevPosition, int nextPosition, int prevBalance, int nextBalance, ActionType nextAction) {
 		return DrawCardResponse.builder()
 				.playerId(playerId)
-				.card(card)
+				.pickedCard(pickedCard)
 				.player(player)
-				.nextAction(nextAction.name())
+				.cards(updatedCards)
+				.prevPosition(prevPosition)
+				.nextPosition(nextPosition)
+				.prevBalance(prevBalance)
+				.nextBalance(nextBalance)
+				.nextAction(nextAction.getAction())
 				.build();
 	}
 }

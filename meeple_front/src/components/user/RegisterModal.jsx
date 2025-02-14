@@ -49,12 +49,15 @@ const RegisterModal = ({ isOpen, onClose }) => {
   const [validations, setValidations] = useState(initialValidations);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [emailCheckMessage, setEmailCheckMessage] = useState("");
+  const [nicknameCheckMessage, setNicknameCheckMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [termsAgreed, setTermsAgreed] = useState({
     terms: false, // 이용약관 동의
     privacy: false, // 개인정보 동의
     device: false, // 기기접근 동의
+    AI: false,
   });
 
   // 모달 닫기 시 초기화
@@ -104,6 +107,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
         emailChecked: false,
         validEmail: isValid,
       }));
+      setEmailCheckMessage("");
     } else if (name === "userNickname") {
       setValidations((prev) => ({
         ...prev,
@@ -111,6 +115,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
         nicknameChecked: false,
         validNickname: isValid,
       }));
+      setNicknameCheckMessage("");
     } else if (name === "userName") {
       setValidations((prev) => ({
         ...prev,
@@ -144,7 +149,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
         email: !isDuplicate,
         emailChecked: true,
       }));
-      setError(
+      setEmailCheckMessage(
         isDuplicate
           ? "이미 사용 중인 이메일입니다."
           : "사용 가능한 이메일입니다."
@@ -168,7 +173,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
         nickname: !isDuplicate,
         nicknameChecked: true,
       }));
-      setError(
+      setNicknameCheckMessage(
         isDuplicate
           ? "이미 사용 중인 닉네임입니다."
           : "사용 가능한 닉네임입니다."
@@ -191,11 +196,12 @@ const RegisterModal = ({ isOpen, onClose }) => {
       formData.userBirthday && // 생년월일
       termsAgreed.terms && // 이용약관
       termsAgreed.privacy && // 개인정보
-      termsAgreed.device // 기기접근
+      termsAgreed.device && // 기기접근
+      termsAgreed.AI // AI 프로그램 설치
     );
   };
 
-  // 회원가입 제출 처리
+  // 회원가입 제출
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -219,7 +225,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
         userBirthday: formattedBirthday,
       };
 
-      // 회원가입 API 호출
+      // 회원가입 및 자동 로그인 시도
       const success = await UserAPI.register(userData);
       if (success) {
         // 회원가입 성공 시 자동 로그인
@@ -244,44 +250,47 @@ const RegisterModal = ({ isOpen, onClose }) => {
     <>
       <style>{`
         .thin-scrollbar::-webkit-scrollbar { width: 5px; padding-right: 12px; position: absolute; right: 0;}
-        .thin-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
-        .thin-scrollbar::-webkit-scrollbar-thumb { background: #888; border-radius: 15px;}
+        .thin-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .thin-scrollbar::-webkit-scrollbar-thumb { background: rgba(6, 182, 212, 0.5); border-radius: 15px;}
         .thin-scrollbar::-webkit-scrollbar-track { display: none; }
-        .thin-scrollbar {padding-right: 10px;}
+        .thin-scrollbar { padding-right: 10px; }
       `}</style>
       <Dialog open={isOpen} onClose={handleClose} className="relative z-50">
-        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-        <div className="fixed inset-0 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/70" aria-hidden="true" />
+        <div className="fixed inset-0 flex items-center justify-center p-4">
           <Dialog.Panel
-            className="relative space-y-1 rounded-3xl bg-white p-6 w-full max-w-lg overflow-visible"
+            className="relative w-full max-w-[550px] rounded-lg bg-gradient-to-b from-gray-900 to-gray-800 p-6 border-2 border-cyan-500 shadow-[0_0_15px_rgba(0,255,255,0.3)] overflow-visible"
             onWheel={handleWheel}
           >
-            <div className="flex justify-between items-center mb-4">
+            {/* 게임스러운 상단 장식 */}
+            <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-3/4 h-1 bg-cyan-500 rounded-full shadow-[0_0_10px_rgba(0,255,255,0.5)]" />
+
+            <div className="flex justify-between items-center mb-3">
               <div className="flex-1 text-center">
-                <Dialog.Title className="text-3xl font-bold ml-7">
+                <Dialog.Title className="text-4xl font-bold text-transparent ml-6 bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 animate-pulse">
                   MEEPLE SIGNUP
                 </Dialog.Title>
               </div>
               <button
                 onClick={handleClose}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-400 hover:text-cyan-400 transition-colors duration-300"
               >
                 <X className="h-6 w-6" />
               </button>
             </div>
 
-            <div className="text-center text-gray-400 mb-3">
-              MEET MEEPLE NOW
+            <div className="text-cyan-400 text-center mb-6">
+              CREATE YOUR ACCOUNT
             </div>
 
-            <div className="max-h-[75vh] overflow-y-auto thin-scrollbar pr-1">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
+            <div className="max-h-[65vh] overflow-y-auto thin-scrollbar pr-1">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="group">
                   <label
                     htmlFor="userName"
-                    className="block text-xl font-medium text-gray-700"
+                    className="block text-xl text-cyan-400 group-hover:text-cyan-300"
                   >
-                    이름
+                    NAME
                   </label>
                   <input
                     type="text"
@@ -289,27 +298,23 @@ const RegisterModal = ({ isOpen, onClose }) => {
                     id="userName"
                     value={formData.userName}
                     onChange={handleChange}
-                    className={`mt-1 block w-full rounded-md border ${
-                      formData.userName && !validations.validName
-                        ? "border-red-500"
-                        : "border-gray-300"
-                    } px-3 py-2`}
+                    className="mt-1 block w-full rounded-md bg-gray-800 px-4 py-3 text-cyan-400 border border-cyan-700 focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 transition-all duration-300 placeholder:text-gray-500"
                     required
                     placeholder="이름을 입력하세요."
                   />
                   {formData.userName && !validations.validName && (
-                    <p className="mt-1 text-sm text-red-500">
+                    <p className="mt-1 text-sm text-red-500 animate-pulse">
                       이름은 2-5자의 한글만 가능합니다.
                     </p>
                   )}
                 </div>
 
-                <div>
+                <div className="group">
                   <label
                     htmlFor="userBirthday"
-                    className="block text-xl font-medium text-gray-700"
+                    className="block text-xl text-cyan-400 group-hover:text-cyan-300"
                   >
-                    생년월일
+                    BIRTHDAY
                   </label>
                   <input
                     type="date"
@@ -317,97 +322,106 @@ const RegisterModal = ({ isOpen, onClose }) => {
                     id="userBirthday"
                     value={formData.userBirthday}
                     onChange={handleChange}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                    onKeyDown={(e) => e.preventDefault()}
+                    className="mt-1 block w-full rounded-md bg-gray-800 px-4 py-3 text-cyan-400 border border-cyan-700 focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 transition-all duration-300 [&::-webkit-calendar-picker-indicator]:filter-white"
                     required
                   />
                 </div>
 
-                <div>
-                  <div className="flex justify-between">
+                <div className="group">
+                  <div className="flex justify-between items-center">
                     <label
                       htmlFor="userNickname"
-                      className="block text-xl font-medium text-gray-700"
+                      className="block text-xl text-cyan-400 group-hover:text-cyan-300"
                     >
-                      닉네임
+                      NICKNAME
                     </label>
-                    <div className="ml-1 flex-1 text-[#FF7A4A]">*</div>
                     <button
                       type="button"
                       onClick={handleNicknameCheck}
-                      className="mt-1 px-3 h-7 bg-[#E3E3E3] text-black rounded-md hover:bg-gray-600 whitespace-nowrap"
+                      className="px-4 py-1 bg-cyan-600 text-white rounded-md hover:bg-cyan-500 transition-all duration-300 transform hover:scale-105 text-sm"
                     >
-                      check
+                      CHECK
                     </button>
                   </div>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      name="userNickname"
-                      id="userNickname"
-                      value={formData.userNickname}
-                      onChange={handleChange}
-                      className={`mt-1 block w-full rounded-md border ${
-                        formData.userNickname && !validations.validNickname
-                          ? "border-red-500"
-                          : "border-gray-300"
-                      } px-3 py-2`}
-                      required
-                      placeholder="사용할 닉네임을 입력하세요."
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    name="userNickname"
+                    id="userNickname"
+                    value={formData.userNickname}
+                    onChange={handleChange}
+                    className="mt-1 block w-full rounded-md bg-gray-800 px-4 py-3 text-cyan-400 border border-cyan-700 focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 transition-all duration-300 placeholder:text-gray-500"
+                    required
+                    placeholder="사용할 닉네임을 입력하세요."
+                  />
                   {formData.userNickname && !validations.validNickname && (
-                    <p className="mt-1 text-sm text-red-500">
+                    <p className="mt-1 text-sm text-red-500 animate-pulse">
                       닉네임은 2-10자의 한글, 영문, 숫자만 가능합니다.
                     </p>
                   )}
-                </div>
-
-                <div>
-                  <div className="flex justify-between">
-                    <label
-                      htmlFor="userEmail"
-                      className="block text-xl font-medium text-gray-700"
+                  {nicknameCheckMessage && (
+                    <p
+                      className={`mt-1 text-sm ${
+                        nicknameCheckMessage.includes("사용 가능")
+                          ? "text-green-500"
+                          : "text-red-500"
+                      } animate-pulse`}
                     >
-                      이메일
-                    </label>
-                    <div className="ml-1 flex-1 text-[#FF7A4A]">*</div>
-                    <button
-                      type="button"
-                      onClick={handleEmailCheck}
-                      className="mt-1 px-3 h-7 bg-[#E3E3E3] text-black rounded-md hover:bg-gray-600 whitespace-nowrap"
-                    >
-                      check
-                    </button>
-                  </div>
-                  <div className="flex gap-2">
-                    <input
-                      type="email"
-                      name="userEmail"
-                      id="userEmail"
-                      value={formData.userEmail}
-                      onChange={handleChange}
-                      className={`mt-1 block w-full rounded-md border ${
-                        formData.userEmail && !validations.validEmail
-                          ? "border-red-500"
-                          : "border-gray-300"
-                      } px-3 py-2`}
-                      required
-                      placeholder="사용할 이메일을 입력하세요."
-                    />
-                  </div>
-                  {formData.userEmail && !validations.validEmail && (
-                    <p className="mt-1 text-sm text-red-500">
-                      유효한 이메일 형식이 아닙니다.
+                      {nicknameCheckMessage}
                     </p>
                   )}
                 </div>
 
-                <div>
+                <div className="group">
+                  <div className="flex justify-between items-center">
+                    <label
+                      htmlFor="userEmail"
+                      className="block text-xl text-cyan-400 group-hover:text-cyan-300"
+                    >
+                      EMAIL
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleEmailCheck}
+                      className="px-4 py-1 bg-cyan-600 text-white rounded-md hover:bg-cyan-500 transition-all duration-300 transform hover:scale-105 text-sm"
+                    >
+                      CHECK
+                    </button>
+                  </div>
+                  <input
+                    type="email"
+                    name="userEmail"
+                    id="userEmail"
+                    value={formData.userEmail}
+                    onChange={handleChange}
+                    className="mt-1 block w-full rounded-md bg-gray-800 px-4 py-3 text-cyan-400 border border-cyan-700 focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 transition-all duration-300 placeholder:text-gray-500"
+                    required
+                    placeholder="사용할 이메일을 입력하세요."
+                  />
+                  {formData.userEmail && !validations.validEmail && (
+                    <p className="mt-1 text-sm text-red-500 animate-pulse">
+                      유효한 이메일 형식이 아닙니다.
+                    </p>
+                  )}
+                  {emailCheckMessage && (
+                    <p
+                      className={`mt-1 text-sm ${
+                        emailCheckMessage.includes("사용 가능")
+                          ? "text-green-500"
+                          : "text-red-500"
+                      } animate-pulse`}
+                    >
+                      {emailCheckMessage}
+                    </p>
+                  )}
+                </div>
+
+                <div className="group">
                   <label
                     htmlFor="userPassword"
-                    className="block text-xl font-medium text-gray-700"
+                    className="block text-xl text-cyan-400 group-hover:text-cyan-300"
                   >
-                    비밀번호
+                    PASSWORD
                   </label>
                   <div className="relative">
                     <input
@@ -416,36 +430,32 @@ const RegisterModal = ({ isOpen, onClose }) => {
                       id="userPassword"
                       value={formData.userPassword}
                       onChange={handleChange}
-                      className={`mt-1 block w-full rounded-md border ${
-                        formData.userPassword && !validations.validPassword
-                          ? "border-red-500"
-                          : "border-gray-300"
-                      } px-3 py-2 pr-10`}
+                      className="mt-1 block w-full rounded-md bg-gray-800 px-4 py-3 text-cyan-400 border border-cyan-700 focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 transition-all duration-300 placeholder:text-gray-500"
                       required
                       placeholder="사용할 비밀번호를 입력하세요."
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-cyan-400 transition-colors duration-300"
                     >
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
                   {formData.userPassword && !validations.validPassword && (
-                    <p className="mt-1 text-sm text-red-500">
+                    <p className="mt-1 text-sm text-red-500 animate-pulse">
                       비밀번호는 영문, 숫자, 특수문자를 포함한 9-16자여야
                       합니다.
                     </p>
                   )}
                 </div>
 
-                <div>
+                <div className="group">
                   <label
                     htmlFor="userPasswordConfirm"
-                    className="block text-xl font-medium text-gray-700"
+                    className="block text-xl text-cyan-400 group-hover:text-cyan-300"
                   >
-                    비밀번호 확인
+                    CONFIRM PASSWORD
                   </label>
                   <div className="relative">
                     <input
@@ -454,12 +464,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
                       id="userPasswordConfirm"
                       value={formData.userPasswordConfirm}
                       onChange={handleChange}
-                      className={`mt-1 block w-full rounded-md border ${
-                        formData.userPasswordConfirm &&
-                        !validations.passwordMatch
-                          ? "border-red-500"
-                          : "border-gray-300"
-                      } px-3 py-2 pr-10`}
+                      className="mt-1 block w-full rounded-md bg-gray-800 px-4 py-3 text-cyan-400 border border-cyan-700 focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 transition-all duration-300 placeholder:text-gray-500"
                       required
                       placeholder="비밀번호를 다시 입력하세요."
                     />
@@ -468,7 +473,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
                       onClick={() =>
                         setShowPasswordConfirm(!showPasswordConfirm)
                       }
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-cyan-400 transition-colors duration-300"
                     >
                       {showPasswordConfirm ? (
                         <EyeOff size={20} />
@@ -479,28 +484,48 @@ const RegisterModal = ({ isOpen, onClose }) => {
                   </div>
                   {formData.userPasswordConfirm &&
                     !validations.passwordMatch && (
-                      <p className="mt-1 text-sm text-red-500">
+                      <p className="mt-1 text-sm text-red-500 animate-pulse">
                         비밀번호가 일치하지 않습니다.
                       </p>
                     )}
                 </div>
 
-                {error && <p className="text-red-500 text-sm">{error}</p>}
+                {error && (
+                  <p className="text-red-500 text-sm text-center animate-pulse">
+                    {error}
+                  </p>
+                )}
 
-                <hr className="my-4" />
+                <div className="border border-cyan-800 rounded-lg p-4 bg-gray-900/50">
+                  <div className="text-cyan-400 text-lg mb-4 text-center">
+                    REQUIRED PERMISSIONS
+                  </div>
+                  <div className="space-y-2 text-gray-300 text-sm ">
+                    <p className="ml-4">
+                      1️⃣ 본 서비스는 화상 카메라 및 마이크 사용이 필수적입니다.
+                    </p>
+                    <p className="ml-4">
+                      2️⃣ 이용을 위한 카메라 및 마이크 기기 접근에 동의해주세요.
+                    </p>
+                    <p className="ml-4">
+                      3️⃣ 청정한 소통 위한 욕설감지 AI프로그램 설치에
+                      동의해주세요.
+                    </p>
+                  </div>
 
-                <div className="p-3 bg-gray-50 rounded-md text-sm text-gray-600">
-                  본 서비스는 원활한 소통을 위해 화상 카메라와 마이크 사용이
-                  필수적입니다. 서비스 이용을 위한 카메라 및 마이크 기기 접근과
-                  사용에 동의해주세요.
+                  <div className="mt-4 text-red-400 text-center">
+                    <div className="text-xl">⚠️WARNING⚠️</div>
+                    <div className="text-sm">
+                      서비스 이용시 욕설을 할 경우 음성이 녹음될 수 있습니다.
+                    </div>
+                  </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="flex items-center">
+                <div className="space-y-3 text-gray-300">
+                  <div className="flex items-center space-x-2 hover:text-cyan-400 transition-colors duration-300">
                     <input
                       type="checkbox"
                       id="termsAgreement"
-                      className="mr-2"
                       checked={termsAgreed.terms}
                       onChange={(e) =>
                         setTermsAgreed((prev) => ({
@@ -508,6 +533,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
                           terms: e.target.checked,
                         }))
                       }
+                      className="w-4 h-4 rounded border-cyan-700 text-cyan-500 focus:ring-cyan-500"
                       required
                     />
                     <label htmlFor="termsAgreement" className="text-sm">
@@ -515,11 +541,10 @@ const RegisterModal = ({ isOpen, onClose }) => {
                     </label>
                   </div>
 
-                  <div className="flex items-center">
+                  <div className="flex items-center space-x-2 hover:text-cyan-400 transition-colors duration-300">
                     <input
                       type="checkbox"
                       id="privacyAgreement"
-                      className="mr-2"
                       checked={termsAgreed.privacy}
                       onChange={(e) =>
                         setTermsAgreed((prev) => ({
@@ -527,6 +552,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
                           privacy: e.target.checked,
                         }))
                       }
+                      className="w-4 h-4 rounded border-cyan-700 text-cyan-500 focus:ring-cyan-500"
                       required
                     />
                     <label htmlFor="privacyAgreement" className="text-sm">
@@ -534,11 +560,10 @@ const RegisterModal = ({ isOpen, onClose }) => {
                     </label>
                   </div>
 
-                  <div className="flex items-center">
+                  <div className="flex items-center space-x-2 hover:text-cyan-400 transition-colors duration-300">
                     <input
                       type="checkbox"
                       id="deviceAgreement"
-                      className="mr-2"
                       checked={termsAgreed.device}
                       onChange={(e) =>
                         setTermsAgreed((prev) => ({
@@ -546,25 +571,46 @@ const RegisterModal = ({ isOpen, onClose }) => {
                           device: e.target.checked,
                         }))
                       }
+                      className="w-4 h-4 rounded border-cyan-700 text-cyan-500 focus:ring-cyan-500"
                       required
                     />
                     <label htmlFor="deviceAgreement" className="text-sm">
                       [필수] 화상/음성 채팅 이용 동의
                     </label>
                   </div>
-                </div>
 
-                <hr className="my-4" />
+                  <div className="flex items-center space-x-2 hover:text-cyan-400 transition-colors duration-300">
+                    <input
+                      type="checkbox"
+                      id="AIAgreement"
+                      checked={termsAgreed.AI}
+                      onChange={(e) =>
+                        setTermsAgreed((prev) => ({
+                          ...prev,
+                          AI: e.target.checked,
+                        }))
+                      }
+                      className="w-4 h-4 rounded border-cyan-700 text-cyan-500 focus:ring-cyan-500"
+                      required
+                    />
+                    <label htmlFor="AIAgreement" className="text-sm">
+                      [필수] AI 욕설 감지 프로그램 설치 동의
+                    </label>
+                  </div>
+                </div>
 
                 <button
                   type="submit"
                   disabled={isLoading || !isFormValid()}
-                  className="w-full rounded-md text-xl py-2 text-white bg-gradient-to-tr from-cyan-500 to-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+                  className="w-full rounded-md bg-gradient-to-r from-cyan-600 to-blue-600 py-4 text-white text-xl font-bold focus:outline-none disabled:opacity-50 hover:from-cyan-500 hover:to-blue-500 transition-all duration-300 transform shadow-[0_0_15px_rgba(0,255,255,0.3)] hover:shadow-[0_0_20px_rgba(0,255,255,0.5)]"
                 >
-                  {isLoading ? "처리중..." : "SIGNUP"}
+                  {isLoading ? "CREATING ACCOUNT..." : "JOIN WITH US"}
                 </button>
               </form>
             </div>
+
+            {/* 게임스러운 하단 장식 */}
+            <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 w-3/4 h-1 bg-cyan-500 rounded-full shadow-[0_0_10px_rgba(0,255,255,0.5)]" />
           </Dialog.Panel>
         </div>
       </Dialog>

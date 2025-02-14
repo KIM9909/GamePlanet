@@ -17,7 +17,7 @@ import com.meeple.meeple_back.gameInfo.model.response.gameReview.ResponseUpdateR
 import java.util.List;
 
 public interface GameInfoService {
-   ResponseGameInfoList getGameInfoList();
+    ResponseGameInfoList getGameInfoList();
 
     ResponseCreateGameInfo createGameInfo(RequestCreateGameInfo request);
 
@@ -29,23 +29,25 @@ public interface GameInfoService {
 
     ResponseCreateReview createReview(RequestCreateReview request);
 
- ResponseReviewList getReviewList(int gameInfoId);
+    ResponseReviewList getReviewList(int gameInfoId);
 
- void deleteReview(int reviewId);
+    void deleteReview(int reviewId);
 
- ResponseUpdateReview updateReview(int reviewId, RequestUpdateReview request);
+    ResponseUpdateReview updateReview(int reviewId, RequestUpdateReview request);
 
- ResponseCreateCommunity createCommunity(RequestCreateCommunity request);
+    ResponseCreateCommunity createCommunity(RequestCreateCommunity request);
 
- List<ResponseCommunityList> getCommunityList(int gameInfoId);
+    List<ResponseCommunityList> getCommunityList(int gameInfoId);
 
- ResponseCreateComment createComment(RequestCreateComment request);
+    ResponseCreateComment createComment(RequestCreateComment request);
 
- ResponseUpdateCommunity updateCommunity(int gameCommunityId, RequestUpdateCommunity request);
+    ResponseUpdateCommunity updateCommunity(int gameCommunityId, RequestUpdateCommunity request);
 
- ResponseDeleteCommunity deleteCommunity(int gameCommunityId);
+    ResponseDeleteCommunity deleteCommunity(int gameCommunityId);
 
- ResponseUpdateComment updateComment(int gameCommunityCommentId, RequestUpdateComment request);
+    ResponseUpdateComment updateComment(int gameCommunityCommentId, RequestUpdateComment request);
 
- ResponseDeleteComment deleteComment(int gameCommunityCommentId);
+    ResponseDeleteComment deleteComment(int gameCommunityCommentId);
+
+    ResponseCommunity findCommunity(int gameInfoId, int gameCommunityId);
 }

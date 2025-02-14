@@ -14,17 +14,24 @@ const ChatBox = ({ roomId, currentUser, correctAnswer }) => {
   );
 
   useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop =
-        chatContainerRef.current.scrollHeight;
-    }
+    const scrollToBottom = () => {
+      if (chatContainerRef.current) {
+        const scrollHeight = chatContainerRef.current.scrollHeight;
+        const height = chatContainerRef.current.clientHeight;
+        const maxScrollTop = scrollHeight - height;
+        chatContainerRef.current.scrollTop =
+          maxScrollTop > 0 ? maxScrollTop : 0;
+      }
+    };
+
+    scrollToBottom();
+    requestAnimationFrame(scrollToBottom);
   }, [messages]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!message.trim()) return;
 
-    // 출제자가 정답을 입력하는 경우 무시
     if (
       currentUserTurn &&
       message.trim().toLowerCase() === correctAnswer?.toLowerCase()
@@ -34,7 +41,6 @@ const ChatBox = ({ roomId, currentUser, correctAnswer }) => {
       return;
     }
 
-    // 모든 메시지를 일반 메시지 형식으로 전송
     const messageData = {
       message: message.trim(),
       sender: currentUser,
@@ -46,53 +52,55 @@ const ChatBox = ({ roomId, currentUser, correctAnswer }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-800">
-      <div
-        ref={chatContainerRef}
-        className="flex-1 p-4 overflow-y-auto space-y-3"
-      >
-        {messages.map((msg, index) => {
-          // Notice 메시지
-          if (msg.isNotice || msg.sender === "SYSTEM") {
+    <div className="flex flex-col h-full">
+      {/* 채팅 메시지 영역 */}
+      <div className="relative flex-1 min-h-0">
+        <div
+          ref={chatContainerRef}
+          className="absolute inset-0 p-4 overflow-y-scroll space-y-3 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-800/40 [&::-webkit-scrollbar-thumb]:bg-gray-600/40 hover:[&::-webkit-scrollbar-thumb]:bg-gray-600/80 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:rounded-full"
+        >
+          {messages.map((msg, index) => {
+            if (msg.isNotice || msg.sender === "SYSTEM") {
+              return (
+                <div key={index} className="flex justify-center">
+                  <div className="bg-yellow-500/20 text-yellow-200 px-4 py-2 rounded text-sm">
+                    {msg.content}
+                  </div>
+                </div>
+              );
+            }
+
             return (
-              <div key={index} className="flex justify-center">
-                <div className="bg-yellow-500/20 text-yellow-200 px-4 py-2 rounded text-sm">
-                  {msg.content}
+              <div
+                key={index}
+                className={`flex flex-col ${
+                  msg.sender === currentUser ? "items-end" : "items-start"
+                }`}
+              >
+                <span className="text-sm text-gray-400">{msg.sender}</span>
+                <div
+                  className={`px-4 py-2 rounded-lg max-w-[80%] ${
+                    msg.isCorrect
+                      ? "bg-green-500 text-white"
+                      : msg.sender === currentUser
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-700 text-white"
+                  }`}
+                >
+                  <p>{msg.content}</p>
+                  {msg.isCorrect && (
+                    <div className="text-xs mt-1 text-green-200">
+                      🎉 정답을 맞추셨습니다! + 30점
+                    </div>
+                  )}
                 </div>
               </div>
             );
-          }
-
-          // 일반 채팅 메시지
-          return (
-            <div
-              key={index}
-              className={`flex flex-col ${
-                msg.sender === currentUser ? "items-end" : "items-start"
-              }`}
-            >
-              <span className="text-sm text-gray-400">{msg.sender}</span>
-              <div
-                className={`px-4 py-2 rounded-lg max-w-[80%] ${
-                  msg.isCorrect
-                    ? "bg-green-500 text-white"
-                    : msg.sender === currentUser
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-700 text-white"
-                }`}
-              >
-                <p>{msg.content}</p>
-                {msg.isCorrect && (
-                  <div className="text-xs mt-1 text-green-200">
-                    🎉 정답을 맞추셨습니다! + 30점
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
+          })}
+        </div>
       </div>
 
+      {/* 입력 폼 영역 */}
       <form onSubmit={handleSubmit} className="p-4 border-t border-gray-700">
         <div className="flex gap-2">
           <input

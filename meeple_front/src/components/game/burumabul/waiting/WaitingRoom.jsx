@@ -12,15 +12,22 @@ import { createPortal } from "react-dom";
 import { fetchFriendList } from "../../../../sources/api/FriendApi";
 import { findBurumabulRoom } from "../../../../sources/api/BurumabulRoomAPI";
 import { SocketContext } from "../../../layout/SocketLayout";
+import ChangePasswordModal from "../play/burumabul_Modal/ChangePasswordModal";
+import WaitingChat from "../play/burumabul_Modal/WaitingChat";
 
-// 백엔드 연결 필요
 const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
-  console.log(roomId);
-  useEffect(() => {
-    setCurrnetRoomInfo(roomInfo);
-  }, [roomInfo]);
   const userId = Number(useSelector((state) => state.user.userId));
-  const [currentRoomInfo, setCurrnetRoomInfo] = useState(roomInfo);
+  const [currentRoomInfo, setCurrentRoomInfo] = useState(roomInfo);
+  useEffect(() => {
+    if (roomInfo && Object.keys(roomInfo).length > 0) {
+      setCurrentRoomInfo(roomInfo);
+      setRoomName(roomInfo.roomName);
+      setMaxPlayers(roomInfo.maxPlayers);
+      setPlayerLen(roomInfo.players.length);
+      console.log(currentRoomInfo);
+    }
+  }, [roomInfo]);
+
   const {
     connected,
     roomSocketData,
@@ -31,11 +38,34 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
 
   const [showPutRoomModal, setShowPutRoomModal] = useState(false);
   const [showAlertModal, setShowAlertModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [friendList, setFriendList] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  console.log("소켓 데이터", SocketContext);
+  // console.log("소켓 데이터", SocketContext);
+
+  const playersInfo = currentRoomInfo.players;
+  const [roomName, setRoomName] = useState(currentRoomInfo.roomName);
+  const [maxPlayers, setMaxPlayers] = useState(currentRoomInfo.maxPlayers);
+  const [playerLen, setPlayerLen] = useState(currentRoomInfo.players.length);
+  const creatorId = Number(currentRoomInfo.creator.playerId);
+  const isPrivate = currentRoomInfo.private;
+
+  // 준비 됐는지 안 됐는지
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    if (!roomSocketData) return;
+    setCurrentRoomInfo((prev) => ({
+      ...prev,
+      ...roomSocketData,
+    }));
+
+    if (roomSocketData.roomName) setRoomName(roomSocketData.roomName);
+    if (roomSocketData.maxPlayers) setMaxPlayers(roomSocketData.maxPlayers);
+    if (roomSocketData.players) setPlayerLen(roomSocketData.players.length);
+  }, [roomSocketData]);
 
   useEffect(() => {
     const getFriendList = async () => {
@@ -58,7 +88,7 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
       if (roomId) {
         try {
           const response = await findBurumabulRoom(roomId);
-          setCurrnetRoomInfo(response);
+          setCurrentRoomInfo(response);
         } catch (error) {
           console.error("방 정보 조회 중 오류 발생 : ", error);
         } finally {
@@ -67,14 +97,19 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
       }
     };
     getRoomInfo();
+    console.log(roomId);
   }, [roomId]);
 
   useEffect(() => {
     if (connected && roomSocketData) {
-      setCurrnetRoomInfo((prev) => ({
+      setCurrentRoomInfo((prev) => ({
         ...prev,
         ...roomSocketData,
       }));
+
+      if (roomSocketData.roomName) setRoomName(roomSocketData.roomName);
+      if (roomSocketData.maxPlayers) setMaxPlayers(roomSocketData.maxPlayers);
+      if (roomSocketData.players) setPlayerLen(roomSocketData.players.length);
     }
   }, [connected, roomSocketData]);
 
@@ -82,22 +117,16 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
     return <div>Loading Room Informangition</div>;
   }
 
-  console.log(currentRoomInfo);
-
-  const playersInfo = currentRoomInfo.players;
-  const roomName = currentRoomInfo.roomName;
-  const creatorId = Number(currentRoomInfo.creator?.playerId);
-
-  const isPrivate = currentRoomInfo.private;
-  const maxPlayers = currentRoomInfo.maxPlayers;
-  const playerLen = currentRoomInfo.players?.length;
-
   const handlePutRoom = () => {
     setShowPutRoomModal(true);
   };
 
   const handleAlertModal = () => {
     setShowAlertModal(true);
+  };
+
+  const showChangePassword = () => {
+    setShowPasswordModal(true);
   };
 
   //
@@ -125,6 +154,22 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
       navigate("/home");
     }
   };
+
+  // // 게임 준비 정원 => 방장은 무조건 Ready
+  // let readyPeople = 1;
+
+  // // 게임 준비 취소
+  // const handleCancel = () => {
+  //   setIsReady(false);
+  //   readyPeople -= 1
+  // };
+
+  // // 게임 준비 완료
+  // const handleReady = () => {
+  //   setIsReady(true);
+  //   ready += 1
+  // };
+
   return (
     <>
       <style>{`
@@ -138,14 +183,14 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
         className="h-screen w-full bg-cover bg-center relative flex justify-center items-center"
         style={{ backgroundImage: `url(${background}` }}
       >
-        <div className="h-[600px] w-[1000px] bg-white bg-opacity-70 rounded-lg flex flex-col justify-start items-center">
+        <div className="min-h-[600px] w-[880px] bg-black bg-opacity-30 rounded-lg flex flex-col justify-start items-center">
           {/* 친구 검색해서 친구 추가 */}
           <div className="mt-5">
             <FriendSearch friendList={friendList} />
           </div>
           <div className="flex flex-col items-center my-5">
             <div className="flex flex-row justify-center items-center mt-5">
-              <h1 className="text-3xl mx-2 text-center break-words w-[400px] truncate">
+              <h1 className="text-white text-3xl mx-2 text-center break-words w-[400px] truncate">
                 {roomName}
               </h1>
               <span className="mx-2">
@@ -162,7 +207,7 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
                   />
                 )}
               </span>
-              <span className="mx-1 ">
+              <span className="mx-1 text-white text-nowrap">
                 {playerLen} / {maxPlayers}
               </span>
             </div>
@@ -176,24 +221,33 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
 
             {/* 하단 버튼 */}
             <div className="w-full flex flex-row justify-between my-10 px-10">
-              <button
-                className="relative overflow-hidden text-lg font-semibold text-white mx-10 bg-gradient-to-r from-red-400 to-red-500 border-2 border-red-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
-                onClick={leaveTheRoom}
-              >
-                방 나가기
-              </button>
               {userId && creatorId && Number(userId) === Number(creatorId) ? (
+                // 방장인 경우
                 <div>
                   {Number(maxPlayers) === Number(playerLen) ? (
                     <div className="flex flex-row">
                       <button
-                        className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-yellow-200 to-yellow-500 border-2 border-yellow-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
+                        className="relative overflow-hidden text-lg font-semibold text-white mx-10 bg-gradient-to-r from-red-400 to-red-500 border-2 border-red-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
+                        onClick={leaveTheRoom}
+                      >
+                        방 나가기
+                      </button>
+                      {isPrivate && (
+                        <button
+                          className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-fuchsia-200 to-fuchsia-400 border-2 border-fuchsia-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                          onClick={showChangePassword}
+                        >
+                          비밀번호 변경
+                        </button>
+                      )}
+                      <button
+                        className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-yellow-200 to-yellow-500 border-2 border-yellow-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
                         onClick={handlePutRoom}
                       >
                         게임방 수정
                       </button>
                       <button
-                        className="relative overflow-hidden text-lg font-semibold text-white mx-10 bg-gradient-to-r from-cyan-500 to-blue-500 border-2 border-blue-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
+                        className="relative overflow-hidden text-lg font-semibold text-white mx-10 bg-gradient-to-r from-cyan-500 to-blue-500 border-2 border-blue-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
                         onClick={goToGame}
                       >
                         게임 시작
@@ -202,13 +256,27 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
                   ) : (
                     <div className="flex flex-row">
                       <button
-                        className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-yellow-200 to-yellow-500 border-2 border-yellow-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
+                        className="relative overflow-hidden text-lg font-semibold text-white mx-10 bg-gradient-to-r from-red-400 to-red-500 border-2 border-red-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
+                        onClick={leaveTheRoom}
+                      >
+                        방 나가기
+                      </button>
+                      {isPrivate && (
+                        <button
+                          onClick={showChangePassword}
+                          className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-fuchsia-200 to-fuchsia-400 border-2 border-fuchsia-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                        >
+                          비밀번호 변경
+                        </button>
+                      )}
+                      <button
+                        className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-yellow-200 to-yellow-500 border-2 border-yellow-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
                         onClick={handlePutRoom}
                       >
                         게임방 수정
                       </button>
                       <button
-                        className="text-lg text-white mx-10 bg-gray-500 border-2 w-32 h-12 rounded "
+                        className="text-lg text-white mx-10 bg-gray-500 border-2 w-32 h-12 rounded"
                         onClick={handleAlertModal}
                       >
                         게임 시작
@@ -217,32 +285,50 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
                   )}
                 </div>
               ) : (
-                <div>게임준비</div>
+                // 방장이 아닌 경우
+                <div className="flex justify-center w-full">
+                  <button
+                    className="relative overflow-hidden text-lg font-semibold text-white bg-gradient-to-r from-red-400 to-red-500 border-2 border-red-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                    onClick={leaveTheRoom}
+                  >
+                    방 나가기
+                  </button>
+                </div>
               )}
-
-              {showPutRoomModal && (
-                <PutBurumabulRoom
-                  originRoomData={currentRoomInfo}
-                  onClose={() => setShowPutRoomModal(false)}
-                />
-              )}
-
-              {showAlertModal &&
-                createPortal(
-                  <div className="fixed inset-0 z-50 flex flex-row justify-center items-center ">
-                    <PlayerAlertModal
-                      className=""
-                      onClose={() => setShowAlertModal(false)}
-                    />
-                  </div>,
-                  document.body
-                )}
-
-              {/* <button className="mx-3">게임 준비</button> */}
             </div>
           </div>
         </div>
+        <div className="w-[250px] bg-white rounded-lg">
+          <WaitingChat roomId={roomId} players={playersInfo} />
+        </div>
       </div>
+
+      {showPutRoomModal && (
+        <PutBurumabulRoom
+          originRoomData={currentRoomInfo}
+          onClose={() => setShowPutRoomModal(false)}
+        />
+      )}
+
+      {showAlertModal &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex flex-row justify-center items-center ">
+            <PlayerAlertModal onClose={() => setShowAlertModal(false)} />
+          </div>,
+          document.body
+        )}
+
+      {isPrivate &&
+        showPasswordModal &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex flex-row justify-center items-center">
+            <ChangePasswordModal
+              onClick={showChangePassword}
+              onClose={() => setShowPasswordModal(false)}
+            />
+          </div>,
+          document.body
+        )}
     </>
   );
 };

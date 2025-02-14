@@ -1,17 +1,19 @@
 import React, { useState, useRef, useCallback } from "react";
-import VideoChat from "./VideoChat";
 import ProfileModal from "../../../user/ProfileModal";
 import { UserSearch } from "lucide-react";
+import ReportFormModal from "../../../user/ReportFormModal";
 
 const PlayerCard = ({
   userNickname,
   isCurrentTurn,
   score,
-  userLevel = 1,
+  userLevel,
   isCurrentUser = false,
+  sessionId,
+  children,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [showReportForm, setShowReportForm] = useState(false); // 여기로 state 이동
+  const [showReportForm, setShowReportForm] = useState(false);
   const buttonRef = useRef();
 
   const getAnchorRect = useCallback(() => {
@@ -37,9 +39,7 @@ const PlayerCard = ({
       }`}
     >
       <div className="w-full pt-[56.25%] relative">
-        <div className="absolute inset-0 overflow-hidden">
-          <VideoChat nickname={userNickname} />
-        </div>
+        <div className="absolute inset-0 overflow-hidden">{children}</div>
         {isCurrentTurn && (
           <div className="absolute top-2 right-2 px-2 py-1 bg-blue-500 text-white text-xs font-medium rounded-full shadow-md z-50">
             출제자
@@ -49,7 +49,22 @@ const PlayerCard = ({
       <div className="p-3 bg-gray-700/90 backdrop-blur-md border-t border-gray-600">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-gray-200">{userNickname}</span>
+            {isCurrentUser ? (
+              <span className="flex items-center gap-2 group">
+                <div className="font-medium text-cyan-300/90 transition-colors duration-200">
+                  {userNickname}
+                </div>
+                <div className="px-2 py-0.5 text-sm bg-cyan-400/10 rounded-full">
+                  <span className="bg-gradient-to-r from-cyan-300 to-cyan-300 bg-clip-text text-transparent font-semibold">
+                    Me
+                  </span>
+                </div>
+              </span>
+            ) : (
+              <span className="font-medium text-gray-200 hover:text-gray-100 transition-colors duration-200">
+                {userNickname}
+              </span>
+            )}
             {!isCurrentUser && (
               <button
                 ref={buttonRef}
@@ -69,7 +84,7 @@ const PlayerCard = ({
           userNickname={userNickname}
           userLevel={userLevel}
           getAnchorRect={getAnchorRect}
-          onReport={handleReport} // 여기에 handleReport 전달
+          onReport={handleReport}
         />
       )}
 

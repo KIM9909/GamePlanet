@@ -1,356 +1,494 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { OpenVidu } from "openvidu-browser";
-import { VideoAPI } from "../../../../sources/api/CatchMindAPI";
-import { Camera, CameraOff, Mic, MicOff } from "lucide-react";
+import axios from "axios";
+import PlayerCard from "./PlayerCard";
+import { Mic, MicOff, Video, VideoOff } from "lucide-react";
 import { useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import * as StompJs from "@stomp/stompjs";
+import SockJS from "sockjs-client";
 
-const VideoChat = ({ nickname }) => {
-  const { roomId } = useParams();
+const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
   const [session, setSession] = useState(null);
   const [publisher, setPublisher] = useState(null);
   const [subscribers, setSubscribers] = useState([]);
-  const [isMicOn, setIsMicOn] = useState(true);
-  const [isCameraOn, setIsCameraOn] = useState(true);
-  const [error, setError] = useState(null);
-  const [isInitializing, setIsInitializing] = useState(false);
+  const [connectionError, setConnectionError] = useState(null);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [players, setPlayers] = useState([]);
+  const [audioEnabled, setAudioEnabled] = useState(false);
+  const [videoEnabled, setVideoEnabled] = useState(false);
+  const tokenRef = useRef(null);
+  const stompClient = useRef(null);
 
-  const currentUser = useSelector((state) => state.profile.profileData);
-  const isCurrentUser = currentUser?.userNickname === nickname;
+  const gameStatePlayers = useSelector((state) => state.catchmind.players);
 
-  const publisherRef = useRef(null);
-  const subscribersRef = useRef(null);
-  const sessionRef = useRef(null);
-  const publisherObjRef = useRef(null);
-  const retryCountRef = useRef(0);
-  const retryTimeoutRef = useRef(null);
-  const isConnectedRef = useRef(false);
-
-  // Publisher 설정
-  const getPublisherOptions = () => ({
-    audioSource: undefined,
-    videoSource: undefined,
-    publishAudio: true,
-    publishVideo: true,
-    resolution: "640x480",
-    frameRate: 30,
-    insertMode: "APPEND",
-    mirror: false,
-    videoSimulcast: false,
-    NetworkQualityLevels: true,
-  });
-
-  // 스트림 생성 핸들러
-  const handleStreamCreated = async (session, event, mounted) => {
-    if (!mounted) return;
-
-    try {
-      const connectionData = JSON.parse(event.stream.connection.data);
-      const streamNickname = connectionData.clientData;
-
-      if (streamNickname === nickname) return;
-
-      console.log(`Subscribing to stream from ${streamNickname}`);
-      const subscriber = session.subscribe(
-        event.stream,
-        subscribersRef.current
-      );
-
-      subscriber.on("videoElementCreated", (e) => {
-        const videoElement = e.element;
-        videoElement.classList.add("w-full", "h-full", "object-cover");
-
-        videoElement.addEventListener("loadedmetadata", () => {
-          console.log(`Video metadata loaded for ${streamNickname}`);
-        });
-
-        videoElement.addEventListener("playing", () => {
-          console.log(`Video started playing for ${streamNickname}`);
-        });
-      });
-
-      subscriber.on("streamPlaying", () => {
-        console.log(`Stream is playing for ${streamNickname}`);
-      });
-
-      subscriber.on("streamPlayingFailed", (error) => {
-        console.error(`Stream playing failed for ${streamNickname}:`, error);
-        try {
-          subscriber.stream?.disposeWebRtcPeer();
-          session.subscribe(event.stream, subscribersRef.current);
-        } catch (retryError) {
-          console.error("Error during stream resubscription:", retryError);
-        }
-      });
-
-      setSubscribers((prev) => [...prev, subscriber]);
-    } catch (error) {
-      console.error("Error in streamCreated handler:", error);
-    }
-  };
-
-  // 세션 정리
-  const cleanupSession = async () => {
-    console.log("Cleaning up session...");
-    try {
-      if (subscribers.length > 0) {
-        subscribers.forEach((subscriber) => {
-          try {
-            if (subscriber.stream) {
-              subscriber.stream.disposeWebRtcPeer();
-            }
-          } catch (error) {
-            console.warn("Error disposing subscriber:", error);
-          }
-        });
-      }
-
-      if (publisherObjRef.current) {
-        try {
-          if (publisherObjRef.current.stream) {
-            publisherObjRef.current.stream.disposeWebRtcPeer();
-          }
-          publisherObjRef.current = null;
-        } catch (error) {
-          console.warn("Error disposing publisher:", error);
-        }
-      }
-
-      if (sessionRef.current && isConnectedRef.current) {
-        try {
-          await sessionRef.current.disconnect();
-          console.log("Session disconnected successfully");
-        } catch (error) {
-          console.warn("Error disconnecting session:", error);
-        }
-      }
-    } catch (error) {
-      console.error("Error during cleanup:", error);
-    } finally {
-      sessionRef.current = null;
-      isConnectedRef.current = false;
-      setSession(null);
-      setPublisher(null);
-      setSubscribers([]);
-    }
-  };
-
-  // 마이크 토글
-  const toggleMic = useCallback(() => {
-    if (!publisher || !isCurrentUser) return;
-    try {
-      const newMicState = !isMicOn;
-      publisher.publishAudio(newMicState);
-      setIsMicOn(newMicState);
-    } catch (error) {
-      console.error("Error toggling mic:", error);
-    }
-  }, [publisher, isCurrentUser, isMicOn]);
-
-  // 카메라 토글
-  const toggleCamera = useCallback(() => {
-    if (!publisher || !isCurrentUser || !session) return;
-    try {
-      const newCameraState = !isCameraOn;
-      publisher.publishVideo(newCameraState);
-      setIsCameraOn(newCameraState);
-
-      if (publisherRef.current) {
-        const videoElements =
-          publisherRef.current.getElementsByTagName("video");
-        if (videoElements.length > 0) {
-          videoElements[0].style.display = newCameraState ? "block" : "none";
-        }
-      }
-    } catch (error) {
-      console.error("Error toggling camera:", error);
-    }
-  }, [publisher, isCurrentUser, session, isCameraOn]);
-
-  // 메인 초기화 효과
   useEffect(() => {
-    let mounted = true;
+    let isComponentMounted = true;
+    let client = null;
 
-    const initializeSession = async () => {
-      if (isInitializing) return;
-
-      setIsInitializing(true);
-      setError(null);
+    const connect = () => {
+      if (!isComponentMounted) return;
 
       try {
-        await cleanupSession();
+        const wsUrl = `${import.meta.env.VITE_SOCKET_API_BASE_URL}`;
+        console.log("Connecting to WebSocket URL:", wsUrl);
 
-        console.log("Initializing OpenVidu session...");
-        const OV = new OpenVidu();
-
-        OV.setAdvancedConfiguration({
-          forceMediaReconnectionAfterNetworkDrop: true,
-          timeoutInterval: 30000,
-          backoffPeriod: 1000,
-          retryOnFailure: 3,
-          iceServers: [
-            { urls: ["stun:stun.l.google.com:19302"] },
-            { urls: ["stun:stun1.l.google.com:19302"] },
-          ],
+        // SockJS 설정
+        const socket = new SockJS(wsUrl, null, {
+          transports: ["websocket", "xhr-streaming", "xhr-polling"],
+          timeout: 10000,
         });
 
-        const session = OV.initSession();
-        sessionRef.current = session;
-
-        if (!mounted) return;
-        setSession(session);
-
-        // 이벤트 리스너 설정
-        session.on("streamCreated", (event) =>
-          handleStreamCreated(session, event, mounted)
-        );
-
-        session.on("streamDestroyed", (event) => {
-          if (!mounted) return;
-          console.log("Stream destroyed:", event.stream.streamId);
-          setSubscribers((prev) =>
-            prev.filter((sub) => sub.stream.streamId !== event.stream.streamId)
-          );
+        client = new StompJs.Client({
+          webSocketFactory: () => socket,
+          connectHeaders: {
+            Origin: window.location.origin,
+          },
+          debug: (str) => {
+            console.log("STOMP Debug:", str);
+          },
+          reconnectDelay: 5000,
+          heartbeatIncoming: 4000,
+          heartbeatOutgoing: 4000,
+          connectionTimeout: 10000,
         });
 
-        session.on("sessionDisconnected", () => {
-          if (!mounted) return;
-          console.log("Session disconnected");
-          isConnectedRef.current = false;
-          cleanupSession();
+        client.onConnect = () => {
+          console.log("WebSocket Connected Successfully");
+          if (!isComponentMounted) {
+            client.deactivate();
+            return;
+          }
+          stompClient.current = client;
+
+          // OpenVidu 스트림이 이미 존재하면 데이터 전송
+          if (publisher) {
+            const streamData = {
+              nickname: nickname,
+              streamId: publisher.stream.streamId,
+              connectionId: publisher.stream.connection.connectionId,
+            };
+            sendStreamData(nickname, JSON.stringify(streamData));
+          }
+        };
+
+        client.onStompError = (frame) => {
+          console.error("STOMP Protocol Error:", frame);
+        };
+
+        client.onWebSocketError = (error) => {
+          console.error("WebSocket Error:", error);
+        };
+
+        client.onDisconnect = () => {
+          console.log("WebSocket Disconnected");
+          if (isComponentMounted) {
+            setTimeout(connect, 5000);
+          }
+        };
+
+        client.activate();
+      } catch (error) {
+        console.error("Error creating WebSocket connection:", error);
+        if (isComponentMounted) {
+          setTimeout(connect, 5000);
+        }
+      }
+    };
+
+    connect();
+
+    return () => {
+      isComponentMounted = false;
+      if (client?.connected) {
+        client.deactivate();
+      }
+    };
+  }, [nickname, publisher]);
+
+  // 스트림 데이터 전송 함수
+  const sendStreamData = (nickname, streamData) => {
+    if (stompClient.current?.connected) {
+      try {
+        const message = {
+          userStream: streamData,
+        };
+        console.log("Sending stream data:", message);
+        stompClient.current.publish({
+          destination: `/app/give-stream/${nickname}`,
+          body: JSON.stringify(message),
+          headers: { "content-type": "application/json" },
         });
+      } catch (error) {
+        console.error("Error sending stream data:", error);
+      }
+    } else {
+      console.warn("STOMP client not connected. Unable to send stream data.");
+    }
+  };
 
-        session.on("exception", (exception) => {
-          console.warn("Session exception:", exception);
+  // 오디오 상태 토글
+  const toggleAudio = () => {
+    if (publisher) {
+      publisher.publishAudio(!audioEnabled);
+      setAudioEnabled(!audioEnabled);
+      // players 상태도 즉시 업데이트
+      updatePlayers(publisher, subscribers);
+    }
+  };
+
+  const toggleVideo = () => {
+    if (publisher) {
+      publisher.publishVideo(!videoEnabled);
+      setVideoEnabled(!videoEnabled);
+      // players 상태도 즉시 업데이트
+      updatePlayers(publisher, subscribers);
+    }
+  };
+
+  // Media Control Button 컴포넌트
+  const MediaControlButton = ({ onClick, enabled, Icon, DisabledIcon }) => (
+    <button
+      onClick={onClick}
+      className={`p-1.5 rounded-full transition-all duration-200 backdrop-blur-md
+        ${
+          enabled
+            ? "bg-white/10 hover:bg-white/20 text-white shadow-lg"
+            : "bg-red-500/20 hover:bg-red-500/30 text-red-500 shadow-lg"
+        }
+        group flex items-center justify-center
+        hover:scale-110 active:scale-95
+        border ${enabled ? "border-white/20" : "border-red-500/30"}
+      `}
+    >
+      <div className="transition-transform duration-200 group-hover:scale-110">
+        {enabled ? <Icon size={16} /> : <DisabledIcon size={16} />}
+      </div>
+    </button>
+  );
+
+  // players 상태 업데이트 함수
+  const updatePlayers = (publisher, subscribers) => {
+    const allPlayers = [];
+    const addedNicknames = new Set(); // 이미 추가된 닉네임을 추적
+
+    // 현재 사용자(publisher) 추가
+    if (publisher) {
+      const currentPlayerState = gameStatePlayers.find(
+        (p) => p.nickname === nickname
+      );
+      allPlayers.push({
+        stream: publisher.stream,
+        nickname: nickname,
+        isCurrentUser: true,
+        score: currentPlayerState?.score || 0, // Redux store에서 점수 가져오기
+        isCurrentTurn: currentPlayerState?.isTurn || false,
+        audioEnabled: audioEnabled,
+        videoEnabled: videoEnabled,
+      });
+      addedNicknames.add(nickname);
+    }
+
+    // 다른 참가자들(subscribers) 추가 - 중복 닉네임 체크
+    subscribers.forEach((subscriber) => {
+      const connectionData = JSON.parse(subscriber.stream.connection.data);
+      const playerNickname = connectionData.clientData;
+      const playerState = gameStatePlayers.find(
+        (p) => p.nickname === connectionData.clientData
+      );
+
+      // 이미 추가된 닉네임이 아닌 경우에만 추가
+      if (!addedNicknames.has(playerNickname)) {
+        allPlayers.push({
+          stream: subscriber.stream,
+          nickname: connectionData.clientData,
+          isCurrentUser: false,
+          score: playerState?.score || 0, // Redux store에서 점수 가져오기
+          isCurrentTurn: playerState?.isTurn || false,
+          audioEnabled: subscriber.stream.audioActive,
+          videoEnabled: subscriber.stream.videoActive,
         });
+        addedNicknames.add(playerNickname);
+      }
+    });
 
-        // 토큰 생성 및 연결
-        console.log("Generating token...");
-        const tokenResponse = await VideoAPI.generateToken(roomId);
+    setPlayers(allPlayers);
+  };
 
-        console.log("Connecting to session...");
-        await session.connect(tokenResponse.token, { clientData: nickname });
-        console.log("Connected to session");
-        isConnectedRef.current = true;
+  useEffect(() => {
+    if (publisher || subscribers.length > 0) {
+      updatePlayers(publisher, subscribers);
+    }
+  }, [gameStatePlayers, publisher, subscribers]);
 
-        // Publisher 초기화
-        console.log("Initializing publisher...");
-        const publisher = OV.initPublisher(
-          publisherRef.current,
-          getPublisherOptions()
-        );
+  useEffect(() => {
+    console.log("Subscribers 상태 변경:", {
+      count: subscribers.length,
+      subscribers: subscribers.map((sub) => ({
+        connectionId: sub.stream.connection.connectionId,
+        streamId: sub.stream.streamId,
+        connectionData: JSON.parse(sub.stream.connection.data),
+      })),
+    });
 
-        publisherObjRef.current = publisher;
+    updatePlayers(publisher, subscribers);
+  }, [subscribers, publisher, audioEnabled, videoEnabled]);
 
-        publisher.on("videoElementCreated", (event) => {
-          const videoElement = event.element;
-          videoElement.classList.add("w-full", "h-full", "object-cover");
+  useEffect(() => {
+    if (!sessionId || !nickname || !isCurrentUser || isConnecting) {
+      return;
+    }
 
-          videoElement.addEventListener("loadedmetadata", () => {
-            console.log("Publisher video metadata loaded");
-          });
+    const OV = new OpenVidu();
+    let currentSession = null;
 
-          videoElement.addEventListener("playing", () => {
-            console.log("Publisher video started playing");
-          });
-        });
+    const connectToSession = async () => {
+      try {
+        setIsConnecting(true);
+        console.log("Initializing session with ID:", sessionId);
+        currentSession = OV.initSession();
+        setSession(currentSession);
 
-        publisher.on("streamPropertyChanged", (event) => {
-          if (event.changedProperty === "videoActive" && !event.newValue) {
-            console.warn("Publisher video quality degraded");
+        currentSession.on("streamCreated", (event) => {
+          console.log("New stream created", event.stream.connection.data);
+          const connectionData = JSON.parse(event.stream.connection.data);
+
+          if (connectionData.clientData !== nickname) {
+            console.log("구독 시도:", {
+              streamId: event.stream.streamId,
+              connectionData: connectionData,
+            });
+
+            const subscriber = currentSession.subscribe(
+              event.stream,
+              undefined
+            );
+
+            setSubscribers((prev) => {
+              const exists = prev.find(
+                (sub) =>
+                  sub.stream.connection.connectionId ===
+                  subscriber.stream.connection.connectionId
+              );
+              return exists ? prev : [...prev, subscriber];
+            });
           }
         });
 
-        await session.publish(publisher);
-        console.log("Publisher started");
+        currentSession.on("streamDestroyed", (event) => {
+          console.log("Stream destroyed", {
+            connectionData: event.stream.connection.data,
+            streamId: event.stream.streamId,
+          });
 
-        if (mounted) {
-          setPublisher(publisher);
-          retryCountRef.current = 0;
-        }
-      } catch (error) {
-        console.error("Error initializing session:", error);
-        setError("비디오 연결에 실패했습니다.");
-
-        if (retryCountRef.current < 3) {
-          retryCountRef.current += 1;
-          console.log(
-            `Retrying initialization (attempt ${
-              retryCountRef.current + 1
-            }/3)...`
+          setSubscribers((prev) =>
+            prev.filter(
+              (sub) =>
+                sub.stream.connection.connectionId !==
+                event.stream.connection.connectionId
+            )
           );
-          retryTimeoutRef.current = setTimeout(() => {
-            if (mounted) {
-              setIsInitializing(false);
-              initializeSession();
+        });
+
+        currentSession.on("sessionDisconnected", () => {
+          console.log("Session disconnected, clearing subscribers");
+          setSubscribers([]);
+          setIsConnecting(false);
+          tokenRef.current = null;
+        });
+
+        currentSession.on("streamPropertyChanged", (event) => {
+          console.log("Stream property changed", {
+            propertyName: event.changedProperty,
+            newValue: event.newValue,
+            connectionId: event.stream.connection.connectionId,
+          });
+
+          // audioActive나 videoActive가 변경되었을 때만 subscribers 업데이트
+          if (
+            event.changedProperty === "videoActive" ||
+            event.changedProperty === "audioActive"
+          ) {
+            setSubscribers((prevSubscribers) => {
+              const updatedSubscribers = prevSubscribers.map((sub) => {
+                if (
+                  sub.stream.connection.connectionId ===
+                  event.stream.connection.connectionId
+                ) {
+                  // 스트림 상태 업데이트
+                  sub.stream[event.changedProperty] = event.newValue;
+                }
+                return sub;
+              });
+              return [...updatedSubscribers];
+            });
+          }
+        });
+
+        if (!tokenRef.current) {
+          const response = await axios.post(
+            `${
+              import.meta.env.VITE_API_BASE_URL
+            }/api/video/generate-token/${sessionId}`,
+            // `${
+            //   import.meta.env.VITE_LOCAL_API_BASE_URL
+            // }/api/video/generate-token/${sessionId}`,
+            {},
+            {
+              headers: { "Content-Type": "application/json" },
+              timeout: 10000,
             }
-          }, 2000);
-        } else {
-          setError(
-            "연결 재시도 횟수를 초과했습니다. 페이지를 새로고침해주세요."
           );
+
+          if (!response.data?.token) {
+            throw new Error("No token received from server");
+          }
+
+          tokenRef.current = response.data.token;
         }
+
+        await currentSession.connect(tokenRef.current, {
+          clientData: nickname,
+        });
+
+        const newPublisher = await OV.initPublisher(undefined, {
+          audioSource: undefined, // 기본 마이크 사용
+          videoSource: undefined, // 기본 카메라 사용
+          publishAudio: audioEnabled,
+          publishVideo: videoEnabled,
+          resolution: "640x480",
+          frameRate: 15,
+          insertMode: "APPEND",
+          mirror: false,
+          publisherProperties: {
+            mediaConstraints: {
+              audio: {
+                echoCancellation: true, // 에코 캔슬레이션 활성화
+                noiseSuppression: true, // 노이즈 제거 활성화
+                autoGainControl: true, // 자동 게인 컨트롤 활성화
+              },
+            },
+          },
+        });
+
+        await currentSession.publish(newPublisher);
+        setPublisher(newPublisher);
+
+        // Publisher가 생성되면 스트림 데이터 전송
+        const streamData = {
+          nickname: nickname,
+          streamId: newPublisher.stream.streamId,
+          connectionId: newPublisher.stream.connection.connectionId,
+        };
+
+        // nickname으로 스트림 데이터 전송
+        sendStreamData(nickname, JSON.stringify(streamData));
+      } catch (error) {
+        console.error("Error in video chat connection:", error);
+        setConnectionError(
+          error.response?.status === 500
+            ? "서버 오류가 발생했습니다."
+            : `연결 오류: ${error.message}`
+        );
+        tokenRef.current = null;
       } finally {
-        if (mounted) {
-          setIsInitializing(false);
-        }
+        setIsConnecting(false);
       }
     };
 
-    if (nickname && roomId) {
-      initializeSession();
-    }
+    connectToSession();
 
     return () => {
-      mounted = false;
-      if (retryTimeoutRef.current) {
-        clearTimeout(retryTimeoutRef.current);
+      if (currentSession) {
+        try {
+          console.log("Cleaning up video session...");
+          if (publisher) {
+            currentSession.unpublish(publisher);
+          }
+          subscribers.forEach((subscriber) => {
+            currentSession.unsubscribe(subscriber);
+          });
+          currentSession.disconnect();
+          setSubscribers([]);
+          setIsConnecting(false);
+          tokenRef.current = null;
+          setSession(null);
+          setPublisher(null);
+        } catch (error) {
+          console.error("Error during cleanup:", error);
+        }
       }
-      cleanupSession();
     };
-  }, [nickname, roomId]);
+  }, [sessionId, nickname, isCurrentUser]);
+
+  if (connectionError) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-gray-900 text-white">
+        <p className="text-sm text-red-400">{connectionError}</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="relative w-full h-full bg-gray-900">
-      {!isCameraOn && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-          <div className="text-gray-400 text-lg">카메라 OFF</div>
-        </div>
-      )}
-
-      <div ref={publisherRef} className="absolute inset-0" />
-      <div ref={subscribersRef} className="absolute inset-0" />
-
-      {isCurrentUser && (
-        <div className="absolute bottom-2 right-2 flex gap-2 z-20">
-          <button
-            onClick={toggleMic}
-            className="p-1.5 bg-gray-800/80 rounded-full hover:bg-gray-700/80 transition-colors"
-          >
-            {isMicOn ? (
-              <Mic className="w-4 h-4 text-white" />
-            ) : (
-              <MicOff className="w-4 h-4 text-red-500" />
+    <div className="grid grid-cols-2 gap-3">
+      {players.map((player) => (
+        <PlayerCard
+          key={player.stream.connection?.connectionId || player.nickname}
+          userNickname={player.nickname}
+          isCurrentTurn={player.isCurrentTurn}
+          score={player.score}
+          isCurrentUser={player.isCurrentUser}
+          sessionId={sessionId}
+        >
+          <div className="relative w-full h-full group">
+            <video
+              autoPlay
+              ref={(video) => {
+                if (video) {
+                  video.srcObject = player.stream.getMediaStream();
+                  video.muted = player.isCurrentUser; // 자신의 비디오는 음소거
+                }
+              }}
+              className={`w-full h-full object-cover rounded-lg ${
+                !player.videoEnabled ? "hidden" : ""
+              }`}
+            />
+            {!player.videoEnabled && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-800 rounded-lg">
+                <div className="text-white text-lg">카메라 꺼짐</div>
+              </div>
             )}
-          </button>
-          <button
-            onClick={toggleCamera}
-            className="p-1.5 bg-gray-800/80 rounded-full hover:bg-gray-700/80 transition-colors"
-          >
-            {isCameraOn ? (
-              <Camera className="w-4 h-4 text-white" />
-            ) : (
-              <CameraOff className="w-4 h-4 text-red-500" />
-            )}
-          </button>
-        </div>
-      )}
 
-      {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-900/90 z-30">
-          <p className="text-red-500 text-sm">{error}</p>
-        </div>
-      )}
+            {/* 미디어 상태 표시 */}
+            <div className="absolute bottom-2 left-2 flex items-center space-x-2">
+              {!player.audioEnabled && (
+                <div className="bg-red-500/80 p-1 rounded-full">
+                  <MicOff size={16} className="text-white" />
+                </div>
+              )}
+            </div>
+
+            {/* 미디어 컨트롤 버튼 (현재 사용자만) */}
+            {player.isCurrentUser && (
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                <div className="flex gap-3 bg-black/20 backdrop-blur-md p-1.5 rounded-full">
+                  <MediaControlButton
+                    onClick={toggleAudio}
+                    enabled={audioEnabled}
+                    Icon={Mic}
+                    DisabledIcon={MicOff}
+                  />
+                  <MediaControlButton
+                    onClick={toggleVideo}
+                    enabled={videoEnabled}
+                    Icon={Video}
+                    DisabledIcon={VideoOff}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </PlayerCard>
+      ))}
     </div>
   );
 };

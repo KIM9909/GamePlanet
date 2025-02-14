@@ -20,8 +20,11 @@ public class GameInfo {
     @Column(name = "game_info_content")
     private String gameInfoContent;
 
-    @Column(name = "game_rule")
+    @Column(name = "game_rule", columnDefinition = "TEXT")
     private String gameRule;
+
+    @Column(name = "game_info_file")
+    private String gameInfoFile;
 
     @OneToOne
     @JoinColumn(name = "game_id")

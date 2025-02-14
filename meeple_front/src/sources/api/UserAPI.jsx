@@ -15,7 +15,7 @@ const API = axios.create({
 });
 
 /**
- * 요청 인터셉터 설정
+ * 요청 인터셉터를 설정
  * 모든 요청에 Authorization 헤더 자동 추가
  */
 API.interceptors.request.use(
@@ -167,7 +167,13 @@ export const UserAPI = {
    */
   updateProfile: async (userId, data) => {
     try {
-      const response = await API.put(`/profile/${userId}`, data);
+      const response = await API.put(`/profile/${userId}`, data, {
+        headers: {
+          // FormData를 사용할 때는 Content-Type을 multipart/form-data로 설정하지 않음
+          // 브라우저가 자동으로 설정하도록 기존 Content-Type을 삭제
+          "Content-Type": undefined,
+        },
+      });
       return response;
     } catch (error) {
       throw error || "프로필 수정에 실패했습니다.";

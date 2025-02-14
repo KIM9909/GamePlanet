@@ -16,5 +16,7 @@ public class UserProfileResponse {
     private String userProfilePictureUrl;
     private String userTier;
     private int userLevel;
+    private long userExp;
     private LocalDateTime userCreatedAt;
+    private String userBio;
 }

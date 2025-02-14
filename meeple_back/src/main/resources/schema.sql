@@ -1,3 +1,6 @@
+CREATE SCHEMA IF NOT EXISTS game_project;
+SET SCHEMA game_project;
+
 use game_project;
 
 CREATE TABLE `tbl_user` (

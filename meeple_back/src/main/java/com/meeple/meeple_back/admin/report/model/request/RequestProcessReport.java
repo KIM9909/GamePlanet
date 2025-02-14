@@ -9,4 +9,6 @@ public class RequestProcessReport {
     private int reportId;
     @Schema(description = "처리 결과", example = "BAN")
     private String reportResult;
+    @Schema(description = "신고 처리 메모", example = "~~해서 이렇게 처리함")
+    private String reportMemo;
 }

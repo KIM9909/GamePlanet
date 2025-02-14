@@ -46,24 +46,32 @@ const MyArea = forwardRef(
         </div>
 
         <div className="flex justify-center gap-4 flex-wrap">
-          {sortCards(handCards).map((card, i) => (
-            <div
-              key={i}
-              className="transition-all duration-300 ease-in-out"
-              style={{
-                opacity: selectedCard?.type === card.type ? 0 : 1,
-                transform:
-                  selectedCard?.type === card.type ? "scale(0.9)" : "scale(1)",
-              }}
-            >
-              <Card
-                type={card.type}
-                isRoyal={card.royal}
-                onClick={(card, e) => handleCardClick(card, e)}
-                selectedCard={selectedCard}
-              />
-            </div>
-          ))}
+          {sortCards(handCards).map((card, i) => {
+            // 고유한 cardId 생성
+            const uniqueCardId = `${card.type}-${card.royal ? 'king' : 'normal'}-${i}`;
+            return (
+              <div
+                key={uniqueCardId}
+                className="transition-all duration-300 ease-in-out"
+                style={{
+                  // selectedCard의 cardId와 정확히 일치할 때만 사라지도록
+                  opacity: selectedCard?.cardId === uniqueCardId ? 0 : 1,
+                  transform: selectedCard?.cardId === uniqueCardId ? "scale(0.9)" : "scale(1)",
+                }}
+              >
+                <Card
+                  type={card.type}
+                  isRoyal={card.royal}  // royal 속성 전달
+                  cardId={uniqueCardId}  // 고유한 cardId 전달
+                  onClick={(e) => handleCardClick({
+                    ...card,
+                    cardId: uniqueCardId
+                  }, e)}
+                  selectedCard={selectedCard}
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
     );

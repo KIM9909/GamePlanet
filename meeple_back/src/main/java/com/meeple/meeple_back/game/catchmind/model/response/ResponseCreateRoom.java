@@ -7,6 +7,12 @@ import lombok.Data;
 @Data
 @Builder
 public class ResponseCreateRoom {
+    @Schema(description = "상태코드", example = "200", required = true)
+    private int code;
+
+    @Schema(description = "상태 메세지", example = "정상 작동", required = true)
+    private String message;
+
     @Schema(description = "게임방 Pk", example = "1", required = true)
     private int roomId;
 

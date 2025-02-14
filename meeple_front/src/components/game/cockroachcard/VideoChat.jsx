@@ -3,7 +3,7 @@ import { OpenVidu } from "openvidu-browser";
 import { Camera, CameraOff, Mic, MicOff } from "lucide-react";
 import axios from "axios";
 
-const OPENVIDU_SERVER_URL = "https://boardjjigae.duckdns.org:4443";
+const OPENVIDU_SERVER_URL = "https://letsmeeple.duckdns.org:8443";
 const OPENVIDU_SERVER_SECRET = "MY_SECRET";
 const HEADERS = {
   Authorization: "Basic " + btoa(`OPENVIDUAPP:${OPENVIDU_SERVER_SECRET}`),

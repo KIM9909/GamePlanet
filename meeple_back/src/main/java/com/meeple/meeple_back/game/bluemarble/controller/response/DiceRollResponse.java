@@ -15,9 +15,14 @@ public class DiceRollResponse {
 	private final int prevPosition;
 
 	private final int nextPosition;
-
+	private final int firstDice;
+	private final int secondDice;
 	private final boolean isDouble;
 	private final String nextAction;
+
+	public static DiceRollResponse from(int playerId, int prevPosition, int nextPosition, int firstDice, int secondDice, boolean isDouble, ActionType nextAction) {
+		return DiceRollResponse.builder().playerId(playerId).prevPosition(prevPosition).nextPosition(nextPosition).firstDice(firstDice).secondDice(secondDice).isDouble(isDouble).nextAction(nextAction.getAction()).build();
+	}
 
 	public static DiceRollResponse from(DiceRollResult diceRollResult, ActionType nextAction) {
 		return DiceRollResponse.builder()
@@ -26,6 +31,7 @@ public class DiceRollResponse {
 				.nextPosition(diceRollResult.getNextPosition())
 				.isDouble(diceRollResult.isDouble())
 				.nextAction(nextAction.name())
+				.firstDice(diceRollResult.getFirstDice()).secondDice(diceRollResult.getSecondDice())
 				.build();
 	}
 }

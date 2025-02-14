@@ -30,4 +30,9 @@ public class BlueMarbleGameRepositoryImpl implements BluemarbleGameRepository {
 		return Optional.ofNullable(GamePlayEntity.toGamePlay(
 				gamePlayEntity));
 	}
+
+	@Override
+	public void delete(GamePlay gamePlay) {
+		bluemarbleGameRedisRepository.deleteById(gamePlay.getGamePlayId());
+	}
 }

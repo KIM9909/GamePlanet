@@ -68,7 +68,7 @@ public class ReportSerivceImpl implements ReportService {
         mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
 
         return reportList.stream().map(report -> mapper
-            .map(report, ResponseReportList.class))
+                .map(report, ResponseReportList.class))
             .collect(Collectors.toList());
     }
 
@@ -89,9 +89,9 @@ public class ReportSerivceImpl implements ReportService {
         Report report = reportRepository.findById(request.getReportId())
             .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 신고입니다."));
 
-
         if (request.getReportResult().equals("PASS")) {
             report.setProcessStatus("PASS");
+            report.setReportMemo(request.getReportMemo());
             reportRepository.save(report);
 
             ResponseProcessReport response = ResponseProcessReport.builder()
@@ -108,6 +108,7 @@ public class ReportSerivceImpl implements ReportService {
                 .build();
             reportProcessRepository.save(reportProcess);
 
+            report.setReportMemo(request.getReportMemo());
             report.setProcessStatus("WARNING");
             reportRepository.save(report);
 
@@ -130,6 +131,7 @@ public class ReportSerivceImpl implements ReportService {
             reportProcessRepository.save(reportProcess);
 
             report.setProcessStatus("BAN");
+            report.setReportMemo(request.getReportMemo());
             reportRepository.save(report);
 
             ResponseProcessReport reponse = ResponseProcessReport.builder()
@@ -157,12 +159,13 @@ public class ReportSerivceImpl implements ReportService {
             Report report = reportProcess.getReport();
 
             report.setProcessStatus("PASS");
-
-            if (report.getUser().getUserDeletedAt() != null) {
-                User user = report.getUser();
-                user.setUserDeletedAt(null);
-                userRepository.save(user);
+            if (!request.getReportMemo().equals("")) {
+                report.setReportMemo(request.getReportMemo());
             }
+
+            User user = report.getUser();
+            user.setUserDeletedAt(null);
+            userRepository.save(user);
 
             reportProcessRepository.delete(reportProcess);
 
@@ -185,6 +188,10 @@ public class ReportSerivceImpl implements ReportService {
                 userRepository.save(user);
             }
 
+            if (!request.getReportMemo().equals("")) {
+                report.setReportMemo(request.getReportMemo());
+            }
+
             report.setProcessStatus("WARNING");
             reportRepository.save(report);
 
@@ -201,6 +208,10 @@ public class ReportSerivceImpl implements ReportService {
             User user = report.getUser();
             user.setUserDeletedAt(LocalDateTime.now());
             userRepository.save(user);
+
+            if (!request.getReportMemo().equals("")) {
+                report.setReportMemo(request.getReportMemo());
+            }
 
             report.setProcessStatus("BAN");
             reportRepository.save(report);

@@ -11,7 +11,7 @@ const GameRule = () => {
 
   useEffect(() => {
     setLoading(true);
-    axios.get(`https://boardjjigae.duckdns.org/api/game-info/${gameId}`) //받아온 gameId로 게임 정보 받아오기
+    axios.get(`https://game-planet.duckdns.org/api/game-info/${gameId}`) //받아온 gameId로 게임 정보 받아오기
       .then(response => {
         setData(response.data);
         setLoading(false);

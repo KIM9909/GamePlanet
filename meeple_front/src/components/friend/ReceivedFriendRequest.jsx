@@ -78,35 +78,59 @@ const ReceivedFriendRequest = ({ requestedList }) => {
     }
   };
 
+  const handleBlock = async (friendId) => {
+    if (requestList && userId) {
+      try {
+        const requirements = "BLOCKING";
+        await processFriendRequest(friendId, requirements);
+        const response = await requestFriendList(userId);
+        setRequestList(response.requestedList);
+      } catch (error) {
+        console.error("친구 차단 중 에러:", error);
+        throw error;
+      }
+    }
+  };
+
   return (
-    <div className="my-2">
+    <div className="space-y-3">
       {requestList && requestList.length > 0 ? (
-        <ul>
+        <ul className="space-y-3">
           {requestList.map((list, index) => (
             <li
               key={index}
-              className="p-2 border-b flex flex-row justify-between"
+              className="p-4 bg-gray-50 rounded-lg flex justify-between items-center"
             >
-              <p>{list.user.userNickname}</p>
-              <div className="flex flex-row mx-2">
+              <p className="font-medium text-gray-700">
+                {list.user.userNickname}
+              </p>
+              <div className="flex gap-2">
                 <button
-                  className="mx-2 w-12 rounded bg-cyan-400 text-white font-semibold shadow-lg hover:bg-cyan-500 hover:shadow-xl active:scale-95 transition-all duration-300 animate-pulse"
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200"
                   onClick={() => handleAccept(list.friendId)}
                 >
                   승인
                 </button>
                 <button
-                  className="mx-2 w-12 rounded bg-gray-400 text-white font-semibold shadow-lg hover:bg-gray-600 hover:shadow-xl active:scale-95 transition-all duration-300 animate-pulse"
+                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all duration-200"
                   onClick={() => handleDeny(list.friendId)}
                 >
                   거절
+                </button>
+                <button
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-200"
+                  onClick={() => handleBlock(list.friendId)}
+                >
+                  차단
                 </button>
               </div>
             </li>
           ))}
         </ul>
       ) : (
-        <p>받은 친구 요청이 없습니다.</p>
+        <div className="flex justify-center items-center h-[30vh] text-gray-500">
+          <p>받은 친구 요청이 없습니다.</p>
+        </div>
       )}
     </div>
   );

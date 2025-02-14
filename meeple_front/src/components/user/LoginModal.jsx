@@ -1,109 +1,81 @@
-// 로그인 모달 컴포넌트: 사용자 인증을 위한 UI 인터페이스를 제공합니다.
 import React, { useState } from "react";
-// Redux 관련 훅 임포트: dispatch는 액션 발생, useSelector는 상태 조회
 import { useDispatch, useSelector } from "react-redux";
-// 로그인 관련 액션과 모달 상태 제어 액션을 임포트
 import { loginUser, setModalOpen } from "../../sources/store/slices/UserSlice";
-// HeadlessUI의 Dialog 컴포넌트: 접근성이 고려된 모달 구현을 위해 사용
 import { Dialog } from "@headlessui/react";
-// Lucide 아이콘: 모달 닫기 버튼과 비밀번호 표시/숨김에 사용될 아이콘
 import { X, Eye, EyeOff } from "lucide-react";
 
 const LoginModal = () => {
-  // Redux의 dispatch 함수를 가져옴: 액션을 발생시키는 데 사용
   const dispatch = useDispatch();
-
-  // Redux store에서 필요한 상태를 가져옴
   const { isModalOpen, isLoading, error } = useSelector((state) => state.user);
-
-  // 로그인 폼의 입력값을 관리하는 로컬 상태
-  const [credentials, setCredentials] = useState({
-    email: "", // 이메일 입력값
-    password: "", // 비밀번호 입력값
-  });
-
-  // 입력값 유효성 검사 상태
+  const [credentials, setCredentials] = useState({ email: "", password: "" });
   const [validations, setValidations] = useState({
     email: false,
     password: false,
   });
-
-  // 비밀번호 표시/숨김 상태
   const [showPassword, setShowPassword] = useState(false);
 
-  // 유효성 검사를 위한 정규식
   const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
   const passwordRegex =
     /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{9,16}$/;
 
-  // 모달 닫기 핸들러: 상태 초기화 및 모달 닫기
   const handleClose = () => {
     setCredentials({ email: "", password: "" });
     setValidations({ email: false, password: false });
     dispatch(setModalOpen(false));
   };
 
-  // 입력값 유효성 검사 함수
   const validateField = (name, value) => {
-    if (name === "email") {
-      return emailRegex.test(value);
-    } else if (name === "password") {
-      return passwordRegex.test(value);
-    }
+    if (name === "email") return emailRegex.test(value);
+    if (name === "password") return passwordRegex.test(value);
     return false;
   };
 
-  // 입력값 변경 핸들러
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setCredentials((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    setValidations((prev) => ({
-      ...prev,
-      [name]: validateField(name, value),
-    }));
+    setCredentials((prev) => ({ ...prev, [name]: value }));
+    setValidations((prev) => ({ ...prev, [name]: validateField(name, value) }));
   };
 
-  // 폼 유효성 검사: 모든 필드가 유효한지 확인
-  const isFormValid = () => {
-    return validations.email && validations.password;
-  };
+  const isFormValid = () => validations.email && validations.password;
 
-  // 폼 제출 핸들러
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (isFormValid()) {
-      dispatch(loginUser(credentials));
-    }
+    if (isFormValid()) dispatch(loginUser(credentials));
   };
 
   return (
     <Dialog open={isModalOpen} onClose={handleClose} className="relative z-50">
-      <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+      <div className="fixed inset-0 bg-black/70" aria-hidden="true" />
 
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="space-y-1 mx-auto max-w-sm rounded-3xl bg-white p-6 w-full">
-          <div className="flex justify-between items-center mb-2">
+        <Dialog.Panel className="relative w-full max-w-md rounded-lg bg-gradient-to-b from-gray-900 to-gray-800 p-8 border-2 border-cyan-500 shadow-[0_0_15px_rgba(0,255,255,0.3)]">
+          {/* 게임스러운 상단 장식 */}
+          <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-3/4 h-1 bg-cyan-500 rounded-full shadow-[0_0_10px_rgba(0,255,255,0.5)]" />
+
+          <div className="flex justify-between items-center mb-3">
             <div className="flex-1 text-center">
-              <Dialog.Title className="text-3xl font-bold ml-5">
+              <Dialog.Title className="text-4xl font-bold text-transparent ml-5 bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 animate-pulse">
                 MEEPLE LOGIN
               </Dialog.Title>
             </div>
             <button
               onClick={handleClose}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-gray-400 hover:text-cyan-400 transition-colors duration-300"
             >
               <X className="h-6 w-6" />
             </button>
           </div>
 
-          <div className="text-gray-400 text-center mb-6">PLAY MEEPLE NOW</div>
+          <div className="text-cyan-400 text-center mb-6">
+            PRESS LOGIN TO PLAY
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <div>
-              <label htmlFor="email" className="block text-2xl mb-2">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="group">
+              <label
+                htmlFor="email"
+                className="block text-2xl mb-2 text-cyan-400 group-hover:text-cyan-300"
+              >
                 EMAIL
               </label>
               <input
@@ -112,113 +84,76 @@ const LoginModal = () => {
                 id="email"
                 value={credentials.email}
                 onChange={handleChange}
-                className={`mt-1 block w-full rounded-md bg-gray-100 px-4 py-3 text-gray-700 focus:outline-none ${
-                  credentials.email && !validations.email
-                    ? "border-2 border-red-500"
-                    : ""
-                }`}
+                className="mt-1 block w-full rounded-md bg-gray-800 px-4 py-3 text-cyan-400 border border-cyan-700 focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 transition-all duration-300 placeholder:text-gray-500"
                 required
                 placeholder="이메일을 입력하세요."
               />
               {credentials.email && !validations.email && (
-                <p className="text-red-500 text-sm mt-1">
+                <p className="text-red-500 text-sm mt-1 animate-pulse">
                   유효한 이메일 형식이 아닙니다.
                 </p>
               )}
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-2xl mb-2">
-                PW
+            <div className="group">
+              <label
+                htmlFor="password"
+                className="block text-2xl mb-2 text-cyan-400 group-hover:text-cyan-300"
+              >
+                PASSWORD
               </label>
               <div className="relative">
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    id="password"
-                    value={credentials.password}
-                    onChange={handleChange}
-                    className={`mt-1 block w-full rounded-md bg-gray-100 px-4 py-3 pr-10 text-gray-700 focus:outline-none ${
-                      credentials.password && !validations.password
-                        ? "border-2 border-red-500"
-                        : ""
-                    }`}
-                    required
-                    placeholder="비밀번호를 입력하세요."
-                  />
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="text-gray-500 hover:text-gray-700 focus:outline-none"
-                    >
-                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                    </button>
-                  </div>
-                </div>
-                {credentials.password && !validations.password && (
-                  <p className="text-red-500 text-sm mt-1">
-                    비밀번호는 영문, 숫자, 특수문자를 포함한 9-16자여야 합니다.
-                  </p>
-                )}
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  id="password"
+                  value={credentials.password}
+                  onChange={handleChange}
+                  className="mt-1 block w-full rounded-md bg-gray-800 px-4 py-3 text-cyan-400 border border-cyan-700 focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 transition-all duration-300 placeholder:text-gray-500"
+                  required
+                  placeholder="비밀번호를 입력하세요."
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-cyan-400 transition-colors duration-300"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
               </div>
+              {credentials.password && !validations.password && (
+                <p className="text-red-500 text-sm mt-1 animate-pulse">
+                  비밀번호는 영문, 숫자, 특수문자를 포함한 9-16자여야 합니다.
+                </p>
+              )}
             </div>
 
-            <div className="text-right mb-4">
+            <div className="text-right">
               <button
                 type="button"
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-400 hover:text-cyan-400 text-sm transition-colors duration-300"
               >
-                ID / PW 찾기
+                Forgot Password?
               </button>
             </div>
 
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {error && (
+              <p className="text-red-500 text-sm text-center animate-pulse">
+                {error}
+              </p>
+            )}
 
             <button
               type="submit"
               disabled={isLoading || !isFormValid()}
-              className="w-full rounded-md bg-gradient-to-tr from-cyan-500 to-gray-500 py-3 text-white text-xl font-semibold focus:outline-none disabled:opacity-50"
+              className="w-full rounded-md bg-gradient-to-r from-cyan-600 to-blue-600 py-4 text-white text-xl font-bold focus:outline-none disabled:opacity-50 hover:from-cyan-500 hover:to-blue-500 transition-all duration-300 transform  shadow-[0_0_15px_rgba(0,255,255,0.3)] hover:shadow-[0_0_20px_rgba(0,255,255,0.5)]"
             >
-              {isLoading ? "로그인 중..." : "LOGIN"}
+              {isLoading ? "CONNECTING..." : "PRESS LOGIN"}
             </button>
-
-            <hr />
-
-            <div className="text-center text-gray-500 mt-4">또는</div>
-
-            <div className="flex justify-center space-x-6 mt-4">
-              <button type="button" className="w-12 h-12">
-                <img
-                  src="/src/assets/images/naver-icon.png"
-                  alt="Naver"
-                  className="w-full h-full"
-                />
-              </button>
-              <button type="button" className="w-12 h-12">
-                <img
-                  src="/src/assets/images/kakao-icon.png"
-                  alt="Kakao"
-                  className="w-full h-full"
-                />
-              </button>
-              <button type="button" className="w-12 h-12">
-                <img
-                  src="/src/assets/images/google-icon.png"
-                  alt="Google"
-                  className="w-full h-full"
-                />
-              </button>
-              <button type="button" className="w-12 h-12">
-                <img
-                  src="/src/assets/images/apple-icon.png"
-                  alt="Apple"
-                  className="w-full h-full"
-                />
-              </button>
-            </div>
           </form>
+
+          {/* 게임스러운 하단 장식 */}
+          <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 w-3/4 h-1 bg-cyan-500 rounded-full shadow-[0_0_10px_rgba(0,255,255,0.5)]" />
         </Dialog.Panel>
       </div>
     </Dialog>

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { FaRegEye } from "react-icons/fa";
-import { FaRegEyeSlash } from "react-icons/fa";
+import { EyeOff, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createBurumabulRoom } from "../../../sources/api/BurumabulRoomAPI";
 import { useDispatch, useSelector } from "react-redux";
@@ -141,11 +140,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
                       className="absolute right-2 bottom-1.5 text-gray-500"
                       type="button"
                     >
-                      {showPassword ? (
-                        <FaRegEye size={20} />
-                      ) : (
-                        <FaRegEyeSlash size={20} />
-                      )}
+                      {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
                     </button>
                   </div>
                 </div>

@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
 
+
 // WebSocket URL constants
 export const WS_ENDPOINTS = {
   SUBSCRIBE_ROOMS: "/topic/game/rooms",
@@ -25,101 +26,93 @@ export const WS_ENDPOINTS = {
 const useCockroachSocket = (roomId) => {
   const clientRef = useRef(null);
   const [messages, setMessages] = useState([]);
-  const [rooms, setRooms] = useState([]);
   const [connected, setConnected] = useState(false);
   const [stompClient, setStompClient] = useState(null);
   const isConnecting = useRef(false);
   const subscriptionsRef = useRef(new Map());
   const isGameStartedRef = useRef(false);
 
+  const handleGameMessage = useCallback((response) => {
+    console.log("게임 메시지 처리 시작:", response);
+  },[]);
+
   const connect = useCallback(() => {
     if (isConnecting.current) return;
     isConnecting.current = true;
 
     const client = new Client({
-      webSocketFactory: () =>
-        new SockJS(
-          // `${import.meta.env.VITE_SOCKET_LOCAL_API_BASE_URL}`),
+      webSocketFactory: () => {
+        const socket = new SockJS(
+          // `${import.meta.env.VITE_SOCKET_LOCAL_API_BASE_URL}`
           `${import.meta.env.VITE_SOCKET_API_BASE_URL}`
-        ),
+        );
+
+        socket.onclose = () => {
+          console.log("웹소켓 연결이 끊겼습니다.");
+          setTimeout(() => {
+            connect();
+          }, 1000);
+        };
+
+        return socket;
+      },
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
     });
 
+    // 구독 설정 함수
+    const setupSubscriptions = () => {
+      // 게임방 내부
+      if (!subscriptionsRef.current.has("game")) {
+        const gameSubscription = client.subscribe(
+          WS_ENDPOINTS.SUBSCRIBE_GAME(roomId),
+          (message) => {
+            const response = JSON.parse(message.body);
+            handleGameMessage(response);
+          }
+        );
+        subscriptionsRef.current.set("game", gameSubscription);
+      }
+
+      // 채팅 메시지 구독
+      if (!subscriptionsRef.current.has("chat")) {
+        const chatSubscription = client.subscribe(
+          WS_ENDPOINTS.SUBSCRIBE_CHAT(roomId),
+          (message) => {
+            const newMessage = JSON.parse(message.body);
+            setMessages((prev) => [...prev, newMessage]);
+          }
+        );
+        subscriptionsRef.current.set("chat", chatSubscription);
+      }
+    };
+
+    // Connect 이벤트 핸들러
     client.onConnect = () => {
       console.log("웹소켓 연결 완료");
       setConnected(true);
       setStompClient(client);
       isConnecting.current = false;
-
-      // 게임 메시지 구독
-      // 구독 설정
-      const setupSubscriptions = () => {
-        // 방 목록 화면
-        if (roomId === "rooms") {
-          const roomsSubscription = client.subscribe(
-            WS_ENDPOINTS.SUBSCRIBE_ROOMS,
-            (message) => {
-              const roomList = JSON.parse(message.body);
-              setRooms(roomList.sort((a, b) => b.roomId - a.roomId));
-            }
-          );
-          subscriptionsRef.current.set("rooms", roomsSubscription);
-          return;
-        }
-
-        // 게임방 내부
-        if (!subscriptionsRef.current.has("game")) {
-          const gameSubscription = client.subscribe(
-            WS_ENDPOINTS.SUBSCRIBE_GAME(roomId),
-            (message) => {
-              const response = JSON.parse(message.body);
-              console.log("게임 메시지 수신:", response);
-              if (response.gameData?.isGameStart) {
-                isGameStartedRef.current = true;
-              }
-            }
-          );
-          subscriptionsRef.current.set("game", gameSubscription);
-        }
-
-        // 채팅 메시지 구독
-        if (!subscriptionsRef.current.has("chat")) {
-          const chatSubscription = client.subscribe(
-            WS_ENDPOINTS.SUBSCRIBE_CHAT(roomId),
-            (message) => {
-              console.log("채팅 메시지 수신:", message.body);
-              const newMessage = JSON.parse(message.body);
-              setMessages((prev) => [...prev, newMessage]);
-            }
-          );
-          subscriptionsRef.current.set("chat", chatSubscription);
-        }
-      };
-
       setupSubscriptions();
     };
 
+    // Disconnect 이벤트 핸들러
     client.onDisconnect = () => {
       console.log("웹소켓 연결이 끊겼습니다.");
       setConnected(false);
       setStompClient(null);
       isConnecting.current = false;
-
-      if (isGameStartedRef.current) {
-        console.log("Game is in progress - attempting to reconnect");
-        setTimeout(() => connect(), 1000);
-      }
+      setTimeout(() => connect(), 1000);
     };
 
     client.onWebSocketError = (error) => {
-      console.error("웹소켓 에러 :", error);
+      console.error("웹소켓 에러:", error);
     };
 
     clientRef.current = client;
     client.activate();
-  }, [roomId]);
+  }, [roomId, handleGameMessage]);
 
   const sendMessage = useCallback(
     (type, data) => {
@@ -189,4 +182,5 @@ const useCockroachSocket = (roomId) => {
     ...gameActions,
   };
 };
+
 export default useCockroachSocket;

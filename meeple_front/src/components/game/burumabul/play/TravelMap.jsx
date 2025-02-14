@@ -64,24 +64,30 @@ import floorTexture from "../../../../assets/burumabul_images/floor.png";
 import timemachineStop from "../../../../assets/burumabul_images/timemachinestop.png";
 import telepathyCard from "../../../../assets/burumabul_images/telepathycard.png";
 import neuronsCard from "../../../../assets/burumabul_images/neuronscard.png";
+
 import BlueRobot from "./BlueRobot";
 import SpaceBase from "./SpaceBase";
-import useBurumabulSocket from "../../../../hooks/useBurumabulPlaySocket";
-import { color } from "framer-motion";
-import { depth } from "three/tsl";
 import { SocketContext } from "../../../layout/SocketLayout";
+import QuestBuildBase from "./burumabul_Modal/QuestBuildBase.";
+import QuestBuyLand from "./burumabul_Modal/QuestBuyLand";
+import PayTollModal from "./burumabul_Modal/PayTollModal";
+import DiceVersion2 from "./DiceVersion2";
+import HeartPlayer from "./HeartPlayer";
+import PickedCardModal from "./burumabul_Modal/PickedCardModal";
+import EndWinner from "./burumabul_Modal/EndWinner";
 
 const Cell = ({
   position,
-  isHighlight,
   name,
   textureUrl,
   topTextureUrl,
   size,
+  ownerIndex,
+  players,
 }) => {
   const textRef = useRef();
   const { camera } = useThree();
-
+  const colors = ["#FF3EA5", "#7695FF", "#00FF9C", "#EBF400"];
   // TextureLoader로 텍스쳐 로드
   const texture = textureUrl ? useLoader(TextureLoader, textureUrl) : null;
   const topTexture = topTextureUrl
@@ -94,14 +100,18 @@ const Cell = ({
     }
   });
 
-  // 특정 셀의 크기 조정
+  const getColor = () => {
+    if (ownerIndex !== null) {
+      return colors[ownerIndex];
+    }
+  };
 
   return (
     <mesh position={position}>
       {/* 셀 박스 = 직육면체 */}
       <boxGeometry args={size} />
       {/* 각 면의 텍스처 및 색상 설정 */}
-      <meshStandardMaterial color={isHighlight ? "#ff6b6b" : "white"} />
+      <meshStandardMaterial color={getColor()} />
 
       <Edges
         scale={1}
@@ -141,7 +151,7 @@ const Cell = ({
   );
 };
 
-const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
+const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
   // cities 배열
   const cities = [
     "지구 Start",
@@ -185,41 +195,921 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
     "수성",
     "금성",
   ];
+  const userId = Number(useSelector((state) => state.user.userId));
+  const colors = ["#FF3EA5", "#7695FF", "#00FF9C", "#EBF400"];
 
   const dispatch = useDispatch();
   // 소켓에서 받아오는 정보들
-  const { connected, rollDice, buyLand, currentPlayerSocketIndex } =
-    useContext(SocketContext);
+  const {
+    connected,
+    rollDice,
+    buyLand,
+    roll,
+    buildBase,
+    startTurn,
+    payToll,
+    drawCard,
+    checkEnd,
+    currentPlayerSocketIndex,
+    rollDiceSocketData,
+    socketBoard,
+    socketCards,
+    socketNext,
+    socketUserUpdate,
+    socketTileUpdate,
+    buyLandSocketData,
+    buildBaseSocketData,
+    socketPayTollData,
+    setBuyLandSocketData,
+    setBuildBaseSocketData,
+    setSocketDrawCardData,
+    setSocketPayTollData,
+    socketTollPrice,
+    socketReceivedPlayer,
+    setSocketNext,
+    socketFirstDice,
+    socketSecondDice,
+    socketDouble,
+    socketCurrentRound,
+    socketRoll,
+    socketDrawCardData,
+    socketPickedCard,
+    socketDrawPrevPosition,
+    socketDrawNextPosition,
+    setSocketDrawNextPosition,
+    setSocketDrawPrevPosition,
+    socketDrawPrevBalance,
+    socketDrawNextBalance,
+    setSocketDrawPrevBalance,
+    setSocketDrawNextBalance,
+    socketWinner,
+    endGame,
+  } = useContext(SocketContext);
   const [playData, setPlayData] = useState(gameData);
 
   useEffect(() => {
-    setPlayData(gameData);
-  }, [gameData]);
+    console.log(buyLandSocketData);
+  }, [buyLandSocketData]);
 
-  const players = playData.players;
-  const numPlayers = players.length;
+  // 플레이어 정보
+  const [players, setPlayers] = useState(playData?.players);
+  const numPlayers = players?.length;
 
-  // 현재 플레이어는 인덱스 번호로
-  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(
-    currentPlayerSocketIndex
+  const myInfo = players?.find((player) => player.playerId === userId);
+  const myColorIndex = players?.findIndex(
+    (player) => Number(player.playerId) === Number(userId)
   );
 
-  useEffect(() => {
-    setCurrentPlayerIndex(currentPlayerSocketIndex);
-  }, [currentPlayerSocketIndex]);
+  const [cards, setCards] = useState(null);
+  const [board, setBoard] = useState(null);
 
+  const [showBuyLand, setShowBuyLand] = useState(false);
+  const [showBuildBase, setShowBuildBase] = useState(false);
+  const [isBuyLand, setIsBuyLand] = useState(false);
+  const [isBuildBase, setIsBuildBase] = useState(false);
+  const [showCardId, setShowCardId] = useState(null);
+
+  useEffect(() => {
+    setPlayData(gameData);
+    setCards(socketCards);
+    if (socketBoard) {
+      setBoard((prevBoard) => {
+        // 이전 board가 없는 경우에만 새로운 socketBoard로 설정
+        if (!prevBoard) return socketBoard;
+
+        // 기존 board 상태 유지하면서 필요한 부분만 업데이트
+        return prevBoard.map((tile, index) => {
+          const newTile = socketBoard[index];
+          if (!newTile) return tile;
+
+          return {
+            ...tile,
+            ownerId: newTile.ownerId || tile.ownerId,
+            hasBase: newTile.hasBase || tile.hasBase,
+            tollPrice: newTile.tollPrice || tile.tollPrice,
+          };
+        });
+      });
+    }
+  }, [gameData, socketCards, socketBoard]);
+
+  useEffect(() => {
+    if (buyLandSocketData) {
+      const { updatedPlayer, updatedTile } = buyLandSocketData;
+
+      // 플레이어 정보 업데이트
+      if (updatedPlayer) {
+        setPlayers((prevPlayers) => {
+          const newPlayers =
+            prevPlayers?.map((player) =>
+              player.playerId === updatedPlayer.playerId
+                ? {
+                    ...player,
+                    balance: updatedPlayer.balance,
+                    cardOwned: updatedPlayer.cardOwned || [],
+                    landOwned: updatedPlayer.landOwned || [],
+                    position: updatedPlayer.position,
+                  }
+                : player
+            ) || [];
+          // console.log("Player update:", newPlayers);
+          return newPlayers;
+        });
+      }
+
+      // 보드(타일) 정보 업데이트
+      if (updatedTile) {
+        setBoard((prevBoard) => {
+          const newBoard =
+            prevBoard?.map((tile) =>
+              tile.id === updatedTile.id
+                ? {
+                    ...tile,
+                    ownerId: updatedTile.ownerId,
+                    hasBase: updatedTile.hasBase,
+                    tollPrice: updatedTile.tollPrice,
+                  }
+                : tile
+            ) || [];
+          // console.log("Board update:", newBoard);
+          return [...newBoard];
+        });
+      }
+      // setBuyLandSocketData(null);
+    }
+  }, [buyLandSocketData]);
+
+  useEffect(() => {
+    if (buildBaseSocketData) {
+      const { updatedPlayer, updatedTile } = buildBaseSocketData;
+
+      // 플레이어 정보 업데이트
+      if (updatedPlayer) {
+        setPlayers((prevPlayers) => {
+          const newPlayers =
+            prevPlayers?.map((player) =>
+              player.playerId === updatedPlayer.playerId
+                ? {
+                    ...player,
+                    balance: updatedPlayer.balance,
+                    cardOwned: updatedPlayer.cardOwned || [],
+                    landOwned: updatedPlayer.landOwned || [],
+                    position: updatedPlayer.position,
+                  }
+                : player
+            ) || [];
+          // console.log("Player update:", newPlayers);
+          return newPlayers;
+        });
+      }
+
+      // 보드(타일) 정보 업데이트
+      if (updatedTile) {
+        setBoard((prevBoard) => {
+          const newBoard =
+            prevBoard?.map((tile) =>
+              tile.id === updatedTile.id
+                ? {
+                    ...tile,
+                    ownerId: updatedTile.ownerId,
+                    hasBase: updatedTile.hasBase,
+                    tollPrice: updatedTile.tollPrice,
+                  }
+                : tile
+            ) || [];
+          // console.log("Board update:", newBoard);
+          return newBoard;
+        });
+      }
+
+      // 우주 기지 상태 업데이트
+      setSpaceBases((prevBases) => {
+        return prevBases.map((base, index) => {
+          if (index === updatedTile.id) {
+            const ownerIndex = players.findIndex(
+              (p) => p.playerId === updatedTile.ownerId
+            );
+            return {
+              ...base,
+              visible: true,
+              color: colors[ownerIndex],
+            };
+          }
+          return base;
+        });
+      });
+      // setBuildBaseSocketData(null);
+    }
+  }, [buildBaseSocketData]);
+
+  // 통행료 지불 후 업데이트 정보
+  const [tollPrice, setTollPrice] = useState(null);
+  const [paidPlayer, setPaidPlayer] = useState(null);
+  const [receivedPlayer, setReceivedPlayer] = useState(null);
+  useEffect(() => {
+    if (socketPayTollData) {
+      const { paidPlayer, receivedPlayer, tollPrice } = socketPayTollData;
+
+      if (paidPlayer) {
+        setPlayers((prevPlayers) => {
+          const newPlayers =
+            prevPlayers?.map((player) =>
+              player.playerId === paidPlayer.playerId
+                ? {
+                    ...player,
+                    balance: paidPlayer.balance,
+                    cardOwned: paidPlayer.cardOwned || [],
+                    landOwned: paidPlayer.landOwned || [],
+                    position: paidPlayer.position,
+                  }
+                : player
+            ) || [];
+          // console.log("Player update:", newPlayers);
+          return newPlayers;
+        });
+        setPaidPlayer(paidPlayer);
+      }
+      if (receivedPlayer) {
+        setPlayers((prevPlayers) => {
+          const newPlayers =
+            prevPlayers?.map((player) =>
+              player.playerId === receivedPlayer.playerId
+                ? {
+                    ...player,
+                    balance: receivedPlayer.balance,
+                    cardOwned: receivedPlayer.cardOwned || [],
+                    landOwned: receivedPlayer.landOwned || [],
+                    position: receivedPlayer.position,
+                  }
+                : player
+            ) || [];
+          // console.log("Player update:", newPlayers);
+          return newPlayers;
+        });
+        setReceivedPlayer(receivedPlayer);
+      }
+      setTollPrice(tollPrice);
+    }
+  }, [socketPayTollData]);
+
+  // 카드 뽑고 나서 정보 업데이트
+
+  const [pickedCardInfo, setPickedCardInfo] = useState(socketPickedCard);
+  const [drawPrevPosition, setDrawPrevPosition] = useState(
+    socketDrawPrevPosition
+  );
+
+  const [drawNextPosition, setDrawNextPosition] = useState(
+    socketDrawNextPosition
+  );
+  const [drawPrevBalance, setDrawPrevBalance] = useState(socketDrawPrevBalance);
+  const [drawNextBalance, setDrawNextBalance] = useState(socketDrawNextBalance);
+
+  const prevPositionRef = useRef(drawPrevPosition);
+  const nextPositionRef = useRef(drawNextPosition);
+
+  useEffect(() => {
+    if (
+      socketDrawCardData &&
+      prevPositionRef.current !== socketDrawNextPosition
+    ) {
+      console.log("socketPickedCard:", socketPickedCard);
+      setPickedCardInfo(socketPickedCard);
+      setDrawPrevPosition(socketDrawPrevPosition);
+      setDrawNextPosition(socketDrawNextPosition);
+      setDrawPrevBalance(socketDrawPrevBalance);
+      setDrawNextBalance(socketDrawNextBalance);
+
+      // 🔵 업데이트된 값을 useRef에 저장 (불필요한 재렌더링 방지)
+      prevPositionRef.current = socketDrawPrevPosition;
+      nextPositionRef.current = socketDrawNextPosition;
+    }
+  }, [
+    socketDrawCardData,
+    socketPickedCard,
+    socketDrawPrevPosition,
+    socketDrawNextPosition,
+  ]);
+
+  useEffect(() => {
+    if (socketDrawCardData) {
+      const { player } = socketDrawCardData;
+
+      if (player) {
+        setPlayers((prevPlayers) => {
+          const newPlayers =
+            prevPlayers?.map((prevPlayer) =>
+              prevPlayer.playerId === player.playerId
+                ? {
+                    ...prevPlayer,
+                    balance: player.balance,
+                    cardOwned: player.cardOwned,
+                    landOwned: player.landOwned,
+                    position: player.position,
+                  }
+                : prevPlayer
+            ) || [];
+
+          return newPlayers;
+        });
+      }
+      // setSocketDrawCardData(null);
+    }
+  }, [socketDrawCardData]);
+
+  // 상태 변화를 모니터링하기 위한 별도의 useEffect
+  // useEffect(() => {
+  //   if (buyLandSocketData) {
+  //     console.log("상태 업데이트 확인:");
+  //     console.log("Updated Players:", players);
+  //     console.log("Updated Cards:", cards);
+  //     console.log("Updated Board:", board);
+  //   }
+  // }, [ buildBaseSocketData]);
+
+  // 색상
+
+  // 현재 플레이어는 인덱스 번호로
+  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const currentPlayer = players[currentPlayerIndex];
+  // 주사위
+  const [firstDice, setFirstDice] = useState(null);
+  const [secondDice, setSecondDice] = useState(null);
+  const isDouble = firstDice === secondDice;
+  // 다음 행동
+  const [nextAction, setNextAction] = useState(null);
+  const [hasRolledDice, setHasRolledDice] = useState(false);
+  const [isDiceRolling, setIsDiceRolling] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [currentPosition, setCurrentPosition] = useState(0);
+
+  // 통행료 알림 모달 오픈
+  const [showPayTollModal, setShowPayTollModal] = useState(false);
+
+  // 뽑은 카드 모달 오픈
+  const [showPickedCardModal, setShowPickedCardModal] = useState(false);
+
+  // 나는 몇 번째 순서인지
+  const myIndex = players.findIndex((player) => player.playerId === userId);
+  // useEffect(() => {
+  //   console.log("players:", players);
+  //   console.log("myIndex:", myIndex);
+  // }, [myIndex, players]);
+
+  const [nextxTurn, setNextTurn] = useState(Number(currentPlayerIndex) + 1);
+  useEffect(() => {
+    setNextTurn(Number(currentPlayerIndex) + 1);
+  }, [currentPlayerIndex]);
+
+  // 이전 위치 , 다음 위치
+  const [prevPosition, setPrevPosition] = useState(null);
+  const [nextPosition, setNextPosition] = useState(null);
+
+  useEffect(() => {
+    if (rollDiceSocketData) {
+      setPrevPosition(rollDiceSocketData.prevPosition);
+      setNextPosition(rollDiceSocketData.nextPosition);
+    }
+  }, [rollDiceSocketData]);
+
+  const [onRollDice, setOnRollDice] = useState(false);
+
+  // 이동 끝났는지 체크 (말)
+
+  const [isMovementComplete, setIsMovementComplete] = useState(false);
 
   // 주사위 버튼을 눌렀는지 안 눌렀는지 추적
   useEffect(() => {
     if (onRollDice) {
-      onRollDice(() => setShowModal(true));
-    }
-  }, [onRollDice]);
+      const alertRoll = async () => {
+        try {
+          const rollInfo = {
+            playerId: currentPlayer.playerId,
+            diceRolled: "true",
+          };
 
-  const firstDice = useSelector((state) => state.burumabul.firstDice);
-  const secondDice = useSelector((state) => state.burumabul.secondDice);
-  const isDouble = firstDice === secondDice;
+          await roll(rollInfo);
+          setOnRollDice(false);
+          setIsDiceRolling(true);
+          setHasRolledDice(true);
+        } catch (error) {
+          console.error("주사위 알림 전달 실패 :", error);
+        }
+      };
+      alertRoll();
+    }
+  }, [onRollDice, currentPlayer]);
+
+  useEffect(() => {
+    setCurrentPlayerIndex(currentPlayerSocketIndex);
+    setIsDiceRolling(false);
+    setHasRolledDice(false);
+    setShowModal(false);
+  }, [currentPlayerSocketIndex]);
+
+  // 다음행동 유추
+  useEffect(() => {
+    if (socketNext) {
+      setNextAction(socketNext);
+    }
+  }, [socketNext]);
+
+  // 턴 시작
+  useEffect(() => {
+    const turnStart = async () => {
+      try {
+        await startTurn();
+        setSocketNext(null);
+      } catch (error) {
+        console.error("턴 시작에 오류가 생겼습니다.", error);
+        setSocketNext(null);
+      }
+    };
+    if (
+      nextAction &&
+      nextAction === "START_TURN" &&
+      myIndex === currentPlayerIndex
+    ) {
+      console.log("턴을 시작합니다!!!");
+      turnStart();
+    }
+    console.log("현재 순서랑 내 차례", currentPlayerIndex, myIndex);
+  }, [nextAction]);
+
+  // 주사위 굴리기
+  useEffect(() => {
+    console.log("🔍 주사위 굴리기 감지:", {
+      nextAction,
+      isDiceRolling,
+      hasRolledDice,
+      firstDice,
+      secondDice,
+      myIndex,
+      currentPlayerIndex,
+      isMovementComplete,
+    });
+    const handleDiceResult = async () => {
+      if (
+        isDiceRolling &&
+        hasRolledDice &&
+        firstDice !== null &&
+        secondDice !== null
+      ) {
+        try {
+          const diceInfo = {
+            playerId: currentPlayer.playerId,
+            // firstDice: firstDice,
+            // secondDice: secondDice,
+            firstDice: 6,
+            secondDice: 6,
+          };
+          console.log("주사위 정보 :", diceInfo);
+          await rollDice(diceInfo);
+          setIsDiceRolling(false);
+        } catch (error) {
+          console.error("주사위 굴리기에 실패했습니다.", error);
+          setSocketNext(null);
+        }
+      }
+    };
+    if (
+      nextAction &&
+      nextAction === "ROLL_DICE" &&
+      hasRolledDice &&
+      firstDice !== null &&
+      secondDice !== null &&
+      myIndex === currentPlayerIndex
+    ) {
+      handleDiceResult();
+    }
+  }, [
+    nextAction,
+    isDiceRolling,
+    hasRolledDice,
+    firstDice,
+    secondDice,
+    currentPlayer,
+    rollDice,
+  ]);
+
+  useEffect(() => {
+    if (!isDiceRolling) {
+      console.log("♻️ 주사위 값 초기화 (턴 종료 후)");
+      setTimeout(() => {
+        setFirstDice(null);
+        setSecondDice(null);
+      }, 1000); // 1초 후 초기화
+    }
+  }, [isDiceRolling]);
+
+  // 땅 구매
+  useEffect(() => {
+    if (!isMovementComplete) return;
+
+    if (
+      nextAction === "DO_YOU_WANT_TO_BUY_THE_LAND" &&
+      myIndex === currentPlayerIndex
+    ) {
+      if (showCardId !== nextPosition) {
+        // 중복 실행 방지
+        setShowCardId(nextPosition);
+        setShowBuyLand(true);
+      }
+    }
+  }, [isMovementComplete, nextAction, nextPosition]);
+
+  useEffect(() => {
+    const handleBuyLand = async () => {
+      if (
+        isBuyLand &&
+        currentPlayer &&
+        // nextPosition !== null &&
+        myIndex === currentPlayerIndex
+      ) {
+        try {
+          const buyInfo = {
+            playerId: currentPlayer.playerId,
+            tileId: nextPosition,
+          };
+
+          console.log("구매 요청 보내기 :", buyInfo);
+          await buyLand(buyInfo);
+
+          // 구매 요청이 성공적으로 보내진 후 상태 초기화
+          setShowBuyLand(false);
+          setShowCardId(null);
+          setIsBuyLand(false);
+        } catch (error) {
+          console.error("땅 구매 요청 실패 :", error);
+          setSocketNext(null);
+          setShowBuyLand(false);
+          setShowCardId(null);
+          setIsBuyLand(false);
+        }
+      }
+    };
+    handleBuyLand();
+  }, [isBuyLand, currentPlayer, nextPosition]);
+
+  // 기지 건설
+  useEffect(() => {
+    if (!isMovementComplete) return;
+    if (
+      nextAction === "DO_YOU_WANT_TO_BUILD_THE_BASE" &&
+      !showBuildBase &&
+      myIndex === currentPlayerIndex
+    ) {
+      setShowCardId(nextPosition);
+      setShowBuildBase(true);
+      return;
+    }
+  }, [isMovementComplete, nextAction, showBuildBase]);
+
+  useEffect(() => {
+    const handleBuildBase = async () => {
+      if (
+        isBuildBase &&
+        currentPlayer &&
+        nextPosition !== null &&
+        myIndex === currentPlayerIndex
+      ) {
+        try {
+          const buildInfo = {
+            playerId: currentPlayer.playerId,
+            tileId: nextPosition,
+          };
+          console.log("기지 건설 요청:", buildInfo);
+          await buildBase(buildInfo);
+          setShowBuildBase(false);
+          setShowCardId(null);
+          setIsBuildBase(false);
+        } catch (error) {
+          console.error("기지 건설 요청 실패 :", error);
+          setSocketNext(null);
+          setShowBuildBase(false);
+          setShowCardId(null);
+          setIsBuildBase(false);
+        }
+      }
+    };
+    handleBuildBase();
+  }, [isBuildBase, currentPlayer, nextPosition]);
+
+  // 카드 뽑기 해서 나오는 애니매이션
+  const [isCardDrawn, setIsCardDrawn] = useState(false);
+  const [drawIsAnimating, setDrawIsAnimating] = useState(false);
+
+  // 통행료 지불
+  useEffect(() => {
+    if (!isMovementComplete) return;
+    if (
+      nextAction &&
+      nextAction === "PAY_TOLL" &&
+      myIndex === currentPlayerIndex
+    ) {
+      try {
+        const payInfo = {
+          playerId: currentPlayer.playerId,
+          tileId: nextPosition,
+        };
+        payToll(payInfo);
+        console.log("통행료 지불 성공");
+      } catch (error) {
+        console.log("통행료 지불 실패: ", error);
+        setSocketNext(null);
+      }
+      if (isMovementComplete) {
+        setShowPayTollModal(true);
+      }
+    }
+  }, [isMovementComplete, nextAction]);
+
+  // 카드 뽑기 -> 모달
+
+  useEffect(() => {
+    const handleDrawCard = async () => {
+      if (
+        nextAction &&
+        nextAction === "DRAW_CARD" &&
+        myIndex === currentPlayerIndex &&
+        !isCardDrawn &&
+        isMovementComplete
+      ) {
+        try {
+          setIsCardDrawn(true);
+          const drawInfo = {
+            playerId: currentPlayer.playerId,
+            tileId: nextPosition,
+          };
+          drawCard(drawInfo);
+          console.log("카드 뽑기 성공");
+          setShowPickedCardModal(true);
+        } catch (error) {
+          console.error("카드 뽑기 실패 :", error);
+          setSocketNext(null);
+          setIsCardDrawn(false);
+        }
+      }
+    };
+    handleDrawCard();
+  }, [nextAction, isMovementComplete]);
+
+  // 카드 뽑고 나서 position이 달라질 경우, 왔다갔다 이동하는 로직
+
+  const [drawIsMovementComplete, setDrawIsMovementComplete] = useState(true);
+
+  useEffect(() => {
+    console.log("카드 이동 디버그:", {
+      socketDrawCardData: !!socketDrawCardData,
+      drawPrevPosition,
+      drawNextPosition,
+      현재상태: {
+        drawIsMovementComplete,
+        drawIsAnimating,
+      },
+    });
+    if (socketDrawCardData) {
+      if (
+        drawPrevPosition !== null &&
+        drawNextPosition !== null &&
+        drawPrevPosition !== drawNextPosition
+      ) {
+        const playerIndex = players.findIndex(
+          (player) => player.playerId === socketDrawCardData.player.playerId
+        );
+        const startPosition = playersPositions[playerIndex];
+        const targetPosition = drawNextPosition;
+        setDrawIsMovementComplete(false);
+        setDrawIsAnimating(true);
+
+        if (drawPrevPosition < drawNextPosition) {
+          const animateMovement = async () => {
+            let current = startPosition;
+            while (current !== targetPosition) {
+              current = (current + 1) % totalCells;
+              setPlayersPositions((prev) => {
+                const newPositions = [...prev];
+                newPositions[playerIndex] = current;
+                return newPositions;
+              });
+              await new Promise((resolve) => setTimeout(resolve, 300));
+            }
+            setDrawIsAnimating(false);
+            setTimeout(() => {
+              setDrawIsMovementComplete(true);
+              if (!showPickedCardModal) {
+                // 모달이 이미 닫혀있을 때만
+                setSocketDrawPrevPosition(null);
+                setSocketDrawNextPosition(null);
+                setSocketDrawPrevBalance(null);
+                setSocketDrawNextBalance(null);
+                setNextAction("CHECK_END");
+              }
+            }, 200);
+          };
+          animateMovement();
+          // 뒤로 이동
+        } else if (drawPrevPosition > drawNextPosition) {
+          const animateMovement = async () => {
+            let current = startPosition;
+            while (current !== targetPosition) {
+              current = current === 0 ? totalCells - 1 : current - 1;
+              // current = current - 1;
+              console.log("뒤로 이동 중:", current);
+              setPlayersPositions((prev) => {
+                const newPositions = [...prev];
+                newPositions[playerIndex] = current;
+                return newPositions;
+              });
+              await new Promise((resolve) => setTimeout(resolve, 300));
+            }
+            setDrawIsAnimating(false);
+            setTimeout(() => {
+              setDrawIsMovementComplete(true);
+              if (!showPickedCardModal) {
+                // 모달이 이미 닫혀있을 때만
+                setSocketDrawPrevPosition(null);
+                setSocketDrawNextPosition(null);
+                setSocketDrawPrevBalance(null);
+                setSocketDrawNextBalance(null);
+                setNextAction("CHECK_END");
+              }
+            }, 200);
+          };
+          animateMovement();
+        }
+      }
+    }
+  }, [socketDrawCardData, drawPrevPosition, drawNextPosition]);
+
+  // 턴 종료 조건 확인
+  useEffect(() => {
+    console.log("🔍 CHECK_END 실행 조건 검사: ", {
+      nextAction,
+      isMovementComplete,
+      drawIsMovementComplete,
+      isDiceRolling,
+      showPickedCardModal,
+      showPayTollModal,
+      showBuyLand,
+      showBuildBase,
+    });
+
+    // 모든 모달이 닫혀있는지
+    const allModalClosed =
+      !showPickedCardModal &&
+      !showPayTollModal &&
+      !showBuildBase &&
+      !showBuyLand;
+
+    // 주사위를 굴렸고 말 이동이 완료되었는지 확인
+    const allMovementsComplete =
+      !isMovementComplete &&
+      !isDiceRolling &&
+      drawIsMovementComplete &&
+      !drawIsAnimating;
+
+    if (
+      nextAction === "CHECK_END" &&
+      myIndex === currentPlayerIndex &&
+      allModalClosed &&
+      allMovementsComplete
+    ) {
+      try {
+        const endInfo = {
+          playerId: currentPlayer.playerId,
+        };
+        checkEnd(endInfo);
+        console.log("종료 조건 체크");
+      } catch (error) {
+        console.error("종료 조건 체크 실패 : ", error);
+        setSocketNext(null);
+      }
+    } else if (nextAction === "CHECK_END") {
+      console.log("턴 종료 조건 미충족X :", {
+        allModalClosed,
+        allMovementsComplete,
+      });
+    }
+  }, [
+    nextAction,
+    isMovementComplete,
+    drawIsMovementComplete,
+    isDiceRolling,
+    drawIsAnimating,
+    showPickedCardModal,
+    showPayTollModal,
+    showBuyLand,
+    showBuildBase,
+    myIndex,
+    currentPlayerIndex,
+  ]);
+
+  // 게임 종료 확인
+
+  const [isEnd, setIsEnd] = useState(false);
+  const [showEndWinner, setShowEndWinner] = useState(false);
+
+  useEffect(() => {
+    if (socketWinner && nextAction && nextAction === "GAME_END") {
+      setIsEnd(true);
+      setShowEndWinner(true);
+    }
+  }, [socketWinner, nextAction]);
+
+  const closeBuyLand = () => {
+    setShowBuyLand(false);
+    setShowCardId(null);
+    setSocketNext("CHECK_END");
+  };
+
+  const closeBuildBase = () => {
+    setShowBuildBase(false);
+    setShowCardId(null);
+    setSocketNext("CHECK_END");
+  };
+
+  const closePayToll = () => {
+    setShowPayTollModal(false);
+    setPaidPlayer(null);
+    setReceivedPlayer(null);
+    setTollPrice(null);
+    setSocketNext("CHECK_END");
+  };
+
+  const closePickedCard = () => {
+    console.log("모달 닫기 전:", {
+      nextAction,
+      isCardDrawn,
+      drawIsAnimating,
+    });
+
+    setShowPickedCardModal(false);
+    setIsCardDrawn(false);
+    setNextAction("CHECK_END");
+
+    console.log("모달 닫은 후:", {
+      nextAction,
+      isCardDrawn,
+      drawIsAnimating,
+    });
+  };
+
+  const closeEndWinner = () => {
+    setShowEndWinner(false);
+    setTimeout(() => {
+      console.log("대기방으로 이동합니다.");
+      setIsStart(false);
+      endGame();
+    }, 5000);
+  };
+
+  // 플레이어 위치 초기화
+  const [playersPositions, setPlayersPositions] = useState(
+    Array(numPlayers).fill(0)
+  );
+
+  const [isAnimating, setIsAnimating] = useState(false);
+  // console.log(playersPositions);
+
+  useEffect(() => {
+    if (rollDiceSocketData && rollDiceSocketData.nextPosition !== undefined) {
+      const playerIndex = players.findIndex(
+        (player) => player.playerId === rollDiceSocketData.playerId
+      );
+
+      const startPosition = playersPositions[playerIndex];
+      const targetPosition = rollDiceSocketData.nextPosition;
+      console.log("🚀 이동 시작:", { startPosition, targetPosition });
+      setIsMovementComplete(false); // 이동 시작 시 false 설정
+      setIsAnimating(true);
+
+      const animateMovement = async () => {
+        let current = startPosition;
+
+        while (current !== targetPosition) {
+          current = (current + 1) % totalCells;
+          setPlayersPositions((prev) => {
+            const newPositions = [...prev];
+            newPositions[playerIndex] = current;
+            return newPositions;
+          });
+          await new Promise((resolve) => setTimeout(resolve, 300));
+        }
+
+        setIsAnimating(false);
+        setTimeout(() => setIsMovementComplete(true), 200); // 이동이 끝난 후 true로 변경
+      };
+
+      animateMovement();
+    }
+  }, [rollDiceSocketData]);
+
+  useEffect(() => {
+    if (currentPlayerIndex === myIndex) {
+      setOnRollDice(false);
+    }
+  }, [currentPlayerIndex]);
 
   const [positions, setPositions] = useState([]);
   const [cellSizes, setCellSizes] = useState([]);
@@ -228,25 +1118,6 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
   const totalCells = size * 4 - 4; // 전체 칸 개수
   const cells = Array.from({ length: totalCells }, (_, i) => i); // 칸 번호
   // const [currentPosition, setCurrentPosition] = useState(0); // 현재 말 위치
-
-  const [showModal, setShowModal] = useState(false);
-  const currentPosition = useSelector((state) => state.burumabul.prevPosition);
-
-  useEffect(() => {
-    if (onRollDice && firstDice !== null && secondDice !== null) {
-      try {
-        const diceInfo = {
-          playerId: currentPlayer.playerId,
-          firstDice: firstDice,
-          secondDice: secondDice,
-          wasDouble: isDouble,
-        };
-        rollDice(diceInfo);
-      } catch (error) {
-        console.error("주사위 굴리기에 실패했습니다.", error);
-      }
-    }
-  }, [onRollDice, firstDice, secondDice]);
 
   // 카메라 위치 초기화하기 위한..
   const orbitControlsRef = useRef();
@@ -401,25 +1272,28 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
       venusTexture,
     ];
 
-    return positions.map((pos, index) => (
-      <Cell
-        key={index}
-        position={pos}
-        isHighlight={index === currentPosition}
-        name={cities[index]}
-        topTextureUrl={index < topTextures.length ? topTextures[index] : null}
-        size={cellSizes[index]}
-      />
-    ));
+    return positions.map((pos, index) => {
+      const tile = board?.[index];
+      const ownerId = players?.findIndex(
+        (player) => player.playerId === tile?.ownerId
+      );
+
+      return (
+        <Cell
+          key={index}
+          position={pos}
+          name={cities[index]}
+          topTextureUrl={index < topTextures.length ? topTextures[index] : null}
+          size={cellSizes[index]}
+          ownerIndex={ownerId}
+          players={players}
+        />
+      );
+    });
   };
 
-  // 플레이어 위치 초기화
-  const [playersPositions, setPlayersPositions] = useState(
-    Array(numPlayers).fill(0)
-  );
-  console.log(playersPositions);
   // 플레이어 우주 기지를 세운!
-  const [playerBases, setPlayerBases] = useState([[], [], [], []]);
+  const [playerBases, setPlayerBases] = useState(Array(numPlayers).fill(0));
 
   useEffect(() => {
     if (onBasesInfo) {
@@ -441,6 +1315,7 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
 
       const initialBases = positions.map((position, index) => {
         const cellSize = cellSizes[index];
+
         let baseSize;
         // 인덱스  0-9, 20-29: 가로가 세로의 2배
         if ((index >= 0 && index <= 9) || (index >= 20 && index <= 29)) {
@@ -459,15 +1334,17 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
             depth: cellSize[2] * 0.64,
           };
         }
+
         return {
           position: position,
-          color: "gray",
+          color: null,
           size: baseSize,
+          visible: false,
         };
       });
       setSpaceBases(initialBases);
     }
-  }, [positions, cellSizes, size]);
+  }, [positions, cellSizes]);
 
   // Preload textures
   const floor = useMemo(() => useLoader(TextureLoader, floorTexture), []);
@@ -484,95 +1361,37 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
     []
   );
 
-  // 주사위 굴린 후 플레이어 이동 처리
-  const handleDiceComplete = (score) => {
-    const player = players[currentPlayerIndex];
-
-    const targetPosition = player.position;
-
-    console.log(`🎲 Player ${currentPlayerIndex + 1} rolled: ${score}`);
-    console.log(`➡️ Moving to position: ${targetPosition}`);
-
-    const animateMovement = (currentPosition, targetPosition) => {
-      if (currentPosition !== targetPosition) {
-        setPlayersPositions((prevPlayersPosition) => {
-          const newPlayersPosition = [...prevPlayersPosition];
-          newPlayersPosition[currentPlayerIndex] =
-            (currentPosition + 1) % totalCells;
-          return newPlayersPosition;
-        });
-        setTimeout(
-          () =>
-            animateMovement((currentPosition + 1) % totalCells, targetPosition),
-          300
-        );
-      } else {
-        // 우주기지 생성 로직
-        const targetCity = cities[targetPosition];
-        console.log("Building space base at:", positions[targetPosition]);
-        setSpaceBases((prevBases) => {
-          return prevBases.map((base) => {
-            if (base.position === positions[targetPosition]) {
-              return { ...base, color: player.color };
-            }
-            return base;
-          });
-        });
-
-        // 플레이어의 우주기지 목록 업데이트
-        setPlayerBases((prev) => {
-          const newBases = [...prev];
-          return prev.map((bases, index) =>
-            index === currentPlayerIndex && !bases.includes(targetCity)
-              ? [...bases, targetCity]
-              : bases
-          );
-        });
-
-        console.log(
-          `player ${currentPlayerIndex + 1} built a base in ${targetCity}`
-        );
-
-        dispatch(nextTurn());
-      }
-    };
-    animateMovement(player.position, targetPosition);
-
-    setShowModal(false);
-  };
-  console.log(playerBases);
-
   // positions 배열에서 각 플레이어의 위치 좌표 계산
   const getPlayerPosition = (playerPosition, playerIndex) => {
     if (!positions[playerPosition]) {
-      return playersPositions;
+      return [0, 0, 0];
     }
     const basePosition = positions[playerPosition];
     // 말이 같은 칸에 있을 때 겹치지 않도록 약간의 오프셋 추가
-    const offset = 0.4;
+    const offset = 0.5;
     switch (playerIndex) {
       case 0:
         return [
           basePosition[0] - offset,
-          basePosition[1],
+          basePosition[1] + 0.7,
           basePosition[2] - offset,
         ];
       case 1:
         return [
           basePosition[0] + offset,
-          basePosition[1],
+          basePosition[1] + 0.7,
           basePosition[2] - offset,
         ];
       case 2:
         return [
           basePosition[0] - offset,
-          basePosition[1],
+          basePosition[1] + 0.7,
           basePosition[2] + offset,
         ];
       case 3:
         return [
           basePosition[0] + offset,
-          basePosition[1],
+          basePosition[1] + 0.7,
           basePosition[2] + offset,
         ];
     }
@@ -594,31 +1413,31 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
 
   // 우주 기지 렌더링 추가
   const renderSpaceBases = useMemo(() => {
-    console.log("render base");
+    // console.log("render base");
     return spaceBases.map((base, index) => {
       let adjustedPosition;
-      if (index >= 0 && index <= 9) {
+      if (index >= 1 && index <= 9) {
         // 하단 1/3
         adjustedPosition = [
           base.position[0],
           base.position[1] + 0.3,
           base.position[2] + base.size.depth + 0.1,
         ];
-      } else if (index >= 10 && index <= 19) {
+      } else if (index >= 11 && index <= 19) {
         // 좌측 1/3
         adjustedPosition = [
           base.position[0] - base.size.width - 0.1,
           base.position[1] + 0.3,
           base.position[2],
         ];
-      } else if (index >= 20 && index <= 29) {
+      } else if (index >= 21 && index <= 29) {
         // 상단 1/3
         adjustedPosition = [
           base.position[0],
           base.position[1] + 0.3,
           base.position[2] - base.size.depth - 0.1,
         ];
-      } else if (index >= 30 && index <= 39) {
+      } else if (index >= 31 && index <= 39) {
         // 우측 1/3
         adjustedPosition = [
           base.position[0] + base.size.width + 0.1,
@@ -635,128 +1454,238 @@ const TravelMap = ({ onRollDice, onBasesInfo, gameData, roomId }) => {
           width={base.size.width}
           height={base.size.height}
           depth={base.size.depth} // 3D 크기
-          visible={true}
+          visible={base.visible}
         />
       );
     });
   }, [spaceBases]);
 
-  return (
-    <div className="h-[100%] flex flex-col">
-      {/* 이동 버튼 + 주사위 버튼 */}
-      <div className="flex justify-center mb-5">
-        {/* <button
-          onClick={moveToken}
-          className="mt-5 mx-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Move Token
-        </button> */}
+  // Portal을 위한 state
+  const [mountPortal, setMountPortal] = useState(false);
 
+  // 컴포넌트 마운트 후 Portal 활성화
+  useEffect(() => {
+    setMountPortal(true);
+  }, []);
+
+  useEffect(() => {
+    // Modal이 열릴 때 메인 Canvas의 렌더링 일시 중지
+    if (showModal) {
+      // Canvas 렌더링 일시 중지 로직
+      return () => {
+        // Canvas 렌더링 재개 로직
+      };
+    }
+  }, [showModal]);
+
+  return (
+    <div className="h-[100%] flex flex-col bg-black bg-opacity-50">
+      {/* 이동 버튼 + 주사위 버튼 */}
+      <div className="flex justify-center items-center mb-2">
         <button
           onClick={resetCamera}
-          className="mt-5 mx-3 px-4 py-2 bg-yellow-300 text-white rounded hover:bg-blue-600"
+          className="mt-5 mx-3 px-4 py-2 h-15 bg-yellow-300 text-white rounded hover:bg-blue-600"
         >
           Reset Camera
         </button>
-        {/* <select
-          value={numPlayers}
-          onChange={(e) => handlePlayerCountChange(e.target.value)}
-          className="mt-5 mx-3 px-4 py-2 bg-yellow-300 text-white rounded hover:bg-blue-600"
-        >
-          <option value={2}>2 players</option>
-          <option value={3}>3 players</option>
-          <option value={4}>4 players</option>
-        </select> */}
+        {currentPlayerIndex === myIndex && !isEnd && (
+          <DiceVersion2
+            setOnRollDice={setOnRollDice}
+            setFirstDice={setFirstDice}
+            setSecondDice={setSecondDice}
+          />
+        )}
       </div>
       <div className="flex w-full h-full">
         <div className=" w-full h-full">
-          <Canvas
-            camera={{
-              position: initialCameraPosition, // 카메라 초기 위치
-              fov: 75, // 시야각 조절
-            }}
-            onCreated={({ scene }) => {
-              const texture = new TextureLoader().load(spaceBackground);
-              scene.background = texture;
-            }}
-          >
-            <ambientLight intensity={2} />
-            <pointLight position={[10, 20, 10]} intensity={0.8} color="white" />
-
-            {/* 바닥 생성 */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.18, 0]}>
-              <planeGeometry args={[16.5, 16.5]} />
-              <meshStandardMaterial map={floor} color="#ffffff" />
-            </mesh>
-
-            {/* 타임머신 탑승장 */}
-            <mesh position={[5, 0.01, -5]} rotation={[-Math.PI / 2, 0, 0]}>
-              <planeGeometry args={[5, 5]} />
-              <meshStandardMaterial
-                map={timeMachineStopTexture} // 추가 이미지 텍스처
-                transparent={true}
-              />
-            </mesh>
-
-            {/* 텔레파시 카드 */}
-            <mesh position={[5, 0.01, 4.5]} rotation={[-Math.PI / 2, 0, 0]}>
-              <planeGeometry args={[3, 5]} />
-              <meshStandardMaterial
-                map={telepathyCardTexture} // 추가 이미지 텍스처
-                transparent={true}
-              />
-            </mesh>
-
-            {/* 뉴런의 골짜기 */}
-            <mesh position={[-5, 0.01, -5]} rotation={[-Math.PI / 2, 0, 0]}>
-              <planeGeometry args={[5, 5]} />
-              <meshStandardMaterial
-                map={neuronsCardTexture} // 추가 이미지 텍스처
-                transparent={true}
-              />
-            </mesh>
-
-            {/* OrbitControls로 카메라 이동 및 확대/축소 제어 */}
-            <OrbitControls
-              ref={orbitControlsRef}
-              target={initialTarget}
-              makeDefault
-              maxPolarAngle={Math.PI / 2.5} // 위쪽으로 카메라 제한
-              minDistance={1} // 최소 줌 거리
-              maxDistance={15} // 최대 줌 거리
-              mouseButtons={{
-                LEFT: 0,
-                MIDDLE: 1,
-                RIGHT: 2,
+          {!showModal && (
+            <Canvas
+              camera={{
+                position: initialCameraPosition,
+                fov: 75,
               }}
-              enablePan={true}
-              zoomToCursor={true}
-              rotateSpeed={0.15}
-            />
+              dpr={[1, 1.5]}
+              style={{ maxWidth: "1200px", maxHeight: "1000px" }}
+              performance={{ min: 0.5 }}
+              gl={{
+                powerPreference: "high-performance",
+                antialias: false, // 안티앨리어싱 비활성화로 성능 향상
+                depth: true,
+              }}
+              onCreated={({ gl, scene }) => {
+                const texture = new TextureLoader().load(spaceBackground);
+                scene.background = texture;
+                gl.setClearColor("#000000", 0);
 
-            {renderCells()}
-            {players.slice(0, numPlayers).map((player, index) => (
-              <BlueRobot
-                key={player.id}
-                position={getPlayerPosition(playersPositions[index], index)}
-                scale={0.005}
+                // WebGL 컨텍스트 복구 처리 추가
+                if (gl.domElement) {
+                  gl.domElement.addEventListener(
+                    "webglcontextlost",
+                    (event) => {
+                      event.preventDefault();
+                      // console.warn("Main canvas context lost");
+                    }
+                  );
+
+                  gl.domElement.addEventListener("webglcontextrestored", () => {
+                    // console.log("Context restored");
+                    gl.render(scene, camera);
+                  });
+                }
+              }}
+            >
+              <ambientLight intensity={1} /> {/* 주변광 밝기 증가 */}
+              <directionalLight
+                position={[10, 20, 10]}
+                intensity={3}
+                castShadow
+              />{" "}
+              {/* 태양광 추가 */}
+              <pointLight position={[10, 20, 10]} intensity={3} color="white" />
+              <spotLight
+                position={[0, 10, 0]}
+                angle={0.6}
+                penumbra={0.5}
+                intensity={3}
               />
-            ))}
-            {renderSpaceBases}
-          </Canvas>
+              {/* 바닥 생성 */}
+              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.18, 0]}>
+                <planeGeometry args={[16.5, 16.5]} />
+                <meshStandardMaterial map={floor} color="#ffffff" />
+              </mesh>
+              {/* 타임머신 탑승장 */}
+              <mesh position={[5, 0.01, -5]} rotation={[-Math.PI / 2, 0, 0]}>
+                <planeGeometry args={[5, 5]} />
+                <meshStandardMaterial
+                  map={timeMachineStopTexture} // 추가 이미지 텍스처
+                  transparent={true}
+                />
+              </mesh>
+              {/* 텔레파시 카드 */}
+              <mesh position={[5, 0.01, 4.5]} rotation={[-Math.PI / 2, 0, 0]}>
+                <planeGeometry args={[3, 5]} />
+                <meshStandardMaterial
+                  map={telepathyCardTexture} // 추가 이미지 텍스처
+                  transparent={true}
+                />
+              </mesh>
+              {/* 뉴런의 골짜기 */}
+              <mesh position={[-5, 0.01, -5]} rotation={[-Math.PI / 2, 0, 0]}>
+                <planeGeometry args={[5, 5]} />
+                <meshStandardMaterial
+                  map={neuronsCardTexture} // 추가 이미지 텍스처
+                  transparent={true}
+                />
+              </mesh>
+              {/* OrbitControls로 카메라 이동 및 확대/축소 제어 */}
+              <OrbitControls
+                ref={orbitControlsRef}
+                target={initialTarget}
+                makeDefault
+                maxPolarAngle={Math.PI / 2.5} // 위쪽으로 카메라 제한
+                minDistance={1} // 최소 줌 거리
+                maxDistance={15} // 최대 줌 거리
+                mouseButtons={{
+                  LEFT: 0,
+                  MIDDLE: 1,
+                  RIGHT: 2,
+                }}
+                enablePan={true}
+                zoomToCursor={true}
+                rotateSpeed={0.15}
+              />
+              {renderCells()}
+              {players.slice(0, numPlayers).map((player, index) => (
+                <HeartPlayer
+                  key={player.id}
+                  position={getPlayerPosition(playersPositions[index], index)}
+                  color={colors[index]} // 플레이어 색상 적용
+                  scale={0.6} // 하트 크기 조절
+                />
+              ))}
+              {renderSpaceBases}
+            </Canvas>
+          )}
         </div>
       </div>
-      {showModal &&
+      {/* {mountPortal &&
+        showModal &&
         createPortal(
           <div className="fixed inset-0 z-50 w-2/3 text-center flex items-center justify-center">
             <Dice
               onComplete={handleDiceComplete}
               onClose={() => setShowModal(false)}
               roomId={roomId}
+              setFirstDice={setFirstDice}
+              setSecondDice={setSecondDice}
             />
-            ,
           </div>,
           document.body
+        )} */}
+      {mountPortal &&
+        showBuyLand &&
+        showCardId &&
+        currentPlayerIndex === myColorIndex &&
+        createPortal(
+          <div className="fixed inset-0 z-50 w-2/3 text-center flex items-center justify-center">
+            <QuestBuyLand
+              setIsBuyLand={setIsBuyLand}
+              onClose={closeBuyLand}
+              cardId={showCardId}
+              cardInfo={cards?.find((card) => card.number === showCardId)}
+            />
+          </div>,
+          document.body
+        )}
+
+      {mountPortal &&
+        showBuildBase &&
+        showCardId &&
+        currentPlayerIndex === myColorIndex &&
+        createPortal(
+          <div className="fixed inset-0 z-50 w-2/3 text-center flex items-center justify-center">
+            <QuestBuildBase
+              setIsBuildBase={setIsBuildBase}
+              onClose={closeBuildBase}
+              cardId={showCardId}
+              cardInfo={cards?.find((card) => card.id === showCardId)}
+            />
+          </div>,
+          document.body
+        )}
+      {mountPortal &&
+        showPayTollModal &&
+        createPortal(
+          <div className="fixed inset-0 z-50 w-2/3 text-center flex items-center justify-center">
+            <PayTollModal
+              onClose={closePayToll}
+              tollPrice={tollPrice}
+              receivedPlayer={receivedPlayer}
+              paidPlayer={paidPlayer}
+            />
+          </div>,
+          document.body
+        )}
+      {mountPortal &&
+        showPickedCardModal &&
+        createPortal(
+          <div className="fixed inset-0 z-50 w-2/3 text-center flex items-center justify-center">
+            <PickedCardModal
+              onClose={closePickedCard}
+              cardInfo={pickedCardInfo}
+            />
+          </div>,
+          document.body
+        )}
+
+      {mountPortal &&
+        isEnd &&
+        socketWinner &&
+        showEndWinner &&
+        createPortal(
+          <div className="fixed inset-0 z-50 w-full text-center flex items-center justify-center">
+            <EndWinner onClose={closeEndWinner} />
+          </div>
         )}
     </div>
   );

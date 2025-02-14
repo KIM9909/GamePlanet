@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { CatchMindAPI } from "../../../../sources/api/CatchMindAPI";
 import { fetchProfile } from "../../../../sources/store/slices/ProfileSlice";
+import { toast } from "react-toastify";
+import CustomToastContent from "../../../CustomToastContent";
 
 const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
@@ -12,6 +14,9 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
   const profileData = useSelector((state) => state.profile.profileData);
   const token = useSelector((state) => state.user.token);
 
+  // 폼 제출 상태 추가
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // 컴포넌트 마운트 시 프로필 정보 가져오기
   useEffect(() => {
     if (userId) {
@@ -20,7 +25,7 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
   }, [userId, dispatch]);
 
   const [formData, setFormData] = useState({
-    roomTitle: "", // roomTitle이 아닌 roomTitle으로 통일
+    roomTitle: "",
     isPrivate: false,
     password: "",
     maxPeople: "2",
@@ -28,15 +33,29 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
     quizCount: "5",
   });
 
+  const handleClose = () => {
+    setFormData({
+      roomTitle: "",
+      isPrivate: false,
+      password: "",
+      maxPeople: "2",
+      timeLimit: "90",
+      quizCount: "5",
+    });
+    setIsSubmitting(false);
+    onClose();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
     try {
-      // 리덕스의 토큰과 localStorage의 토큰 확인
       const localToken = localStorage.getItem("token");
       if (!localToken || !token || localToken !== token) {
         console.error("토큰이 유효하지 않습니다.");
-        // 토큰 갱신 또는 로그인 처리
+        setIsSubmitting(false);
         return;
       }
 
@@ -63,10 +82,33 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
         data: error.response?.data,
       });
 
+      if (error.response?.status === 500) {
+        toast(
+          ({ closeToast }) => <CustomToastContent closeToast={closeToast} />,
+          {
+            position: "top-center",
+            autoClose: false,
+            hideProgressBar: true,
+            closeOnClick: false,
+            pauseOnHover: true,
+            draggable: true,
+            className: "!bg-transparent !p-0 !shadow-none",
+            toastClassName: "!bg-transparent !p-0",
+            bodyClassName: "!p-0 !m-0",
+            closeButton: false, // 기본 닫기 버튼 비활성화
+            style: {
+              background: "transparent",
+              padding: 0,
+            },
+          }
+        );
+        handleClose();
+      }
+
       if (error.response?.status === 401) {
         localStorage.removeItem("token");
-        // 토큰 갱신 또는 로그인 페이지로 리다이렉트
       }
+      setIsSubmitting(false);
     }
   };
 
@@ -74,25 +116,29 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
 
   return (
     <div
-      className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${
+      className={`fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 ${
         !isOpen && "hidden"
       }`}
     >
-      <div className="bg-white rounded-lg p-6 w-96">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">방 만들기</h2>
+      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-8 w-96 border-2 border-cyan-500/60 shadow-2xl transform transition-all duration-300">
+        {/* 헤더 */}
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-400">
+            방 만들기
+          </h2>
           <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            onClick={handleClose}
+            className="text-cyan-400 hover:text-cyan-300 transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-700"
           >
             ✕
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* 방 제목 입력 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              방 제목
+            <label className="block text-sm font-medium text-cyan-400 mb-2">
+              🎯 방 제목
             </label>
             <input
               type="text"
@@ -103,15 +149,19 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
                   roomTitle: e.target.value,
                 }))
               }
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 bg-slate-700 border-2 border-cyan-400/30 rounded-lg 
+                       text-white placeholder-slate-400
+                       focus:outline-none focus:border-cyan-400 transition-colors"
               placeholder="방 제목을 입력하세요"
               required
             />
           </div>
 
           {/* 비밀방 설정 */}
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-gray-700">비밀방</label>
+          {/* <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg border border-cyan-400/20">
+            <label className="text-sm font-medium text-cyan-400">
+              🔒 비밀방
+            </label>
             <div
               className="relative inline-flex items-center cursor-pointer"
               onClick={() =>
@@ -122,24 +172,24 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
               }
             >
               <div
-                className={`w-11 h-6 rounded-full transition-colors ${
-                  formData.isPrivate ? "bg-blue-500" : "bg-gray-200"
+                className={`w-12 h-6 rounded-full transition-colors duration-300 ${
+                  formData.isPrivate ? "bg-cyan-500" : "bg-slate-600"
                 }`}
               >
                 <div
-                  className={`w-5 h-5 rounded-full bg-white shadow transform transition-transform ${
+                  className={`w-5 h-5 rounded-full bg-white shadow-lg transform transition-transform duration-300 ${
                     formData.isPrivate ? "translate-x-6" : "translate-x-1"
                   } mt-0.5`}
                 />
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* 비밀번호 입력 */}
-          {formData.isPrivate && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                비밀번호 (숫자 최대 8자리)
+          {/* {formData.isPrivate && (
+            <div className="animate-fadeIn">
+              <label className="block text-sm font-medium text-cyan-400 mb-2">
+                🔑 비밀번호
               </label>
               <input
                 type="password"
@@ -153,59 +203,68 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
                     }));
                   }
                 }}
-                className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="비밀번호를 입력하세요"
+                className="w-full p-3 bg-slate-700 border-2 border-cyan-400/30 rounded-lg 
+                         text-white placeholder-slate-400
+                         focus:outline-none focus:border-cyan-400 transition-colors"
+                placeholder="숫자 8자리 이하"
                 required={formData.isPrivate}
               />
             </div>
-          )}
+          )} */}
 
-          {/* 최대 인원 선택 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              최대 인원
-            </label>
-            <select
-              value={formData.maxPeople}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  maxPeople: e.target.value,
-                }))
-              }
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="2">2인</option>
-              <option value="3">3인</option>
-              <option value="4">4인</option>
-            </select>
-          </div>
+          {/* 게임 설정 그리드 */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* 최대 인원 선택 */}
+            <div>
+              <label className="block text-sm font-medium text-cyan-400 mb-2">
+                👥 최대 인원
+              </label>
+              <select
+                value={formData.maxPeople}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    maxPeople: e.target.value,
+                  }))
+                }
+                className="w-full p-3 bg-slate-700 border-2 border-cyan-400/30 rounded-lg 
+                         text-white appearance-none cursor-pointer
+                         focus:outline-none focus:border-cyan-400 transition-colors"
+              >
+                <option value="2">2인</option>
+                <option value="3">3인</option>
+                <option value="4">4인</option>
+              </select>
+            </div>
 
-          {/* 제한 시간 설정 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              제한 시간 (초)
-            </label>
-            <select
-              value={formData.timeLimit}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  timeLimit: e.target.value,
-                }))
-              }
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="5">5초</option>
-              <option value="90">90초</option>
-              <option value="120">120초</option>
-            </select>
+            {/* 제한 시간 설정 */}
+            <div>
+              <label className="block text-sm font-medium text-cyan-400 mb-2">
+                ⏱️ 제한 시간
+              </label>
+              <select
+                value={formData.timeLimit}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    timeLimit: e.target.value,
+                  }))
+                }
+                className="w-full p-3 bg-slate-700 border-2 border-cyan-400/30 rounded-lg 
+                         text-white appearance-none cursor-pointer
+                         focus:outline-none focus:border-cyan-400 transition-colors"
+              >
+                <option value="1">1초</option>
+                <option value="90">90초</option>
+                <option value="120">120초</option>
+              </select>
+            </div>
           </div>
 
           {/* 퀴즈 개수 설정 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              퀴즈 개수
+            <label className="block text-sm font-medium text-cyan-400 mb-2">
+              📝 퀴즈 개수
             </label>
             <select
               value={formData.quizCount}
@@ -215,9 +274,11 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
                   quizCount: e.target.value,
                 }))
               }
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 bg-slate-700 border-2 border-cyan-400/30 rounded-lg 
+                       text-white appearance-none cursor-pointer
+                       focus:outline-none focus:border-cyan-400 transition-colors"
             >
-              <option value="5">5개</option>
+              <option value="1">1개</option>
               <option value="7">7개</option>
               <option value="10">10개</option>
             </select>
@@ -226,9 +287,39 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
           {/* 제출 버튼 */}
           <button
             type="submit"
-            className="w-full py-2 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            disabled={isSubmitting}
+            className={`w-full py-3 px-4 rounded-lg font-medium text-white
+                     transform transition-all duration-300
+                     ${
+                       isSubmitting
+                         ? "bg-slate-600 cursor-not-allowed"
+                         : "bg-gradient-to-r from-cyan-500 to-cyan-500 hover:from-cyan-400 hover:to-cyan-400 active:scale-95"
+                     }
+                     border border-cyan-400/50 shadow-lg`}
           >
-            방 만들기
+            {isSubmitting ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                방 생성 중...
+              </span>
+            ) : (
+              "🎮 방 만들기"
+            )}
           </button>
         </form>
       </div>

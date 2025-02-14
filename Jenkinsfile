@@ -16,7 +16,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'develop',
+                git branch: 'release',
                     credentialsId: 'gitlab-token',
                     url: 'https://lab.ssafy.com/s12-webmobile1-sub1/S12P11C109.git'
             }

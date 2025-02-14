@@ -9,7 +9,7 @@ import { SocketContext } from "../../../components/layout/SocketLayout";
 
 const BurumabulPage = () => {
   const roomId = useSelector((state) => state.burumabul.roomId);
-  console.log("BurumabulPage received roomId:", roomId);
+
   const navigate = useNavigate();
   const userId = Number(useSelector((state) => state.user.userId));
   const [currentRoomInfo, setCurrentRoomInfo] = useState({});
@@ -28,6 +28,7 @@ const BurumabulPage = () => {
       }
     };
     getRoomInfo();
+    console.log("BurumabulPage received roomId:", roomId);
   }, [roomId]);
 
   const [isStart, setIsStart] = useState(false);
@@ -65,7 +66,7 @@ const BurumabulPage = () => {
       }
     };
     initializeRoom();
-  }, [roomId, connected, userId, enterWaitingRoom]);
+  }, [roomId, connected, userId]);
 
   useEffect(() => {
     if (gamePlaySocketData) {

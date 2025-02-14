@@ -1,12 +1,12 @@
 // App.jsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AdminPage from "./pages/admin/AdminPage";
-import BoardPage from "./pages/board/BoardPage";
+import BoardPage from "./pages/gameInfo/board/BoardPage";
 import BurumabulPage from "./pages/game/burumabul/BurumabulPage";
 import GameInfoPage from "./pages/gameInfo/GameInfoPage";
 import HomePage from "./pages/home/HomePage";
 import ProfilePage from "./pages/profile/ProfilePage";
-import ProposalPage from "./pages/proposal/ProposalPage";
+import CustomPage from "./pages/proposal/CustomPage";
 import CockroachPokerPage from "./pages/game/CockroachPokerPage";
 import MainPage from "./pages/main/MainPage";
 import TopLayout from "./components/layout/TopLayout";
@@ -16,75 +16,143 @@ import ScrollToTop from "./components/layout/ScrollToTop";
 import CatchMindPage from "./pages/game/CatchMindPage";
 import FriendModalLayout from "./components/layout/FriendModalLayout";
 import CatchMindListPage from "./components/game/catchMind/roomList/CatchMindListPage";
+import NewArticlePage from "./pages/gameInfo/board/NewArticlePage";
+import GameRulePage from "./pages/gameInfo/GameRulePage";
+import ArticleDetailPage from "./pages/gameInfo/board/ArticleDetailPage";
+import ReviewPage from "./pages/gameInfo/ReviewPage";
+import GameVideoPage from "./pages/gameInfo/GameVideoPage";
+
 import CockroachRoom from "./components/game/cockroachcard/CockroachRoom";
-import BurumabulRoomListPage from "./pages/game/burumabul/BurumabulRoomListPaage";
+import BurumabulRoomListPage from "./pages/game/burumabul/BurumabulRoomListPage";
 import SocketLayout from "./components/layout/SocketLayout";
+import EditArticlePage from "./pages/gameInfo/board/EditArticlePage";
+import FallingStars from "./components/background/FallingStars";
+
+import ErrorPage from "./pages/error/ErrorPage";
+import CustomEditor from "./components/info/gamecustom/CustomEditor";
+import BackGroundMusic from "./components/background/BackGroundMusic";
+import CustomDetail from "./components/info/gamecustom/CustomDetail";
+import ReportDetail from "./components/admin/report/ReportDetail";
+import RecordDetail from "./components/admin/record/RecordDetail";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <ToastContainer />
+      <BackGroundMusic />
       <TopLayout>
-        {/* <SideLayout> */}
-        <FriendModalLayout>
-          <Routes>
-            {/* Admin */}
-            <Route path="/admin" element={<AdminPage />} />
+        <SideLayout>
+          <FallingStars />
+          <FriendModalLayout>
+            <Routes>
+              {/* Admin */}
+              <Route path="/admin" element={<AdminPage />} />
+              <Route
+                path="/admin/report/:reportId"
+                element={<ReportDetail />}
+              />
+              <Route
+                path="/admin/record/:recordId"
+                element={<RecordDetail />}
+              />
 
-            {/* Board */}
-            <Route path="/board" element={<BoardPage />} />
-            <Route path="/board/:boardId" element={<BoardPage />} />
+              {/* Board */}
+              <Route path="/board" element={<BoardPage />} />
+              <Route path="/board/:boardId" element={<BoardPage />} />
 
-            {/* Game */}
-            <Route
-              path="/game/burumabul/start/:roomId"
-              element={
-                <SocketLayout>
-                  <BurumabulPage />
-                </SocketLayout>
-              }
-            />
-            <Route
-              path="/burumabul/room-list"
-              element={
-                <SocketLayout>
-                  <BurumabulRoomListPage />
-                </SocketLayout>
-              }
-            />
+              {/* Game */}
+              <Route
+                path="/game/burumabul/start/:roomId"
+                element={
+                  <SocketLayout>
+                    <BurumabulPage />
+                  </SocketLayout>
+                }
+              />
+              <Route
+                path="/burumabul/room-list"
+                element={
+                  <SocketLayout>
+                    <BurumabulRoomListPage />
+                  </SocketLayout>
+                }
+              />
 
-            <Route
-              path="/game/cockroach/:roomId"
-              element={<CockroachPokerPage />}
-            />
-            <Route path="/catch-mind/:roomId" element={<CatchMindPage />} />
-            <Route path="/catch-mind" element={<CatchMindListPage />} />
+              {/* GameInfo */}
+              <Route path="/game-info/:gameInfoId" element={<GameInfoPage />} />
+              <Route
+                path="/game-info/:gameInfoId/rule"
+                element={<GameRulePage />}
+              />
+              <Route
+                path="/game-info/:gameInfoId/board"
+                element={<BoardPage />}
+              />
+              <Route
+                path="/game-info/:gameInfoId/board/write"
+                element={<NewArticlePage />}
+              />
+              <Route
+                path="/game-info/:gameInfoId/board/detail/:gameCommunityId"
+                element={<ArticleDetailPage />}
+              />
+              <Route
+                path="/game-info/:gameInfoId/board/edit/:gameCommunityId"
+                element={<EditArticlePage />}
+              />
+              <Route
+                path="/game-info/:gameInfoId/review"
+                element={<ReviewPage />}
+              />
+              <Route
+                path="/game-info/:gameInfoId/video"
+                element={<GameVideoPage />}
+              />
 
-            {/* GameInfo */}
-            <Route path="/game/:gameId" element={<GameInfoPage />} />
+              <Route path="/catch-mind/:roomId" element={<CatchMindPage />} />
+              <Route path="/catch-mind" element={<CatchMindListPage />} />
 
-            {/* Home & Main */}
-            <Route path="/home" element={<HomePage />} />
-            <Route path="/" element={<MainPage />} />
+              {/* Home & Main */}
+              <Route path="/home" element={<HomePage />} />
+              <Route path="/" element={<MainPage />} />
 
-            {/* Profile */}
-            <Route path="/profile/:userId" element={<ProfilePage />} />
+              {/* GameInfo */}
+              <Route path="/game/:gameId" element={<GameInfoPage />} />
 
-            {/* Proposal */}
-            <Route path="/proposal" element={<ProposalPage />} />
-            <Route path="/proposal/:proposalId" element={<ProposalPage />} />
+              {/* Profile */}
+              <Route path="/profile/:userId" element={<ProfilePage />} />
 
-            {/* INTRODUCE */}
-            <Route path="/introduce" element={<Introduce />} />
+              {/* custom */}
+              <Route
+                path="/game-info/:gameInfoId/custom"
+                element={<CustomPage />}
+              />
+              <Route
+                path="/game-info/:gameInfoId/custom/editor"
+                element={<CustomEditor />}
+              />
+              <Route
+                path="/game-info/:gameInfoId/custom/detail/:customId"
+                element={<CustomDetail />}
+              />
 
-            {/* Cockroach Room List */}
-            <Route path="/test/cockroach" element={<CockroachRoom />} />
+              {/* Cockroach Room List */}
+              <Route path="/test/cockroach" element={<CockroachRoom />} />
 
-            {/* INTRODUCE */}
-            <Route path="/introduce" element={<Introduce />} />
-          </Routes>
-        </FriendModalLayout>
-        {/* </SideLayout> */}
+              {/* INTRODUCE */}
+              <Route path="/introduce" element={<Introduce />} />
+
+              {/* ERROR */}
+              <Route path="/errorpage" element={<ErrorPage />} />
+
+              {/* etc */}
+              <Route path="*" element={<ErrorPage />} />
+            </Routes>
+          </FriendModalLayout>
+        </SideLayout>
       </TopLayout>
     </BrowserRouter>
   );

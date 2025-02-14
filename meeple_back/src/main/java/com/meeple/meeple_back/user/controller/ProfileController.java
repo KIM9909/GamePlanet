@@ -2,12 +2,15 @@ package com.meeple.meeple_back.user.controller;
 
 import com.meeple.meeple_back.user.model.PasswordConfirmRequest;
 import com.meeple.meeple_back.user.model.PasswordUpdateRequest;
+import com.meeple.meeple_back.user.model.ResponseUserList;
 import com.meeple.meeple_back.user.model.UserProfileResponse;
 import com.meeple.meeple_back.user.model.UserUpdateRequest;
 import com.meeple.meeple_back.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/profile")
@@ -16,6 +19,13 @@ public class ProfileController {
 
     private final UserService userService;
 
+    @GetMapping
+    public ResponseEntity<ResponseUserList> getUserList() {
+        ResponseUserList response = userService.getUserList();
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{userId}")
     public ResponseEntity<UserProfileResponse> getUserProfile(@PathVariable("userId") Long userId) {
         UserProfileResponse profile = userService.getUserProfile(userId);
@@ -23,12 +33,14 @@ public class ProfileController {
     }
 
     // 프로필 수정
-    @PutMapping("/{userId}")
+    @PutMapping(value = "/{userId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<UserProfileResponse> updateUserProfile(
             @PathVariable("userId") Long userId,
-            @RequestBody UserUpdateRequest request) {
+            @RequestPart("userInfo") UserUpdateRequest request,
+            @RequestPart(value = "userProfilePicture", required = false) MultipartFile userProfilePicture
+            ) {
         // 수정된 프로필 데이터를 응답으로 반환
-        UserProfileResponse updatedProfile = userService.updateUserProfile(userId, request);
+        UserProfileResponse updatedProfile = userService.updateUserProfile(userId, request, userProfilePicture);
         return ResponseEntity.ok(updatedProfile); // 수정된 데이터와 함께 200 ok 반환
     }
 

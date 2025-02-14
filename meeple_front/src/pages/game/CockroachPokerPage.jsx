@@ -1,63 +1,57 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import useSocket from "../../hooks/useCockroachSocket";
+import { useSelector } from "react-redux";
+import useCockroachSocket from "../../hooks/useCockroachSocket";
+import useCockState from "../../hooks/useCockState";
 import GameBoard from "../../components/game/cockroachcard/GameBoard";
 import GameStartScreen from "../../components/game/cockroachcard/GameStartScreen";
 import GameSidebar from "../../components/sidebar/GameSidebar";
 import VideoChat from "../../components/game/cockroachcard/VideoChat";
-import {
-  setRoomData,
-  setGameData,
-  setGameStarted,
-  resetGame,
-  setCurrentUser,
-} from "../../sources/store/slices/CockroachSlice";
 import { toast } from "react-hot-toast";
 
 const CockroachPokerPage = () => {
   const { roomId } = useParams();
-  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const userId = useSelector((state) => state.user.userId)
 
-  const { isGameStarted, gameData, roomData, players, currentUser } =
-    useSelector((state) => state.cockroach);
-  const userId = useSelector((state) => state.user.userId);
+  const {
+    gameState,
+    setGameState,
+    playerCards,
+    setPlayerCards,
+    currentUser,
+    setCurrentUser,
+    isGameStarted,
+    setIsGameStarted,
+    players,
+    setPlayers,
+    roomData,
+    setRoomData
+  } = useCockState(roomId);
 
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [hasJoined, setHasJoined] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   const subscriptionRef = useRef(null);
-  const { sendMessage, startGame, stompClient, connected } = useSocket(roomId);
+  const { sendMessage, startGame, stompClient, connected } =
+    useCockroachSocket(roomId);
 
+  // 프로필 및 방 참여 로직
   const fetchProfileAndJoinRoom = async () => {
     try {
+      if (hasJoined || retryCount > 3) return;
+
       const response = await fetch(
         // `${import.meta.env.VITE_LOCAL_API_BASE_URL}/profile/${userId}`
         `${import.meta.env.VITE_API_BASE_URL}/profile/${userId}`
       );
+      if (!response.ok) throw new Error("프로필을 가져오는데 실패했습니다.");
       const profileData = await response.json();
+      setCurrentUser(profileData.userNickname);
 
-      dispatch(setCurrentUser(profileData.userNickname));
-      console.log("현재 유저:", profileData.userNickname);
-
-      // 방 정보 가져오기
-      const roomCheckResponse = await fetch(
-        // `${import.meta.env.VITE_LOCAL_API_BASE_URL}/game/room/${roomId}`
-        `${import.meta.env.VITE_API_BASE_URL}/game/room/${roomId}`
-      );
-      const currentRoomData = await roomCheckResponse.json();
-
-      const updatedRoomInfo = {
-        ...currentRoomData,
-        roomTitle: currentRoomData.roomTitle || "바퀴벌레 포커",
-      };
-
-      dispatch(setRoomData(updatedRoomInfo));
-      setHasJoined(true);
-
-      // WebSocket을 통해 방 참여 처리
+      // 웹소켓 연결 및 방 참여
       if (connected && stompClient) {
         stompClient.publish({
           destination: "/app/game/join-room",
@@ -67,105 +61,113 @@ const CockroachPokerPage = () => {
             password: "",
           }),
         });
-        console.log(roomId, profileData.userNickname, "");
+        setHasJoined(true);
+        setRetryCount(0);
+      } else {
+        throw new Error("WebSocket 연결이 되지 않았습니다.");
       }
     } catch (error) {
       console.error("Error:", error);
-      toast.error("방 입장에 실패했습니다.");
-      navigate("/home");
+      setRetryCount((prev) => prev + 1);
+      
+      if (retryCount >= 3) {
+        toast.error("방 입장에 실패했습니다. 메인으로 이동합니다.");
+        setTimeout(() => navigate("/home"), 1500);
+      } else {
+        toast.error(`방 입장 재시도 중... (${retryCount + 1}/3)`);
+        setTimeout(fetchProfileAndJoinRoom, 1000);
+      }
+    }
+  };
+  // 로그인 체크 Effect
+useEffect(() => {
+  if (!userId) {
+    console.log("로그인 해야겠어 안해야겠어 !! ");
+    navigate("/home");
+  }
+}, [userId, navigate]);
+
+// WebSocket 구독 설정
+useEffect(() => {
+  if (!stompClient || !connected || !currentUser) return;
+
+  if (subscriptionRef.current) {
+    subscriptionRef.current.unsubscribe();
+  }
+
+  const handleGameMessage = (message) => {
+    try {
+      const response = JSON.parse(message.body);
+      console.log("웹소켓 메시지 수신:", response);
+
+      // 방 정보 업데이트
+      if (response.type === "UPDATE_ROOM" || response.roomInfo) {
+        const roomInfo = response.roomInfo || response.data;
+        if (roomInfo) {
+          const uniquePlayers = [...new Set(roomInfo.players || [])];
+          setPlayers(uniquePlayers);
+          setRoomData(roomInfo);
+        }
+      }
+      // 게임 데이터 업데이트
+      else if (response.players && response.gameData) {
+        setPlayers([...new Set(response.players)]);
+        setGameState(response.gameData.gameState);
+        setPlayerCards(response.gameData.playerCards);
+        setIsGameStarted(true);
+        setIsStarting(false);
+        setHasJoined(true);
+      }
+      // 카드 전달 메시지 처리
+      else if (response.to && response.from && response.card) {
+        setGameState(prevState => ({
+          ...prevState,
+          cardReceiver: response.to,
+          cardSender: response.from,
+          currentCard: response.card,
+          claimedAnimal: response.animal,
+          king: response.king,
+          currentPhase: "GUESS_OR_FORWARD",
+          currentTurn: response.from,
+          passCount: 0,
+          passedPlayers: []
+        }));
+
+        setPlayerCards(prevCards => ({
+          ...prevCards,
+          [response.from]: prevCards[response.from].filter(
+            card => card.type !== response.card.type || card.royal !== response.card.royal
+          )
+        }));
+      }
+    } catch (error) {
+      console.error("웹소켓 메시지 처리 중 오류:", error);
     }
   };
 
-  // Initial check effect
-  useEffect(() => {
-    if (!roomId) {
-      console.log("roomId가 없어서 /home으로 리디렉션");
-      navigate("/home");
-      return;
-    }
+  subscriptionRef.current = stompClient.subscribe(
+    `/topic/game/${roomId}`,
+    handleGameMessage
+  );
 
-    if (!hasJoined && !userId && !isGameStarted) {
-      console.log("최초 입장 시 userId가 없어서 /home으로 리디렉션");
-      navigate("/home");
-    }
-  }, [roomId, userId, navigate, hasJoined, isGameStarted]);
-
-  // Profile fetch and room join effect
-  useEffect(() => {
-    if (!userId || !roomId || (!hasJoined && isGameStarted)) return;
-
-    fetchProfileAndJoinRoom();
-  }, [userId, roomId]);
-
-  // WebSocket subscription effect
-  useEffect(() => {
-    if (!stompClient || !connected || !currentUser) return;
-
+  return () => {
     if (subscriptionRef.current) {
       subscriptionRef.current.unsubscribe();
     }
+  };
+}, [stompClient, connected, currentUser, roomId]);
 
-    subscriptionRef.current = stompClient.subscribe(
-      `/topic/game/${roomId}`,
-      async (message) => {
-        try {
-          const response = JSON.parse(message.body);
-          console.log("웹소켓 메시지 수신:", response);
 
-          if (response.type === "UPDATE_ROOM") {
-            dispatch(
-              setRoomData({
-                ...response.data,
-                roomTitle: response.data.roomTitle,
-              })
-            );
-          } else if (response.roomTitle || response.maxPeople) {
-            // 방 업데이트 응답 처리 추가
-            dispatch(
-              setRoomData({
-                ...roomData,
-                ...response,
-              })
-            );
-          } else if (response.players && response.gameData) {
-            dispatch(
-              setGameData({
-                ...response,
-                roomTitle: roomData?.roomTitle || response.roomTitle,
-                currentUser,
-              })
-            );
-
-            if (response.gameData.isGameStart) {
-              setIsStarting(false);
-              dispatch(setGameStarted(true));
-              setHasJoined(true);
-            }
-          }
-        } catch (error) {
-          console.error("웹소켓 메시지 처리 중 오류:", error);
-        }
-      }
-    );
-
-    return () => {
-      if (subscriptionRef.current) {
-        subscriptionRef.current.unsubscribe();
-      }
-    };
-  }, [stompClient, connected, currentUser, roomId, roomData, dispatch]);
-
+  // 게임 시작 핸들러
   const handleStartGame = async () => {
-    if (!connected) {
-      toast.error("서버와 연결되지 않았습니다.");
-      return;
-    }
-    if (isStarting) return;
+    if (!connected || isStarting) return;
 
     try {
       setIsStarting(true);
       setHasJoined(true);
       await startGame();
+      setIsGameStarted(true);
+      sessionStorage.setItem(`game_${roomId}_status`, "started");
       console.log("게임 시작 요청 전송!!");
     } catch (error) {
       console.error("게임 시작 실패:", error);
@@ -174,6 +176,15 @@ const CockroachPokerPage = () => {
     }
   };
 
+ // 게임 종료 핸들러
+ const handleGameEnd = () => {
+  sessionStorage.removeItem(`game_${roomId}_status`);
+  setGameState(null);
+  setPlayerCards({});
+  setIsGameStarted(false);
+};
+
+  // 방 업데이트 핸들러
   const handleUpdateRoom = (updateData) => {
     sendMessage({
       type: "UPDATE_ROOM",
@@ -181,6 +192,7 @@ const CockroachPokerPage = () => {
     });
   };
 
+  // 로딩 화면
   if (!currentUser && !isGameStarted) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-gray-900">
@@ -189,6 +201,7 @@ const CockroachPokerPage = () => {
     );
   }
 
+  // 메인 렌더링
   return (
     <div className="h-screen w-screen flex bg-gray-900">
       <div
@@ -219,26 +232,26 @@ const CockroachPokerPage = () => {
         <div className="flex-1 overflow-hidden">
           {!isGameStarted ? (
             <GameStartScreen
-              playerCount={players?.length || 0}
-              onStart={handleStartGame}
-              roomTitle={roomData?.roomTitle || "바퀴벌레 포커"}
-              maxPeople={roomData?.maxPeople || 4}
-              isCreator={roomData?.creator === currentUser}
-              onUpdateRoom={handleUpdateRoom}
-              gameData={gameData}
-              players={players || []}
-              roomData={roomData}
-              stompClient={stompClient}
+            playerCount={players?.length || 0}
+            onStart={handleStartGame}
+            roomTitle={roomData?.roomTitle || "바퀴벌레 포커"}
+            maxPeople={roomData?.maxPeople || 4}
+            isCreator={roomData?.creator === currentUser}
+            onUpdateRoom={handleUpdateRoom}
+            players={players || []}
+            roomData={roomData}
+            stompClient={stompClient}
             />
           ) : (
             <GameBoard
-              playerCount={players?.length || 0}
-              gameData={gameData}
-              currentUser={currentUser}
-              sendMessage={sendMessage}
-              stompClient={stompClient}
-              roomId={roomId}
-              onGameEnd={() => dispatch(resetGame())}
+            playerCount={players?.length || 0}
+            gameState={gameState}
+            playerCards={playerCards}
+            currentUser={currentUser}
+            sendMessage={sendMessage}
+            stompClient={stompClient}
+            roomId={roomId}
+            onGameEnd={handleGameEnd}
             />
           )}
         </div>

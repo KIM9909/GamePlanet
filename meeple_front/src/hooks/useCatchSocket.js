@@ -180,38 +180,6 @@ const useCatchSocket = (roomId) => {
                   // 게임 상태를 종료 상태로 변경
                   dispatch(setGameStarted(false));
 
-                  // 현재 플레이어들의 상태를 업데이트
-                  const updatedPlayers = currentGameState.players.map(
-                    (player) => {
-                      // 결과 데이터에서 해당 플레이어의 정보를 찾음
-                      const playerResult = data.result.find(
-                        (r) => r.player === player.nickname
-                      );
-
-                      if (playerResult) {
-                        return {
-                          ...player,
-                          score: playerResult.point,
-                          rank: playerResult.rank,
-                          isTurn: false, // 게임 종료 시 모든 플레이어의 턴을 false로
-                        };
-                      }
-                      return player;
-                    }
-                  );
-
-                  // 플레이어 정보 업데이트
-                  dispatch(updatePlayers({ players: updatedPlayers }));
-
-                  // 게임 상태 초기화
-                  dispatch(
-                    updateGameState({
-                      currentWord: null,
-                      remainQuizCount: 0,
-                      currentRound: currentGameState.quizCount, // 마지막 라운드로 설정
-                    })
-                  );
-
                   // 결과 발표 메시지를 채팅창에 추가
                   setMessages((prev) => [
                     ...prev,
@@ -221,54 +189,133 @@ const useCatchSocket = (roomId) => {
                       timestamp: new Date(),
                       isNotice: true,
                     },
-                    // 순위별 결과 메시지 추가
                     ...data.result.map((result) => ({
                       sender: "SYSTEM",
                       content: `${result.rank}등 - ${result.player} (${result.point}점)`,
                       timestamp: new Date(),
                       isNotice: true,
                     })),
+                    {
+                      sender: "SYSTEM",
+                      content: "5초 후에 새로고침됩니다...",
+                      timestamp: new Date(),
+                      isNotice: true,
+                    },
                   ]);
 
-                  return; // 다른 메시지 처리는 건너뛰기
+                  // 5초 후 게임 상태 초기화 및 새로고침
+                  setTimeout(() => {
+                    // 캔버스 초기화 메시지 전송
+                    if (client) {
+                      client.publish({
+                        destination: `/app/drawing/${roomId}`,
+                        body: JSON.stringify({
+                          type: "clear",
+                          roomId: parseInt(roomId),
+                        }),
+                        headers: { "content-type": "application/json" },
+                      });
+                    }
+
+                    // 게임 상태 초기화
+                    dispatch(resetGameState());
+
+                    // 플레이어 점수 초기화
+                    const resetPlayers = currentGameState.players.map(
+                      (player) => ({
+                        ...player,
+                        score: 0,
+                        isTurn: false,
+                        rank: null,
+                      })
+                    );
+                    dispatch(updatePlayers({ players: resetPlayers }));
+
+                    // 게임 상태 업데이트
+                    dispatch(
+                      updateGameState({
+                        currentWord: null,
+                        remainQuizCount: 0,
+                        currentRound: 1,
+                        quizCategory: null,
+                        isGameStarted: false,
+                      })
+                    );
+
+                    // 페이지 새로고침
+                    window.location.reload();
+                  }, 5000);
+
+                  return;
                 }
 
                 // gameInfo 타입 처리 추가
                 if (data.type === "gameInfo" && data.gameInfo) {
-                  console.log("게임 정보 업데이트:", data.gameInfo);
+                  console.log("[GameInfo] 수신된 데이터:", data.gameInfo);
 
-                  // 먼저 게임 시작 상태 설정
+                  // 게임 시작 상태 설정
                   dispatch(setGameStarted(true));
 
-                  // 현재 플레이어 목록 가져오기
+                  // 현재 Redux store의 players 상태 확인
                   const currentPlayers = store.getState().catchmind.players;
+                  console.log("[GameInfo] 현재 플레이어 상태:", currentPlayers);
+                  console.log(
+                    "[GameInfo] 새로운 턴 플레이어:",
+                    data.gameInfo.currentTurn
+                  );
 
-                  // 플레이어들의 현재 턴 상태 업데이트
-                  const updatedPlayers = currentPlayers.map((player) => ({
-                    ...player,
-                    isTurn: player.nickname === data.gameInfo.currentTurn,
-                    // 기존 점수와 다른 정보는 유지
-                  }));
+                  let updatedPlayers = currentPlayers;
 
-                  // 상태 업데이트
+                  // players 배열이 비어있다면 roomInfo에서 플레이어 목록을 다시 가져옴
+                  if (currentPlayers.length === 0 && data.roomInfo?.players) {
+                    console.log(
+                      "[GameInfo] 플레이어 목록 재구성:",
+                      data.roomInfo.players
+                    );
+                    updatedPlayers = data.roomInfo.players.map(
+                      (playerName, index) => ({
+                        id: index + 1,
+                        nickname: playerName,
+                        score: 0,
+                        isTurn: playerName === data.gameInfo.currentTurn,
+                        isCurrentUser: playerName === currentUserNickname,
+                      })
+                    );
+                  } else {
+                    // 기존 플레이어 정보를 유지하면서 턴만 업데이트
+                    updatedPlayers = currentPlayers.map((player) => ({
+                      ...player,
+                      isTurn: player.nickname === data.gameInfo.currentTurn,
+                    }));
+                  }
+
+                  // 플레이어 정보 업데이트
+                  dispatch(updatePlayers({ players: updatedPlayers }));
+
+                  // 게임 상태 업데이트
                   dispatch(
                     updateGameState({
                       currentWord: data.gameInfo.quiz,
                       remainQuizCount: data.gameInfo.remainQuizCount,
+                      currentTurn: data.gameInfo.currentTurn,
                     })
                   );
 
-                  // 플레이어 정보 업데이트
-                  dispatch(
-                    updatePlayers({
-                      players: updatedPlayers,
-                    })
-                  );
+                  // 출제자 지정 메시지 추가
+                  setMessages((prev) => [
+                    ...prev,
+                    {
+                      sender: "SYSTEM",
+                      content: `👉 ${data.gameInfo.currentTurn}님이 출제자로 지정되었습니다!`,
+                      timestamp: new Date(),
+                      isNotice: true,
+                    },
+                  ]);
 
-                  console.log("게임 정보 업데이트 완료:", {
+                  console.log("[GameInfo] 상태 업데이트 완료:", {
                     currentTurn: data.gameInfo.currentTurn,
+                    updatedPlayers: updatedPlayers,
                     quiz: data.gameInfo.quiz,
-                    players: updatedPlayers,
                   });
 
                   return;
@@ -276,6 +323,19 @@ const useCatchSocket = (roomId) => {
 
                 // 메시지 타입 처리
                 if (data.type === "message") {
+                  if (data.message.clearChat) {
+                    // clearChat 플래그가 있으면 채팅 초기화
+                    setMessages([
+                      {
+                        sender: "SYSTEM",
+                        content:
+                          "🔄 게임이 초기화되었습니다. 새 게임을 시작할 수 있습니다!",
+                        timestamp: new Date(),
+                        isNotice: true,
+                      },
+                    ]);
+                    return;
+                  }
                   console.log("채팅 메시지 수신:", data.message);
 
                   setMessages((prev) => [
@@ -354,14 +414,39 @@ const useCatchSocket = (roomId) => {
                 }
 
                 if (data.type === "roomInfo" && data.roomInfo) {
-                  // roomInfo의 모든 데이터를 유지하면서 Redux store 업데이트
-                  store.dispatch(
+                  console.log("[RoomInfo] 수신된 데이터:", data.roomInfo);
+
+                  // 게임이 시작되지 않은 상태라면 점수를 0으로 초기화
+                  if (!data.roomInfo.isGameStarted) {
+                    if (
+                      data.roomInfo.players &&
+                      Array.isArray(data.roomInfo.players)
+                    ) {
+                      const updatedPlayers = data.roomInfo.players.map(
+                        (playerName, index) => ({
+                          id: index + 1,
+                          nickname: playerName,
+                          score: 0, // 게임 시작 전에는 항상 0으로 초기화
+                          isTurn: false,
+                          isCurrentUser: playerName === currentUserNickname,
+                        })
+                      );
+
+                      dispatch(updatePlayers({ players: updatedPlayers }));
+                      console.log(
+                        "[RoomInfo] 플레이어 정보 초기화됨:",
+                        updatedPlayers
+                      );
+                    }
+                  }
+
+                  // 게임 상태 업데이트
+                  dispatch(
                     updateGameState({
-                      currentWord: data.roomInfo.gameInfo?.currentWord,
-                      currentRound: data.roomInfo.gameInfo?.currentRound,
-                      quizCategory: data.roomInfo.gameInfo?.quizCategory,
-                      remainQuizCount: data.roomInfo.gameInfo?.quizList?.length,
-                      creator: data.roomInfo.creator, // creator 정보 추가
+                      currentWord: null,
+                      currentRound: 1,
+                      remainQuizCount: 0,
+                      creator: data.roomInfo.creator,
                       roomTitle: data.roomInfo.roomTitle,
                       maxPeople: data.roomInfo.maxPeople,
                       timeLimit: data.roomInfo.timeLimit,
@@ -369,22 +454,12 @@ const useCatchSocket = (roomId) => {
                       isPrivate: data.roomInfo.isPrivate,
                       password: data.roomInfo.password,
                       roomId: data.roomInfo.roomId,
+                      sessionId: data.roomInfo.sessionId,
+                      isGameStarted: false, // 방 정보를 새로 받을 때는 게임 시작 상태를 false로
                     })
                   );
 
-                  // players 업데이트
-                  store.dispatch(
-                    updatePlayers({
-                      players: data.roomInfo.players.map((player, index) => ({
-                        id: index + 1,
-                        nickname: player,
-                        score:
-                          data.roomInfo.gameInfo?.playerScore?.[player] || 0,
-                        isTurn: player === data.roomInfo.gameInfo?.currentTurn,
-                        isCurrentUser: player === currentUserNickname,
-                      })),
-                    })
-                  );
+                  return;
                 }
 
                 // drawing 관련 메시지는 무시
@@ -405,33 +480,46 @@ const useCatchSocket = (roomId) => {
 
                   // 첫 번째 퀴즈로 게임 상태 초기화
                   const firstQuiz = data.quizList[0];
+                  const firstPlayer = data.sequence[0];
+
+                  // 초기 게임 상태 설정
                   dispatch(
                     updateGameState({
                       currentWord: firstQuiz.quiz,
                       currentRound: 1,
                       quizCategory: firstQuiz.quizCategory,
                       remainQuizCount: data.quizList.length - 1,
+                      currentTurn: firstPlayer, // 첫 번째 플레이어를 현재 턴으로 설정
                     })
                   );
 
-                  // 턴 순서 데이터 저장
-                  window.quizData = {
-                    quizList: data.quizList,
-                    sequence: data.sequence,
-                    currentIndex: 0,
-                  };
+                  // 플레이어 턴 업데이트
+                  const updatedPlayers = currentGameState.players.map(
+                    (player) => ({
+                      ...player,
+                      isTurn: player.nickname === firstPlayer,
+                      score: 0, // 점수 초기화
+                    })
+                  );
 
-                  // 순서대로 첫 번째 플레이어에게 턴 부여
-                  if (data.sequence.length > 0) {
-                    const firstPlayer = data.sequence[0];
-                    const updatedPlayers = currentGameState.players.map(
-                      (player) => ({
-                        ...player,
-                        isTurn: player.nickname === firstPlayer,
-                      })
-                    );
-                    dispatch(updatePlayers({ players: updatedPlayers }));
-                  }
+                  dispatch(updatePlayers({ players: updatedPlayers }));
+
+                  // 턴 지정 메시지 추가
+                  setMessages((prev) => [
+                    ...prev,
+                    {
+                      sender: "SYSTEM",
+                      content: `👉 ${firstPlayer}님이 첫 출제자로 지정되었습니다!`,
+                      timestamp: new Date(),
+                      isNotice: true,
+                    },
+                  ]);
+
+                  console.log("게임 시작 설정 완료:", {
+                    firstPlayer,
+                    firstQuiz: firstQuiz.quiz,
+                    players: updatedPlayers,
+                  });
 
                   return;
                 }
@@ -464,12 +552,12 @@ const useCatchSocket = (roomId) => {
                     if (clientRef.current) {
                       try {
                         fetch(
-                          // `${
-                          //   import.meta.env.VITE_API_BASE_URL
-                          // }/catch-mind/delete-room?roomId=${roomId}`,
                           `${
-                            import.meta.env.VITE_LOCAL_API_BASE_URL
+                            import.meta.env.VITE_API_BASE_URL
                           }/catch-mind/delete-room?roomId=${roomId}`,
+                          // `${
+                          //   import.meta.env.VITE_LOCAL_API_BASE_URL
+                          // }/catch-mind/delete-room?roomId=${roomId}`,
                           { method: "DELETE" }
                         )
                           .then(() => console.log("Room deletion request sent"))

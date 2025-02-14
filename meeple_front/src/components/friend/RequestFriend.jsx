@@ -50,33 +50,42 @@ const RequestFriend = () => {
   };
 
   return (
-    <>
-      <div className="my-3 text-center">
+    <div className="bg-gray-100 p-4 rounded-b-lg">
+      <div className="flex justify-center gap-4 mb-4">
         <button
-          className={`px-4 py-2 mx-3 rounded-lg font-semibold transition-all duration-300 
+          className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 
             ${
               activeTab === "requestedList"
-                ? "bg-gradient-to-r from-blue-400 to-blue-600 text-white shadow-lg scale-105 border-2 border-blue-700"
-                : "bg-gray-500 text-gray-200 hover:bg-gray-600 hover:text-white"
+                ? "bg-blue-500 text-white shadow-md"
+                : "bg-white text-gray-600 hover:bg-blue-50"
             }`}
           onClick={() => handleTabChange("requestedList")}
         >
           받은 요청
         </button>
         <button
-          className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 
+          className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 
             ${
               activeTab === "requestingList"
-                ? "bg-gradient-to-r from-green-400 to-green-600 text-white shadow-lg scale-105 border-2 border-green-700"
-                : "bg-gray-500 text-gray-200 hover:bg-gray-600 hover:text-white"
+                ? "bg-blue-500 text-white shadow-md"
+                : "bg-white text-gray-600 hover:bg-blue-50"
             }`}
           onClick={() => handleTabChange("requestingList")}
         >
           보낸 요청
         </button>
       </div>
-      <div>{renderContent()}</div>
-    </>
+
+      <div className="bg-white rounded-lg shadow-sm p-4 min-h-[40vh]">
+        {!response ? (
+          <div className="flex justify-center items-center h-[40vh]">
+            <div className="text-gray-400">로딩 중...</div>
+          </div>
+        ) : (
+          <div className="h-[40vh] overflow-y-auto">{renderContent()}</div>
+        )}
+      </div>
+    </div>
   );
 };
 
