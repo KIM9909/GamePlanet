@@ -76,7 +76,7 @@ const ArticleForm = ({ gameInfoId,initialData, onSubmit, isEditing, isSubmitting
   return (
     <form onSubmit={handleSubmit} className=" mx-auto p-4 space-y-4">
 
-      <div className="min-h-screen p-8 bg-[#0a0a2a]/50">
+      <div className="max-h-screen p-8 bg-[#0a0a2a]/50">
         <div className=" mx-auto">
           <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-cyan-500/50  overflow-y-auto custom-scrollbar">
             <div className="space-y-2">

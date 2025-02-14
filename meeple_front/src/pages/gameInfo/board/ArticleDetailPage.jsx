@@ -1,11 +1,10 @@
-// ArticleDetailPage.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import CommentList from '../../../components/info/board/CommentList';
 import { GameInfoAPI } from '../../../sources/api/GameInfoAPI';
 import Loading from '../../../components/Loading'
 import { useSelector } from 'react-redux';
-
+import EditArticleModal from '../../../components/info/board/EditArticleModal';
 
 const ArticleDetailPage = () => {
   const { gameInfoId, gameCommunityId } = useParams();
@@ -16,26 +15,9 @@ const ArticleDetailPage = () => {
   const { token } = useSelector((state) => state.user);
   const currentUserId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
   
-  const [comments, setComments] = useState([]);
-
-  useEffect(() => {
-    if (article?.commentList) {
-      setComments(article.commentList);
-    }
-  }, [article]);
-
-  const handleCommentUpdate = async (newComment) => {
-    if (newComment) {
-      // 새 댓글을 목록 앞에 추가
-      setComments(prevComments => [newComment, ...prevComments]);
-    } else {
-      // 댓글 삭제나 수정의 경우 전체 새로고침
-      await fetchArticle();
-    }
-  };
-
-
 
   const fetchArticle = async () => {
     try {
@@ -49,6 +31,12 @@ const ArticleDetailPage = () => {
       setLoading(false);
     }
   };
+
+    // 댓글 업데이트 시 전체 데이터 새로고침
+    const handleCommentUpdate = () => {
+      fetchArticle();
+    };
+  
 
   useEffect(() => {
     fetchArticle();
@@ -87,23 +75,20 @@ const ArticleDetailPage = () => {
                 </div>
                 <div>
                   {isAuthor && (
-                  <>
-                    <button
-                      onClick={() => navigate(`/game-info/${gameInfoId}/board/edit/${gameCommunityId}`)}
-                      className="hover:text-blue-700
-                       focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
-                    >
-                      수정
-                    </button>
-                    
-                    <button
-                      onClick={handleDelete}
-                      className="hover:text-red-700
-                       focus:outline-none focus:ring-2 focus:ring-red-500 rounded px-2 py-1"
-                    >
-                      삭제
-                    </button>
-                  </>
+                    <>
+                      <button
+                        onClick={() => setIsEditModalOpen(true)}
+                        className="hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
+                      >
+                        수정
+                      </button>
+                      <button
+                        onClick={handleDelete}
+                        className="hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 rounded px-2 py-1"
+                      >
+                        삭제
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
@@ -123,12 +108,11 @@ const ArticleDetailPage = () => {
             </div>
 
             <CommentList 
-              commentListData={comments}
+              commentListData={article.commentList}
               gameCommunityId={gameCommunityId}
-              onCommentUpdate={handleCommentUpdate}
-            />
-          </div>
-          <div className="flex justify-end gap-2 border-t pt-4">
+              refreshComments={handleCommentUpdate} 
+            /> 
+            <div className="flex justify-end gap-2 border-t pt-4">
               <button
                 onClick={() => navigate(`/game-info/${gameInfoId}/board`)}
                 className="px-4 py-2 border rounded hover:bg-gray-100 text-white hover:text-black"
@@ -136,6 +120,16 @@ const ArticleDetailPage = () => {
                 목록으로
               </button>
             </div>
+
+            <EditArticleModal 
+              isOpen={isEditModalOpen}
+              onClose={() => setIsEditModalOpen(false)}
+              gameInfoId={gameInfoId}
+              gameCommunityId={gameCommunityId}
+              onArticleUpdated={fetchArticle}
+            />
+          </div>
+          
 
         </div>
       </div>

@@ -51,13 +51,13 @@ const CommentForm = ({ initialData, gameCommunityId, commentId, userId, onSucces
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mt-6">
+    <form onSubmit={handleSubmit} className="my-6">
       <div className="flex gap-2">
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="댓글을 입력하세요"
-          className="flex-1 p-2 border rounded resize-none h-[100px]
+          className="flex-1 p-2 border rounded resize-none h-[50px]
                    focus:outline-none focus:ring-2 focus:ring-blue-500 
                    focus:border-transparent
                    disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -67,7 +67,7 @@ const CommentForm = ({ initialData, gameCommunityId, commentId, userId, onSucces
           type="submit"
           disabled={isSubmitting}
           className="px-4 py-2 bg-blue-500 text-white rounded 
-                   hover:bg-blue-600 h-[100px] min-w-[80px]
+                   hover:bg-blue-600 h-[50px] min-w-[80px]
                    disabled:opacity-50 disabled:cursor-not-allowed
                    transition-colors duration-200"
         >
