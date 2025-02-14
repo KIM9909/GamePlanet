@@ -127,40 +127,40 @@ const CustomModal = ({ onClose, cardId, customId }) => {
     });
 };
 
-  const handleSave = async () => {
-    if (!name || !price || !description || !baseBuildPrice || !hqPrice || !basePrice) {
-      toast.error('모든 필드를 입력해주세요.');
-      return;
-    }
-
-    try {
-      // 회전된 이미지 Blob 가져오기
-      const rotatedBlob = await rotateAndGetBlob();
-      if (!rotatedBlob) {
-        toast.error('이미지 생성에 실패했습니다.');
+    const handleSave = async () => {
+      if (!name || !price || !description || !baseBuildPrice || !hqPrice || !basePrice) {
+        toast.error('모든 필드를 입력해주세요.');
         return;
       }
 
-      const tileCardData = {
-        name: name,
-        cardColor: backgroundColor,
-        description: description,
-        baseConstructionCost: parseInt(baseBuildPrice),
-        headquartersUsageFee: parseInt(hqPrice),
-        baseUsageFee: parseInt(basePrice),
-        imgFile: rotatedBlob,
-        number: actualTileNumber,
-        seedCount: parseInt(price)  // 씨앗 수는 가격으로 설정
-      };
+      try {
+        const rotatedBlob = await rotateAndGetBlob();
+        if (!rotatedBlob) {
+          toast.error('이미지 생성에 실패했습니다.');
+          return;
+        }
 
-      await CustomAPI.createTileCard(customId, tileCardData);
-      toast.success('타일과 카드가 성공적으로 생성되었습니다.');
-      onClose();
-    } catch (error) {
-      console.error('타일/카드 생성 에러:', error);
-      toast.error(error.message || '타일과 카드 생성에 실패했습니다.');
-    }
-  };
+        const tileCardData = {
+          name: name,
+          cardColor: backgroundColor,
+          description: description,
+          baseConstructionCost: parseInt(baseBuildPrice),
+          headquartersUsageFee: parseInt(hqPrice),
+          baseUsageFee: parseInt(basePrice),
+          imgFile: rotatedBlob,
+          number: actualTileNumber,
+          seedCount: parseInt(price),
+        };
+
+        // 타일과 카드 생성
+        await CustomAPI.createTileCard(customId, tileCardData);
+        toast.success('타일과 카드가 성공적으로 생성되었습니다.');
+        onClose();  // 모달 닫기
+      } catch (error) {
+        console.error('타일/카드 생성 에러:', error);
+        toast.error(error.message || '타일과 카드 생성에 실패했습니다.');
+      }
+    };
 
 
   useEffect(() => {

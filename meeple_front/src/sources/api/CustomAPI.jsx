@@ -278,11 +278,63 @@ export const CustomAPI = {
       throw error || "타일 카드 생성에 실패했습니다.";
     }
   },
+
+  getTileImages: async (customId) => {
+    try {
+      const response = await API.get(`/custom-element/${customId}/tile-images`);
+      return response;
+    } catch (error) {
+      throw error || "타일 이미지 목록을 불러오는데 실패했습니다.";
+    }
+  },
+
+  updateTileCard: async (customId, tileCardData) => {
+    try {
+      const formData = new FormData();
+      
+      // 이미지 파일이 있는 경우에만 변환
+      if (tileCardData.imgFile) {
+        const imgFile = new File(
+          [tileCardData.imgFile], 
+          `tile-card-${tileCardData.number}.png`, 
+          { type: 'image/png' }
+        );
+        formData.append('imgFile', imgFile);
+      }
+
+      // FormData에 필요한 데이터 추가
+      formData.append('cardColor', tileCardData.cardColor);
+      formData.append('name', tileCardData.name);
+      formData.append('seedCount', tileCardData.seedCount);
+      formData.append('description', tileCardData.description);
+      formData.append('baseConstructionCost', tileCardData.baseConstructionCost);
+      formData.append('headquartersUsageFee', tileCardData.headquartersUsageFee);
+      formData.append('baseUsageFee', tileCardData.baseUsageFee);
+      formData.append('number', tileCardData.number);
+
+      const response = await API.put(
+        `/custom-element/${customId}/update-tile-card`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      return response;
+    } catch (error) {
+      throw error || "타일 카드 수정에 실패했습니다.";
+    }
+  },
+
+  findTileCardByNumber: async (customId, cardNumber) => {
+    try {
+      const response = await API.get(`/custom-element/${customId}/find-tile-card/${cardNumber}`);
+      return response;
+    } catch (error) {
+      throw error || "타일 카드를 찾는데 실패했습니다.";
+    }
+  },
 };
-
-
-
-
-
 
 export default CustomAPI;

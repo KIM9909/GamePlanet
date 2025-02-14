@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Dice1, Dice2,Dice3, Dice4, Dice5, Dice6, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, ArrowRight, CheckCircle } from 'lucide-react';
 import { CustomAPI } from '../../../sources/api/CustomAPI';
 import Loading from '../../../components/Loading';
 import CustomModal from './modal/CustomModal';
@@ -34,9 +34,7 @@ const FIXED_TILES = [
 const CustomEditor = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const gameInfo = location.state?.gameInfo;
-  const isNew = location.state?.isNew;
-  const customId = location.state?.customId;
+  const { gameInfo, customId, isNew } = location.state;
   
   const [isLoading, setIsLoading] = useState(true);
   const [customName, setCustomName] = useState('나만의 부루마불');
@@ -45,22 +43,59 @@ const CustomEditor = () => {
   const [selectedCardId, setSelectedCardId] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState(null);
-
-  const maxIndex = Math.max(0, Math.floor((CUSTOMIZABLE_ITEMS.length - 1) / 5));
+  const [completedItems, setCompletedItems] = useState(new Set());
   
+  const maxIndex = Math.max(0, Math.floor((CUSTOMIZABLE_ITEMS.length - 1) / 5));
+  const progress = (completedItems.size / CUSTOMIZABLE_ITEMS.length) * 100;
+
+  const loadCompletedItems = async () => {
+    try {
+      const completedSet = new Set();
+  
+      // 서버에서 완료된 타일 목록 가져오기
+      const response = await CustomAPI.getElementById(customId);
+      const completedItemsFromServer = response.completedItems || [];
+      completedItemsFromServer.forEach(item => completedSet.add(item));
+  
+      setCompletedItems(completedSet);  // 상태 업데이트
+    } catch (error) {
+      console.error('완료된 타일 정보를 불러오는데 실패했습니다:', error);
+    }
+  };
+  
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        if (!isNew && customId) {
+          const response = await CustomAPI.getElementById(customId);
+          setCustomName(response.customName);
+          await loadCompletedItems();  // 완료된 타일 정보 로드
+        }
+      } catch (error) {
+        setError('커스텀 요소를 불러오는데 실패했습니다.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+  
+    loadData();
+  }, [isNew, customId]);
+
   useEffect(() => {
     const loadCustomElement = async () => {
       try {
         if (!isNew && customId) {
           const response = await CustomAPI.getElementById(customId);
           setCustomName(response.customName);
+          if (response.completedItems) {
+            setCompletedItems(new Set(response.completedItems));
+          }
         }
       } catch (err) {
         setError('커스텀 요소를 불러오는데 실패했습니다.');
       } finally {
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 2000);
+        setIsLoading(false);
       }
     };
 
@@ -72,9 +107,28 @@ const CustomEditor = () => {
     setShowModal(true);
   };
 
+  const handleSaveComplete = async (cardId) => {
+    try {
+      const newCompletedItems = new Set(completedItems);
+      newCompletedItems.add(cardId);
+      setCompletedItems(newCompletedItems);  // 상태 업데이트
+  
+      // 완료된 타일을 서버에 저장
+      await CustomAPI.updateElement(customId, { completedItems: [...newCompletedItems] });
+      
+      await loadCompletedItems();
+      
+      setShowModal(false);  // 모달 닫기
+    } catch (error) {
+      console.error('완료 상태 저장 실패:', error);
+    }
+  };
+
   const renderBoardTile = (position, isHorizontal = false) => {
     const index = getIndex(position);
     const isCustomizable = CUSTOMIZABLE_ITEMS.includes(index);
+    const cardId = CUSTOMIZABLE_ITEMS.indexOf(index) + 1;
+    const isCompleted = completedItems.has(cardId);
     
     return (
       <div 
@@ -84,15 +138,51 @@ const CustomEditor = () => {
           border border-slate-600
           ${isCustomizable 
             ? 'bg-slate-700 cursor-pointer hover:bg-slate-600' 
-            : 'bg-slate-700/30'
-          }
+            : 'bg-slate-700/30'}
           flex items-center justify-center text-sm
+          relative
         `}
-        onClick={isCustomizable ? () => handleCardClick(CUSTOMIZABLE_ITEMS.indexOf(index) + 1) : undefined}
+        onClick={isCustomizable ? () => handleCardClick(cardId) : undefined}
       >
         <span className={isCustomizable ? 'text-cyan-400' : 'text-slate-500'}>
           {index}
         </span>
+        {isCompleted && (
+          <div className="absolute -top-1">
+            <CheckCircle className="w-4 h-4 text-green-400" />
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderCard = (cardId, actualNumber) => {
+    const isCompleted = completedItems.has(cardId);
+    
+    return (
+      <div 
+        key={cardId}
+        className={`
+          h-24 bg-slate-700 rounded-lg flex flex-col items-center justify-center gap-1.5
+          cursor-pointer hover:bg-slate-600 relative border
+          ${isCompleted ? 'border-green-400' : 'border-slate-600'}
+        `}
+        // onClick={() => handleCardClick(cardId)}
+      >
+        <div className="absolute top-0 left-0 w-full h-1 bg-slate-600 rounded-t-lg overflow-hidden">
+          <div 
+            className={`h-full ${isCompleted ? 'bg-green-400' : 'bg-slate-500'} transition-all duration-300`}
+            style={{ width: isCompleted ? '100%' : '0%' }}
+          />
+        </div>
+        <p className="text-cyan-400 text-sm p-1">타일/카드 - {actualNumber}번</p>
+        <div className={`px-3 py-0.5 rounded-full text-xs ${
+          isCompleted 
+            ? 'bg-green-400/20 text-green-400' 
+            : 'bg-slate-600/50 text-slate-400'
+        }`}>
+          {isCompleted ? '완료' : '미완료'}
+        </div>
       </div>
     );
   };
@@ -169,16 +259,16 @@ const CustomEditor = () => {
         <div className="bg-slate-800/50 rounded-xl p-6">
           <h2 className="text-lg font-semibold text-white mb-4">타일/씨앗은행카드 선택</h2>
           
-          {/* 현재 진행 상황 표시 */}
+          {/* 진행 상황 표시 */}
           <div className="mb-6">
             <div className="flex justify-between text-sm text-slate-400 mb-2">
               <span>커스터마이징 진행률</span>
-              <span>0 / {CUSTOMIZABLE_ITEMS.length} 완료</span>
+              <span>{completedItems.size} / {CUSTOMIZABLE_ITEMS.length} 완료</span>
             </div>
             <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-cyan-400 rounded-full transition-all"
-                style={{ width: '0%' }}  // 실제로는 완료된 항목 퍼센티지로 조정
+                className="h-full bg-cyan-400 rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
               />
             </div>
           </div>
@@ -208,16 +298,7 @@ const CustomEditor = () => {
                       );
                     }
   
-                    return (
-                      <div 
-                        key={idx} 
-                        className="h-24 bg-slate-700 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-slate-600"
-                        onClick={() => handleCardClick(cardId)}
-                      >
-                        <p className="text-cyan-400">타일/카드</p>
-                        <p className="text-white font-bold">{actualNumber}</p>
-                      </div>
-                    );
+                    return renderCard(cardId, actualNumber);
                   })}
                 </div>
               </div>
@@ -337,7 +418,7 @@ const CustomEditor = () => {
         </div>
       </div>
 
-      {/* 완료 버튼 - 하단 중앙 */}
+      {/* 완료 버튼 */}
       <div className="text-center">
         <button
           onClick={() => setShowConfirm(true)}
@@ -354,6 +435,7 @@ const CustomEditor = () => {
             onClose={() => setShowModal(false)} 
             cardId={selectedCardId}
             customId={customId}
+            onSaveComplete={() => handleSaveComplete(selectedCardId)}
           />
         </div>
       )}
