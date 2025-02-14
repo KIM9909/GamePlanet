@@ -19,13 +19,16 @@ const BoardPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const itemsPerPage = 10;
 
+  const [searchTermInput, setSearchTermInput] = useState(''); // 검색어 입력값을 위한 새로운 state
+  const [activeSearchTerm, setActiveSearchTerm] = useState(''); // 실제 검색에 사용될 검색어
 
   const fetchArticles = async () => {
     try {
       setLoading(true);
       const response = await GameInfoAPI.getCommunityPosts(gameInfoId);
+      //최신 글이 앞에 오도록 정렬
       const Articles = response.sort((a, b) => 
-        new Date(b.createdAt) - new Date(a.createdAt)
+        b.gameCommunityId - a.gameCommunityId
       );
 
       setArticles(Articles);
@@ -45,20 +48,20 @@ const BoardPage = () => {
   if (loading && articles.length === 0) 
     return <div className="text-white"><Loading /></div>;
   if (error) return 
-    <div className="text-white">에러가 발생했습니다.</div>;
-    // navigate("/errorpage");
+    // <div className="text-white">에러가 발생했습니다.</div>;
+    navigate("/errorpage");
   // if (!articles.length) return <div>데이터가 없습니다.</div>;
 
 
 
-  // 검색 필터링
+  // 검색 필터링 
   const filteredArticles = articles.filter(article => {
-    if (!searchTerm) return true;
+    if (!activeSearchTerm) return true;
     
     if (searchType === 'content') {
-      return article.gameCommunityContent.toLowerCase().includes(searchTerm.toLowerCase());
+      return article.gameCommunityContent.toLowerCase().includes(activeSearchTerm.toLowerCase());
     } else {
-      return article.user.nickname.toLowerCase().includes(searchTerm.toLowerCase());
+      return article.user.nickname.toLowerCase().includes(activeSearchTerm.toLowerCase());
     }
   });
 
@@ -69,9 +72,16 @@ const BoardPage = () => {
     return filteredArticles.slice(startIndex, endIndex);
   };
 
-  // 검색 시 페이지 리셋
   const handleSearch = () => {
-    setCurrentPage(1);
+    setActiveSearchTerm(searchTermInput); // 입력된 검색어를 활성 검색어로 설정
+    setCurrentPage(1); // 페이지 리셋
+  };
+
+  // Enter 키로도 검색버튼 눌리게
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
   };
 
   const handleArticleClick = (articleId) => {
@@ -85,31 +95,30 @@ const BoardPage = () => {
           <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-cyan-500/50 max-h-[650px] overflow-y-auto custom-scrollbar">
             <div className="grid grid-rows-1 gap-8 mb-8">
               {/* 검색 영역 */}
-              <div className="flex justify-end mb-6">
-                <div className="flex gap-3">
-                  <select
-                    value={searchType}
-                    onChange={(e) => setSearchType(e.target.value)}
-                    className="px-4 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500"
-                  >
-                    <option value="content">내용</option>
-                    <option value="nickname">닉네임</option>
-                  </select>
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder={searchType === 'content' ? '내용 검색...' : '닉네임 검색...'}
-                    className="px-4 py-2 bg-slate-700 text-white placeholder-gray-400 border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500"
-                  />
-                  <button 
-                    onClick={handleSearch}
-                    className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors flex items-center gap-2"
-                  >
-                    <Search size={20} />
-                    검색
-                  </button>
-                </div>
+              <div className="flex gap-3">
+                <select
+                  value={searchType}
+                  onChange={(e) => setSearchType(e.target.value)}
+                  className="px-4 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500"
+                >
+                  <option value="content">내용</option>
+                  <option value="nickname">닉네임</option>
+                </select>
+                <input
+                  type="text"
+                  value={searchTermInput}
+                  onChange={(e) => setSearchTermInput(e.target.value)}
+                  
+                  placeholder={searchType === 'content' ? '내용 검색...' : '닉네임 검색...'}
+                  className="px-4 py-2 bg-slate-700 text-white placeholder-gray-400 border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500"
+                />
+                <button 
+                  onClick={handleSearch}
+                  className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors flex items-center gap-2"
+                >
+                  <Search size={20} />
+                  검색
+                </button>
               </div>
 
               {/* 테이블 영역 */}
