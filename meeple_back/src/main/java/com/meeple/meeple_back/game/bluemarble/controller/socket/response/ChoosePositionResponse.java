@@ -9,6 +9,4 @@ public class ChoosePositionResponse {
 
 	private final int nextPosition;
 	private final String nextAction;
-
-
 }
