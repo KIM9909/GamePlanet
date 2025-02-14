@@ -95,7 +95,7 @@ const ReviewPage = () => {
             </h1>
               <section className="text-white">
                 {data.starAvg 
-                  ? `별점 ${data.starAvg}` 
+                  ? `별점 ${(Number(data.starAvg.toFixed(1)))}` 
                   : "아직 별점을 등록한 사람이 없어요"
                 }
               </section>
