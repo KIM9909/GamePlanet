@@ -1,3 +1,4 @@
+// ArticleDetailPage.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import CommentList from '../../../components/info/board/CommentList';
@@ -16,6 +17,25 @@ const ArticleDetailPage = () => {
   const currentUserId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
 
   
+  const [comments, setComments] = useState([]);
+
+  useEffect(() => {
+    if (article?.commentList) {
+      setComments(article.commentList);
+    }
+  }, [article]);
+
+  const handleCommentUpdate = async (newComment) => {
+    if (newComment) {
+      // 새 댓글을 목록 앞에 추가
+      setComments(prevComments => [newComment, ...prevComments]);
+    } else {
+      // 댓글 삭제나 수정의 경우 전체 새로고침
+      await fetchArticle();
+    }
+  };
+
+
 
   const fetchArticle = async () => {
     try {
@@ -96,22 +116,22 @@ const ArticleDetailPage = () => {
             <div className="flex justify-end gap-2 border-t pt-4">
               <button
                 onClick={() => navigate(`/game-info/${gameInfoId}/board`)}
-                className="px-4 py-2 border rounded hover:bg-gray-100"
+                className="px-4 py-2 border rounded hover:bg-gray-100 text-white hover:text-black"
               >
                 목록으로
               </button>
             </div>
 
             <CommentList 
-              commentListData={article.commentList}
+              commentListData={comments}
               gameCommunityId={gameCommunityId}
-              onCommentUpdate={fetchArticle}
+              onCommentUpdate={handleCommentUpdate}
             />
           </div>
           <div className="flex justify-end gap-2 border-t pt-4">
               <button
                 onClick={() => navigate(`/game-info/${gameInfoId}/board`)}
-                className="px-4 py-2 border rounded hover:bg-gray-100"
+                className="px-4 py-2 border rounded hover:bg-gray-100 text-white hover:text-black"
               >
                 목록으로
               </button>
