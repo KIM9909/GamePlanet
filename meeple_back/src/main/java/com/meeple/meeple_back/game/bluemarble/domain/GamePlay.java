@@ -168,6 +168,7 @@ public class GamePlay {
 				return DiceRollResponse.from(diceRollRequest.getPlayerId(), currentPlayer.getPosition(), currentPlayer.getPosition() + 5, diceRollRequest.getFirstDice(), diceRollRequest.getSecondDice(), false, ActionType.CHECK_END);
 			}
 		}
+
 		if (!isDouble && currentPlayer.getBlackHoleCount() > 0) {
 			currentPlayer.decreaseBlackholeCount();
 			return DiceRollResponse.from(diceRollRequest.getPlayerId(), currentPlayer.getPosition(), currentPlayer.getPosition(), diceRollRequest.getFirstDice(), diceRollRequest.getSecondDice(), false, ActionType.CHECK_END);
@@ -204,7 +205,7 @@ public class GamePlay {
 		if (TileType.TIME_TRAVEL == currentTile.getType()) {
 			currentPlayer.payMoney(300000);
 			turnManager.resetDoubleCount();
-			return ActionType.CHECK_END;
+			return ActionType.CHOOSE_POSITION;
 		}
 
 		return ActionType.CHECK_END;
