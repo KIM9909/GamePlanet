@@ -1,6 +1,7 @@
 package com.meeple.meeple_back.game.bluemarble.domain;
 
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
+import java.util.Objects;
 import lombok.Getter;
 import org.springframework.data.annotation.PersistenceConstructor;
 
@@ -32,6 +33,24 @@ public class TurnManager {
 	private static Logger logger = Logger.getLogger(TurnManager.class.getName());
 	private int initialPlayerCount;
 	private List<Player> players;
+
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof TurnManager that)) {
+			return false;
+		}
+		return getInitialPlayerCount() == that.getInitialPlayerCount()
+				&& getDoubleCount() == that.getDoubleCount() && getRound() == that.getRound()
+				&& getCurrentPlayerIndex() == that.getCurrentPlayerIndex() && Objects.equals(
+				getPlayers(), that.getPlayers());
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(getInitialPlayerCount(), getPlayers(), getDoubleCount(), getRound(),
+				getCurrentPlayerIndex());
+	}
+
 	private int doubleCount;
 	private int round;
 	private int currentPlayerIndex;
@@ -74,6 +93,7 @@ public class TurnManager {
 	/**
 	 * 턴 끝내기. 턴 끝내는 조건 확인하고 다음턴 준비하기.
 	 */
+	// TODO : nextPlayer가 잘 안가는 에러 있음.
 	public synchronized TurnEndResponse endTurn(List<Tile> board) {
 		if (checkWinnerByPlayerSize()) {
 			return TurnEndResponse.gameEnd(determineWinner(board));

@@ -47,7 +47,7 @@ public class CustomTileService {
 	@Transactional
 	public CustomTileResponse update(CustomTileId id, CustomTileRequest customTileRequest) {
 		TileEntity tile = customTileRepository.findById(id).orElseThrow().getTileEntity();
-		tile.update(customTileRequest);
+//		tile.update(customTileRequest);
 		tileJpaRepository.save(tile);
 		CustomTileEntity customTileEntity = customTileRepository.findById(id).orElseThrow();
 		return CustomTileResponse.from(customTileEntity);

@@ -72,15 +72,15 @@ public class CustomTileController {
 	}
 
 	// UPDATE
-	@PutMapping("/{customId}/update/{tileId}")
-	public ResponseEntity<CustomTileResponse> updateCustomTile(@PathVariable Integer customId,
-	                                                           @PathVariable Integer tileId,
-	                                                           @RequestBody CustomTileRequest request) {
-		CustomTileId id = new CustomTileId(customId, tileId);
-		CustomTileResponse response = customTileService.update(id, request);
-
-		return ResponseEntity.ok(response);
-	}
+//	@PutMapping("/{customId}/update/{tileId}")
+//	public ResponseEntity<CustomTileResponse> updateCustomTile(@PathVariable Integer customId,
+//	                                                           @PathVariable Integer tileId,
+//	                                                           @RequestBody CustomTileRequest request) {
+//		CustomTileId id = new CustomTileId(customId, tileId);
+//		CustomTileResponse response = customTileService.update(id, request);
+//
+//		return ResponseEntity.ok(response);
+//	}
 
 	// DELETE
 	@DeleteMapping("/{customId}/delete/{tileId}")

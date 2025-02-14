@@ -25,4 +25,19 @@ public abstract class Card {
 
 		return this.type == type;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof Card card)) {
+			return false;
+		}
+		return getId() == card.getId() && getNumber() == card.getNumber() && Objects.equals(
+				getName(), card.getName()) && getType() == card.getType() && Objects.equals(
+				getDescription(), card.getDescription());
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(getId(), getNumber(), getName(), getType(), getDescription());
+	}
 }

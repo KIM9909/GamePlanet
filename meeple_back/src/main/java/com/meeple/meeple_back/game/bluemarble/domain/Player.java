@@ -2,6 +2,7 @@ package com.meeple.meeple_back.game.bluemarble.domain;
 
 import com.meeple.meeple_back.game.bluemarble.controller.request.DiceRollRequest;
 import com.meeple.meeple_back.user.model.User;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,6 +22,28 @@ import java.util.Set;
 public class Player {
 
 	private int playerId;
+
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof Player player)) {
+			return false;
+		}
+		return getPlayerId() == player.getPlayerId() && getPosition() == player.getPosition()
+				&& getBalance() == player.getBalance()
+				&& getBlackHoleCount() == player.getBlackHoleCount()
+				&& isTimeTravel() == player.isTimeTravel() && Objects.equals(getPlayerName(),
+				player.getPlayerName()) && Objects.equals(getCardOwned(),
+				player.getCardOwned()) && Objects.equals(getLandOwned(),
+				player.getLandOwned());
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(getPlayerId(), getPlayerName(), getPosition(), getBalance(),
+				getCardOwned(),
+				getLandOwned(), getBlackHoleCount(), isTimeTravel());
+	}
+
 	private String playerName;
 	private int position;
 	private int balance;
