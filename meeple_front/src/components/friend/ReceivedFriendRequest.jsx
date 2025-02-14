@@ -18,24 +18,24 @@ const ReceivedFriendRequest = ({ requestedList }) => {
 
   const { connected, responseSocket, stompClientRef } = useFriendSocket();
 
-  // useEffect(() => {
-  //   if (connected) {
-  //     console.log("소켓이 연결되었습니다.");
-  //   } else {
-  //     console.error("소켓 연결 에러");
-  //     // 재연결 시도
-  //     const reconnectSocket = async () => {
-  //       if (stompClientRef.current) {
-  //         try {
-  //           await stompClientRef.current.activate();
-  //         } catch (error) {
-  //           console.error("재연결 실패:", error);
-  //         }
-  //       }
-  //     };
-  //     reconnectSocket();
-  //   }
-  // }, [connected]);
+  useEffect(() => {
+    if (connected) {
+      console.log("소켓이 연결되었습니다.");
+    } else {
+      console.error("소켓 연결 에러");
+      // 재연결 시도
+      const reconnectSocket = async () => {
+        if (stompClientRef.current) {
+          try {
+            await stompClientRef.current.activate();
+          } catch (error) {
+            console.error("재연결 실패:", error);
+          }
+        }
+      };
+      reconnectSocket();
+    }
+  }, [connected]);
 
   useEffect(() => {
     if (responseSocket) {

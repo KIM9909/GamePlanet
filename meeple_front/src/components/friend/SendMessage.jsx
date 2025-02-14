@@ -31,7 +31,7 @@ const SendMessage = ({ selectedFriend }) => {
   const handleSendMessage = (e) => {
     e.preventDefault();
 
-    if (!selectedFriend) {
+    if (!selectFriend) {
       alert("보낼 친구를 선택해주세요!");
       return;
     }
@@ -41,10 +41,10 @@ const SendMessage = ({ selectedFriend }) => {
       return;
     }
 
-    console.log("쪽지 전송:", { to: selectedFriend, message: messageText });
+    console.log("쪽지 전송:", { to: selectFriend, message: messageText });
     if (userId && messageText) {
       try {
-        const response = sendMessage(messageText, selectedFriend, userId);
+        const response = sendMessage(messageText, selectFriend, userId);
         console.log(response);
       } catch (error) {
         console.log("메세지 발송 중 오류:", error);
@@ -55,46 +55,57 @@ const SendMessage = ({ selectedFriend }) => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md h-[43.5vh]">
-      {/* 친구 선택 드롭다운 */}
-      <label className="block text-gray-700 font-medium mb-2">받는 사람</label>
-      <select
-        className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 "
-        value={selectedFriend}
-        onChange={(e) => setSelectFriend(e.target.value)}
-      >
-        <option value="">친구를 선택하세요</option>
-        {friendList.length > 0 ? (
-          friendList.map((friend) => (
-            <option key={friend.id} value={friend.friend.userId}>
-              {friend.friend.nickname} ({friend.friend.userId})
-            </option>
-          ))
-        ) : (
-          <option disabled>친구 목록이 없습니다.</option>
-        )}
-      </select>
+    <div className="flex flex-col items-start justify-center h-full">
+      <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md h-[40vh] flex flex-col">
+        <form onSubmit={handleSendMessage} className="flex flex-col h-full">
+          {/* 친구 선택 드롭다운 */}
+          <div className="mb-4">
+            <label className="block text-gray-700 font-medium mb-2">
+              받는 사람
+            </label>
+            <select
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={selectFriend}
+              onChange={(e) => setSelectFriend(e.target.value)}
+            >
+              <option value="">친구를 선택하세요</option>
+              {friendList.length > 0 ? (
+                friendList.map((friend) => (
+                  <option
+                    key={friend.friend.userId}
+                    value={friend.friend.userId}
+                  >
+                    {friend.friend.nickname} ({friend.friend.userId})
+                  </option>
+                ))
+              ) : (
+                <option disabled>친구 목록이 없습니다.</option>
+              )}
+            </select>
+          </div>
 
-      {/* 쪽지 입력 폼 */}
-      <form onSubmit={handleSendMessage}>
-        <label className="block text-gray-700 font-medium mb-2">
-          쪽지 내용
-        </label>
-        <textarea
-          className="w-full h-24 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-          placeholder="쪽지를 입력하세요..."
-          value={messageText}
-          onChange={(e) => setMessageText(e.target.value)}
-        ></textarea>
+          {/* 쪽지 입력 폼 */}
+          <div className="flex-1 mb-4">
+            <label className="block text-gray-700 font-medium mb-2">
+              쪽지 내용
+            </label>
+            <textarea
+              className="w-full h-[calc(100%-2rem)] px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              placeholder="쪽지를 입력하세요..."
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+            ></textarea>
+          </div>
 
-        {/* 제출 버튼 */}
-        <button
-          type="submit"
-          className="mt-4 w-full bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600 transition-all duration-200"
-        >
-          보내기
-        </button>
-      </form>
+          {/* 제출 버튼 */}
+          <button
+            type="submit"
+            className="w-full bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600 transition-all duration-200"
+          >
+            보내기
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

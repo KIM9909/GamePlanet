@@ -2,11 +2,13 @@ import React, { useState, useRef, useEffect } from "react";
 import { CircleX } from "lucide-react";
 
 const NotificationList = ({ notiList, setNotiList }) => {
-  const deleteNotifi = (index) => {
+  const deleteNotifi = (indexToDelete) => {
+    console.log("삭제 시도:", indexToDelete);
     setNotiList((prevList) => {
       console.log("삭제 전 목록:", prevList);
-      if (!prevList || prevList.length === 0) return [];
-      return prevList.filter((_, i) => i !== index);
+      const newList = prevList.filter((_, index) => index !== indexToDelete);
+      console.log("삭제 후 목록:", newList);
+      return newList;
     });
   };
 
@@ -25,13 +27,17 @@ const NotificationList = ({ notiList, setNotiList }) => {
               className="flex justify-between p-4 border-b hover:bg-yellow-300"
             >
               <div className="text-gray-800 text-sm">{notification}</div>
-
-              <CircleX
+              <button
                 onClick={() => deleteNotifi(index)}
-                size={28}
-                color="#7a7a7a"
-                strokeWidth={2.5}
-              />
+                aria-label="알림 삭제"
+              >
+                <CircleX
+                  size={28}
+                  color="#7a7a7a"
+                  strokeWidth={2.5}
+                  className="text-gray-500 hover:text-red-500 transition-colors duration-200"
+                />
+              </button>
             </div>
           ))
         ) : (
