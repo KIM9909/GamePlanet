@@ -11,6 +11,7 @@ import com.meeple.meeple_back.game.bluemarble.controller.socket.response.ChooseP
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.PayFeeResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
 import com.meeple.meeple_back.game.bluemarble.util.*;
+import java.util.Objects;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
@@ -505,13 +506,41 @@ public class GamePlay {
 		}
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof GamePlay gamePlay)) {
+			return false;
+		}
+		return getGamePlayId() == gamePlay.getGamePlayId() && getRound() == gamePlay.getRound()
+				&& Objects.equals(getPlayers(), gamePlay.getPlayers())
+				&& Objects.equals(getGameStatus(), gamePlay.getGameStatus())
+				&& Objects.equals(getBoard(), gamePlay.getBoard())
+				&& Objects.equals(getCards(), gamePlay.getCards())
+				&& Objects.equals(getTurnManager(), gamePlay.getTurnManager());
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(getGamePlayId(), getPlayers(), getGameStatus(), getRound(), getBoard(),
+				getCards(), getTurnManager());
+	}
+
 	private PayFeeResponse handleInsufficientBalance(Player paidPlayer, Player receivedPlayer,
 	                                                 int tollPrice) {
 		int available = paidPlayer.getBalance();
-		int maxValue = board.stream().mapToInt(Tile::getPrice).max().orElse(0);
+		int seizureLandIndex = -1;
+		int maxSeizurePrice = -1;
+		for(int i=0; i<board.size(); i++){
+			Tile tile = board.get(i);
+			if(tile.getOwnerId() != paidPlayer.getPlayerId()){
+				continue;
+			}
+			maxSeizurePrice = Math.max(maxSeizurePrice, tile.getPrice());
+			seizureLandIndex = i;
+		}
 
-		if (available + maxValue >= tollPrice) {
-			Tile mostExpeisiveTile = board.stream().filter(tile -> tile.getPrice() == maxValue && tile.getOwnerId() == paidPlayer.getPlayerId()).findFirst().orElseThrow();
+		if (available + maxSeizurePrice >= tollPrice) {
+			Tile mostExpeisiveTile = board.get(seizureLandIndex);
 			SeedCertificateCard card = (SeedCertificateCard) paidPlayer.getCardOwnedByTileId(mostExpeisiveTile.getId());
 			paidPlayer.addMoney(card.getSeedCount());
 			cards.add(card);
