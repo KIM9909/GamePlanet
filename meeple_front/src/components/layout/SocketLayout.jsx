@@ -546,7 +546,7 @@ const SocketLayout = ({ children }) => {
     [roomId, userId]
   );
 
-  // 종료 조건 확인
+  // 턴 종료 조건 확인
   const checkEnd = useCallback(
     (endInfo) => {
       if (!stompClientRef.current?.connected) {
@@ -567,7 +567,22 @@ const SocketLayout = ({ children }) => {
     [roomId, userId]
   );
 
-  //
+  // 게임 종료 -> 방 파괴
+  const endGame = useCallback(() => {
+    if (!stompClientRef.current?.connected) {
+      console.warn("웹소켓에 연결되어 있지 않습니다.");
+      return;
+    }
+    try {
+      console.log("게임을 종료합니다.");
+      stompClientRef.current.publish({
+        destination: `/app/game/blue-marble/game-plays/${roomId}/game-end`,
+      });
+      console.log("게임 종료에 성공했습니다.");
+    } catch (error) {
+      console.error("게임 종료에 실패했습니다.", error);
+    }
+  }, [roomId, userId]);
 
   if (!userId || !token) {
     return children;
@@ -614,12 +629,17 @@ const SocketLayout = ({ children }) => {
           socketTollPrice,
           socketReceivedPlayer,
           socketDrawCardData,
+          socketWinner,
           setSocketDrawCardData,
           socketPickedCard,
           socketDrawPrevPosition,
+          setSocketDrawPrevPosition,
           socketDrawNextPosition,
+          setSocketDrawNextPosition,
           socketDrawPrevBalance,
+          setSocketDrawPrevBalance,
           socketDrawNextBalance,
+          setSocketDrawNextBalance,
           enterWaitingRoom,
           chatWaitingRoom,
           changePassword,
@@ -634,6 +654,7 @@ const SocketLayout = ({ children }) => {
           payToll,
           checkEnd,
           drawCard,
+          endGame,
         }}
       >
         {children}
