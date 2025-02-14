@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
+import CustomAPI from '../../../../sources/api/CustomAPI';
+import toast from 'react-hot-toast'; 
 
 const CUSTOMIZABLE_TILES = [1, 3, 4, 5, 6, 8, 9, 11, 12, 14, 16, 18, 19, 21, 22, 24, 25, 26, 27, 28, 31, 32, 34, 36, 38, 39];
 
@@ -19,7 +21,7 @@ const getRotationInfo = (tileNumber) => {
   return { rotation: 0, type: 'vertical', width: 180, height: 250 };
 };
 
-const CustomModal = ({ onClose, cardId }) => {
+const CustomModal = ({ onClose, cardId, customId }) => {
   const actualTileNumber = CUSTOMIZABLE_TILES[cardId - 1];
   
   // 공통 state
@@ -82,6 +84,84 @@ const CustomModal = ({ onClose, cardId }) => {
     ctx.fillStyle = 'white';       
     ctx.fillText('만마불', width / 2 + 25, 60);
   };
+
+
+
+  const rotateAndGetBlob = async () => {
+    const sourceCanvas = canvasRef.current;
+    if (!sourceCanvas || isImageLoading) return null;
+
+    const { rotation, type } = getRotationInfo(actualTileNumber);
+    
+    // 회전 캔버스 크기 조정
+    const rotatedCanvas = document.createElement('canvas');
+    if (type === 'vertical') {
+      rotatedCanvas.width = 180;
+      rotatedCanvas.height = 250;
+    } else {
+      // 가로형 타일일 때는 크기를 반대로
+      rotatedCanvas.width = 250;
+      rotatedCanvas.height = 180;
+    }
+    
+    const ctx = rotatedCanvas.getContext('2d');
+    ctx.save();
+    
+    // 회전 중심점 조정
+    if (type === 'horizontal') {
+      // 가로형 타일의 경우
+      ctx.translate(rotatedCanvas.width / 2, rotatedCanvas.height / 2);
+      ctx.rotate((rotation * Math.PI) / 180);
+      ctx.drawImage(sourceCanvas, -125, -125, 250, 250); // 크기 정확히 맞춤
+    } else {
+      // 세로형 타일의 경우
+      ctx.translate(rotatedCanvas.width / 2, rotatedCanvas.height / 2);
+      ctx.rotate((rotation * Math.PI) / 180);
+      ctx.drawImage(sourceCanvas, -90, -125, 180, 250); // 크기 정확히 맞춤
+    }
+    
+    ctx.restore();
+
+    return new Promise(resolve => {
+      rotatedCanvas.toBlob(resolve, 'image/png');
+    });
+};
+
+  const handleSave = async () => {
+    if (!name || !price || !description || !baseBuildPrice || !hqPrice || !basePrice) {
+      toast.error('모든 필드를 입력해주세요.');
+      return;
+    }
+
+    try {
+      // 회전된 이미지 Blob 가져오기
+      const rotatedBlob = await rotateAndGetBlob();
+      if (!rotatedBlob) {
+        toast.error('이미지 생성에 실패했습니다.');
+        return;
+      }
+
+      const tileCardData = {
+        name: name,
+        cardColor: backgroundColor,
+        description: description,
+        baseConstructionCost: parseInt(baseBuildPrice),
+        headquartersUsageFee: parseInt(hqPrice),
+        baseUsageFee: parseInt(basePrice),
+        imgFile: rotatedBlob,
+        number: actualTileNumber,
+        seedCount: parseInt(price)  // 씨앗 수는 가격으로 설정
+      };
+
+      await CustomAPI.createTileCard(customId, tileCardData);
+      toast.success('타일과 카드가 성공적으로 생성되었습니다.');
+      onClose();
+    } catch (error) {
+      console.error('타일/카드 생성 에러:', error);
+      toast.error(error.message || '타일과 카드 생성에 실패했습니다.');
+    }
+  };
+
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -272,9 +352,15 @@ const CustomModal = ({ onClose, cardId }) => {
       </div>
 
       {/* 저장 버튼 */}
-      <div className="mt-6 flex justify-end">
+      <div className="mt-6 flex justify-end gap-4">
         <button
           onClick={onClose}
+          className="px-6 py-2 text-white bg-slate-600 hover:bg-slate-700 rounded transition-colors"
+        >
+          취소
+        </button>
+        <button
+          onClick={handleSave}
           disabled={isImageLoading}
           className={`px-6 py-2 text-white rounded transition-colors ${
             isImageLoading 

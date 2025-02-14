@@ -239,6 +239,50 @@ export const CustomAPI = {
       throw error || "카드 삭제에 실패했습니다.";
     }
   },
+
+
+  // 찐막막
+  createTileCard: async (customId, tileCardData) => {
+    try {
+      const formData = new FormData();
+      
+      // 이미지 파일 변환
+      const imgFile = new File(
+        [tileCardData.imgFile], 
+        `tile-card-${tileCardData.number}.png`, 
+        { type: 'image/png' }
+      );
+
+      // FormData에 필요한 데이터 추가
+      formData.append('cardColor', tileCardData.cardColor);
+      formData.append('name', tileCardData.name);
+      formData.append('seedCount', tileCardData.seedCount);
+      formData.append('description', tileCardData.description);
+      formData.append('baseConstructionCost', tileCardData.baseConstructionCost);
+      formData.append('headquartersUsageFee', tileCardData.headquartersUsageFee);
+      formData.append('baseUsageFee', tileCardData.baseUsageFee);
+      formData.append('imgFile', imgFile);
+      formData.append('number', tileCardData.number);
+
+      const response = await API.post(
+        `/custom-element/${customId}/create-tile-card`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      return response;
+    } catch (error) {
+      throw error || "타일 카드 생성에 실패했습니다.";
+    }
+  },
 };
+
+
+
+
+
 
 export default CustomAPI;
