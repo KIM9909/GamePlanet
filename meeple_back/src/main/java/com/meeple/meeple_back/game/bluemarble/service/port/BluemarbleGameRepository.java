@@ -8,4 +8,6 @@ public interface BluemarbleGameRepository {
 	GamePlay save(GamePlay gamePlay);
 
 	Optional<GamePlay> findById(Integer roomId);
+
+	void delete(GamePlay gamePlay);
 }

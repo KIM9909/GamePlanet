@@ -29,4 +29,6 @@ public interface BluemarbleGameService {
 	GamePlayResponse startTurn(int roomId);
 
 	ChoosePositionResponse choosePosition(int roomId, ChoosePositionRequest request);
+
+	String gameEnd(int roomId);
 }

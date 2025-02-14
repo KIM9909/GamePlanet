@@ -141,4 +141,9 @@ public class BluemarbleGameController {
 		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, response);
 	}
 
+	@MessageMapping("/{roomId}/game-end")
+	public void gameEnd(@DestinationVariable("roomId") int roomId) {
+		SocketResponse<String> response = SocketResponse.from("game-end", bluemarbleGameService.gameEnd(roomId), "게임이 종료되었습니다.");
+		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, response);
+	}
 }
