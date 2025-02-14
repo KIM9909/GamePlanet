@@ -227,8 +227,8 @@ public class GameInfoController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "커뮤니티 게시글 삭제", description = "게시글을 삭제합니다.")
-    @DeleteMapping("/community/{gameCommunityCommentId}")
+    @Operation(summary = "커뮤니티 댓글 삭제", description = "댓글을 삭제합니다.")
+    @DeleteMapping("/comment/{gameCommunityCommentId}")
     public ResponseEntity<ResponseDeleteComment> deleteComment(
             @PathVariable int gameCommunityCommentId
     ) {

@@ -2,6 +2,7 @@ package com.meeple.meeple_back.gameInfo.model.entity;
 
 import com.meeple.meeple_back.user.model.User;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import lombok.*;
 
 import java.sql.Date;
@@ -26,7 +27,7 @@ public class GameCommunityComment {
     private Date createAt;
 
     @Column(name = "deleted_at")
-    private Date deletedAt;
+    private LocalDateTime deletedAt;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
