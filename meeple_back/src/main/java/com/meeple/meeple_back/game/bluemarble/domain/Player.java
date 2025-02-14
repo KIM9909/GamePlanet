@@ -52,8 +52,8 @@ public class Player {
 
 	private int blackHoleCount;
 	private boolean timeTravel;
-	final static int INITIAL_BALANCE = 50;
-	final static int SALARY = 20;
+	final static int INITIAL_BALANCE = 500000;
+	final static int SALARY = 200000;
 
 	public static Player init(User user) {
 		final int INITIAL_POSITION = 0;

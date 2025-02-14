@@ -203,7 +203,11 @@ public class GamePlay {
 		}
 
 		if (TileType.TIME_TRAVEL == currentTile.getType()) {
+			if(currentPlayer.getBalance() < 300000){
+				return ActionType.CHECK_END;
+			}
 			currentPlayer.payMoney(300000);
+			currentPlayer.setTimeTravel(true);
 			turnManager.resetDoubleCount();
 			return ActionType.CHOOSE_POSITION;
 		}
