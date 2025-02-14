@@ -658,10 +658,10 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
         try {
           const diceInfo = {
             playerId: currentPlayer.playerId,
-            // firstDice: firstDice,
-            // secondDice: secondDice,
-            firstDice: 2,
-            secondDice: 2,
+            firstDice: firstDice,
+            secondDice: secondDice,
+            // firstDice: 2,
+            // secondDice: 2,
           };
           console.log("주사위 정보 :", diceInfo);
           await rollDice(diceInfo);
@@ -815,8 +815,7 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
       nextAction &&
       nextAction === "CHECK_END" &&
       myIndex === currentPlayerIndex &&
-      !drawIsAnimating &&
-      !isDiceRolling
+      !drawIsAnimating
     ) {
       try {
         const endInfo = {
@@ -829,7 +828,7 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
         setSocketNext(null);
       }
     }
-  }, [nextAction, drawIsAnimating]);
+  }, [nextAction, drawIsAnimating, isDiceRolling]);
 
   // 통행료 지불
   useEffect(() => {
@@ -902,8 +901,8 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
     });
     if (socketDrawCardData) {
       if (
-        drawPrevPosition &&
-        drawNextPosition &&
+        drawPrevPosition !== null &&
+        drawNextPosition !== null &&
         drawPrevPosition !== drawNextPosition
       ) {
         const playerIndex = players.findIndex(
@@ -945,8 +944,8 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
           const animateMovement = async () => {
             let current = startPosition;
             while (current !== targetPosition) {
-              // current = current === 0 ? totalCells - 1 : current - 1;
-              current = current - 1;
+              current = current === 0 ? totalCells - 1 : current - 1;
+              // current = current - 1;
               console.log("뒤로 이동 중:", current);
               setPlayersPositions((prev) => {
                 const newPositions = [...prev];
