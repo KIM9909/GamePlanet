@@ -183,7 +183,76 @@ export const AdminAPI = {
     }
   },
 
+/**
+ * 회원 전체 목록 조회 API
+ * @returns {Promise<Array>} 회원 목록
+ */
+getUserList: async () => {
+  try {
+    const response = await API.get("/profile");
+    return response;
+  } catch (error) {
+    throw error || "회원 목록을 불러오는데 실패했습니다.";
+  }
+},
 
+/**
+ * 회원 프로필 수정 API
+ * @param {number} userId - 수정할 회원 ID
+ * @param {Object} userUpdateData - 수정할 회원 정보 (userInfo, userProfilePicture)
+ * @returns {Promise<Object>} 수정된 회원 프로필 정보
+ */
+updateUserProfile: async (userId, userUpdateData) => {
+  try {
+    const formData = new FormData();
+    
+    // userInfo JSON을 Blob으로 변환하여 추가
+    const userInfo = {
+      userName: userUpdateData.userName,
+      userNickname: userUpdateData.userNickname,
+      userBio: userUpdateData.userBio
+    };
+    
+    formData.append('userInfo', new Blob([JSON.stringify(userInfo)], {
+      type: 'application/json'
+    }));
+    
+    // 프로필 이미지가 있으면 추가
+    if (userUpdateData.profileImage) {
+      formData.append('userProfilePicture', userUpdateData.profileImage);
+    }
+
+    const response = await API.put(`/profile/${userId}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response;
+  } catch (error) {
+    throw error || "회원 프로필 수정에 실패했습니다.";
+  }
+},
+
+/**
+ * 회원 탈퇴 API
+ * @param {number} userId - 탈퇴할 회원 ID
+ * @param {string} password - 회원 탈퇴를 위한 비밀번호
+ * @returns {Promise<void>} 탈퇴 처리 결과
+ */
+deleteUser: async (userId, password) => {
+  try {
+    const response = await API.delete(`/profile/${userId}/delete`, {
+      data: { password },  // data 객체 안에 password를 넣어서 전송
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    return response;
+  } catch (error) {
+    throw error || "회원 탈퇴에 실패했습니다.";
+  }
+}
 };
+
 
 export default AdminAPI;

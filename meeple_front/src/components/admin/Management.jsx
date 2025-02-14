@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import UserList from './UserList';
+import UserList from './user/UserList';
 import CustomList from './CustomList';
 import ReportList from './report/ReportList';
 import RecordList from './record/RecordList';
