@@ -7,8 +7,6 @@ import { setToken } from "../../sources/store/slices/UserSlice";
 
 const RegisterModal = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
-  const INSTALLER_URL =
-    "https://meeple-file-server.s3.ap-northeast-2.amazonaws.com/static-files/Meeple+Setup+1.4.3.exe";
 
   // 유효성 검사용 정규식
   // email: 이메일 형식
@@ -203,10 +201,6 @@ const RegisterModal = ({ isOpen, onClose }) => {
     );
   };
 
-  const downloadInstaller = () => {
-    window.location.href = INSTALLER_URL;
-  };
-
   // 회원가입 제출
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -215,9 +209,6 @@ const RegisterModal = ({ isOpen, onClose }) => {
       setError("모든 필드를 올바르게 입력해주세요.");
       return;
     }
-
-    // 먼저 설치 파일 다운로드 시작
-    downloadInstaller();
 
     setIsLoading(true);
     try {

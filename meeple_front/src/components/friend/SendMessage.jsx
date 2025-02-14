@@ -55,11 +55,11 @@ const SendMessage = ({ selectedFriend }) => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md h-[43.5vh]">
       {/* 친구 선택 드롭다운 */}
       <label className="block text-gray-700 font-medium mb-2">받는 사람</label>
       <select
-        className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 "
         value={selectedFriend}
         onChange={(e) => setSelectFriend(e.target.value)}
       >
