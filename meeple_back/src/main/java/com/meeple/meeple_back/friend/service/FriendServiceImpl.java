@@ -224,7 +224,7 @@ public class FriendServiceImpl implements FriendService {
                 .code(200)
                 .message("차단이 해제되었습니다.")
                 .build();
-        return null;
+        return response;
     }
 
     @Override
