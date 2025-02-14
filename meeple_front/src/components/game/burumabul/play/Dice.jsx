@@ -18,6 +18,14 @@ const Dice = ({ onComplete, onClose, roomId, setFirstDice, setSecondDice }) => {
   const [totalScore, setTotalScore] = useState(0);
   const dispatch = useDispatch();
 
+  //희준
+  const throwDiceRef = useRef(null);
+
+  useEffect(() => {
+    throwDiceRef.current = throwDice;
+  }, []);
+  //희준준
+
   const animationFrameId = useRef(null);
   const params = {
     numberOfDice: 2,
