@@ -3,6 +3,7 @@ package com.meeple.meeple_back.user.service;
 
 import com.meeple.meeple_back.aws.s3.service.S3Service;
 import com.meeple.meeple_back.user.model.PasswordUpdateRequest;
+import com.meeple.meeple_back.user.model.ResponseUserList;
 import com.meeple.meeple_back.user.model.User;
 import com.meeple.meeple_back.user.model.UserProfileResponse;
 import com.meeple.meeple_back.user.model.UserRegistDto;
@@ -11,6 +12,7 @@ import com.meeple.meeple_back.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -158,5 +160,17 @@ public class UserService {
     public User findById(long creator) {
         return userRepository.findById(creator)
             .orElseThrow(() -> new EntityNotFoundException("User not found"));
+    }
+
+    public ResponseUserList getUserList() {
+        List<User> users = userRepository.findAll();
+
+        ResponseUserList response = ResponseUserList.builder()
+            .code(200)
+            .message("조회 성공")
+            .userList(users)
+            .build();
+
+        return response;
     }
 }

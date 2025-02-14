@@ -2,6 +2,7 @@ package com.meeple.meeple_back.user.controller;
 
 import com.meeple.meeple_back.user.model.PasswordConfirmRequest;
 import com.meeple.meeple_back.user.model.PasswordUpdateRequest;
+import com.meeple.meeple_back.user.model.ResponseUserList;
 import com.meeple.meeple_back.user.model.UserProfileResponse;
 import com.meeple.meeple_back.user.model.UserUpdateRequest;
 import com.meeple.meeple_back.user.service.UserService;
@@ -17,6 +18,13 @@ import org.springframework.web.multipart.MultipartFile;
 public class ProfileController {
 
     private final UserService userService;
+
+    @GetMapping
+    public ResponseEntity<ResponseUserList> getUserList() {
+        ResponseUserList response = userService.getUserList();
+
+        return ResponseEntity.ok(response);
+    }
 
     @GetMapping("/{userId}")
     public ResponseEntity<UserProfileResponse> getUserProfile(@PathVariable("userId") Long userId) {
