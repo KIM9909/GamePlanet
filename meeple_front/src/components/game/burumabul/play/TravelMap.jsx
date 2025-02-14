@@ -471,7 +471,7 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
   useEffect(() => {
     if (
       socketDrawCardData &&
-      nextPositionRef.current !== socketDrawNextPosition
+      prevPositionRef.current !== socketDrawNextPosition
     ) {
       console.log("socketPickedCard:", socketPickedCard);
       setPickedCardInfo(socketPickedCard);
@@ -658,10 +658,10 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
         try {
           const diceInfo = {
             playerId: currentPlayer.playerId,
-            firstDice: firstDice,
-            secondDice: secondDice,
-            // firstDice: 2,
-            // secondDice: 2,
+            // firstDice: firstDice,
+            // secondDice: secondDice,
+            firstDice: 6,
+            secondDice: 6,
           };
           console.log("주사위 정보 :", diceInfo);
           await rollDice(diceInfo);
@@ -798,37 +798,6 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
   // 카드 뽑기 해서 나오는 애니매이션
   const [isCardDrawn, setIsCardDrawn] = useState(false);
   const [drawIsAnimating, setDrawIsAnimating] = useState(false);
-
-  // 턴 종료 조건 확인
-  useEffect(() => {
-    console.log("🔍 CHECK_END 실행 조건 검사: ", {
-      nextAction,
-      isMovementComplete,
-      drawIsMovementComplete,
-      isDiceRolling,
-      showPickedCardModal,
-      showPayTollModal,
-      showBuyLand,
-      showBuildBase,
-    });
-    if (
-      nextAction &&
-      nextAction === "CHECK_END" &&
-      myIndex === currentPlayerIndex &&
-      !drawIsAnimating
-    ) {
-      try {
-        const endInfo = {
-          playerId: currentPlayer.playerId,
-        };
-        checkEnd(endInfo);
-        console.log("종료 조건 체크");
-      } catch (error) {
-        console.error("종료 조건 체크 실패 : ", error);
-        setSocketNext(null);
-      }
-    }
-  }, [nextAction, drawIsAnimating, isDiceRolling]);
 
   // 통행료 지불
   useEffect(() => {
@@ -972,6 +941,69 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
       }
     }
   }, [socketDrawCardData, drawPrevPosition, drawNextPosition]);
+
+  // 턴 종료 조건 확인
+  useEffect(() => {
+    console.log("🔍 CHECK_END 실행 조건 검사: ", {
+      nextAction,
+      isMovementComplete,
+      drawIsMovementComplete,
+      isDiceRolling,
+      showPickedCardModal,
+      showPayTollModal,
+      showBuyLand,
+      showBuildBase,
+    });
+
+    // 모든 모달이 닫혀있는지
+    const allModalClosed =
+      !showPickedCardModal &&
+      !showPayTollModal &&
+      !showBuildBase &&
+      !showBuyLand;
+
+    // 주사위를 굴렸고 말 이동이 완료되었는지 확인
+    const allMovementsComplete =
+      !isMovementComplete &&
+      !isDiceRolling &&
+      drawIsMovementComplete &&
+      !drawIsAnimating;
+
+    if (
+      nextAction === "CHECK_END" &&
+      myIndex === currentPlayerIndex &&
+      allModalClosed &&
+      allMovementsComplete
+    ) {
+      try {
+        const endInfo = {
+          playerId: currentPlayer.playerId,
+        };
+        checkEnd(endInfo);
+        console.log("종료 조건 체크");
+      } catch (error) {
+        console.error("종료 조건 체크 실패 : ", error);
+        setSocketNext(null);
+      }
+    } else if (nextAction === "CHECK_END") {
+      console.log("턴 종료 조건 미충족X :", {
+        allModalClosed,
+        allMovementsComplete,
+      });
+    }
+  }, [
+    nextAction,
+    isMovementComplete,
+    drawIsMovementComplete,
+    isDiceRolling,
+    drawIsAnimating,
+    showPickedCardModal,
+    showPayTollModal,
+    showBuyLand,
+    showBuildBase,
+    myIndex,
+    currentPlayerIndex,
+  ]);
 
   // 게임 종료 확인
 
