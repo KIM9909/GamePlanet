@@ -79,6 +79,15 @@ public class TurnManager {
 			return TurnEndResponse.gameEnd(determineWinner(board));
 		}
 
+		if (isCurrentPlayerBankrupt()) {
+			return handleBankruptCurrentPlayer(board);
+		}
+
+		if (hasMetConstructionWinCondition(getCurrentPlayer(), board)) {
+			return TurnEndResponse.gameEnd(getCurrentPlayer());
+		}
+
+
 		if (rolledDouble()) {
 			doubleCount = 2;
 			return TurnEndResponse.diceDoubleOneMoreTurn(getCurrentPlayer(), currentPlayerIndex,
@@ -86,13 +95,8 @@ public class TurnManager {
 		}
 		doubleCount = 0;
 
-		if (hasMetConstructionWinCondition(getCurrentPlayer(), board)) {
-			return TurnEndResponse.gameEnd(getCurrentPlayer());
-		}
 
-		if (isCurrentPlayerBankrupt()) {
-			return handleBankruptCurrentPlayer(board);
-		}
+
 
 		Player nextPlayer = nextTurn();
 
