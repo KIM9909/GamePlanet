@@ -353,6 +353,7 @@ const CustomEditor = () => {
           <CustomModal 
             onClose={() => setShowModal(false)} 
             cardId={selectedCardId}
+            customId={customId}
           />
         </div>
       )}
