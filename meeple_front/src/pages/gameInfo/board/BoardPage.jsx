@@ -7,6 +7,8 @@ import Pagination from "../../../components/admin/Pagination";
 import { Search } from "lucide-react";
 import Loading from "../../../components/Loading";
 
+import NewArticleModal from "../../../components/info/board/NewArticleModal";
+
 const BoardPage = () => {
   const { gameInfoId } = useParams();
   const navigate = useNavigate();
@@ -21,6 +23,9 @@ const BoardPage = () => {
 
   const [searchTermInput, setSearchTermInput] = useState(''); // 검색어 입력값을 위한 새로운 state
   const [activeSearchTerm, setActiveSearchTerm] = useState(''); // 실제 검색에 사용될 검색어
+
+  const [isNewArticleModalOpen, setIsNewArticleModalOpen] = useState(false);
+
 
   const fetchArticles = async () => {
     try {
@@ -47,9 +52,9 @@ const BoardPage = () => {
 
   if (loading && articles.length === 0) 
     return <div className="text-white"><Loading /></div>;
-  if (error) return 
+  if (error) return navigate("/errorpage");
     // <div className="text-white">에러가 발생했습니다.</div>;
-    navigate("/errorpage");
+    
   // if (!articles.length) return <div>데이터가 없습니다.</div>;
 
 
@@ -95,7 +100,8 @@ const BoardPage = () => {
           <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-cyan-500/50 max-h-[650px] overflow-y-auto custom-scrollbar">
             <div className="grid grid-rows-1 gap-8 mb-8">
               {/* 검색 영역 */}
-              <div className="flex gap-3">
+              <div className="flex gap-3 justify-between">
+                <div className="flex gap-3">
                 <select
                   value={searchType}
                   onChange={(e) => setSearchType(e.target.value)}
@@ -108,7 +114,7 @@ const BoardPage = () => {
                   type="text"
                   value={searchTermInput}
                   onChange={(e) => setSearchTermInput(e.target.value)}
-                  
+                  onKeyPress={handleKeyPress}
                   placeholder={searchType === 'content' ? '내용 검색...' : '닉네임 검색...'}
                   className="px-4 py-2 bg-slate-700 text-white placeholder-gray-400 border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500"
                 />
@@ -119,6 +125,15 @@ const BoardPage = () => {
                   <Search size={20} />
                   검색
                 </button>
+              </div>
+              <div className="">
+                <button
+                  onClick={() => setIsNewArticleModalOpen(true)}
+                  className="px-6 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors flex flex-end items-center gap-2"
+                >
+                  글쓰기
+                </button>
+              </div>
               </div>
 
               {/* 테이블 영역 */}
@@ -162,8 +177,7 @@ const BoardPage = () => {
                 </table>
               </div>
 
-              {/* 페이지네이션과 글쓰기 버튼 */}
-              <div className="flex justify-between items-center mt-4">
+              <div>
                 
                 <Pagination 
                   totalItems={filteredArticles.length}
@@ -171,13 +185,14 @@ const BoardPage = () => {
                   currentPage={currentPage}
                   onPageChange={setCurrentPage}
                 />
-                <button
-                  onClick={() => navigate(`/game-info/${gameInfoId}/board/write`)}
-                  className="px-6 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors flex items-center gap-2"
-                >
-                  글쓰기
-                </button>
+                
               </div>
+              <NewArticleModal 
+              isOpen={isNewArticleModalOpen}
+              onClose={() => setIsNewArticleModalOpen(false)}
+              gameInfoId={gameInfoId}
+              onArticleCreated={fetchArticles} // 게시글 작성 후 목록 새로고침
+            />
             </div>
           </div>
         </div>
