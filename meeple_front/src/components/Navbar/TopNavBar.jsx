@@ -27,7 +27,7 @@ const TopNavbar = () => {
   const { token } = useSelector((state) => state.user);
 
   const userId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
-  const { connected, responseSocket, stompClitenRef } = useFriendSocket();
+  const { connected, responseSocket, stompClientRef } = useFriendSocket();
   const [notificationList, setNotificationList] = useState([]);
   const [isShowNotifi, setIsShowNotifi] = useState(false);
   const [notificationCount, setNotificationCount] = useState(
@@ -103,36 +103,42 @@ const TopNavbar = () => {
   // 소켓 연결 관리
   useEffect(() => {
     if (connected) {
-      console.log("소켓 연결 성공");
+      console.log("소켓연결 성공");
     } else {
-      console.error("소켓 연결 에러");
-      const reconnectSocket = async () => {
-        if (stompClitenRef.current) {
+      console.log("소켓 연결 대기 중");
+      if (stompClientRef?.current) {
+        const reconnectSocket = async () => {
           try {
-            await stompClitenRef.current.active();
+            await stompClientRef.current.activate();
+            console.log("소켓 재연결 시도");
           } catch (error) {
-            console.error("재연결 실패:", error);
+            console.error("소켓 재연결 실패:", error);
           }
-        }
-      };
-      reconnectSocket();
+        };
+        reconnectSocket();
+      }
     }
-  }, [connected]);
+  }, [connected, stompClientRef]);
 
   // 알림 처리
   useEffect(() => {
     if (responseSocket) {
-      setNotificationList((prevList) => {
-        const updatedList = [...prevList, responseSocket];
-        return updatedList;
-      });
-      setNotificationCount((prev) => prev + 1);
+      try {
+        console.log(responseSocket);
+        setNotificationList((prevList) => {
+          const updatedList = [...prevList, responseSocket];
+          return updatedList;
+        });
+        setNotificationCount((prev) => prev + 1);
+      } catch (error) {
+        console.error("알림 처리 중 오류 발생: ", error);
+      }
     }
   }, [responseSocket]);
 
   useEffect(() => {
     setNotificationCount(notificationList.length);
-  }, [notificationList]);
+  }, [responseSocket, notificationList]);
 
   const showNotifi = () => {
     setIsShowNotifi(true);
@@ -207,7 +213,9 @@ const TopNavbar = () => {
           <div className="flex items-center space-x-6">
             <div className="relative" ref={notificationRef}>
               <Bell
-                className="cursor-pointer"
+                className={`cursor-pointer ${
+                  connected ? "text-white" : "text-gray-400"
+                }`}
                 onClick={showNotifi}
                 size={24}
                 color="#ffffff"
