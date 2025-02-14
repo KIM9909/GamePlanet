@@ -7,7 +7,7 @@ const PlayerCard = ({
   userNickname,
   isCurrentTurn,
   score,
-  userLevel = 1,
+  userLevel,
   isCurrentUser = false,
   sessionId,
   children,

@@ -254,7 +254,7 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
                          text-white appearance-none cursor-pointer
                          focus:outline-none focus:border-cyan-400 transition-colors"
               >
-                <option value="5">5초</option>
+                <option value="1">1초</option>
                 <option value="90">90초</option>
                 <option value="120">120초</option>
               </select>
@@ -278,7 +278,7 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
                        text-white appearance-none cursor-pointer
                        focus:outline-none focus:border-cyan-400 transition-colors"
             >
-              <option value="5">5개</option>
+              <option value="1">1개</option>
               <option value="7">7개</option>
               <option value="10">10개</option>
             </select>

@@ -19,14 +19,16 @@ export const fetchProfile = createAsyncThunk(
 // 프로필 수정을 위한 비동기 액션 생성
 export const updateProfile = createAsyncThunk(
   "profile/updateProfile",
-  async ({ userId, data }, { rejectWithValue }) => {
+  async ({ userId, data }, { rejectWithValue, getState }) => {
     try {
-      // userId와 data가 제대로 전달되는지 확인 (디버깅용)
-
       const response = await UserAPI.updateProfile(userId, data);
-      return response;
+      // 기존 프로필 데이터와 새로운 데이터를 병합
+      const currentProfile = getState().profile.profileData;
+      return {
+        ...currentProfile, // 기존 프로필 데이터 유지
+        ...response, // 새로운 데이터로 업데이트
+      };
     } catch (error) {
-      // 에러 발생 시 자세한 정보 로깅
       return rejectWithValue(error.message);
     }
   }

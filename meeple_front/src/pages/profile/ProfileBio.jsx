@@ -46,7 +46,7 @@ const ProfileBio = ({ initialBio, onSave }) => {
         <textarea
           value={tempBio}
           onChange={handleChange}
-          className="w-full h-[50px] p-2 text-zinc-900 bg-zinc-100 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500" // h-[55px]를 h-[35px]로 변경
+          className="w-full h-[50px] p-2 text-zinc-900 bg-zinc-100 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500"
           rows="1" // rows="3"을 rows="1"로 변경
           maxLength={20}
           autoFocus
