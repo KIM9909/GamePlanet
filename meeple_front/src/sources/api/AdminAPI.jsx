@@ -50,20 +50,6 @@ API.interceptors.response.use(
 
 export const AdminAPI = {
   /**
-   * 신고 등록 API
-   * @param {Object} reportData - 신고 정보 (신고 사유, 제목, 내용, 신고대상 ID, 신고자 ID)
-   * @returns {Promise<Object>} 신고 등록 결과
-   */
-  createReport: async (reportData) => {
-    try {
-      const response = await API.post("/report", reportData);
-      return response;
-    } catch (error) {
-      throw error || "신고 등록에 실패했습니다.";
-    }
-  },
-
-  /**
    * 신고 목록 조회 API
    * @returns {Promise<Array>} 신고 목록
    */
@@ -92,7 +78,10 @@ export const AdminAPI = {
 
   /**
    * 신고 처리 API
-   * @param {Object} processData - 처리할 신고 정보 (신고 ID, 처리 결과)
+   * @param {Object} processData - 처리할 신고 정보
+   * @param {number} processData.reportId - 신고 ID
+   * @param {string} processData.reportResult - 처리 결과 (PASS/WARNING/BAN)
+   * @param {string} processData.reportMemo - 처리 메모
    * @returns {Promise<Object>} 처리 결과
    */
   processReport: async (processData) => {
@@ -106,7 +95,10 @@ export const AdminAPI = {
 
   /**
    * 신고 처리 수정 API
-   * @param {Object} updateData - 수정할 처리 정보 (처리 ID, 새로운 처리 결과)
+   * @param {Object} updateData - 수정할 처리 정보
+   * @param {number} updateData.reportProcessId - 처리 ID
+   * @param {string} updateData.reportResult - 새로운 처리 결과
+   * @param {string} updateData.reportMemo - 처리 메모
    * @returns {Promise<Object>} 수정 결과
    */
   updateReportProcess: async (updateData) => {
@@ -117,6 +109,7 @@ export const AdminAPI = {
       throw error || "신고 처리 수정에 실패했습니다.";
     }
   },
+  
    /**
    * 음성 로그 생성 API
    * @param {File} audio - 음성 파일
