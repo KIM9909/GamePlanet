@@ -76,32 +76,32 @@ const ReceivedFriendRequest = ({ requestedList }) => {
   };
 
   return (
-    <div className="p-4 h-[40vh] flex flex-col">
+    <div className="h-full flex flex-col items-center justify-start w-full overflow-y-auto">
       {requestList && requestList.length > 0 ? (
-        <ul className="overflow-y-auto flex-1">
+        <ul className="space-y-2 w-full">
           {requestList.map((list, index) => (
             <li
               key={index}
-              className="p-4 bg-gray-50 rounded-lg flex justify-between items-center"
+              className="p-4 bg-gray-800 rounded-lg flex items-center justify-between border border-cyan-500/30 hover:border-cyan-400/60 transition-all duration-300"
             >
-              <p className="font-medium text-gray-700">
+              <p className="font-medium text-cyan-400">
                 {list.user.userNickname}
               </p>
               <div className="flex gap-2">
                 <button
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200"
+                  className="px-3 py-2 bg-cyan-500/80 text-white rounded-lg hover:bg-cyan-600 transition-all duration-300"
                   onClick={() => handleAccept(list.friendId)}
                 >
                   승인
                 </button>
                 <button
-                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all duration-200"
+                  className="px-3 py-2 bg-gray-600/80 text-white rounded-lg hover:bg-gray-700 transition-all duration-300"
                   onClick={() => handleDeny(list.friendId)}
                 >
                   거절
                 </button>
                 <button
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-200"
+                  className="px-3 py-2 bg-red-500/80 text-white rounded-lg hover:bg-red-600 transition-all duration-300"
                   onClick={() => handleBlock(list.friendId)}
                 >
                   차단
@@ -111,7 +111,7 @@ const ReceivedFriendRequest = ({ requestedList }) => {
           ))}
         </ul>
       ) : (
-        <div className="flex-1 flex items-center justify-center text-gray-500">
+        <div className="flex-1 flex items-center justify-center text-gray-400">
           <p>받은 친구 요청이 없습니다.</p>
         </div>
       )}

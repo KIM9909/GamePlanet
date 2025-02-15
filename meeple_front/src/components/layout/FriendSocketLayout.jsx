@@ -8,7 +8,6 @@ import React, {
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
 import { useSelector } from "react-redux";
-import FriendModalLayout from "./FriendModalLayout";
 
 // Context 생성
 export const FriendSocketContext = createContext({

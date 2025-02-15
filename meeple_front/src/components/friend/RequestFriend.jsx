@@ -50,25 +50,25 @@ const RequestFriend = () => {
   };
 
   return (
-    <div className="bg-gray-100 p-4 rounded-b-lg">
-      <div className="flex justify-center gap-4 mb-4">
+    <div className="bg-gray-900 bg-opacity-80 p-4 rounded-b-lg">
+      <div className="flex justify-center gap-4 mb-4 ">
         <button
-          className={`px-6 rounded-lg font-medium transition-all duration-200 
+          className={`px-3 rounded-lg font-medium transition-all duration-300 
             ${
               activeTab === "requestedList"
-                ? "bg-blue-500 text-white shadow-md"
-                : "bg-white text-gray-600 hover:bg-blue-50"
+                ? "bg-cyan-500/20 text-cyan-400 shadow-md border border-cyan-400/60"
+                : "bg-gray-800 text-gray-400 hover:bg-cyan-500/10 hover:text-cyan-400"
             }`}
           onClick={() => handleTabChange("requestedList")}
         >
           받은 요청
         </button>
         <button
-          className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 
+          className={`px-3 py-2 rounded-lg font-medium transition-all duration-300 
             ${
               activeTab === "requestingList"
-                ? "bg-blue-500 text-white shadow-md"
-                : "bg-white text-gray-600 hover:bg-blue-50"
+                ? "bg-cyan-500/20 text-cyan-400 shadow-md border border-cyan-400/60"
+                : "bg-gray-800 text-gray-400 hover:bg-cyan-500/10 hover:text-cyan-400"
             }`}
           onClick={() => handleTabChange("requestingList")}
         >
@@ -76,13 +76,15 @@ const RequestFriend = () => {
         </button>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm p-4 min-h-[40vh]">
+      <div className="bg-gray-800 rounded-lg shadow-lg p-4 min-h-[40vh] border border-cyan-500/30">
         {!response ? (
-          <div className="flex justify-center items-center h-[40vh]">
+          <div className="flex justify-center items-center">
             <div className="text-gray-400">로딩 중...</div>
           </div>
         ) : (
-          <div className="h-[35vh] overflow-y-auto">{renderContent()}</div>
+          <div className="h-[35vh] overflow-y-auto w-full">
+            {renderContent()}
+          </div>
         )}
       </div>
     </div>
