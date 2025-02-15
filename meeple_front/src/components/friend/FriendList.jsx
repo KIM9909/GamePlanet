@@ -44,7 +44,7 @@ const FriendList = () => {
 
   return (
     <div className="bg-gray-100 p-4 rounded-b-lg">
-      <div className="bg-white rounded-lg shadow-sm h-[50vh] overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-sm h-[48vh] overflow-y-auto">
         <ul className="p-4 space-y-3">
           {friendList && friendList.length > 0 ? (
             friendList.map((friend, index) => (

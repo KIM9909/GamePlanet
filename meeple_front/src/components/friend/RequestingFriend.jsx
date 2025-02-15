@@ -4,7 +4,7 @@ const RequestingFriend = ({ requestingList }) => {
   console.log(requestingList);
 
   return (
-    <div className="space-y-3">
+    <div className="p-4 h-[40vh] flex flex-col">
       {requestingList && requestingList.length > 0 ? (
         <ul className="space-y-3">
           {requestingList.map((list, index) => (
@@ -25,7 +25,7 @@ const RequestingFriend = ({ requestingList }) => {
           ))}
         </ul>
       ) : (
-        <div className="flex justify-center items-center h-[30vh] text-gray-500">
+        <div className="flex-1 flex items-center justify-center text-gray-500">
           <p>보낸 친구 요청이 없습니다.</p>
         </div>
       )}

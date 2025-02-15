@@ -53,7 +53,7 @@ const RequestFriend = () => {
     <div className="bg-gray-100 p-4 rounded-b-lg">
       <div className="flex justify-center gap-4 mb-4">
         <button
-          className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 
+          className={`px-6 rounded-lg font-medium transition-all duration-200 
             ${
               activeTab === "requestedList"
                 ? "bg-blue-500 text-white shadow-md"
@@ -82,7 +82,7 @@ const RequestFriend = () => {
             <div className="text-gray-400">로딩 중...</div>
           </div>
         ) : (
-          <div className="h-[40vh] overflow-y-auto">{renderContent()}</div>
+          <div className="h-[35vh] overflow-y-auto">{renderContent()}</div>
         )}
       </div>
     </div>

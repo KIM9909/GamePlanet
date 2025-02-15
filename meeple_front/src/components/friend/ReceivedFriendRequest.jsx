@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 
 import { useSelector, useDispatch } from "react-redux";
 import {
@@ -6,6 +6,7 @@ import {
   requestFriendList,
 } from "../../sources/api/FriendApi";
 import useFriendSocket from "../../hooks/useFriendSocket";
+import { FriendSocketContext } from "../layout/FriendSocketLayout";
 
 const ReceivedFriendRequest = ({ requestedList }) => {
   const userId = useSelector((state) => state.user.userId);
@@ -16,26 +17,8 @@ const ReceivedFriendRequest = ({ requestedList }) => {
     setRequestList(requestedList);
   }, [requestedList]);
 
-  const { connected, responseSocket, stompClientRef } = useFriendSocket();
-
-  useEffect(() => {
-    if (connected) {
-      console.log("소켓이 연결되었습니다.");
-    } else {
-      console.error("소켓 연결 에러");
-      // 재연결 시도
-      const reconnectSocket = async () => {
-        if (stompClientRef.current) {
-          try {
-            await stompClientRef.current.activate();
-          } catch (error) {
-            console.error("재연결 실패:", error);
-          }
-        }
-      };
-      reconnectSocket();
-    }
-  }, [connected]);
+  const { connected, responseSocket, stompClientRef } =
+    useContext(FriendSocketContext);
 
   useEffect(() => {
     if (responseSocket) {
@@ -93,9 +76,9 @@ const ReceivedFriendRequest = ({ requestedList }) => {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="p-4 h-[40vh] flex flex-col">
       {requestList && requestList.length > 0 ? (
-        <ul className="space-y-3">
+        <ul className="overflow-y-auto flex-1">
           {requestList.map((list, index) => (
             <li
               key={index}
@@ -128,7 +111,7 @@ const ReceivedFriendRequest = ({ requestedList }) => {
           ))}
         </ul>
       ) : (
-        <div className="flex justify-center items-center h-[30vh] text-gray-500">
+        <div className="flex-1 flex items-center justify-center text-gray-500">
           <p>받은 친구 요청이 없습니다.</p>
         </div>
       )}

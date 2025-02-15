@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../sources/store/slices/UserSlice";
@@ -15,6 +15,7 @@ import SungHyun from "../../assets/images/pixel_character/pixel-sunghyun.png";
 import useFriendSocket from "../../hooks/useFriendSocket";
 import NotificationList from "../notification/NotificationList";
 import SettingsPopup from "./SettingsPopup";
+import { FriendSocketContext } from "../layout/FriendSocketLayout";
 
 const TopNavbar = () => {
   const dispatch = useDispatch();
@@ -27,7 +28,15 @@ const TopNavbar = () => {
   const { token } = useSelector((state) => state.user);
 
   const userId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
-  const { connected, responseSocket, stompClientRef } = useFriendSocket();
+  const friendSocket = useContext(FriendSocketContext);
+
+  console.log("🔍 FriendSocketContext 값 확인:", friendSocket);
+
+  if (!friendSocket) {
+    console.error("🚨 FriendSocketContext is undefined! 확인 필요");
+  }
+  const { connected, responseSocket, stompClientRef } = friendSocket;
+
   const [notificationList, setNotificationList] = useState([]);
   const [isShowNotifi, setIsShowNotifi] = useState(false);
   const [notificationCount, setNotificationCount] = useState(

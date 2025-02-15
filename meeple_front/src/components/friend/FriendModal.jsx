@@ -1,12 +1,41 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import FriendList from "./FriendList";
 import RequestFriend from "./RequestFriend";
 import { UsersRound, MessageSquareMore, Handshake } from "lucide-react";
 import Message from "./Message";
-
+import useFriendSocket from "../../hooks/useFriendSocket";
+import { FriendSocketContext } from "../layout/FriendSocketLayout";
 const FriendModal = () => {
   const userId = useSelector((state) => state.user.userId);
+
+  const { connected, responseSocket, stompClientRef } =
+    useContext(FriendSocketContext);
+
+  useEffect(() => {
+    if (connected) {
+      console.log("소켓이 연결되었습니다.");
+    } else {
+      console.error("소켓 연결 에러");
+      // 재연결 시도
+      const reconnectSocket = async () => {
+        if (stompClientRef.current) {
+          try {
+            await stompClientRef.current.activate();
+          } catch (error) {
+            console.error("재연결 실패:", error);
+          }
+        }
+      };
+      reconnectSocket();
+    }
+  }, [connected]);
+
+  useEffect(() => {
+    if (responseSocket) {
+      console.log("새로운 소켓 응답:", responseSocket);
+    }
+  }, [responseSocket]);
 
   const [activeTab, setActiveTab] = useState("friendList");
 
