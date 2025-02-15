@@ -1,5 +1,6 @@
 package com.meeple.meeple_back.gameCustom.bluemarble.infrastructure;
 
+import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomElementResponse;
 import io.lettuce.core.dynamic.annotation.Param;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,4 +19,8 @@ public interface CustomElementJpaRepository extends JpaRepository<CustomElementE
 
 	@Query("SELECT t.tileNumber FROM TileEntity t WHERE t.tileId IN ( SELECT ct.tileEntity.tileId FROM CustomTileEntity ct WHERE ct.customElement.customId = :customId)")
     List<Integer> findCompleteElementListByCustomId(Integer customId);
+
+	@Query("select ce from CustomElementEntity ce where ce.user.userId = :userId")
+    List<CustomElementEntity> findByCustomIdAndUserId(Integer customId, Long userId);
+
 }

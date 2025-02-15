@@ -28,6 +28,7 @@ import com.meeple.meeple_back.user.model.User;
 import com.meeple.meeple_back.user.repository.UserRepository;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -131,4 +132,10 @@ public class CustomElementService {
 		List<Integer> completeIdList = customElementJpaRepository.findCompleteElementListByCustomId(customId);
 		return new CustomElementListResponse(customId, completeIdList);
 	}
+
+	public List<CustomElementResponse> findByUserId(Integer customId, Long userId) {
+		return customElementJpaRepository.findByCustomIdAndUserId(customId, userId).stream().map(CustomElementResponse::from)
+			.toList();
+	}
+
 }
