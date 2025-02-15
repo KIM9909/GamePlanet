@@ -36,7 +36,7 @@ public class UserService {
             .userNickname(user.getUserNickname())
             .userCreatedAt(LocalDateTime.now())
             .userProfilePictureUrl(
-                "https://meeple-file-server.s3.ap-northeast-2.amazonaws.com/static-files/pixel-heejun.png")
+                "https://meeple-file-server-2.s3.ap-northeast-2.amazonaws.com/static-files/pixel-heejun.png")
             .userExp(0)
             .build());
     }
