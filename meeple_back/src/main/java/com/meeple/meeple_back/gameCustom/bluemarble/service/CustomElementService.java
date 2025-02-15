@@ -5,6 +5,7 @@ import com.meeple.meeple_back.game.bluemarble.domain.TileType;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomElementRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomTileCardRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CardResponse;
+import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomElementListResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomElementResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomTileCardResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomTileResponse;
@@ -125,5 +126,10 @@ public class CustomElementService implements CrudService<CustomElementRequest, C
 		TileEntity tileEntity = tileJpaRepository.findByTileNumberAndCustomId(customId, cardNumber);
 		CardEntity cardEntity = cardJpaRepository.findByCardNumberAndCustomId(customId, cardNumber);
 		return new CustomTileCardResponse(TileResponse.from(tileEntity), CardResponse.from(cardEntity));
+	}
+
+	public CustomElementListResponse findCompleteElementList(Integer customId) {
+		List<Integer> completeIdList = customElementJpaRepository.findCompleteElementListByCustomId(customId);
+		return new CustomElementListResponse(customId, completeIdList);
 	}
 }
