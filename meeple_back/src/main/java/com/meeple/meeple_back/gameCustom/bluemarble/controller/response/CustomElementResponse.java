@@ -13,11 +13,13 @@ public class CustomElementResponse {
 	private String customName;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
+	private Long userId;
 	public static CustomElementResponse from(CustomElementEntity entity) {
 		return CustomElementResponse.builder()
 			.customId(entity.getCustomId())
 			.customName(entity.getCustomName())
 			.createdAt(entity.getCreatedAt())
+			.userId(entity.getUser().getUserId())
 			.updatedAt(entity.getUpdatedAt())
 			.build();
 	}

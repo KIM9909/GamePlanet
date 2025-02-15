@@ -152,9 +152,6 @@ public class CustomElementController {
 		}
 	}
 
-	//TODO 커스텀 엘리먼트에 유저정보 추가하기
-	// ERD 수정해야돼 ,, 슈발 v
-	// create할때 유저 정보 추가하기.
 
 	@GetMapping("/{customId}/find-tile-card/{cardNumber}")
 	public ResponseEntity<CustomTileCardResponse> findByCustomIdAndCardNumber(@PathVariable("customId") int customId, @PathVariable("cardNumber") int cardNumber){
