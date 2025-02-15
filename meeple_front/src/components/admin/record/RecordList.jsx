@@ -44,10 +44,8 @@ const RecordList = () => {
     switch (status) {
       case 'Y':
         return '처리완료';
-      case 'N':
-        return '미처리';
       default:
-        return status;
+        return '미처리';
     }
   };
 
@@ -56,8 +54,6 @@ const RecordList = () => {
     switch (status) {
       case 'Y':
         return 'bg-green-500';
-      case 'N':
-        return 'bg-red-500';
       default:
         return 'bg-gray-500';
     }
