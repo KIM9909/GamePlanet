@@ -42,9 +42,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
 
   // 게임 데이터
   const [currentPlayData, setCurrentPlayData] = useState(playData);
-  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(
-    currentPlayerSocketIndex
-  );
+
   const [board, setBoard] = useState(null);
   const [cards, setCards] = useState(null);
   const [players, setPlayers] = useState(currentPlayData?.players || []);
@@ -53,12 +51,6 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     setBoard(socketBoard);
     setCards(socketCards);
   }, [playData]);
-
-  useEffect(() => {
-    setCurrentPlayerIndex(currentPlayerSocketIndex);
-  }, [currentPlayerSocketIndex]);
-
-  // console.log("소켓에서 받아오는 현재 플레이어 순서", currentPlayerIndex);
 
   // 오픈비두 세션 아이디 저장하기
   const [burumabulOpenViduId, setBurumabulOpenVidu] = useState(
@@ -88,14 +80,19 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     Array(currentPlayData?.players.length).fill([])
   );
 
+  const updateGameState = useCallback((newData) => {
+    if (newData) {
+      console.log("새로운 gamePlaySocekData 수신:", newData);
+      setCurrentPlayData(newData);
+      setPlayers(newData.players);
+    }
+  }, []);
+
   useEffect(() => {
     if (gamePlaySocketData) {
-      console.log("새로운 gamePlaySocekData 수신:", gamePlaySocketData);
-      setCurrentPlayData(gamePlaySocketData);
-      setPlayers(gamePlaySocketData.players);
-      setPlayerBases(Array(gamePlaySocketData.players.length).fill([]));
+      updateGameState(gamePlaySocketData);
     }
-  }, [gamePlaySocketData]);
+  }, [gamePlaySocketData, updateGameState]);
 
   const roomInfo = currentRoomInfo;
 
@@ -117,10 +114,12 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
   const [nextAction, setNextAction] = useState(null);
 
   useEffect(() => {
-    setFirstDice(socketFirstDice);
-    setSecondDice(socketSecondDice);
-    setIsDouble(socketDouble);
-  }, [socketFirstDice, socketSecondDice, socketDouble, socketNext]);
+    if (rollDiceSocketData) {
+      setFirstDice(rollDiceSocketData.firstDice);
+      setSecondDice(rollDiceSocketData.secondDice);
+      setIsDouble(rollDiceSocketData.double);
+    }
+  }, [rollDiceSocketData]);
 
   // 현재 라운드
   const [currentRound, setCurrentRound] = useState(null);
@@ -218,7 +217,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
       }
       // setBuildBaseSocketData(null);
     }
-  }, [buildBaseSocketData, players, colors]);
+  }, [buildBaseSocketData]);
 
   // 상태 변화를 모니터링하기 위한 별도의 useEffect
   useEffect(() => {
