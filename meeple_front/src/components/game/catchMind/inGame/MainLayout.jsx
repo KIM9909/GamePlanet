@@ -18,6 +18,7 @@ import CatchMindUpdateRoomModal from "./CatchMindUpdateRoomModal";
 import {
   updatePlayers,
   resetGameState,
+  updateGameState,
 } from "../../../../sources/store/slices/CatchMindSlice";
 import { fetchProfile } from "../../../../sources/store/slices/ProfileSlice";
 import { CatchMindAPI } from "../../../../sources/api/CatchMindAPI";
@@ -86,7 +87,7 @@ const GameInfo = React.memo(
 
     useEffect(() => {
       let timer;
-      if (roomInfo?.isGameStarted) {
+      if (roomInfo?.isGameStart) {
         timer = setInterval(() => {
           setTimeLeft((prevTime) => {
             if (prevTime <= 0) {
@@ -112,7 +113,7 @@ const GameInfo = React.memo(
         }
       };
     }, [
-      roomInfo?.isGameStarted,
+      roomInfo?.isGameStart,
       roomInfo?.timeLimit,
       roomInfo?.roomId,
       client,
@@ -120,7 +121,7 @@ const GameInfo = React.memo(
     ]);
 
     useEffect(() => {
-      if (roomInfo?.isGameStarted) {
+      if (roomInfo?.isGameStart) {
         setTimeLeft(roomInfo?.timeLimit || 90);
       }
     }, [word, roomInfo?.timeLimit]);
@@ -189,7 +190,7 @@ const GameInfo = React.memo(
                 </div>
 
                 {/* Creator Controls */}
-                {!roomInfo?.isGameStarted && (
+                {!roomInfo?.isGameStart && (
                   <div className="flex space-x-2">
                     {isCreator ? (
                       <>
@@ -218,26 +219,12 @@ const GameInfo = React.memo(
                           <span>Settings</span>
                         </button>
                       </>
-                    ) : (
-                      <button
-                        onClick={() =>
-                          client?.publish({
-                            destination: `/app/ready/${roomInfo.roomId}`,
-                            body: "",
-                            headers: { "content-type": "text/plain" },
-                          })
-                        }
-                        className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
-                      >
-                        <PlayCircle className="w-4 h-4 mr-2" />
-                        <span>Ready</span>
-                      </button>
-                    )}
+                    ) : null}
                   </div>
                 )}
 
                 {/* Exit Button */}
-                {!roomInfo?.isGameStarted && (
+                {!roomInfo?.isGameStart && (
                   <button
                     onClick={handleExitRoom}
                     className="flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
@@ -383,6 +370,7 @@ const MainLayout = () => {
       // 3초 후에 실제 게임 시작
       setTimeout(() => {
         dispatch(resetGameState());
+        dispatch(updateGameState({ isGameStart: true }));
 
         client.publish({
           destination: `/app/start-game/${roomId}`,
@@ -410,14 +398,14 @@ const MainLayout = () => {
 
   // 제시어 가져오기
   const currentWord = useMemo(() => {
-    if (!gameState.isGameStarted) {
+    if (!gameState.isGameStart) {
       return "";
     }
 
     const isDrawer = currentPlayer?.nickname === profileData?.userNickname;
     return isDrawer ? gameState.currentWord || "준비중..." : "???";
   }, [
-    gameState.isGameStarted,
+    gameState.isGameStart,
     gameState.currentWord,
     currentPlayer?.nickname,
     profileData?.userNickname,
@@ -437,7 +425,7 @@ const MainLayout = () => {
             if (data.type === "roomInfo" && data.roomInfo) {
               const updatedRoomInfo = {
                 ...data.roomInfo,
-                isGameStarted:
+                isGameStart:
                   data.roomInfo.isGameStarted ||
                   data.roomInfo.isGameStart ||
                   false,
@@ -539,7 +527,7 @@ const MainLayout = () => {
               maxPeople: gameState.maxPeople,
               quizCount: gameState.quizCount,
               players: gameState.players.map((p) => p.nickname),
-              isGameStarted: gameState.isGameStarted,
+              isGameStart: gameState.isGameStart,
             }}
             handleExitRoom={handleExitRoom}
             handleStartGame={handleStartGame}

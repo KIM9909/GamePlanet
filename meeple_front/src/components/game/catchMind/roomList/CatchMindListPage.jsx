@@ -5,6 +5,8 @@ import { CatchMindAPI } from "../../../../sources/api/CatchMindAPI";
 import CatchMindCreateRoomModal from "./CatchMindCreateRoomModal";
 import CatchMindPasswordModal from "./CatchMindPasswordModal";
 import CatchMindImg from "../../../../assets/images/games/MainImage/CatchMind.jpg";
+import { toast } from "react-toastify";
+import CustomToastContent from "../../../CustomToastContent";
 
 const CatchMindListPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -42,11 +44,56 @@ const CatchMindListPage = () => {
         setSelectedRoom(room);
         setIsPasswordModalOpen(true);
       } else {
-        await CatchMindAPI.joinRoom(room.roomId, userNickname);
+        const response = await CatchMindAPI.joinRoom(room.roomId, userNickname);
+
+        // 400 상태 코드 처리
+        if (response && response.code === 400) {
+          toast(
+            ({ closeToast }) => <CustomToastContent closeToast={closeToast} />,
+            {
+              position: "top-center",
+              autoClose: false,
+              hideProgressBar: true,
+              closeOnClick: false,
+              pauseOnHover: true,
+              draggable: true,
+              className: "!bg-transparent !p-0 !shadow-none",
+              toastClassName: "!bg-transparent !p-0",
+              bodyClassName: "!p-0 !m-0",
+              closeButton: false,
+              style: {
+                background: "transparent",
+                padding: 0,
+              },
+            }
+          );
+          return;
+        }
+
         navigate(`/catch-mind/${room.roomId}`);
       }
     } catch (error) {
       console.error("방 입장 실패:", error);
+      // 일반적인 에러에 대해서도 토스트 표시
+      toast(
+        ({ closeToast }) => <CustomToastContent closeToast={closeToast} />,
+        {
+          position: "top-center",
+          autoClose: false,
+          hideProgressBar: true,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: true,
+          className: "!bg-transparent !p-0 !shadow-none",
+          toastClassName: "!bg-transparent !p-0",
+          bodyClassName: "!p-0 !m-0",
+          closeButton: false,
+          style: {
+            background: "transparent",
+            padding: 0,
+          },
+        }
+      );
     }
   };
 
@@ -57,6 +104,8 @@ const CatchMindListPage = () => {
   const filteredRooms = rooms.filter((room) =>
     room.roomTitle.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  console.log("필터된 방 : ", filteredRooms);
 
   return (
     <div className="container mx-auto p-3">
@@ -130,14 +179,12 @@ const CatchMindListPage = () => {
                       </div>
                       <span
                         className={`px-3 py-1 rounded-lg text-sm font-medium ${
-                          room.isGameStarted || room.isGameStart
+                          room.isGameStart
                             ? "bg-red-900/50 text-red-300 border border-red-800"
                             : "bg-green-900/50 text-green-300 border border-green-800"
                         }`}
                       >
-                        {room.isGameStarted || room.isGameStart
-                          ? "게임 중"
-                          : "대기 중"}
+                        {room.isGameStart ? "게임 중" : "대기 중"}
                       </span>
                     </div>
 
