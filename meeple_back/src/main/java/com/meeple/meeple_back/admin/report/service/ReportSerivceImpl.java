@@ -6,11 +6,7 @@ import com.meeple.meeple_back.admin.report.model.entity.ReportProcess;
 import com.meeple.meeple_back.admin.report.model.request.RequestCreateReport;
 import com.meeple.meeple_back.admin.report.model.request.RequestProcessReport;
 import com.meeple.meeple_back.admin.report.model.request.RequestUpdateProcess;
-import com.meeple.meeple_back.admin.report.model.response.ResponseCreateReport;
-import com.meeple.meeple_back.admin.report.model.response.ResponseProcessReport;
-import com.meeple.meeple_back.admin.report.model.response.ResponseReport;
-import com.meeple.meeple_back.admin.report.model.response.ResponseReportList;
-import com.meeple.meeple_back.admin.report.model.response.ResponseUpdateProcess;
+import com.meeple.meeple_back.admin.report.model.response.*;
 import com.meeple.meeple_back.admin.report.repo.ReportProcessRepository;
 import com.meeple.meeple_back.admin.report.repo.ReportRepository;
 import com.meeple.meeple_back.user.model.User;
@@ -32,6 +28,22 @@ public class ReportSerivceImpl implements ReportService {
     private final UserRepository userRepository;
     private final ReportProcessRepository reportProcessRepository;
     private final ModelMapper mapper;
+
+    @Override
+    public ResponseDeleteUser deleteUser(long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 회원"));
+
+        user.setUserDeletedAt(LocalDateTime.now());
+
+        userRepository.save(user);
+
+        ResponseDeleteUser response = ResponseDeleteUser.builder()
+                .code(200)
+                .message("삭제 완료")
+                .build();
+        return response;
+    }
 
     @Override
     public ResponseCreateReport createReport(RequestCreateReport request) {

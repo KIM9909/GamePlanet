@@ -3,11 +3,8 @@ package com.meeple.meeple_back.admin.report.service;
 import com.meeple.meeple_back.admin.report.model.request.RequestCreateReport;
 import com.meeple.meeple_back.admin.report.model.request.RequestProcessReport;
 import com.meeple.meeple_back.admin.report.model.request.RequestUpdateProcess;
-import com.meeple.meeple_back.admin.report.model.response.ResponseCreateReport;
-import com.meeple.meeple_back.admin.report.model.response.ResponseProcessReport;
-import com.meeple.meeple_back.admin.report.model.response.ResponseReport;
-import com.meeple.meeple_back.admin.report.model.response.ResponseReportList;
-import com.meeple.meeple_back.admin.report.model.response.ResponseUpdateProcess;
+import com.meeple.meeple_back.admin.report.model.response.*;
+
 import java.util.List;
 
 public interface ReportService {
@@ -21,4 +18,6 @@ public interface ReportService {
     ResponseProcessReport processReport(RequestProcessReport request);
 
     ResponseUpdateProcess updateProcess(RequestUpdateProcess request);
+
+    ResponseDeleteUser deleteUser(long userId);
 }
