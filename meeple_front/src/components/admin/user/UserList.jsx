@@ -15,6 +15,7 @@ const UserList = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("전체");
 
   useEffect(() => {
     const fetchUserList = async () => {
@@ -31,7 +32,26 @@ const UserList = () => {
     fetchUserList();
   }, []);
 
+  const getUserStatus = (user) => {
+    if (user.userDeletedAt) return "탈퇴예정";
+    return "활성회원";
+  };
+
+  const getStatusCount = (status) => {
+    if (status === "전체") return users.length;
+    return users.filter(user => 
+      status === "탈퇴예정" ? user.userDeletedAt : !user.userDeletedAt
+    ).length;
+  };
+
   const filteredUsers = users.filter((user) => {
+    // 상태 필터링
+    if (statusFilter !== "전체") {
+      const userStatus = getUserStatus(user);
+      if (userStatus !== statusFilter) return false;
+    }
+
+    // 검색어 필터링
     if (!searchTerm) return true;
     if (searchType === "name") {
       return user.userName.toLowerCase().includes(searchTerm.toLowerCase());
@@ -71,14 +91,20 @@ const UserList = () => {
 
   const handleDeleteConfirm = async () => {
     if (!userToDelete) return;
-
+  
     try {
-      await AdminAPI.deleteUser(userToDelete.userId);
-      setUsers(users.filter((user) => user.userId !== userToDelete.userId));
-      alert("회원이 삭제되었습니다.");
+      const response = await AdminAPI.deleteUser(userToDelete.userId);
+      if (response.code === 200) {
+        // 서버에서 최신 사용자 목록을 다시 가져오기
+        const updatedListResponse = await AdminAPI.getUserList();
+        if (updatedListResponse.code === 200) {
+          setUsers(updatedListResponse.userList);
+        }
+      } else {
+        alert(response.message || "회원 탈퇴 처리에 실패했습니다.");
+      }
     } catch (error) {
-      console.error("회원 삭제 실패:", error);
-      alert("회원 삭제에 실패했습니다.");
+      console.error("회원 탈퇴 처리 실패:", error);
     } finally {
       setIsDeleteModalOpen(false);
       setUserToDelete(null);
@@ -87,7 +113,30 @@ const UserList = () => {
 
   return (
     <div>
-      <div className="flex justify-end mb-6">
+      <div className="flex justify-between items-center mb-6">
+        {/* 상태 필터 버튼들 */}
+        <div className="flex gap-2">
+          {['전체', '활성회원', '탈퇴예정'].map((status) => (
+            <button
+              key={status}
+              onClick={() => {
+                setStatusFilter(status);
+                setCurrentPage(1);
+              }}
+              className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm
+                ${statusFilter === status 
+                  ? 'bg-cyan-500 text-white' 
+                  : 'bg-slate-700 text-gray-300 hover:bg-slate-600'}`}
+            >
+              {status}
+              <span className="bg-slate-800 px-2 py-0.5 rounded-full text-xs">
+                {getStatusCount(status)}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* 기존 검색 영역 */}
         <div className="flex gap-3">
           <select
             value={searchType}
@@ -101,13 +150,11 @@ const UserList = () => {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={
-              searchType === "name" ? "이름 검색..." : "닉네임 검색..."
-            }
+            placeholder={searchType === "name" ? "이름 검색..." : "닉네임 검색..."}
             className="px-4 py-2 bg-slate-700 text-white placeholder-gray-400 border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500"
           />
           <button
-            onClick={handleSearch}
+            onClick={() => setCurrentPage(1)}
             className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors flex items-center gap-2"
           >
             <Search size={20} />
@@ -141,13 +188,31 @@ const UserList = () => {
             {getCurrentPageData().map((user) => (
               <tr
                 key={user.userId}
-                className="hover:bg-slate-600 transition-colors"
+                className={`transition-colors ${
+                  user.userDeletedAt 
+                    ? 'bg-slate-800/50 hover:bg-slate-700/50' 
+                    : 'hover:bg-slate-600'
+                }`}
               >
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                  {user.userName}
+                  <div className="flex items-center gap-2">
+                    {user.userName}
+                    {user.userDeletedAt && (
+                      <span className="px-2 py-1 text-xs bg-red-500/20 text-red-300 rounded-full">
+                        탈퇴 예정
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                  {user.userNickname}
+                  <div className="flex items-center gap-2">
+                    {user.userNickname}
+                    {user.userDeletedAt && (
+                      <span className="text-xs text-red-400">
+                        {new Date(user.userDeletedAt).toLocaleDateString()} 삭제
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                   {new Date(user.userBirthday).toISOString().split("T")[0]}
@@ -158,13 +223,19 @@ const UserList = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <button
                     onClick={() => handleViewUser(user)}
-                    className="text-slate-400 hover:text-cyan-300 transition-colors"
+                    className={`text-slate-400 hover:text-cyan-300 transition-colors ${
+                      user.userDeletedAt && 'opacity-50 cursor-not-allowed'
+                    }`}
+                    disabled={user.userDeletedAt}
                   >
                     <Edit size={20} />
                   </button>
                   <button
                     onClick={() => handleDeleteClick(user)}
-                    className="ml-4 text-slate-400 hover:text-red-300 transition-colors"
+                    className={`ml-4 text-slate-400 hover:text-red-300 transition-colors ${
+                      user.userDeletedAt && 'opacity-50 cursor-not-allowed'
+                    }`}
+                    disabled={user.userDeletedAt}
                   >
                     <Trash2 size={20} />
                   </button>

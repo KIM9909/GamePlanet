@@ -233,23 +233,16 @@ updateUserProfile: async (userId, userUpdateData) => {
   }
 },
 
-/**
- * 회원 탈퇴 API
- * @param {number} userId - 탈퇴할 회원 ID
- * @param {string} password - 회원 탈퇴를 위한 비밀번호
- * @returns {Promise<void>} 탈퇴 처리 결과
- */
-deleteUser: async (userId, password) => {
+// 회원탈퇴퇴
+
+deleteUser: async (userId) => {
   try {
-    const response = await API.delete(`/profile/${userId}/delete`, {
-      data: { password },  // data 객체 안에 password를 넣어서 전송
-      headers: {
-        'Content-Type': 'application/json'
-      }
+    const response = await API.delete(`/report/delete-user`, {
+      params: { userId }
     });
     return response;
   } catch (error) {
-    throw error || "회원 탈퇴에 실패했습니다.";
+    throw error || "회원 삭제에 실패했습니다.";
   }
 }
 };
