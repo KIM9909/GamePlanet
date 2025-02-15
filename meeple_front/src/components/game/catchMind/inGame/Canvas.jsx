@@ -123,11 +123,27 @@ const Canvas = () => {
     (message) => {
       try {
         const data = JSON.parse(message.body);
-        if (!data || !data.type || data.userId === parseInt(userId)) return;
+
+        // 드로잉 관련 메시지가 아닌 경우 무시
+        if (
+          !data ||
+          !data.type ||
+          !["start", "draw", "end", "clear"].includes(data.type) ||
+          data.userId === parseInt(userId)
+        ) {
+          return;
+        }
 
         const context = canvasRef.current?.getContext("2d");
         if (!context) return;
 
+        // 현재 context 스타일 저장
+        const currentStyle = {
+          strokeStyle: context.strokeStyle,
+          lineWidth: context.lineWidth,
+        };
+
+        // 전달받은 스타일 적용
         context.strokeStyle = data.color || "#000000";
         context.lineWidth = parseInt(data.lineWidth) || 2;
         context.lineCap = "round";
@@ -155,24 +171,18 @@ const Canvas = () => {
             break;
 
           case "clear":
-            // 캔버스 초기화
             context.clearRect(
               0,
               0,
               canvasRef.current.width,
               canvasRef.current.height
             );
-
-            // 그리기 도구 상태도 함께 초기화
-            setDrawingColor("#000000");
-            setDrawingWidth(2);
-            setIsEraserMode(false);
-
-            // context 스타일 초기화
-            context.strokeStyle = "#000000";
-            context.lineWidth = 2;
             break;
         }
+
+        // 이전 context 스타일 복원
+        context.strokeStyle = currentStyle.strokeStyle;
+        context.lineWidth = currentStyle.lineWidth;
       } catch (error) {
         console.error("드로잉 데이터 처리 오류:", error);
       }
