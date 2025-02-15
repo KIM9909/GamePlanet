@@ -3,6 +3,7 @@ package com.meeple.meeple_back.gameCustom.bluemarble.infrastructure;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomElementRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomElementResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.domain.CustomElementCreate;
+import com.meeple.meeple_back.user.model.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,11 +24,17 @@ public class CustomElementEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer customId;
 
-	@Column(length = 20)
+	@Column(name = "custom_name", length = 20)
 	private String customName;
-
+	@Column(name = "created_at")
 	private LocalDateTime createdAt;
+	@Column(name = "updated_at")
 	private LocalDateTime updatedAt;
+
+	@ManyToOne
+	@JoinColumn(name = "user_id")
+	private User user;
+
 
 	public static CustomElementEntity from(CustomElementRequest request) {
 		return CustomElementEntity.builder()
