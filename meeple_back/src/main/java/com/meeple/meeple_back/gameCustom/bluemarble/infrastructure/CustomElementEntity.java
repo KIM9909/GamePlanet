@@ -32,6 +32,9 @@ public class CustomElementEntity {
 	@Column(name = "updated_at")
 	private LocalDateTime updatedAt;
 
+	@Column(name = "image_url")
+	private String fileUrl;
+
 	@ManyToOne
 	@JoinColumn(name = "user_id")
 	private User user;
@@ -39,6 +42,13 @@ public class CustomElementEntity {
 	@Enumerated(EnumType.STRING)
 	@Column(name = "custom_status")
 	private CustomStatus customStatus;
+
+
+	public CustomElementEntity(User user, String customName, String fileUrl) {
+		this.customName = customName;
+		this.setFileUrl(fileUrl);
+		this.setUser(user);
+	}
 
 
 	public static CustomElementEntity from(CustomElementRequest request, User user) {

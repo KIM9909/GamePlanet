@@ -47,9 +47,35 @@ public class CustomElementController {
 		return ResponseEntity.ok(response);
 	}
 
-	@PostMapping("/create")
-	public ResponseEntity<CustomElementResponse> create(@RequestBody CustomElementRequest request) {
-		return ResponseEntity.status(HttpStatus.CREATED).body(customElementService.create(request));
+	// TODO 썸네일 이미지 갖도록 설정.
+	//private String customName;
+	//	private Long userId;
+	@PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<?> create(@RequestParam("customName") String customName, @RequestParam("userId") Long userId, @RequestParam("imgFile") MultipartFile imgFile) {
+		if (imgFile.isEmpty()) {
+			return ResponseEntity.badRequest().body("파일이 전송되지 않았습니다.");
+		}
+		if (!"image/png".equals(imgFile.getContentType())) {
+			return ResponseEntity.badRequest().body("PNG 이미지 형식만 지원합니다.");
+		}
+		try {
+			String fileName = "custom-element-thumbnail" + System.currentTimeMillis() + ".png";
+
+			ObjectMetadata metadata = new ObjectMetadata();
+			metadata.setContentType(imgFile.getContentType());
+			metadata.setContentLength(imgFile.getSize());
+
+			amazonS3.putObject(bucketName, fileName, imgFile.getInputStream(), metadata);
+
+			String fileUrl = amazonS3.getUrl(bucketName, fileName).toString();
+
+
+			customElementService.create(customName, userId, fileUrl);
+			return ResponseEntity.status(HttpStatus.CREATED).build();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
 	}
 
 	@PostMapping(value = "/{customId}/create-tile-card", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

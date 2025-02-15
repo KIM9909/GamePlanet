@@ -133,6 +133,12 @@ public class CustomElementService {
 		return new CustomElementListResponse(customId, completeIdList);
 	}
 
+	public void create(String customName, Long userId, String fileUrl) {
+		User user = userRepository.findById(userId).orElseThrow();
+		CustomElementEntity entity = new CustomElementEntity(user, customName, fileUrl);
+		customElementJpaRepository.save(entity);
+	}
+	
 	public List<CustomElementResponse> findByUserId(Integer customId, Long userId) {
 		return customElementJpaRepository.findByCustomIdAndUserId(customId, userId).stream().map(CustomElementResponse::from)
 			.toList();
