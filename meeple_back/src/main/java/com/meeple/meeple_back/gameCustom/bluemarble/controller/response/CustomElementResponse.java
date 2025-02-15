@@ -14,6 +14,7 @@ public class CustomElementResponse {
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 	private Long userId;
+	private String customStatus;
 	public static CustomElementResponse from(CustomElementEntity entity) {
 		return CustomElementResponse.builder()
 			.customId(entity.getCustomId())
@@ -21,6 +22,7 @@ public class CustomElementResponse {
 			.createdAt(entity.getCreatedAt())
 			.userId(entity.getUser().getUserId())
 			.updatedAt(entity.getUpdatedAt())
+			.customStatus(entity.getCustomStatus().getName())
 			.build();
 	}
 }
