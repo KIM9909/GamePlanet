@@ -10,6 +10,7 @@ import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomTi
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomTileResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.TileImageResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.TileResponse;
+import com.meeple.meeple_back.gameCustom.bluemarble.domain.CustomElementUpdate;
 import com.meeple.meeple_back.gameCustom.bluemarble.infrastructure.CardEntity;
 import com.meeple.meeple_back.gameCustom.bluemarble.infrastructure.CardJpaRepository;
 import com.meeple.meeple_back.gameCustom.bluemarble.infrastructure.CustomCardEntity;
@@ -22,6 +23,8 @@ import com.meeple.meeple_back.gameCustom.bluemarble.infrastructure.CustomTileId;
 import com.meeple.meeple_back.gameCustom.bluemarble.infrastructure.CustomTileJpaRepository;
 import com.meeple.meeple_back.gameCustom.bluemarble.infrastructure.TileEntity;
 import com.meeple.meeple_back.gameCustom.bluemarble.infrastructure.TileJpaRepository;
+import com.meeple.meeple_back.user.model.User;
+import com.meeple.meeple_back.user.repository.UserRepository;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -30,39 +33,35 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class CustomElementService implements CrudService<CustomElementRequest, CustomElementResponse, Integer> {
+public class CustomElementService {
 	private final CustomElementJpaRepository customElementRepository;
 	private final TileJpaRepository tileJpaRepository;
 	private final CardJpaRepository cardJpaRepository;
 	private final CustomTileJpaRepository customTileJpaRepository;
 	private final CustomCardJpaRepository customCardJpaRepository;
 	private final CustomElementJpaRepository customElementJpaRepository;
+	private final UserRepository userRepository;
 
-
-	@Override
 	public CustomElementResponse create(CustomElementRequest customElementRequest) {
-		return CustomElementResponse.from(customElementRepository.save(CustomElementEntity.from(customElementRequest)));
+		User user = userRepository.findById(customElementRequest.getUserId()).orElseThrow();
+		return CustomElementResponse.from(customElementRepository.save(CustomElementEntity.from(customElementRequest, user)));
 	}
 
-	@Override
 	public CustomElementResponse findById(Integer integer) {
 		return CustomElementResponse.from(customElementRepository.findById(integer).orElseThrow());
 	}
 
-	@Override
-	public CustomElementResponse update(Integer integer,
-			CustomElementRequest customElementRequest) {
-		CustomElementEntity customElementEntity = customElementRepository.findById(integer).orElseThrow();
-		customElementEntity.update(customElementRequest);
+	public CustomElementResponse update(Integer customId,
+			CustomElementUpdate update) {
+		CustomElementEntity customElementEntity = customElementRepository.findById(customId).orElseThrow();
+		customElementEntity.update(update);
 		return CustomElementResponse.from(customElementRepository.save(customElementEntity));
 	}
 
-	@Override
 	public void delete(Integer integer) {
 		customElementRepository.deleteById(integer);
 	}
 
-	@Override
 	public List<CustomElementResponse> findAll() {
 		return customElementRepository.findAll().stream().map(CustomElementEntity::to).toList();
 	}

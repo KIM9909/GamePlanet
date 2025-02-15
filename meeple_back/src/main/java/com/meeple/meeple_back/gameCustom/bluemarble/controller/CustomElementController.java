@@ -12,6 +12,7 @@ import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomEl
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomTileCardResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomTileResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.TileImageResponse;
+import com.meeple.meeple_back.gameCustom.bluemarble.domain.CustomElementUpdate;
 import com.meeple.meeple_back.gameCustom.bluemarble.service.CustomElementService;
 import java.io.IOException;
 import java.net.URI;
@@ -151,6 +152,9 @@ public class CustomElementController {
 		}
 	}
 
+	//TODO 커스텀 엘리먼트에 유저정보 추가하기
+	// ERD 수정해야돼 ,, 슈발 v
+	// create할때 유저 정보 추가하기.
 
 	@GetMapping("/{customId}/find-tile-card/{cardNumber}")
 	public ResponseEntity<CustomTileCardResponse> findByCustomIdAndCardNumber(@PathVariable("customId") int customId, @PathVariable("cardNumber") int cardNumber){
@@ -178,7 +182,8 @@ public class CustomElementController {
 
 	// UPDATE
 	@PutMapping("/{customId}/update")
-	public ResponseEntity<CustomElementResponse> updateCustomElement(@PathVariable Integer customId, @RequestBody CustomElementRequest request) {
+	public ResponseEntity<CustomElementResponse> updateCustomElement(@PathVariable Integer customId, @RequestBody
+	CustomElementUpdate request) {
 		return ResponseEntity.status(HttpStatus.OK).body(customElementService.update(customId, request));
 
 	}
