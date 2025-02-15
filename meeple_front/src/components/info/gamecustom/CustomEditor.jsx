@@ -50,14 +50,17 @@ const CustomEditor = () => {
 
   const loadCompletedItems = async () => {
     try {
-      const completedSet = new Set();
-  
       // 서버에서 완료된 타일 목록 가져오기
-      const response = await CustomAPI.getElementById(customId);
-      const completedItemsFromServer = response.completedItems || [];
-      completedItemsFromServer.forEach(item => completedSet.add(item));
+      const response = await CustomAPI.getCompleteTiles(customId);
+      console.log('완료된 타일 응답:', response); // 디버깅용
+      
+      // customCompleteList 배열을 사용하도록 수정
+      const completedSet = new Set(response.customCompleteList.map(tileNumber => {
+        // tileNumber를 CUSTOMIZABLE_ITEMS 배열에서의 인덱스 + 1로 변환
+        return CUSTOMIZABLE_ITEMS.indexOf(tileNumber) + 1;
+      }));
   
-      setCompletedItems(completedSet);  // 상태 업데이트
+      setCompletedItems(completedSet);
     } catch (error) {
       console.error('완료된 타일 정보를 불러오는데 실패했습니다:', error);
     }
@@ -66,6 +69,7 @@ const CustomEditor = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
+        console.log("커스텀아이디",customId)
         setIsLoading(true);
         if (!isNew && customId) {
           const response = await CustomAPI.getElementById(customId);
@@ -107,22 +111,15 @@ const CustomEditor = () => {
     setShowModal(true);
   };
 
-  const handleSaveComplete = async (cardId) => {
-    try {
-      const newCompletedItems = new Set(completedItems);
-      newCompletedItems.add(cardId);
-      setCompletedItems(newCompletedItems);  // 상태 업데이트
-  
-      // 완료된 타일을 서버에 저장
-      await CustomAPI.updateElement(customId, { completedItems: [...newCompletedItems] });
-      
-      await loadCompletedItems();
-      
-      setShowModal(false);  // 모달 닫기
-    } catch (error) {
-      console.error('완료 상태 저장 실패:', error);
-    }
-  };
+// CustomModal에서 저장 완료 후 호출될 handleSaveComplete 함수도 수정
+const handleSaveComplete = async (response) => {
+  try {
+    await loadCompletedItems();  // 완료된 타일 목록 새로고침
+    setShowModal(false);
+  } catch (error) {
+    console.error('완료 상태 업데이트 실패:', error);
+  }
+};
 
   const renderBoardTile = (position, isHorizontal = false) => {
     const index = getIndex(position);
@@ -433,6 +430,7 @@ const CustomEditor = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <CustomModal 
             onClose={() => setShowModal(false)} 
+            onSuccess={handleSaveComplete}
             cardId={selectedCardId}
             customId={customId}
             onSaveComplete={() => handleSaveComplete(selectedCardId)}

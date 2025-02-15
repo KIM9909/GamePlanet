@@ -21,7 +21,7 @@ const getRotationInfo = (tileNumber) => {
   return { rotation: 0, type: 'vertical', width: 180, height: 250 };
 };
 
-const CustomModal = ({ onClose, cardId, customId }) => {
+const CustomModal = ({ onClose, cardId, customId, onSuccess }) => {
   const actualTileNumber = CUSTOMIZABLE_TILES[cardId - 1];
   
   // 공통 state
@@ -153,9 +153,9 @@ const CustomModal = ({ onClose, cardId, customId }) => {
         };
 
         // 타일과 카드 생성
-        await CustomAPI.createTileCard(customId, tileCardData);
+        const response = await CustomAPI.createTileCard(customId, tileCardData);
         toast.success('타일과 카드가 성공적으로 생성되었습니다.');
-        onClose();  // 모달 닫기
+        onSuccess(response);
       } catch (error) {
         console.error('타일/카드 생성 에러:', error);
         toast.error(error.message || '타일과 카드 생성에 실패했습니다.');

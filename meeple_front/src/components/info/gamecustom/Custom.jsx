@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Gamepad2, Plus, Trash2 } from 'lucide-react';
+import { useSelector } from 'react-redux';
 import { CustomAPI } from "../../../sources/api/CustomAPI"
 import buruMabulImage from '../../../assets/images/games/MainImage/BuruMabul.png';
 import CustomTutorial from './modal/TutorialModal';
 import DeleteConfirmModal from './modal/DeleteConfirmModal';
+import CreateModal from './modal/CreateModal';
 
 
 
@@ -15,23 +17,26 @@ const Custom = () => {
   const [customGames, setCustomGames] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   
   const navigate = useNavigate();
   const location = useLocation();
   const gameInfo = location.state?.gameInfo;
 
+  const userId = useSelector(state => state.user.userId);
+
   useEffect(() => {
     const fetchCustomElements = async () => {
       try {
         setIsLoading(true);
-        const response = await CustomAPI.getAllElements();
+        // customId를 0으로 전달하여 모든 해당 유저의 커스텀 요소 조회
+        const response = await CustomAPI.findByUserId(0, userId);
         
-        // API 응답을 커스텀 게임 형식으로 변환
         const formattedGames = response.map(element => ({
           id: element.customId,
           title: element.customName,
-          createdAt: new Date(element.createdAt).toLocaleDateString(),
-          thumbnail: buruMabulImage
+          createdAt: element.createdAt ? new Date(element.createdAt).toLocaleDateString() : '',
+          thumbnail: element.fileUrl || buruMabulImage
         }));
         
         setCustomGames(formattedGames);
@@ -42,27 +47,17 @@ const Custom = () => {
         setIsLoading(false);
       }
     };
-
-    fetchCustomElements();
-  }, []);
-
-  const handleCreateCustomGame = async () => {
-    try {
-      // 새 게임 생성 후 editor로 이동
-      const response = await CustomAPI.createElement({
-        customName: "나만의 부루마불"
-      });
-
-      navigate(`/game-info/${gameInfo.gameInfoId}/custom/editor`, { 
-        state: { 
-          gameInfo,
-          customId: response.customId 
-        } 
-      });
-    } catch (err) {
-      console.error('커스텀 게임 생성 실패:', err);
-      setError('새 게임 생성에 실패했습니다.');
+  
+    if (userId) {
+      fetchCustomElements();
     }
+  }, [userId]);
+
+  const handleCreateSuccess = (response) => {
+    setShowCreateModal(false);
+    // Editor로 이동
+    const newUrl = `/game-info/${gameInfo.gameInfoId}/custom`;
+    window.location.href = newUrl;
   };
 
   const handleDeleteGame = async (e, game) => {
@@ -122,7 +117,7 @@ const Custom = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {customGames.map((game) => (
+          {customGames.map((game) => (            
             <div 
               key={game.id}
               className="bg-slate-800 rounded-lg overflow-hidden hover:transform hover:scale-105 transition-transform cursor-pointer relative group"
@@ -140,7 +135,6 @@ const Custom = () => {
               />
               <div className="p-4">
                 <h3 className="text-xl font-semibold text-white mb-2">{game.title}</h3>
-                <p className="text-gray-400">제작일: {game.createdAt}</p>
               </div>
                 <button
                 onClick={(e) => handleDeleteGame(e, game)}
@@ -155,7 +149,7 @@ const Custom = () => {
 
 
         <div 
-          onClick={handleCreateCustomGame}
+          onClick={() => setShowCreateModal(true)}
           className="bg-slate-800 rounded-lg overflow-hidden border-2 border-dashed border-cyan-500 flex items-center justify-center h-64 cursor-pointer hover:bg-slate-700 transition-colors"
         >
           <div className="text-center">
@@ -187,6 +181,15 @@ const Custom = () => {
         onConfirm={handleConfirmDelete}
       />
     )}
+          {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <CreateModal 
+            onClose={() => setShowCreateModal(false)}
+            onSuccess={handleCreateSuccess}
+            userId={userId}
+          />
+        </div>
+      )}
   </div>
 );
 }
