@@ -25,6 +25,7 @@ import GameVideoPage from "./pages/gameInfo/GameVideoPage";
 import CockroachRoom from "./components/game/cockroachcard/CockroachRoom";
 import BurumabulRoomListPage from "./pages/game/burumabul/BurumabulRoomListPage";
 import SocketLayout from "./components/layout/SocketLayout";
+import FriendSocketLayout from "./components/layout/FriendSocketLayout";
 import EditArticlePage from "./pages/gameInfo/board/EditArticlePage";
 import FallingStars from "./components/background/FallingStars";
 
@@ -43,117 +44,122 @@ function App() {
       <ScrollToTop />
       <ToastContainer />
       <BackGroundMusic />
-      <TopLayout>
-        <SideLayout>
-          <FallingStars />
-          <FriendModalLayout>
-            <Routes>
-              {/* Admin */}
-              <Route path="/admin" element={<AdminPage />} />
-              <Route
-                path="/admin/report/:reportId"
-                element={<ReportDetail />}
-              />
-              <Route
-                path="/admin/record/:recordId"
-                element={<RecordDetail />}
-              />
+      <FriendSocketLayout>
+        <TopLayout>
+          <SideLayout>
+            <FallingStars />
+            <FriendModalLayout>
+              <Routes>
+                {/* Admin */}
+                <Route path="/admin" element={<AdminPage />} />
+                <Route
+                  path="/admin/report/:reportId"
+                  element={<ReportDetail />}
+                />
+                <Route
+                  path="/admin/record/:recordId"
+                  element={<RecordDetail />}
+                />
 
-              {/* Board */}
-              <Route path="/board" element={<BoardPage />} />
-              <Route path="/board/:boardId" element={<BoardPage />} />
+                {/* Board */}
+                <Route path="/board" element={<BoardPage />} />
+                <Route path="/board/:boardId" element={<BoardPage />} />
 
-              {/* Game */}
-              <Route
-                path="/game/burumabul/start/:roomId"
-                element={
-                  <SocketLayout>
-                    <BurumabulPage />
-                  </SocketLayout>
-                }
-              />
-              <Route
-                path="/burumabul/room-list"
-                element={
-                  <SocketLayout>
-                    <BurumabulRoomListPage />
-                  </SocketLayout>
-                }
-              />
+                {/* Game */}
+                <Route
+                  path="/game/burumabul/start/:roomId"
+                  element={
+                    <SocketLayout>
+                      <BurumabulPage />
+                    </SocketLayout>
+                  }
+                />
+                <Route
+                  path="/burumabul/room-list"
+                  element={
+                    <SocketLayout>
+                      <BurumabulRoomListPage />
+                    </SocketLayout>
+                  }
+                />
 
-              {/* GameInfo */}
-              <Route path="/game-info/:gameInfoId" element={<GameInfoPage />} />
-              <Route
-                path="/game-info/:gameInfoId/rule"
-                element={<GameRulePage />}
-              />
-              <Route
-                path="/game-info/:gameInfoId/board"
-                element={<BoardPage />}
-              />
-              <Route
-                path="/game-info/:gameInfoId/board/write"
-                element={<NewArticlePage />}
-              />
-              <Route
-                path="/game-info/:gameInfoId/board/detail/:gameCommunityId"
-                element={<ArticleDetailPage />}
-              />
-              <Route
-                path="/game-info/:gameInfoId/board/edit/:gameCommunityId"
-                element={<EditArticlePage />}
-              />
-              <Route
-                path="/game-info/:gameInfoId/review"
-                element={<ReviewPage />}
-              />
-              <Route
-                path="/game-info/:gameInfoId/video"
-                element={<GameVideoPage />}
-              />
+                {/* GameInfo */}
+                <Route
+                  path="/game-info/:gameInfoId"
+                  element={<GameInfoPage />}
+                />
+                <Route
+                  path="/game-info/:gameInfoId/rule"
+                  element={<GameRulePage />}
+                />
+                <Route
+                  path="/game-info/:gameInfoId/board"
+                  element={<BoardPage />}
+                />
+                <Route
+                  path="/game-info/:gameInfoId/board/write"
+                  element={<NewArticlePage />}
+                />
+                <Route
+                  path="/game-info/:gameInfoId/board/detail/:gameCommunityId"
+                  element={<ArticleDetailPage />}
+                />
+                <Route
+                  path="/game-info/:gameInfoId/board/edit/:gameCommunityId"
+                  element={<EditArticlePage />}
+                />
+                <Route
+                  path="/game-info/:gameInfoId/review"
+                  element={<ReviewPage />}
+                />
+                <Route
+                  path="/game-info/:gameInfoId/video"
+                  element={<GameVideoPage />}
+                />
 
-              <Route path="/catch-mind/:roomId" element={<CatchMindPage />} />
-              <Route path="/catch-mind" element={<CatchMindListPage />} />
+                <Route path="/catch-mind/:roomId" element={<CatchMindPage />} />
+                <Route path="/catch-mind" element={<CatchMindListPage />} />
 
-              {/* Home & Main */}
-              <Route path="/home" element={<HomePage />} />
-              <Route path="/" element={<MainPage />} />
+                {/* Home & Main */}
+                <Route path="/home" element={<HomePage />} />
+                <Route path="/" element={<MainPage />} />
 
-              {/* GameInfo */}
-              <Route path="/game/:gameId" element={<GameInfoPage />} />
+                {/* GameInfo */}
+                <Route path="/game/:gameId" element={<GameInfoPage />} />
 
-              {/* Profile */}
-              <Route path="/profile/:userId" element={<ProfilePage />} />
+                {/* Profile */}
+                <Route path="/profile/:userId" element={<ProfilePage />} />
 
-              {/* custom */}
-              <Route
-                path="/game-info/:gameInfoId/custom"
-                element={<CustomPage />}
-              />
-              <Route
-                path="/game-info/:gameInfoId/custom/editor"
-                element={<CustomEditor />}
-              />
-              <Route
-                path="/game-info/:gameInfoId/custom/detail/:customId"
-                element={<CustomDetail />}
-              />
+                {/* custom */}
+                <Route
+                  path="/game-info/:gameInfoId/custom"
+                  element={<CustomPage />}
+                />
+                <Route
+                  path="/game-info/:gameInfoId/custom/editor"
+                  element={<CustomEditor />}
+                />
+                <Route
+                  path="/game-info/:gameInfoId/custom/detail/:customId"
+                  element={<CustomDetail />}
+                />
 
-              {/* Cockroach Room List */}
-              <Route path="/test/cockroach" element={<CockroachRoom />} />
+                {/* Cockroach Room List */}
+                <Route path="/test/cockroach" element={<CockroachRoom />} />
 
-              {/* INTRODUCE */}
-              <Route path="/introduce" element={<Introduce />} />
+                {/* INTRODUCE */}
+                <Route path="/introduce" element={<Introduce />} />
 
-              {/* ERROR */}
-              <Route path="/errorpage" element={<ErrorPage />} />
+                {/* ERROR */}
+                <Route path="/errorpage" element={<ErrorPage />} />
 
-              {/* etc */}
-              <Route path="*" element={<ErrorPage />} />
-            </Routes>
-          </FriendModalLayout>
-        </SideLayout>
-      </TopLayout>
+                {/* etc */}
+                <Route path="*" element={<ErrorPage />} />
+              </Routes>
+            </FriendModalLayout>
+          </SideLayout>
+        </TopLayout>
+      </FriendSocketLayout>
     </BrowserRouter>
   );
 }

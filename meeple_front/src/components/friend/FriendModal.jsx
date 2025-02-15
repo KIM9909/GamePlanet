@@ -1,65 +1,77 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import FriendList from "./FriendList";
 import RequestFriend from "./RequestFriend";
 import { UsersRound, MessageSquareMore, Handshake } from "lucide-react";
 import Message from "./Message";
-
+import useFriendSocket from "../../hooks/useFriendSocket";
+import { FriendSocketContext } from "../layout/FriendSocketLayout";
+import AllFriend from "./AllFriend";
 const FriendModal = () => {
   const userId = useSelector((state) => state.user.userId);
+
+  const { connected, responseSocket, stompClientRef } =
+    useContext(FriendSocketContext);
+
+  useEffect(() => {
+    if (responseSocket) {
+      console.log("새로운 소켓 응답:", responseSocket);
+    }
+  }, [responseSocket]);
 
   const [activeTab, setActiveTab] = useState("friendList");
 
   const renderContent = () => {
     switch (activeTab) {
-      case "friendList":
-        return <FriendList userId={userId} />;
+      case "allFriend":
+        return <AllFriend />;
       case "allRequest":
         return <RequestFriend />;
       case "message":
         return <Message />;
       default:
-        return <FriendList userId={userId} />;
+        return <AllFriend />;
     }
   };
 
   return (
     <>
-      <div className="flex justify-around items-center p-3 bg-white rounded-t-lg">
+      <div className="flex justify-around items-center p-3 bg-gray-900 bg-opacity-80 rounded-t-lg w-full border-b border-cyan-500/30">
         <button
-          className={`p-2 rounded-lg transition-all duration-200 ${
-            activeTab === "friendList"
-              ? "bg-blue-50 shadow-md"
-              : "hover:bg-blue-50"
+          className={`p-2 rounded-lg transition-all duration-300 transform hover:scale-110 ${
+            activeTab === "allFriend"
+              ? "bg-cyan-500/20 shadow-lg border border-cyan-400/60"
+              : "hover:bg-cyan-500/10"
           }`}
-          onClick={() => setActiveTab("friendList")}
+          onClick={() => setActiveTab("allFriend")}
         >
-          <UsersRound color="#3B82F6" strokeWidth={2} />
+          <UsersRound className="text-cyan-400" strokeWidth={2} />
         </button>
         <button
-          className={`p-2 rounded-lg transition-all duration-200 ${
+          className={`p-2 rounded-lg transition-all duration-300 transform hover:scale-110 ${
             activeTab === "allRequest"
-              ? "bg-blue-50 shadow-md"
-              : "hover:bg-blue-50"
+              ? "bg-cyan-500/20 shadow-lg border border-cyan-400/60"
+              : "hover:bg-cyan-500/10"
           }`}
           onClick={() => setActiveTab("allRequest")}
         >
-          <Handshake color="#3B82F6" strokeWidth={2} />
+          <Handshake className="text-cyan-400" strokeWidth={2} />
         </button>
         <button
-          className={`p-2 rounded-lg transition-all duration-200 ${
+          className={`p-2 rounded-lg transition-all duration-300 transform hover:scale-110 ${
             activeTab === "message"
-              ? "bg-blue-50 shadow-md"
-              : "hover:bg-blue-50"
+              ? "bg-cyan-500/20 shadow-lg border border-cyan-400/60"
+              : "hover:bg-cyan-500/10"
           }`}
           onClick={() => setActiveTab("message")}
         >
-          <MessageSquareMore color="#3B82F6" strokeWidth={2} />
+          <MessageSquareMore className="text-cyan-400" strokeWidth={2} />
         </button>
       </div>
-      <div>{renderContent()}</div>
+      <div className="bg-gray-900 bg-opacity-80 h-[40vh]">
+        {renderContent()}
+      </div>
     </>
   );
 };
-
 export default FriendModal;
