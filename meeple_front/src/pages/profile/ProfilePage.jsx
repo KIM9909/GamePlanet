@@ -6,7 +6,7 @@ import UserDeletePage from "./UserDeletePage";
 import Heejun from "../../assets/images/pixel_character/pixel-heejun.png";
 import Hongbeom from "../../assets/images/pixel_character/pixel-hongbeom.png";
 import ProfilePicture from "./ProfilePicture";
-import { Shield, Sword, Crown, Sparkles } from "lucide-react";
+import { Shield, Sword, Crown, Sparkles, Gem } from "lucide-react";
 
 // Redux 액션들과 API 임포트
 import {
@@ -93,6 +93,10 @@ const ProfilePage = () => {
   // 경험치 바 퍼센트 계산 함수를 수정된 상태를 사용하도록 변경
   const calculateExpPercentage = () => {
     const maxExp = 300;
+    // 레벨이 30이면 100% 반환
+    if (expData.userLevel >= 30) {
+      return 100;
+    }
     return (expData.userExp / maxExp) * 100;
   };
 
@@ -154,11 +158,15 @@ const ProfilePage = () => {
                             <Shield size={16} className="text-cyan-400" />
                           ) : profile.userLevel <= 19 ? (
                             <Sword size={16} className="text-emerald-400" />
-                          ) : (
+                          ) : profile.userLevel <= 29 ? (
                             <Crown size={16} className="text-yellow-400" />
+                          ) : (
+                            <Gem size={16} className="text-red-400" />
                           )}
                           <span className="text-cyan-400 text-sm font-semibold">
-                            Lv.{profile.userLevel}
+                            {profile.userLevel >= 30
+                              ? `Lv.MAX`
+                              : `Lv.${profile.userLevel}`}
                           </span>
                         </div>
                       </div>
@@ -187,12 +195,16 @@ const ProfilePage = () => {
                     <div className="w-full mt-2">
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-md text-zinc-400">
-                          Level {expData.userLevel}
+                          {expData.userLevel >= 30
+                            ? `Level MAX`
+                            : `Level ${expData.userLevel}`}
                         </span>
                         <div className="flex items-center gap-1.5">
                           <Sparkles size={14} className="text-cyan-400" />
                           <span className="text-md font-medium text-cyan-400">
-                            {expData.userExp}/300
+                            {expData.userLevel >= 30
+                              ? "300/300"
+                              : `${expData.userExp}/300`}
                           </span>
                         </div>
                       </div>
@@ -221,14 +233,22 @@ const ProfilePage = () => {
                         />
                       </div>
 
-                      <div className="flex justify-between mt-1.5">
-                        <span className="text-sm text-zinc-500">
-                          Lv.{expData.userLevel}
-                        </span>
-                        <span className="text-sm text-zinc-500">
-                          Lv.{expData.userLevel + 1}
-                        </span>
-                      </div>
+                      {expData.userLevel >= 30 ? (
+                        <div className="text-center mt-1.5">
+                          <span className="text-sm text-zinc-500">
+                            Level MAX
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex justify-between mt-1.5">
+                          <span className="text-sm text-zinc-500">
+                            Lv.{expData.userLevel}
+                          </span>
+                          <span className="text-sm text-zinc-500">
+                            Lv.{expData.userLevel + 1}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

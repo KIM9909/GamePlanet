@@ -238,7 +238,7 @@ const useCatchSocket = (roomId) => {
                         remainQuizCount: 0,
                         currentRound: 1,
                         quizCategory: null,
-                        isGameStarted: false,
+                        isGameStart: false,
                       })
                     );
 
@@ -298,6 +298,7 @@ const useCatchSocket = (roomId) => {
                       currentWord: data.gameInfo.quiz,
                       remainQuizCount: data.gameInfo.remainQuizCount,
                       currentTurn: data.gameInfo.currentTurn,
+                      isGameStart: true,
                     })
                   );
 
@@ -417,7 +418,7 @@ const useCatchSocket = (roomId) => {
                   console.log("[RoomInfo] 수신된 데이터:", data.roomInfo);
 
                   // 게임이 시작되지 않은 상태라면 점수를 0으로 초기화
-                  if (!data.roomInfo.isGameStarted) {
+                  if (!data.roomInfo.isGameStart) {
                     if (
                       data.roomInfo.players &&
                       Array.isArray(data.roomInfo.players)
@@ -455,7 +456,7 @@ const useCatchSocket = (roomId) => {
                       password: data.roomInfo.password,
                       roomId: data.roomInfo.roomId,
                       sessionId: data.roomInfo.sessionId,
-                      isGameStarted: false, // 방 정보를 새로 받을 때는 게임 시작 상태를 false로
+                      isGameStart: false, // 방 정보를 새로 받을 때는 게임 시작 상태를 false로
                     })
                   );
 
@@ -734,7 +735,9 @@ const useCatchSocket = (roomId) => {
   const joinRoom = useCallback(
     (joinData) => {
       if (!clientRef.current?.connected) {
+        console.log("소켓 연결이 없습니다. 연결을 시도합니다.");
         connect();
+        // 연결 후 입장 시도
         setTimeout(() => {
           if (clientRef.current?.connected) {
             clientRef.current.publish({
@@ -754,7 +757,7 @@ const useCatchSocket = (roomId) => {
           headers: { "content-type": "application/json" },
         });
       } catch (error) {
-        console.error("Error joining room:", error);
+        console.error("방 입장 중 에러 발생:", error);
         handleReconnect();
       }
     },
