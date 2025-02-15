@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Lock, Plus, Users, Star, Search } from "lucide-react";
+import { Lock, Plus, Users, Star, Search, CircleHelp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { CatchMindAPI } from "../../../../sources/api/CatchMindAPI";
 import CatchMindCreateRoomModal from "./CatchMindCreateRoomModal";
@@ -7,6 +7,7 @@ import CatchMindPasswordModal from "./CatchMindPasswordModal";
 import CatchMindImg from "../../../../assets/images/games/MainImage/CatchMind.jpg";
 import { toast } from "react-toastify";
 import CustomToastContent from "../../../CustomToastContent";
+import GuideModal from "./GuideModal";
 
 const CatchMindListPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -14,6 +15,7 @@ const CatchMindListPage = () => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [rooms, setRooms] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
   const navigate = useNavigate();
 
   const fetchRooms = async () => {
@@ -111,8 +113,10 @@ const CatchMindListPage = () => {
     <div className="container mx-auto p-3">
       <div className="flex justify-between items-center mb-5 gap-4">
         <div className="flex items-center gap-3">
-          <Star className="w-8 h-8 text-blue-400 animate-pulse" />
-          <h1 className="text-3xl font-bold text-white">캐치마인드 대기방</h1>
+          <h1 className="text-3xl font-bold text-white">캐치마인드</h1>
+          <button onClick={() => setIsGuideModalOpen(true)}>
+            <CircleHelp className="h-6 w-6 text-yellow-300 animate-pulse hover:text-yellow-300 transition-colors" />
+          </button>
         </div>
         <div className="flex-1 max-w-[320px] relative ml-[420px]">
           <div className="mt-1">
@@ -233,6 +237,11 @@ const CatchMindListPage = () => {
           onSuccessfulEntry={handleSuccessfulEntry}
         />
       )}
+
+      <GuideModal
+        isOpen={isGuideModalOpen}
+        onClose={() => setIsGuideModalOpen(false)}
+      />
     </div>
   );
 };
