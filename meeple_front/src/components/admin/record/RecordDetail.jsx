@@ -14,6 +14,24 @@ const RecordDetail = () => {
   const [submitting, setSubmitting] = useState(false);
   const { recordId } = useParams();
 
+  const getStatusText = (record) => {
+    if (!record.voiceProcessStatus) return '미처리';
+    // 처리가 완료되었고 (Y), userDeletedAt이 있다면 제재된 것
+    if (record.voiceProcessStatus === 'Y' && record.user?.userDeletedAt) {
+      return '영구제재';
+    }
+    // 그 외의 Y는 무혐의
+    return '무혐의';
+  };
+  
+  const getStatusColor = (record) => {
+    if (!record.voiceProcessStatus) return 'bg-yellow-500';
+    if (record.voiceProcessStatus === 'Y' && record.user?.userDeletedAt) {
+      return 'bg-red-500';
+    }
+    return 'bg-blue-500';
+  };
+
   useEffect(() => {
     const fetchVoiceLog = async () => {
       try {
@@ -118,11 +136,18 @@ const RecordDetail = () => {
           <ArrowLeft size={20} />
           돌아가기
         </button>
-        <div className="flex items-center gap-2">
-          <Clock size={16} className="text-gray-400" />
-          <span className="text-gray-300">
-            {record.voiceTime ? new Date(record.voiceTime).toLocaleString() : '시간 정보 없음'}
-          </span>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Clock size={16} className="text-gray-400" />
+            <span className="text-gray-300">
+              {record.voiceTime ? new Date(record.voiceTime).toLocaleString() : '시간 정보 없음'}
+            </span>
+          </div>
+          {record.voiceProcessStatus && (
+            <span className={`px-3 py-1 text-white text-sm rounded-full ${getStatusColor(record.voiceProcessStatus)}`}>
+              {getStatusText(record.voiceProcessStatus)}
+            </span>
+          )}
         </div>
       </div>
 
@@ -175,41 +200,43 @@ const RecordDetail = () => {
         </div>
       </div>
 
-      {/* 처리 양식 */}
-      <div className="bg-slate-700 rounded-lg p-4">
-        <h3 className="text-lg font-semibold text-white mb-4">처리</h3>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-gray-300 mb-2">처리 상태</label>
-            <select
-              value={processStatus}
-              onChange={(e) => setProcessStatus(e.target.value)}
-              className="w-full px-4 py-2 bg-slate-800 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500"
-            >
-              <option value="">선택해주세요</option>
-              <option value="PASS">정상 처리</option>
-              <option value="BAN">제재 처리</option>
-            </select>
-          </div>
+      {/* 처리 양식 (미처리 상태일 때만 표시) */}
+      {!record.voiceProcessStatus && (
+        <div className="bg-slate-700 rounded-lg p-4">
+          <h3 className="text-lg font-semibold text-white mb-4">처리</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-gray-300 mb-2">처리 상태</label>
+              <select
+                value={processStatus}
+                onChange={(e) => setProcessStatus(e.target.value)}
+                className="w-full px-4 py-2 bg-slate-800 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500"
+              >
+                <option value="">선택해주세요</option>
+                <option value="NORMAL">무혐의</option> 
+                <option value="BAN">영구제재</option> 
+              </select>
+            </div>
 
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={handleGoBack}
-              className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-500 transition-colors"
-              disabled={submitting}
-            >
-              취소
-            </button>
-            <button
-              onClick={handleProcessVoiceLog}
-              disabled={submitting}
-              className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
-            >
-              {submitting ? '처리 중...' : '처리 완료'}
-            </button>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={handleGoBack}
+                className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-500 transition-colors"
+                disabled={submitting}
+              >
+                취소
+              </button>
+              <button
+                onClick={handleProcessVoiceLog}
+                disabled={submitting}
+                className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
+              >
+                {submitting ? '처리 중...' : '처리 완료'}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
