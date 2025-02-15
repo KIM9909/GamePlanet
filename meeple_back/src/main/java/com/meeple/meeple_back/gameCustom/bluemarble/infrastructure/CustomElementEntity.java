@@ -3,6 +3,7 @@ package com.meeple.meeple_back.gameCustom.bluemarble.infrastructure;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomElementRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomElementResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.domain.CustomElementUpdate;
+import com.meeple.meeple_back.gameCustom.bluemarble.domain.CustomStatus;
 import com.meeple.meeple_back.user.model.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -35,6 +36,10 @@ public class CustomElementEntity {
 	@JoinColumn(name = "user_id")
 	private User user;
 
+	@Enumerated(EnumType.STRING)
+	@Column(name = "custom_status")
+	private CustomStatus customStatus;
+
 
 	public static CustomElementEntity from(CustomElementRequest request, User user) {
 		return CustomElementEntity.builder()
@@ -42,6 +47,7 @@ public class CustomElementEntity {
 			.user(user)
 			.createdAt(LocalDateTime.now())
 			.updatedAt(LocalDateTime.now())
+			.customStatus(CustomStatus.BEFORE)
 			.build();
 	}
 
