@@ -8,6 +8,7 @@ import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomEle
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomTileCardRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomTileRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.TileImageRequest;
+import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomElementListResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomElementResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomTileCardResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomTileResponse;
@@ -152,9 +153,12 @@ public class CustomElementController {
 		}
 	}
 
-	//TODO 커스텀 엘리먼트에 유저정보 추가하기
-	// ERD 수정해야돼 ,, 슈발 v
-	// create할때 유저 정보 추가하기.
+	// TODO : 완료된 타일을 배열로 받기
+	@GetMapping(value = "/{customId}/complete-tiles")
+	public ResponseEntity<CustomElementListResponse> getCompleteCustoms(@PathVariable("customId") Integer customId){
+		CustomElementListResponse response = customElementService.findCompleteElementList(customId);
+		return ResponseEntity.ok(response);
+	}
 
 	@GetMapping("/{customId}/find-tile-card/{cardNumber}")
 	public ResponseEntity<CustomTileCardResponse> findByCustomIdAndCardNumber(@PathVariable("customId") int customId, @PathVariable("cardNumber") int cardNumber){

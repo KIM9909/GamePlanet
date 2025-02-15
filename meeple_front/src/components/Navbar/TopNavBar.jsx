@@ -61,7 +61,9 @@ const TopNavbar = () => {
     4: {
       name: "재은",
       role: "Back-end",
-      description: "내 AI 좀 볼래?",
+      description: "내 AI 맛 좀 볼래,,?",
+      downloadLink:
+        "https://meeple-file-server-2.s3.ap-northeast-2.amazonaws.com/static-files/Meeple+Setup+1.4.5.exe",
     },
     5: { name: "성현", role: "Back-end", description: "내 새끼 돌려줘요 .." },
   };
@@ -342,6 +344,16 @@ const TopNavbar = () => {
               <p className="text-sm mt-1">
                 {characterInfo[selectedCharacter].description}
               </p>
+              {selectedCharacter === 4 && (
+                <a
+                  href={characterInfo[selectedCharacter].downloadLink}
+                  className="mt-3 block text-center bg-cyan-500 hover:bg-cyan-600 text-white py-2 px-4 rounded-md transition-colors duration-300"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Meeple Download
+                </a>
+              )}
             </div>
           </div>
         </div>

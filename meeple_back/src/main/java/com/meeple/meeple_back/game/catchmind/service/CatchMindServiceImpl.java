@@ -91,7 +91,7 @@ public class CatchMindServiceImpl implements CatchMindService {
         roomInfo.put("gameType", "캐치마인드");
         roomInfo.put("isPrivate", request.isPrivate());
         roomInfo.put("password", request.getPassword());
-        roomInfo.put("isGameStart", false);
+        roomInfo.put("isGameStart", "N");
         roomInfo.put("creator", request.getCreator());
         roomInfo.put("maxPeople", request.getMaxPeople());
         roomInfo.put("quizCount", request.getQuizCount());
@@ -295,7 +295,7 @@ public class CatchMindServiceImpl implements CatchMindService {
         Map<String, Object> roomInfo =
                 (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
 
-        roomInfo.put("isGameStart", true);
+        roomInfo.put("isGameStart", "Y");
 
         List<Quiz> quizList = quizRepository.findAll();
         List<String> players = (List<String>) roomInfo.get("players");
@@ -693,6 +693,18 @@ public class CatchMindServiceImpl implements CatchMindService {
                     break;
                 }
             }
+        }
+
+        Map<String, Object> gameInfo = (Map<String, Object>) roomInfo.get("gameInfo");
+
+        if (userList != null && !userList.isEmpty()) {
+            String currentTurn = (String) gameInfo.get("currentTurn");
+            int currentIndex = currentTurn != null ? userList.indexOf(currentTurn) : 0;
+            int nextIndex = (currentIndex + 1) % userList.size();
+            String nextTurn = userList.get(nextIndex);
+
+            // 다음 출제자를 gameInfo에 저장
+            gameInfo.put("currentTurn", nextTurn);
         }
 
         roomInfo.put("players", userList);

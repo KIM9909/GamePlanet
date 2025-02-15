@@ -1,4 +1,3 @@
-// components/modal/UserDeleteConfirmModal.jsx
 import React from 'react';
 import { UserX } from 'lucide-react';
 
@@ -12,10 +11,13 @@ const UserDeleteConfirmModal = ({ isOpen, onClose, onConfirm, userNickname }) =>
           <div className="w-16 h-16 bg-slate-100 rounded-full mx-auto mb-4 flex items-center justify-center">
             <UserX className="text-slate-500" size={32} />
           </div>
-          <h3 className="text-xl font-semibold text-white mb-2">회원 삭제</h3>
+          <h3 className="text-xl font-semibold text-white mb-2">회원 탈퇴 처리</h3>
           <p className="text-gray-400">
             <span className="font-semibold text-white">{userNickname}</span> 회원을<br />
-            정말 삭제하시겠습니까?
+            탈퇴 처리하시겠습니까?
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            탈퇴 처리된 회원은 유예 기간 동안 탈퇴 예정 상태로 표시됩니다.
           </p>
         </div>
         <div className="flex gap-3 justify-center">
@@ -29,7 +31,7 @@ const UserDeleteConfirmModal = ({ isOpen, onClose, onConfirm, userNickname }) =>
             onClick={onConfirm}
             className="px-4 py-2 bg-slate-500 text-white rounded hover:bg-red-600 transition-colors"
           >
-            삭제
+            탈퇴 처리
           </button>
         </div>
       </div>
