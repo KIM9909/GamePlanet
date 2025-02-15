@@ -131,4 +131,10 @@ public class CustomElementService {
 		List<Integer> completeIdList = customElementJpaRepository.findCompleteElementListByCustomId(customId);
 		return new CustomElementListResponse(customId, completeIdList);
 	}
+
+	public void create(String customName, Long userId, String fileUrl) {
+		User user = userRepository.findById(userId).orElseThrow();
+		CustomElementEntity entity = new CustomElementEntity(user, customName, fileUrl);
+		customElementJpaRepository.save(entity);
+	}
 }
