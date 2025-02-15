@@ -23,7 +23,7 @@ const CustomToastContent = ({ closeToast }) => (
     <span className="text-sm mb-1">혹시 Meeple 앱이 없으신가요?</span>
 
     <a
-      href="https://meeple-file-server-2.s3.ap-northeast-2.amazonaws.com/static-files/Meeple%2BSetup%2B1.4.3.exe"
+      href="https://meeple-file-server-2.s3.ap-northeast-2.amazonaws.com/static-files/Meeple+Setup+1.4.5.exe"
       target="_blank"
       rel="noopener noreferrer"
       className="group px-6 py-1 bg-cyan-600 text-white rounded-lg 

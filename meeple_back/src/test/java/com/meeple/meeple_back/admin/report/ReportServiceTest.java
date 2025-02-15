@@ -116,7 +116,8 @@ public class ReportServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(reporter));
 
         // when
-        ResponseCreateReport response = reportService.createReport(request);
+        ResponseCreateReport response = reportService.createReport(null,ReportReason.ETC
+                ,"제목", "내용", 2L,1L);
 
         // then
         assertEquals(200, response.getCode());

@@ -425,11 +425,7 @@ public class GamePlay {
 		}
 		// 무작위 인덱스 선택
 		int randomIndex = new Random().nextInt(filteredCards.size());
-		Card card = filteredCards.get(randomIndex);
-
-		// 원본 카드 목록에서 제거
-		cards.remove(card);
-		return card;
+		return filteredCards.get(randomIndex);
 	}
 
 	private int getBoardSize() {

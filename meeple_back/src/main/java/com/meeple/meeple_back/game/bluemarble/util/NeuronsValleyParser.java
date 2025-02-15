@@ -2,6 +2,7 @@ package com.meeple.meeple_back.game.bluemarble.util;
 
 import com.meeple.meeple_back.game.bluemarble.domain.CardType;
 import com.meeple.meeple_back.game.bluemarble.domain.NeuronsValleyCard;
+import java.util.Objects;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -32,7 +33,9 @@ public class NeuronsValleyParser implements ExcelReader<NeuronsValleyCard> {
 
 			while (rowIterator.hasNext()) {
 				Row row = rowIterator.next();
-				int id = (int) row.getCell(0).getNumericCellValue();
+				if(Objects.isNull(row.getCell(0))){
+					continue;
+				}
 				int number = (int) row.getCell(1).getNumericCellValue();
 				String name = row.getCell(2).getStringCellValue();
 				String description = row.getCell(3).getStringCellValue();
