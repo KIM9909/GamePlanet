@@ -15,6 +15,9 @@ import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomTi
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.TileImageResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.domain.CustomElementUpdate;
 import com.meeple.meeple_back.gameCustom.bluemarble.service.CustomElementService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.Tags;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
@@ -37,6 +40,12 @@ public class CustomElementController {
 
 	@Value("${aws.s3.bucket-name}")
 	private String bucketName;
+	@Operation(tags = "customElement 목록중 입력받은 userId가 현재 접속한 유저의 것을 찾는다.")
+	@GetMapping("/{customId}/find-by-user-id/{userId}")
+	public ResponseEntity<List<CustomElementResponse>> findByUserId(@PathVariable(name = "customId") Integer customId, @PathVariable("userId") Long userId){
+		List<CustomElementResponse> response = customElementService.findByUserId(customId, userId);
+		return ResponseEntity.ok(response);
+	}
 
 	@PostMapping("/create")
 	public ResponseEntity<CustomElementResponse> create(@RequestBody CustomElementRequest request) {
