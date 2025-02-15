@@ -104,6 +104,13 @@ const SocketLayout = ({ children }) => {
   // 카드 뽑기 후 돈
   const [socketDrawNextBalance, setSocketDrawNextBalance] = useState(null);
 
+  // 시간 여행 ㅎ
+  const [socketTravelData, setSocketTravelData] = useState(null);
+  const [socketTravelPrevPosition, setSocketTravelPrevPosition] =
+    useState(null);
+  const [socketTravelNextPosition, setSocketTravelNextPosition] =
+    useState(null);
+
   const location = useLocation();
 
   const stompClientRef = useRef(null);
@@ -170,6 +177,8 @@ const SocketLayout = ({ children }) => {
               setGameSocketNotifi(receivedData.message);
               setSocketNext(receivedData.data.nextAction);
               setCurrentPlayerSocketIndex(receivedData.data.currentPlayerIndex);
+              // setSocketDrawPrevPosition(null);
+              // setSocketDrawNextPosition(null);
             } else if (receivedData.type === "buy-land") {
               setBuyLandSocketData(receivedData.buyLandResponse);
               setSocketUserUpdate(receivedData.buyLandResponse.updatedPlayer);
@@ -211,7 +220,13 @@ const SocketLayout = ({ children }) => {
               setSocketDrawPrevBalance(receivedData.data.prevBalance);
               setSocketDrawNextBalance(receivedData.data.nextBalance);
               setGameSocketNotifi(receivedData.message);
-              // setSocketNext(receivedData.data.nextAction);
+              setSocketNext(receivedData.data.nextAction);
+            } else if (receivedData.type === "choose-position") {
+              setSocketTravelData(receivedData.data);
+              setSocketTravelPrevPosition(receivedData.data.prevPosition);
+              setSocketTravelNextPosition(receivedData.data.nextPosition);
+              setGameSocketNotifi(receivedData.message);
+              setSocketNext(receivedData.data.nextAction);
             }
             if (receivedData.status) {
               setSocketStatus(receivedData.status);
@@ -406,6 +421,7 @@ const SocketLayout = ({ children }) => {
     }
     try {
       console.log("주사위를 굴렸다는 알림");
+      console.log("주사위 굴렸다는 알림의 정보:", rollInfo);
       stompClientRef.current.publish({
         destination: `app/game/blue-marble/game-plays/${roomId}/just-roll-dice`,
         body: JSON.stringify(rollInfo),
@@ -546,6 +562,27 @@ const SocketLayout = ({ children }) => {
     [roomId, userId]
   );
 
+  const choosePosition = useCallback(
+    (chooseInfo) => {
+      if (!stompClientRef.current?.connected) {
+        console.warn("웹소켓에 연결되어 있지 않습니다.");
+        return;
+      }
+      try {
+        console.log("시간 여행 가고싶은 곳을 보낼거예요");
+        stompClientRef.current.publish({
+          destination: `/app/game/blue-marble/game-plays/${roomId}/choose-position`,
+          body: JSON.stringify(chooseInfo),
+        });
+        console.log("시간 여행 가고싶은 곳을 골랐습니다.");
+      } catch (error) {
+        console.error("시간 여행 가고싶은 곳을 고르는 것에 실패했습니다.");
+        setError("시간 여행 가고싶은 곳을 고르는 것에 실패했습니다.");
+      }
+    },
+    [roomId, userId]
+  );
+
   // 턴 종료 조건 확인
   const checkEnd = useCallback(
     (endInfo) => {
@@ -640,6 +677,11 @@ const SocketLayout = ({ children }) => {
           setSocketDrawPrevBalance,
           socketDrawNextBalance,
           setSocketDrawNextBalance,
+          socketTravelData,
+          socketTravelPrevPosition,
+          setSocketTravelPrevPosition,
+          socketTravelNextPosition,
+          setSocketTravelNextPosition,
           enterWaitingRoom,
           chatWaitingRoom,
           changePassword,
@@ -655,6 +697,7 @@ const SocketLayout = ({ children }) => {
           checkEnd,
           drawCard,
           endGame,
+          choosePosition,
         }}
       >
         {children}
