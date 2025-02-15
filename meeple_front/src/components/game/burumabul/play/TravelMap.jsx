@@ -253,7 +253,9 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
     endGame,
     choosePosition,
   } = useContext(SocketContext);
+
   const [playData, setPlayData] = useState(gamePlaySocketData);
+
   useEffect(() => {
     setPlayData(gamePlaySocketData);
   }, [gamePlaySocketData]);
@@ -408,8 +410,8 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
       }
 
       // 우주 기지 상태 업데이트
-      setSpaceBases((prevBases) => {
-        return prevBases.map((base, index) => {
+      setSpaceBases((prevBases) =>
+        prevBases.map((base, index) => {
           if (index === updatedTile.id) {
             const ownerIndex = players.findIndex(
               (p) => p.playerId === updatedTile.ownerId
@@ -420,9 +422,10 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
               color: colors[ownerIndex],
             };
           }
-          return base;
-        });
-      });
+          return base; // ✅ 기존 값을 유지하면서 업데이트된 값만 변경
+        })
+      );
+
       // setBuildBaseSocketData(null);
     }
   }, [buildBaseSocketData]);
@@ -494,12 +497,8 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
   const nextPositionRef = useRef(drawNextPosition);
 
   useEffect(() => {
-    if (
-      socketDrawCardData &&
-      socketDrawNextPosition &&
-      socketDrawPrevPosition
-    ) {
-      console.log("socketPickedCard:", socketPickedCard);
+    if (socketDrawCardData) {
+      console.log("socketPickedCard:", socketDrawCardData.pickedCard);
       console.log("카드뽑기 전 정보들", {
         drawPrevPosition,
         drawNextPosition,
@@ -509,21 +508,21 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
       setDrawPrevPosition(null);
       setDrawNextPosition(null);
 
-      setPickedCardInfo(socketPickedCard);
-      setDrawPrevPosition(socketDrawPrevPosition);
-      setDrawNextPosition(socketDrawNextPosition);
-      setDrawPrevBalance(socketDrawPrevBalance);
-      setDrawNextBalance(socketDrawNextBalance);
+      setPickedCardInfo(socketDrawCardData.pickedCard);
+      setDrawPrevPosition(socketDrawCardData.prevPosition);
+      setDrawNextPosition(socketDrawCardData.nextPosition);
+      setDrawPrevBalance(socketDrawCardData.prevBalance);
+      setDrawNextBalance(socketDrawCardData.nextBalance);
       console.log("카드뽑기 후 정보들", {
         drawPrevPosition,
         drawNextPosition,
       });
 
       // 🔵 업데이트된 값을 useRef에 저장 (불필요한 재렌더링 방지)
-      prevPositionRef.current = socketDrawPrevPosition;
-      nextPositionRef.current = socketDrawNextPosition;
+      prevPositionRef.current = socketDrawCardData.prevPosition;
+      nextPositionRef.current = socketDrawCardData.nextPosition;
     }
-  }, [socketDrawCardData, socketDrawPrevPosition, socketDrawNextPosition]);
+  }, [socketDrawCardData]);
 
   useEffect(() => {
     if (socketDrawCardData) {
@@ -559,14 +558,11 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
     socketTravelNextPosition
   );
   useEffect(() => {
-    if (
-      socketTravelData &&
-      socketTravelPrevPosition !== socketTravelNextPosition
-    ) {
-      setTravelPrevPosition(socketTravelPrevPosition);
-      setTravelNextPosition(socketTravelNextPosition);
+    if (socketTravelData) {
+      setTravelPrevPosition(socketTravelData.prevPosition);
+      setTravelNextPosition(socketTravelData.nextPosition);
     }
-  }, [socketTravelData, socketTravelNextPosition, socketTravelPrevPosition]);
+  }, [socketTravelData]);
 
   // 상태 변화를 모니터링하기 위한 별도의 useEffect
   // useEffect(() => {
@@ -662,6 +658,8 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
     const turnStart = async () => {
       try {
         await startTurn();
+        setFirstDice(null);
+        setSecondDice(null);
       } catch (error) {
         console.error("턴 시작에 오류가 생겼습니다.", error);
         setSocketNext(null);
@@ -702,7 +700,7 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
             playerId: currentPlayer.playerId,
             // firstDice: firstDice,
             // secondDice: secondDice,
-            firstDice: 2,
+            firstDice: 5,
             secondDice: 5,
           };
           console.log("주사위 정보 :", diceInfo);
@@ -793,11 +791,14 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
       nextAction === "DO_YOU_WANT_TO_BUY_THE_LAND" &&
       myIndex === currentPlayerIndex
     ) {
-      if (showCardId !== nextPosition) {
-        // 중복 실행 방지
-        setShowCardId(nextPosition);
-        setShowBuyLand(true);
-      }
+      // 중복 실행 방지
+      setShowCardId(nextPosition);
+      console.log(
+        "땅 살거냐고 물어보고 모달 띄울 때 몇 번 카드 보여주는지:",
+        showCardId,
+        nextPosition
+      );
+      setShowBuyLand(true);
     }
   }, [isMovementComplete, nextAction, nextPosition]);
 
@@ -843,6 +844,11 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
       myIndex === currentPlayerIndex
     ) {
       setShowCardId(nextPosition);
+      console.log(
+        "기지 살거냐고 물어보고 모달 띄울 때 몇 번 카드 보여주는지:",
+        showCardId,
+        nextPosition
+      );
       setShowBuildBase(true);
       return;
     }
@@ -909,6 +915,12 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
   // 카드 뽑기 -> 모달
 
   useEffect(() => {
+    console.log("🔍 카드 뽑기 useEffect 실행됨");
+    console.log("nextAction:", nextAction);
+    console.log("현재 플레이어 인덱스:", myIndex);
+    console.log("현재 턴 플레이어:", currentPlayerIndex);
+    console.log("이동 완료 여부:", isMovementComplete);
+    console.log("카드 뽑기 여부:", isCardDrawn);
     const handleDrawCard = async () => {
       if (
         nextAction &&
@@ -932,6 +944,8 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
           setSocketNext(null);
           setIsCardDrawn(false);
         }
+      } else {
+        console.log("❌ 카드 뽑기 조건 미충족");
       }
     };
     handleDrawCard();
@@ -980,6 +994,13 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
     currentPlayerIndex,
   ]);
 
+  useEffect(() => {
+    if (socketTravelData) {
+      setTravelPrevPosition(socketTravelData.prevPosition);
+      setTravelNextPosition(socketTravelData.nextPosition);
+    }
+  }, [socketTravelData]);
+
   // 시간 여행 가고싶은 곳 고른 뒤 말 이동하는 로직
   const [chooseIsAnimating, setChooseIsAnimating] = useState(false);
   const [chooseIsMovementComplete, setChooseIsMovementComplete] =
@@ -994,8 +1015,8 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
         (player) => player.playerId === socketTravelData.playerId
       );
 
-      const startPosition = playersPositions[playerIndex];
-      const targetPosition = socketTravelNextPosition;
+      const startPosition = socketTravelData.prevPosition;
+      const targetPosition = socketTravelData.nextPosition;
       console.log("🚀 시간여행 이동 시작:", { startPosition, targetPosition });
       setChooseIsMovementComplete(false); // 이동 시작 시 false 설정
       setChooseIsAnimating(true);
@@ -1019,7 +1040,7 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
 
       animateMovement();
     }
-  }, [socketTravelData, socketTravelNextPosition, socketTravelPrevPosition]);
+  }, [socketTravelData]);
 
   // 카드 뽑고 나서 position이 달라질 경우, 왔다갔다 이동하는 로직
   const [drawIsAnimating, setDrawIsAnimating] = useState(false);
@@ -1080,10 +1101,11 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
               // 모달이 이미 닫혀있을 때만
               setDrawNextPosition(null);
               setDrawPrevPosition(null);
-              setSocketDrawPrevPosition(null);
+
               setSocketDrawNextPosition(null);
               setSocketDrawPrevBalance(null);
               setSocketDrawNextBalance(null);
+              setSocketDrawCardData(null);
               setNextAction("CHECK_END");
               // }
             }, 200);
@@ -1160,8 +1182,6 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
       allMovementsComplete,
     });
     if (
-      socketNext &&
-      socketNext === "CHECK_END" &&
       nextAction === "CHECK_END" &&
       myIndex === currentPlayerIndex &&
       allModalClosed &&
@@ -1214,13 +1234,17 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
   const closeBuyLand = () => {
     setShowBuyLand(false);
     setShowCardId(null);
-    setSocketNext("CHECK_END");
+    // setTimeout(() => {
+    //   setSocketNext("CHECK_END");
+    // }, 100);
   };
 
   const closeBuildBase = () => {
     setShowBuildBase(false);
     setShowCardId(null);
-    setSocketNext("CHECK_END");
+    // setTimeout(() => {
+    //   setSocketNext("CHECK_END");
+    // }, 100);
   };
 
   const closePayToll = () => {
@@ -1228,7 +1252,9 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
     setPaidPlayer(null);
     setReceivedPlayer(null);
     setTollPrice(null);
-    setSocketNext("CHECK_END");
+    // setTimeout(() => {
+    //   setSocketNext("CHECK_END");
+    // }, 100);
   };
 
   const closePickedCard = () => {
@@ -1240,7 +1266,9 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
 
     setShowPickedCardModal(false);
     setIsCardDrawn(false);
-    setNextAction("CHECK_END");
+    // setTimeout(() => {
+    //   setSocketNext("CHECK_END");
+    // }, 100);
 
     console.log("모달 닫은 후:", {
       nextAction,
@@ -1801,7 +1829,7 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
               setIsBuildBase={setIsBuildBase}
               onClose={closeBuildBase}
               cardId={showCardId}
-              cardInfo={cards?.find((card) => card.id === showCardId)}
+              cardInfo={cards?.find((card) => card.number === showCardId)}
             />
           </div>,
           document.body
