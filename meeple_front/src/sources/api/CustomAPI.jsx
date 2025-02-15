@@ -49,7 +49,20 @@ export const CustomAPI = {
    */
   createElement: async (elementData) => {
     try {
-      const response = await API.post("/custom-element/create", elementData);
+      const formData = new FormData();
+      formData.append('customName', elementData.customName);
+      formData.append('userId', elementData.userId);
+      formData.append('imgFile', new File([elementData.imgFile], 'thumbnail.png', { type: 'image/png' }));
+  
+      const response = await API.post(
+        "/custom-element/create", 
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
       return response;
     } catch (error) {
       throw error || "커스텀 요소 생성에 실패했습니다.";
@@ -144,6 +157,30 @@ export const CustomAPI = {
       return response;
     } catch (error) {
       throw error || "커스텀 타일을 불러오는데 실패했습니다.";
+    }
+  },
+
+   /**
+   * 특정 유저의 커스텀 요소 찾기
+   */
+   findByUserId: async (customId, userId) => {
+    try {
+      const response = await API.get(`/custom-element/${customId}/find-by-user-id/${userId}`);
+      return response;
+    } catch (error) {
+      throw error || "유저의 커스텀 요소를 찾는데 실패했습니다.";
+    }
+  },
+
+  /**
+   * 완성된 타일 목록 조회
+   */
+  getCompleteTiles: async (customId) => {
+    try {
+      const response = await API.get(`/custom-element/${customId}/complete-tiles`);
+      return response;
+    } catch (error) {
+      throw error || "완성된 타일 목록을 불러오는데 실패했습니다.";
     }
   },
 
