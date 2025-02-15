@@ -13,6 +13,7 @@ import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomEl
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomTileCardResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomTileResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.TileImageResponse;
+import com.meeple.meeple_back.gameCustom.bluemarble.domain.CustomElementUpdate;
 import com.meeple.meeple_back.gameCustom.bluemarble.service.CustomElementService;
 import java.io.IOException;
 import java.net.URI;
@@ -185,7 +186,8 @@ public class CustomElementController {
 
 	// UPDATE
 	@PutMapping("/{customId}/update")
-	public ResponseEntity<CustomElementResponse> updateCustomElement(@PathVariable Integer customId, @RequestBody CustomElementRequest request) {
+	public ResponseEntity<CustomElementResponse> updateCustomElement(@PathVariable Integer customId, @RequestBody
+	CustomElementUpdate request) {
 		return ResponseEntity.status(HttpStatus.OK).body(customElementService.update(customId, request));
 
 	}

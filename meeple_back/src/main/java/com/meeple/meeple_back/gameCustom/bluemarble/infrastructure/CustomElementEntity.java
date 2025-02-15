@@ -2,7 +2,8 @@ package com.meeple.meeple_back.gameCustom.bluemarble.infrastructure;
 
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomElementRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomElementResponse;
-import com.meeple.meeple_back.gameCustom.bluemarble.domain.CustomElementCreate;
+import com.meeple.meeple_back.gameCustom.bluemarble.domain.CustomElementUpdate;
+import com.meeple.meeple_back.user.model.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,15 +24,22 @@ public class CustomElementEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer customId;
 
-	@Column(length = 20)
+	@Column(name = "custom_name", length = 20)
 	private String customName;
-
+	@Column(name = "created_at")
 	private LocalDateTime createdAt;
+	@Column(name = "updated_at")
 	private LocalDateTime updatedAt;
 
-	public static CustomElementEntity from(CustomElementRequest request) {
+	@ManyToOne
+	@JoinColumn(name = "user_id")
+	private User user;
+
+
+	public static CustomElementEntity from(CustomElementRequest request, User user) {
 		return CustomElementEntity.builder()
 			.customName(request.getCustomName())
+			.user(user)
 			.createdAt(LocalDateTime.now())
 			.updatedAt(LocalDateTime.now())
 			.build();
@@ -46,8 +54,8 @@ public class CustomElementEntity {
 			.build();
 	}
 
-	public void update(CustomElementRequest customElementRequest) {
-		this.customName = customElementRequest.getCustomName();
+	public void update(CustomElementUpdate update) {
+		this.customName = update.getCustomName();
 		this.updatedAt = LocalDateTime.now();
 	}
 }
