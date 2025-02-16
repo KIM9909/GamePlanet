@@ -117,31 +117,29 @@ const BurumabulRoomList = () => {
 
   return (
     <div className="flex justify-center flex-col items-center w-full  min-h-screen ">
-      <h1 className="text-white text-4xl text-center my-10">
+      <h1 className="text-cyan-400 text-4xl text-center my-10">
         부루마불 게임 대기방 목록
       </h1>
       {/* 검색바 추가 */}
-      <div className="w-[70%] mb-6 flex justify-center">
-        <form onSubmit={handleSearch} className="flex gap-2 w-2/3">
-          <input
-            type="text"
-            value={searchName}
-            onChange={(e) => setSearchName(e.target.value)}
-            placeholder="방 이름으로 검색..."
-            className="flex-1 p-2 rounded-lg border border-gray-300 focus:outline-none focus:border-yellow-500"
-          />
-          <button type="submit">
-            <Search size={44} color="#eeff00" strokeWidth={3} />
-          </button>
-        </form>
-      </div>
-      <div className="w-[70%] flex flex-row justify-end">
+      <div className="w-[80%] mb-6 flex justify-between items-center">
+        <div className="flex-1 flex justify-center">
+          <form onSubmit={handleSearch} className="flex gap-2 w-[50%]">
+            <input
+              type="text"
+              value={searchName}
+              onChange={(e) => setSearchName(e.target.value)}
+              placeholder="방 이름으로 검색..."
+              className="flex-1 p-2 mx-2 rounded-lg border border-gray-300 focus:outline-none focus:border-cyan-500"
+            />
+            <button type="submit">
+              <Search size={44} color="#09D0EF" strokeWidth={3} />
+            </button>
+          </form>
+        </div>
+
         <button
-          className="text-4xl text-white px-5 py-2 rounded-lg font-bold
-    bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500
-    hover:from-indigo-500 hover:via-purple-500 hover:to-pink-400
-    transform hover:scale-105 transition-all duration-300
-    shadow-lg hover:shadow-xl hover:shadow-purple-500/30"
+          className="text-2xl text-cyan-500 bg-gray-900 bg-opacity-80 border-2 border-cyan-500 hover:bg-cyan-400 hover:text-white px-4 py-2 rounded-lg font-bold
+    "
           onClick={() => setIsCreateBurumabulRoomModalOpen(true)}
         >
           CREATE
@@ -150,8 +148,8 @@ const BurumabulRoomList = () => {
 
       {roomList.length > 0 ? (
         <>
-          <div className="bg-white bg-opacity-50 rounded-lg w-[80%] h-[70vh] overflow-y-auto p-4 flex justify-center my-3">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 grid-auto-rows-[minmax(250px,auto)]">
+          <div className="bg-gray-900 bg-opacity-80 border-2 border-cyan-400 rounded-lg w-[80%] h-[70vh] overflow-y-auto p-4 flex justify-center my-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 p-4 grid-auto-rows-[minmax(250px,auto)]">
               {visibleRooms.map((roomInfo, index) => (
                 <div
                   key={roomInfo.roomId || index}

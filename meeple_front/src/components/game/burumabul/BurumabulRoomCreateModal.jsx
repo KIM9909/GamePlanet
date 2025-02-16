@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { createBurumabulRoom } from "../../../sources/api/BurumabulRoomAPI";
 import { useDispatch, useSelector } from "react-redux";
 import { setRoomId } from "../../../sources/store/slices/BurumabulGameSlice";
+import { toast } from "react-toastify";
+import CustomToastContent from "../../CustomToastContent";
 
 const BurumabulRoomCreateModal = ({ onClose }) => {
   const userId = useSelector((state) => state.user.userId);
@@ -30,6 +32,28 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
       navigate(`/game/burumabul/start/${roomId}`);
     } catch (error) {
       console.error("방 생성 중 오류 발생 : ", error);
+      if (error.response?.status === 500) {
+        toast(
+          ({ closeToast }) => <CustomToastContent closeToast={closeToast} />,
+          {
+            position: "top-center",
+            autoClose: false,
+            hideProgressBar: true,
+            closeOnClick: false,
+            pauseOnHover: true,
+            draggable: true,
+            className: "!bg-transparent !p-0 !shadow-none",
+            toastClassName: "!bg-transparent !p-0",
+            bodyClassName: "!p-0 !m-0",
+            closeButton: false, // 기본 닫기 버튼 비활성화
+            style: {
+              background: "transparent",
+              padding: 0,
+            },
+          }
+        );
+        handleCancel();
+      }
     }
   };
 
@@ -49,7 +73,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-blue-200 bg-opacity-50 flex justify-center items-center z-50">
-      <div className="w-96 p-6 bg-gray-900 bg-opacity-80  rounded-lg flex flex-col justify-center items-center">
+      <div className="w-96 p-6 bg-gray-900 bg-opacity-80 border-2 border-cyan-500 rounded-lg flex flex-col justify-center items-center">
         <h1 className="text-3xl text-cyan-400 ">부루마불 방 만들기</h1>
         <hr className="w-80 border-t-2 border-white my-2" />
         <div className="bg-gray-900 bg-opacity-80 w-full py-3 my-3 rounded-lg">

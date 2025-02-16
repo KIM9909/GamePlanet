@@ -23,8 +23,8 @@ const ChangePasswordModal = ({ onClose }) => {
 
   return (
     <>
-      <div className="w-96 p-6 bg-slate-900 bg-opacity-90 rounded-lg flex flex-col justify-center items-center">
-        <h2 className="text-lg text-white font-semibold mb-4">
+      <div className="w-96 p-6 bg-gray-900 bg-opacity-90 border-2 border-cyan-400 rounded-lg flex flex-col justify-center items-center">
+        <h2 className="text-lg text-cyan-500 font-semibold mb-4">
           변경할 비밀 번호를 입력하세요
         </h2>
 
@@ -62,7 +62,7 @@ const ChangePasswordModal = ({ onClose }) => {
             </button>
             <button
               type="submit"
-              className="w-1/3 mt-4 bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition duration-200"
+              className="w-1/3 mt-4 bg-cyan-500 text-white py-2 rounded-md hover:bg-cyan-600 transition duration-200"
             >
               변경
             </button>
