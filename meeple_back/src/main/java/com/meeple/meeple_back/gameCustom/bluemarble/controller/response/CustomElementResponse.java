@@ -22,7 +22,7 @@ public class CustomElementResponse {
 			.createdAt(entity.getCreatedAt())
 			.userId(entity.getUser().getUserId())
 			.updatedAt(entity.getUpdatedAt())
-			.customStatus(entity.getCustomStatus().getName())
+				.customStatus(entity.getCustomStatus() != null ? entity.getCustomStatus().getName() : "NONE")
 			.build();
 	}
 }
