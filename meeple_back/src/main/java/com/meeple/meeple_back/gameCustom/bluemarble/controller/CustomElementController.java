@@ -312,6 +312,20 @@ public class CustomElementController {
 	}
 
 	/**
+	 * 특정 customId와 tileNumber에 해당하는 커스텀 타일을 삭제하는 엔드포인트입니다.
+	 *
+	 * @param customId   삭제할 커스텀 요소의 ID
+	 * @param tileNumber 삭제할 타일의 번호
+	 * @return HTTP 상태 코드 204 (No Content)
+	 */
+	@DeleteMapping("/{customId}/delete-tile/{tileNumber}")
+	public ResponseEntity<Void> deleteCustomTile(@PathVariable("customId") Integer customId,
+			@PathVariable("tileNumber") Integer tileNumber) {
+		customElementService.deleteCustomTileByCustomIdAndTileNumber(customId, tileNumber);
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+	}
+
+	/**
 	 * 새 이미지 업로드 후 S3 URL 반환
 	 */
 	private String uploadNewImage(MultipartFile imgFile) throws IOException {

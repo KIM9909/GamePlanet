@@ -63,11 +63,13 @@ public class CustomElementService {
 
 	@Transactional
 	public void delete(Integer customId) {
-		customTileJpaRepository.deleteTileByCustomId(customId);
+		List<Integer> tileIds = customTileJpaRepository.findByIdsByCustomIdAndTileNumber(customId);
 		customTileJpaRepository.deleteByCustomId(customId);
+		tileJpaRepository.deleteAllByIdInBatch(tileIds);
 
-		customCardJpaRepository.deleteCardByCustomId(customId);
+		List<Integer> cardIds = customCardJpaRepository.findIdsByCustomIdAndTileNumber(customId);
 		customCardJpaRepository.deleteByCustomId(customId);
+		cardJpaRepository.deleteAllByIdInBatch(cardIds);
 
 		customElementRepository.deleteById(customId);
 	}
@@ -179,4 +181,13 @@ public class CustomElementService {
 				.toList();
 	}
 
+	public void deleteCustomTileByCustomIdAndTileNumber(Integer customId, Integer tileNumber) {
+		int tileId = customTileJpaRepository.findByIdByCustomIdAndTileNumber(customId, tileNumber);
+		customTileJpaRepository.deleteByCustomIdAndTileNumber(customId, tileNumber);
+		tileJpaRepository.deleteById(tileId);
+
+		int cardId = customCardJpaRepository.findIdByCustomIdAndTileNumber(customId, tileNumber);
+		customCardJpaRepository.deleteByCustomIdAndTileNumber(customId, tileNumber);
+		cardJpaRepository.deleteById(cardId);
+	}
 }
