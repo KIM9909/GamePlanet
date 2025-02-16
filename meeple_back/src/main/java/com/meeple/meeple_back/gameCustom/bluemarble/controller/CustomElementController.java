@@ -301,6 +301,12 @@ public class CustomElementController {
 
 	}
 
+	/**
+	 * 특정 customId에 해당하는 커스텀 요소를 삭제하는 엔드포인트입니다.
+	 *
+	 * @param customId 삭제할 커스텀 요소의 ID
+	 * @return HTTP 상태 코드 204 (No Content)
+	 */
 	@DeleteMapping("/{customId}/delete")
 	public ResponseEntity<Void> deleteCustomElement(@PathVariable Integer customId) {
 		customElementService.delete(customId);
