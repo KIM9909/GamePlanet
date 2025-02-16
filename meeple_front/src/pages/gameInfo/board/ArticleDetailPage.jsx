@@ -121,18 +121,20 @@ const ArticleDetailPage = () => {
               </button>
             </div>
 
-            <EditArticleModal 
-              isOpen={isEditModalOpen}
-              onClose={() => setIsEditModalOpen(false)}
-              gameInfoId={gameInfoId}
-              gameCommunityId={gameCommunityId}
-              onArticleUpdated={fetchArticle}
-            />
+            
           </div>
           
 
         </div>
       </div>
+      <EditArticleModal 
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        gameInfoId={gameInfoId}
+        gameCommunityId={gameCommunityId}
+        onArticleUpdated={fetchArticle}
+      />
+
     </div>
   );
 };
