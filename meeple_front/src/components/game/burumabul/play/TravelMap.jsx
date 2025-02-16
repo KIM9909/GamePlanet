@@ -698,10 +698,10 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
         try {
           const diceInfo = {
             playerId: currentPlayer.playerId,
-            // firstDice: firstDice,
-            // secondDice: secondDice,
-            firstDice: 5,
-            secondDice: 5,
+            firstDice: firstDice,
+            secondDice: secondDice,
+            // firstDice: 2,
+            // secondDice: 2,
           };
           console.log("주사위 정보 :", diceInfo);
           await rollDice(diceInfo);
@@ -1660,15 +1660,16 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
   }, [showModal]);
 
   return (
-    <div className="h-[100%] flex flex-col bg-black bg-opacity-50">
-      {/* 이동 버튼 + 주사위 버튼 */}
-      <div className="flex justify-center items-center mb-2">
+    <div className="h-full w-full flex flex-col bg-gray 900">
+      {/* Controls Bar */}
+      <div className="bg-gray-900/90 border-b border-cyan-500/30 p-4 flex justify-center items-center gap-4">
         <button
           onClick={resetCamera}
-          className="mt-5 mx-3 px-4 py-2 h-15 bg-yellow-300 text-white rounded hover:bg-blue-600"
+          className="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-medium rounded-lg transition-colors"
         >
           Reset Camera
         </button>
+
         {currentPlayerIndex === myIndex && !isEnd && (
           <DiceVersion2
             setOnRollDice={setOnRollDice}
@@ -1677,118 +1678,113 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
           />
         )}
       </div>
-      <div className="flex w-full h-full">
-        <div className=" w-full h-full">
-          {!showModal && (
-            <Canvas
-              camera={{
-                position: initialCameraPosition,
-                fov: 75,
-              }}
-              dpr={[1, 1.5]}
-              style={{ maxWidth: "1200px", maxHeight: "1000px" }}
-              performance={{ min: 0.5 }}
-              gl={{
-                powerPreference: "high-performance",
-                antialias: false, // 안티앨리어싱 비활성화로 성능 향상
-                depth: true,
-              }}
-              onCreated={({ gl, scene }) => {
-                const texture = new TextureLoader().load(spaceBackground);
-                scene.background = texture;
-                gl.setClearColor("#000000", 0);
 
-                // WebGL 컨텍스트 복구 처리 추가
-                if (gl.domElement) {
-                  gl.domElement.addEventListener(
-                    "webglcontextlost",
-                    (event) => {
-                      event.preventDefault();
-                      // console.warn("Main canvas context lost");
-                    }
-                  );
+      {/* Game Board */}
+      <div className="flex-1 relative">
+        {!showModal && (
+          <Canvas
+            camera={{
+              position: initialCameraPosition,
+              fov: 75,
+            }}
+            style={{ width: "100%", height: "100%" }}
+            gl={{
+              powerPreference: "high-performance",
+              antialias: false,
+              depth: true,
+            }}
+            onCreated={({ gl, scene }) => {
+              const texture = new TextureLoader().load(spaceBackground);
+              scene.background = texture;
+              gl.setClearColor("#000000", 0);
 
-                  gl.domElement.addEventListener("webglcontextrestored", () => {
-                    // console.log("Context restored");
-                    gl.render(scene, camera);
-                  });
-                }
+              if (gl.domElement) {
+                gl.domElement.addEventListener("webglcontextlost", (event) => {
+                  event.preventDefault();
+                });
+
+                gl.domElement.addEventListener("webglcontextrestored", () => {
+                  gl.render(scene, camera);
+                });
+              }
+            }}
+          >
+            <ambientLight intensity={1} />
+            <directionalLight
+              position={[10, 20, 10]}
+              intensity={3}
+              castShadow
+            />
+            <pointLight position={[10, 20, 10]} intensity={3} color="white" />
+            <spotLight
+              position={[0, 10, 0]}
+              angle={0.6}
+              penumbra={0.5}
+              intensity={3}
+            />
+
+            {/* Floor */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.18, 0]}>
+              <planeGeometry args={[16.5, 16.5]} />
+              <meshStandardMaterial map={floor} color="#ffffff" />
+            </mesh>
+
+            {/* Special Areas */}
+            <mesh position={[5, 0.01, -5]} rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[5, 5]} />
+              <meshStandardMaterial
+                map={timeMachineStopTexture}
+                transparent={true}
+              />
+            </mesh>
+
+            <mesh position={[5, 0.01, 4.5]} rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[3, 5]} />
+              <meshStandardMaterial
+                map={telepathyCardTexture}
+                transparent={true}
+              />
+            </mesh>
+
+            <mesh position={[-5, 0.01, -5]} rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[5, 5]} />
+              <meshStandardMaterial
+                map={neuronsCardTexture}
+                transparent={true}
+              />
+            </mesh>
+
+            <OrbitControls
+              ref={orbitControlsRef}
+              target={initialTarget}
+              makeDefault
+              maxPolarAngle={Math.PI / 2.5}
+              minDistance={1}
+              maxDistance={15}
+              mouseButtons={{
+                LEFT: 0,
+                MIDDLE: 1,
+                RIGHT: 2,
               }}
-            >
-              <ambientLight intensity={1} /> {/* 주변광 밝기 증가 */}
-              <directionalLight
-                position={[10, 20, 10]}
-                intensity={3}
-                castShadow
-              />{" "}
-              {/* 태양광 추가 */}
-              <pointLight position={[10, 20, 10]} intensity={3} color="white" />
-              <spotLight
-                position={[0, 10, 0]}
-                angle={0.6}
-                penumbra={0.5}
-                intensity={3}
+              enablePan={true}
+              zoomToCursor={true}
+              rotateSpeed={0.15}
+            />
+
+            {renderCells()}
+            {players.slice(0, numPlayers).map((player, index) => (
+              <HeartPlayer
+                key={player.id}
+                position={getPlayerPosition(playersPositions[index], index)}
+                color={colors[index]}
+                scale={0.6}
               />
-              {/* 바닥 생성 */}
-              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.18, 0]}>
-                <planeGeometry args={[16.5, 16.5]} />
-                <meshStandardMaterial map={floor} color="#ffffff" />
-              </mesh>
-              {/* 타임머신 탑승장 */}
-              <mesh position={[5, 0.01, -5]} rotation={[-Math.PI / 2, 0, 0]}>
-                <planeGeometry args={[5, 5]} />
-                <meshStandardMaterial
-                  map={timeMachineStopTexture} // 추가 이미지 텍스처
-                  transparent={true}
-                />
-              </mesh>
-              {/* 텔레파시 카드 */}
-              <mesh position={[5, 0.01, 4.5]} rotation={[-Math.PI / 2, 0, 0]}>
-                <planeGeometry args={[3, 5]} />
-                <meshStandardMaterial
-                  map={telepathyCardTexture} // 추가 이미지 텍스처
-                  transparent={true}
-                />
-              </mesh>
-              {/* 뉴런의 골짜기 */}
-              <mesh position={[-5, 0.01, -5]} rotation={[-Math.PI / 2, 0, 0]}>
-                <planeGeometry args={[5, 5]} />
-                <meshStandardMaterial
-                  map={neuronsCardTexture} // 추가 이미지 텍스처
-                  transparent={true}
-                />
-              </mesh>
-              {/* OrbitControls로 카메라 이동 및 확대/축소 제어 */}
-              <OrbitControls
-                ref={orbitControlsRef}
-                target={initialTarget}
-                makeDefault
-                maxPolarAngle={Math.PI / 2.5} // 위쪽으로 카메라 제한
-                minDistance={1} // 최소 줌 거리
-                maxDistance={15} // 최대 줌 거리
-                mouseButtons={{
-                  LEFT: 0,
-                  MIDDLE: 1,
-                  RIGHT: 2,
-                }}
-                enablePan={true}
-                zoomToCursor={true}
-                rotateSpeed={0.15}
-              />
-              {renderCells()}
-              {players.slice(0, numPlayers).map((player, index) => (
-                <HeartPlayer
-                  key={player.id}
-                  position={getPlayerPosition(playersPositions[index], index)}
-                  color={colors[index]} // 플레이어 색상 적용
-                  scale={0.6} // 하트 크기 조절
-                />
-              ))}
-              {renderSpaceBases}
-            </Canvas>
-          )}
-        </div>
+            ))}
+            {renderSpaceBases}
+          </Canvas>
+        )}
       </div>
+
       {/* {mountPortal &&
         showModal &&
         createPortal(
@@ -1806,19 +1802,16 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
       {mountPortal &&
         showBuyLand &&
         showCardId &&
-        currentPlayerIndex === myColorIndex &&
-        createPortal(
-          <div className="fixed inset-0 z-50 w-2/3 text-center flex items-center justify-center">
+        currentPlayerIndex === myColorIndex && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <QuestBuyLand
               setIsBuyLand={setIsBuyLand}
               onClose={closeBuyLand}
               cardId={showCardId}
               cardInfo={cards?.find((card) => card.number === showCardId)}
             />
-          </div>,
-          document.body
+          </div>
         )}
-
       {mountPortal &&
         showBuildBase &&
         showCardId &&

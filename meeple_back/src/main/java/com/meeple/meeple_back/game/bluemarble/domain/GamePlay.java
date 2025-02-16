@@ -6,39 +6,57 @@ import com.meeple.meeple_back.game.bluemarble.controller.response.BuyLandRespons
 import com.meeple.meeple_back.game.bluemarble.controller.response.DiceRollResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DrawCardResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.ChoosePositionRequest;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.request.*;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuildBaseRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.PayFeeRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.TurnEndRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.ChoosePositionResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.PayFeeResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
-import com.meeple.meeple_back.game.bluemarble.util.*;
+import com.meeple.meeple_back.game.bluemarble.util.ExcelReader;
+import com.meeple.meeple_back.game.bluemarble.util.NeuronsValleyParser;
+import com.meeple.meeple_back.game.bluemarble.util.SeedCertificateCardParser;
+import com.meeple.meeple_back.game.bluemarble.util.TelepathyCardParser;
+import com.meeple.meeple_back.game.bluemarble.util.TileParser;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Random;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
 
 @Getter
 @Builder
 @Data
 public class GamePlay {
 
-	private final int gamePlayId;
-	private List<Player> players;
+	private int gamePlayId;
 	private String gameStatus;
 	private int round;
 	private List<Tile> board;
 	private List<Card> cards;
 	private TurnManager turnManager;
 
-	@Builder
+	public GamePlay() {
+
+	}
+
+	public GamePlay(int gamePlayId, String gameStatus, int round,
+			List<Tile> board, List<Card> cards, TurnManager turnManager) {
+		this.gamePlayId = gamePlayId;
+		this.gameStatus = gameStatus;
+		this.round = round;
+		this.board = board;
+		this.cards = cards;
+		this.turnManager = turnManager;
+	}
+
 	public static GamePlay init(GamePlayCreate gamePlayCreate, List<Player> players) {
 		return GamePlay.builder()
 				.gamePlayId(gamePlayCreate.getGamePlayId())
-				.players(players)
 				.gameStatus(GameStatus.IN_PROGRESS.getStatus())
 				.round(1)
 				.board(createTiles())
@@ -57,25 +75,6 @@ public class GamePlay {
 		cards.addAll(seedCards);
 		cards.addAll(telepathyCards);
 		cards.addAll(neuronsValleyCards);
-//		for (int i = 0; i <= 37; i++) {
-//			SeedCertificateCard card = new SeedCertificateCard(
-//					i,
-//					i,// id
-//					"Seed Certificate Card " + i,                  // name
-//					"Color" + (i % 5 + 1),
-//					// cardColor (예: Color1 ~ Color5)
-//					i * 10,
-//					// seedCount (예시: 10, 20, 30, ...)
-//					"This is a description for card number " + i,  // description
-//					100 + i * 10,
-//					// baseConstructionCost (예: 110, 120, 130, ...)
-//					50 + i * 5,
-//					// headquartersUsageFee (예: 55, 60, 65, ...)
-//					20 + i * 2
-//					// baseUsageFee (예: 22, 24, 26, ...)
-//			);
-//			cards.add(card);
-//		}
 
 		return cards;
 	}
@@ -83,13 +82,17 @@ public class GamePlay {
 	public static GamePlay copyObject(GamePlay gamePlay) {
 		return GamePlay.builder()
 				.gamePlayId(gamePlay.getGamePlayId())
-				.players(gamePlay.getPlayers())
 				.gameStatus(gamePlay.getGameStatus())
 				.round(gamePlay.getRound())
 				.board(gamePlay.getBoard())
 				.cards(gamePlay.getCards())
 				.turnManager(gamePlay.getTurnManager())
 				.build();
+	}
+
+	private static List<Tile> createTiles() {
+		ExcelReader<Tile> tileParser = new TileParser();
+		return tileParser.readExcelFile();
 	}
 
 	/**
@@ -115,33 +118,9 @@ public class GamePlay {
 				.orElseThrow(() -> new IllegalArgumentException("Tile not found"));
 	}
 
-	private static List<Tile> createTiles() {
-		ExcelReader<Tile> tileParser = new TileParser();
-		return tileParser.readExcelFile();
-
-//		for (int i = 0; i <= 40; i++) {
-//			Tile tile = new Tile(
-//					i,                                        // id
-//					"Tile " + i,                              // name
-//					0,                                        // owner (0은 미소유)
-//					i * 50,                                   // toll (예시로 i에 따라 증가)
-//					false,                                    // hasBase (기본값: 없음)
-//					TileType.SEED_CERTIFICATE_CARD,
-//					"image:url",                                   // price (예시로 i에 따라 증가),
-//					1 + i * 10
-//			);
-//			tiles.add(tile);
-//		}
-	}
-
-	private Optional<Player> findPlayerById(int playerId) {
-		return players.stream()
-				.filter(player -> player.getPlayerId() == playerId)
-				.findFirst();
-	}
 
 	private Player getValidatedPlayer(int playerId) {
-		return findPlayerById(playerId)
+		return turnManager.findPlayerById(playerId)
 				.orElseThrow(() -> new IllegalArgumentException("Player not found"));
 	}
 
@@ -162,16 +141,24 @@ public class GamePlay {
 		if (currentPlayer.isTimeTravel()) {
 			currentPlayer.setTimeTravel(false);
 			if (diceRollRequest.getFirstDice() + diceRollRequest.getSecondDice() >= 4) {
-				return DiceRollResponse.from(diceRollRequest.getPlayerId(), currentPlayer.getPosition(), currentPlayer.getPosition(), diceRollRequest.getFirstDice(), diceRollRequest.getSecondDice(), false, ActionType.CHOOSE_POSITION);
+				return DiceRollResponse.from(diceRollRequest.getPlayerId(),
+						currentPlayer.getPosition(), currentPlayer.getPosition(),
+						diceRollRequest.getFirstDice(), diceRollRequest.getSecondDice(), false,
+						ActionType.CHOOSE_POSITION);
 			} else {
 				currentPlayer.setPosition(currentPlayer.getPosition() + 5);
-				return DiceRollResponse.from(diceRollRequest.getPlayerId(), currentPlayer.getPosition(), currentPlayer.getPosition() + 5, diceRollRequest.getFirstDice(), diceRollRequest.getSecondDice(), false, ActionType.CHECK_END);
+				return DiceRollResponse.from(diceRollRequest.getPlayerId(),
+						currentPlayer.getPosition(), currentPlayer.getPosition() + 5,
+						diceRollRequest.getFirstDice(), diceRollRequest.getSecondDice(), false,
+						ActionType.CHECK_END);
 			}
 		}
 
 		if (!isDouble && currentPlayer.getBlackHoleCount() > 0) {
 			currentPlayer.decreaseBlackholeCount();
-			return DiceRollResponse.from(diceRollRequest.getPlayerId(), currentPlayer.getPosition(), currentPlayer.getPosition(), diceRollRequest.getFirstDice(), diceRollRequest.getSecondDice(), false, ActionType.CHECK_END);
+			return DiceRollResponse.from(diceRollRequest.getPlayerId(), currentPlayer.getPosition(),
+					currentPlayer.getPosition(), diceRollRequest.getFirstDice(),
+					diceRollRequest.getSecondDice(), false, ActionType.CHECK_END);
 		}
 
 		DiceRollResult response = currentPlayer.rollDices(diceRollRequest);
@@ -193,7 +180,8 @@ public class GamePlay {
 			return processLandingOnPlanetEvent(currentPlayer, currentTile);
 		}
 		// TODO 3: 특수카드일 경우 처리
-		if (TileType.NEURONS_VALLEY_CARD == currentTile.getType() || TileType.TELEPATHY_CARD == currentTile.getType()) {
+		if (TileType.NEURONS_VALLEY_CARD == currentTile.getType()
+				|| TileType.TELEPATHY_CARD == currentTile.getType()) {
 			return ActionType.DRAW_CARD;
 		}
 
@@ -203,7 +191,7 @@ public class GamePlay {
 		}
 
 		if (TileType.TIME_TRAVEL == currentTile.getType()) {
-			if(currentPlayer.getBalance() < 300000){
+			if (currentPlayer.getBalance() < 300000) {
 				return ActionType.CHECK_END;
 			}
 			currentPlayer.payMoney(300000);
@@ -328,13 +316,13 @@ public class GamePlay {
 		int prevPosition = player.getPosition();
 		int prevBalance = player.getBalance();
 
-
 		Tile tile = findTileById(cardDrawRequest.getTileId());
 		TileType tileType = tile.getType();
 		Card pickedCard = null; // 뽑은 카드 저장
 
 		if (tileType == TileType.TELEPATHY_CARD) {
-			TelepathyCard card = (TelepathyCard) findAndRemoveRandomCardByType(CardType.TELEPATHY_CARD);
+			TelepathyCard card = (TelepathyCard) findAndRemoveRandomCardByType(
+					CardType.TELEPATHY_CARD);
 			pickedCard = card;
 			switch (card.getNumber()) {
 				case 3:
@@ -351,7 +339,7 @@ public class GamePlay {
 
 				case 10:
 					final int FEE_COST = 100000;
-					List<Player> allPlayers = getAllPlayers(); // 전체 플레이어 목록 반환
+					List<Player> allPlayers = turnManager.getAllPlayers(); // 전체 플레이어 목록 반환
 					for (Player other : allPlayers) {
 						if (other.getPlayerId() != player.getPlayerId()) {
 							other.setBalance(other.getBalance() - FEE_COST);
@@ -432,9 +420,6 @@ public class GamePlay {
 		return this.board.size();
 	}
 
-	private List<Player> getAllPlayers() {
-		return this.players;
-	}
 
 	private int getEarthTileIndex() {
 		return 0;
@@ -513,7 +498,6 @@ public class GamePlay {
 			return false;
 		}
 		return getGamePlayId() == gamePlay.getGamePlayId() && getRound() == gamePlay.getRound()
-				&& Objects.equals(getPlayers(), gamePlay.getPlayers())
 				&& Objects.equals(getGameStatus(), gamePlay.getGameStatus())
 				&& Objects.equals(getBoard(), gamePlay.getBoard())
 				&& Objects.equals(getCards(), gamePlay.getCards())
@@ -522,18 +506,18 @@ public class GamePlay {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(getGamePlayId(), getPlayers(), getGameStatus(), getRound(), getBoard(),
+		return Objects.hash(getGamePlayId(), getGameStatus(), getRound(), getBoard(),
 				getCards(), getTurnManager());
 	}
 
 	private PayFeeResponse handleInsufficientBalance(Player paidPlayer, Player receivedPlayer,
-	                                                 int tollPrice) {
+			int tollPrice) {
 		int available = paidPlayer.getBalance();
 		int seizureLandIndex = -1;
 		int maxSeizurePrice = -1;
-		for(int i=0; i<board.size(); i++){
+		for (int i = 0; i < board.size(); i++) {
 			Tile tile = board.get(i);
-			if(tile.getOwnerId() != paidPlayer.getPlayerId()){
+			if (tile.getOwnerId() != paidPlayer.getPlayerId()) {
 				continue;
 			}
 			maxSeizurePrice = Math.max(maxSeizurePrice, tile.getPrice());
@@ -542,7 +526,8 @@ public class GamePlay {
 
 		if (available + maxSeizurePrice >= tollPrice) {
 			Tile mostExpeisiveTile = board.get(seizureLandIndex);
-			SeedCertificateCard card = (SeedCertificateCard) paidPlayer.getCardOwnedByTileId(mostExpeisiveTile.getId());
+			SeedCertificateCard card = (SeedCertificateCard) paidPlayer.getCardOwnedByTileId(
+					mostExpeisiveTile.getId());
 			paidPlayer.addMoney(card.getSeedCount());
 			cards.add(card);
 			paidPlayer.removeCardOwned(card);
@@ -558,22 +543,21 @@ public class GamePlay {
 		receivedPlayer.addMoney(availablePayment);
 		paidPlayer.setBroken();
 
-
 		paidPlayer.getLandOwned().forEach(tileId -> {
 			Tile tile = findTileById(tileId);
 			tile.update(0, 0, tile.getPrice());
-			SeedCertificateCard card = (SeedCertificateCard) paidPlayer.getCardOwnedByTileId(tileId);
+			SeedCertificateCard card = (SeedCertificateCard) paidPlayer.getCardOwnedByTileId(
+					tileId);
 			cards.add(card);
 			paidPlayer.removeCardOwned(card);
 		});
-
 
 		return PayFeeResponse.from(availablePayment, paidPlayer.getBalance(), remainingToll, true,
 				paidPlayer, receivedPlayer, ActionType.CHECK_END);
 	}
 
 	private PayFeeResponse handleSufficientBalance(Player paidPlayer, Player receivedPlayer,
-	                                               int tollPrice) {
+			int tollPrice) {
 		final int previousBalance = paidPlayer.getBalance();
 
 		paidPlayer.payMoney(tollPrice);
@@ -610,6 +594,7 @@ public class GamePlay {
 		player.setTimeTravel(false);
 		player.setPosition(request.getNextPosition());
 		ActionType actionType = processTileEvent(player, player.getPosition());
-		return new ChoosePositionResponse(player.getPlayerId(), prevPosition, player.getPosition(), actionType.getAction());
+		return new ChoosePositionResponse(player.getPlayerId(), prevPosition, player.getPosition(),
+				actionType.getAction());
 	}
 }

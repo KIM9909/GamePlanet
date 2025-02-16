@@ -44,16 +44,19 @@ public class CustomElementService {
 	private final CustomElementJpaRepository customElementJpaRepository;
 	private final UserRepository userRepository;
 
+	@Transactional
 	public CustomElementResponse create(CustomElementRequest customElementRequest) {
 		User user = userRepository.findById(customElementRequest.getUserId()).orElseThrow();
 		return CustomElementResponse.from(
 				customElementRepository.save(CustomElementEntity.from(customElementRequest, user)));
 	}
 
+	@Transactional
 	public CustomElementResponse findById(Integer integer) {
 		return CustomElementResponse.from(customElementRepository.findById(integer).orElseThrow());
 	}
 
+	@Transactional
 	public CustomElementResponse update(Integer customId,
 			CustomElementUpdate update) {
 		CustomElementEntity customElementEntity = customElementRepository.findById(customId)
@@ -75,10 +78,12 @@ public class CustomElementService {
 		customElementRepository.deleteById(customId);
 	}
 
+	@Transactional(readOnly = true)
 	public List<CustomElementResponse> findAll() {
 		return customElementRepository.findAll().stream().map(CustomElementEntity::to).toList();
 	}
 
+	@Transactional
 	public CustomTileCardResponse createTileAndCard(int customId, CustomTileCardRequest request) {
 		// 타일 생성
 		TileEntity tileEntity = new TileEntity(request.getName(),
@@ -118,6 +123,7 @@ public class CustomElementService {
 		return new CustomTileCardResponse(tileResponse, cardResponse);
 	}
 
+	@Transactional(readOnly = true)
 	public List<TileImageResponse> findTileImageUrlByCustomId(Integer customId) {
 		// customID에 해당하는 타일의 번호에 해당하는 이미지 목록을 반환한다.
 		List<TileEntity> tileEntities = customTileJpaRepository.findTileEntitiesByCustomId(
@@ -131,7 +137,7 @@ public class CustomElementService {
 		return result;
 	}
 
-	@Transactional
+	@Transactional(readOnly = true)
 	public String getExistingImageUrl(int customId, int number) {
 		return customElementJpaRepository.findImageUrlByCustomIdAndNumber(customId, number);
 	}
@@ -156,6 +162,7 @@ public class CustomElementService {
 		return new CustomTileCardResponse(tileResponse, cardResponse);
 	}
 
+	@Transactional(readOnly = true)
 	public CustomTileCardResponse findByCustomIdAndCardNumber(int customId, int cardNumber) {
 		TileEntity tileEntity = tileJpaRepository.findByTileNumberAndCustomId(customId, cardNumber);
 		CardEntity cardEntity = cardJpaRepository.findByCardNumberAndCustomId(customId, cardNumber);
@@ -163,12 +170,14 @@ public class CustomElementService {
 				CardResponse.from(cardEntity));
 	}
 
+	@Transactional(readOnly = true)
 	public CustomElementListResponse findCompleteElementList(Integer customId) {
 		List<Integer> completeIdList = customElementJpaRepository.findCompleteElementListByCustomId(
 				customId);
 		return new CustomElementListResponse(customId, completeIdList);
 	}
 
+	@Transactional
 	public CustomElementResponse create(String customName, Long userId, String fileUrl) {
 		User user = userRepository.findById(userId).orElseThrow();
 		CustomElementEntity entity = new CustomElementEntity(user, customName, fileUrl);
@@ -176,12 +185,14 @@ public class CustomElementService {
 		return CustomElementResponse.from(entity);
 	}
 
+	@Transactional(readOnly = true)
 	public List<CustomElementResponse> findByUserId(Long userId) {
 		return customElementJpaRepository.findByUserId(userId).stream()
 				.map(CustomElementResponse::from)
 				.toList();
 	}
 
+	@Transactional
 	public void deleteCustomTileByCustomIdAndTileNumber(Integer customId, Integer tileNumber) {
 		int tileId = customTileJpaRepository.findByIdByCustomIdAndTileNumber(customId, tileNumber);
 		customTileJpaRepository.deleteByCustomIdAndTileNumber(customId, tileNumber);
@@ -192,6 +203,7 @@ public class CustomElementService {
 		cardJpaRepository.deleteById(cardId);
 	}
 
+	@Transactional
 	public CustomElementResponse updateStatus(Integer customId, String status) {
 		CustomElementEntity entity = customElementJpaRepository.findById(customId).orElseThrow();
 		if (status.equals("BEFORE")) {

@@ -5,8 +5,18 @@ import com.meeple.meeple_back.game.bluemarble.controller.request.DiceRollRequest
 import com.meeple.meeple_back.game.bluemarble.controller.response.BuildBaseResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.DrawCardResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.GamePlayResponse;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.request.*;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.response.*;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuildBaseRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.DiceRollBroadcastRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.PayFeeRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.TurnEndRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.response.ChoosePositionResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.response.PayFeeResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.response.SocketBuyLandResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.response.SocketDiceRollResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.response.SocketResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Builder;
@@ -33,7 +43,7 @@ public class BluemarbleGameController {
 	@MessageMapping("/{roomId}/roll-dice")
 	@Operation(summary = "주사위 굴리기", description = "주사위를 굴립니다.")
 	public void rollDice(@DestinationVariable("roomId") int roomId,
-	                     @Payload DiceRollRequest diceRollRequest) {
+			@Payload DiceRollRequest diceRollRequest) {
 		SocketDiceRollResponse socketDiceRollResponse = SocketDiceRollResponse.from("roll-dice",
 				bluemarbleGameService.rollDice(roomId, diceRollRequest), "주사위를 굴렸습니다.");
 		logger.info("socketDiceRollResponse : {}", socketDiceRollResponse);
@@ -43,7 +53,7 @@ public class BluemarbleGameController {
 	@MessageMapping("/{roomId}/buy-land")
 	@Operation(summary = "땅 구매", description = "땅을 구매합니다.")
 	public void buyLand(@DestinationVariable("roomId") int roomId,
-	                    @Payload BuyLandRequest buyLandRequest) {
+			@Payload BuyLandRequest buyLandRequest) {
 		logger.info("buyLandRequest : {}", buyLandRequest);
 		SocketBuyLandResponse socketBuyLandResponse = SocketBuyLandResponse.from("buy-land",
 				bluemarbleGameService.buyLand(roomId, buyLandRequest), "땅을 구매했습니다.");
@@ -54,8 +64,7 @@ public class BluemarbleGameController {
 	@MessageMapping("/{roomId}/draw-card")
 	@Operation(summary = "카드 뽑기", description = "카드를 뽑습니다.")
 	public void drawCard(@DestinationVariable("roomId") int roomId,
-	                     @Payload CardDrawRequest cardDrawRequest) {
-		// TODO : 카드 뽑기 구현
+			@Payload CardDrawRequest cardDrawRequest) {
 		SocketResponse<DrawCardResponse> socketCardDrawResponse = SocketResponse.from("draw-card",
 				bluemarbleGameService.drawCard(roomId, cardDrawRequest), "카드를 뽑았습니다.");
 		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, socketCardDrawResponse);
@@ -64,7 +73,7 @@ public class BluemarbleGameController {
 	@MessageMapping("/{roomId}/build-base")
 	@Operation(summary = "기지 건설", description = "기지를 건설합니다.")
 	public void buildBase(@DestinationVariable("roomId") int roomId,
-	                      @Payload BuildBaseRequest buildBaseRequest) {
+			@Payload BuildBaseRequest buildBaseRequest) {
 		SocketResponse<BuildBaseResponse> socketBuildBaseResponse = SocketResponse.from(
 				"build-base",
 				bluemarbleGameService.buildBase(roomId, buildBaseRequest), "기지를 건설했습니다.");
@@ -81,7 +90,7 @@ public class BluemarbleGameController {
 	@MessageMapping("/{roomId}/pay-fee")
 	@Operation(summary = "통행료 지불", description = "통행료를 지불합니다")
 	public void payFee(@DestinationVariable("roomId") int roomId,
-	                   @Payload PayFeeRequest payFeeRequest) {
+			@Payload PayFeeRequest payFeeRequest) {
 		SocketResponse<PayFeeResponse> response = SocketResponse.from("pay-fee",
 				bluemarbleGameService.payFee(roomId, payFeeRequest), "통행료를 지불했습니다.");
 		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, response);
@@ -106,7 +115,7 @@ public class BluemarbleGameController {
 	@MessageMapping("/{roomId}/check-end")
 	@Operation(summary = "턴을 끝내는 기능", description = "턴을 끝냅니다.")
 	public void turnEnd(@DestinationVariable("roomId") int roomId,
-	                    @Payload TurnEndRequest turnEndRequest) {
+			@Payload TurnEndRequest turnEndRequest) {
 		SocketResponse<TurnEndResponse> response = SocketResponse.from("turn-end",
 				bluemarbleGameService.turnEnd(roomId, turnEndRequest), "턴을 종료합니다");
 		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, response);
@@ -115,7 +124,7 @@ public class BluemarbleGameController {
 	@MessageMapping("/{roomId}/just-roll-dice")
 	@Operation(summary = "주사위 굴리기 방송", description = "주사위 굴리는걸 방송하는 기능")
 	public void justRollDice(@DestinationVariable("roomId") int roomId,
-	                         @Payload DiceRollBroadcastRequest request) {
+			@Payload DiceRollBroadcastRequest request) {
 		SocketResponse<DiceRollBroadcastRequest> response = SocketResponse.from("just-roll-dice",
 				request,
 				"주사위를 굴립니다.");
@@ -136,14 +145,17 @@ public class BluemarbleGameController {
 	}
 
 	@MessageMapping("/{roomId}/choose-position")
-	public void choosePosition(@DestinationVariable("roomId") int roomId, @Payload ChoosePositionRequest request) {
-		SocketResponse<ChoosePositionResponse> response = SocketResponse.from("choose-position", bluemarbleGameService.choosePosition(roomId, request), "시간여행을 합니다!");
+	public void choosePosition(@DestinationVariable("roomId") int roomId,
+			@Payload ChoosePositionRequest request) {
+		SocketResponse<ChoosePositionResponse> response = SocketResponse.from("choose-position",
+				bluemarbleGameService.choosePosition(roomId, request), "시간여행을 합니다!");
 		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, response);
 	}
 
 	@MessageMapping("/{roomId}/game-end")
 	public void gameEnd(@DestinationVariable("roomId") int roomId) {
-		SocketResponse<String> response = SocketResponse.from("game-end", bluemarbleGameService.gameEnd(roomId), "게임이 종료되었습니다.");
+		SocketResponse<String> response = SocketResponse.from("game-end",
+				bluemarbleGameService.gameEnd(roomId), "게임이 종료되었습니다.");
 		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, response);
 	}
 }

@@ -24,6 +24,8 @@ import { fetchProfile } from "../../../../sources/store/slices/ProfileSlice";
 import { CatchMindAPI } from "../../../../sources/api/CatchMindAPI";
 import useCatchSocket from "../../../../hooks/useCatchSocket";
 import VideoChat from "./VideoChat";
+import ExitConfirmationModal from "./ExitConfirmationModal";
+import GameReviewModal from "./GameReivewModal";
 
 // 비디오 컨테이너 컴포넌트 - React.memo로 최적화
 const VideoContainer = React.memo(
@@ -268,6 +270,50 @@ const MainLayout = () => {
 
   const isCreator = gameState.creator === profileData?.userNickname;
   const { sendMessage, client, joinRoom } = useCatchSocket(roomId);
+  const [isExitModalOpen, setIsExitModalOpen] = useState(false);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [hasPlayedGame, setHasPlayedGame] = useState(false);
+
+  // 모달 닫기 핸들러
+  const handleCloseExitModal = () => {
+    setIsExitModalOpen(false);
+  };
+
+  // 나가기 확인 핸들러
+  const handleConfirmExit = () => {
+    handleExitRoom();
+    setIsExitModalOpen(false);
+  };
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (gameState.isGameStart) {
+        e.preventDefault();
+        setIsExitModalOpen(true);
+        e.returnValue = "";
+      }
+    };
+
+    const handlePopState = (e) => {
+      if (gameState.isGameStart) {
+        e.preventDefault();
+        setIsExitModalOpen(true);
+        // 현재 URL을 history stack에 다시 추가
+        window.history.pushState(null, "", window.location.pathname);
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("popstate", handlePopState);
+
+    // 초기 history state 추가
+    window.history.pushState(null, "", window.location.pathname);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [gameState.isGameStart]);
 
   // 현재 턴인 플레이어 찾기
   const currentPlayer = useSelector((state) =>
@@ -289,6 +335,13 @@ const MainLayout = () => {
 
     try {
       setIsExiting(true);
+
+      // 게임을 플레이했다면 리뷰 모달 표시
+      if (hasPlayedGame) {
+        setIsReviewModalOpen(true);
+        return; // 리뷰 모달에서 처리 후 나가기를 진행
+      }
+
       dispatch(resetGameState());
 
       client.publish({
@@ -312,7 +365,28 @@ const MainLayout = () => {
     navigate,
     isExiting,
     dispatch,
+    hasPlayedGame,
   ]);
+
+  const handleReviewClose = useCallback(() => {
+    setIsReviewModalOpen(false);
+
+    // 리뷰 모달이 닫힌 후 방 나가기 처리
+    dispatch(resetGameState());
+
+    if (client) {
+      client.publish({
+        destination: `/app/exit-room/${roomId}`,
+        body: profileData.userNickname,
+        headers: { "content-type": "text/plain" },
+      });
+    }
+
+    setTimeout(() => {
+      setIsExiting(false);
+      navigate("/catch-mind");
+    }, 500);
+  }, [client, dispatch, navigate, profileData?.userNickname, roomId]);
 
   // 게임 시작 처리 함수
   const handleStartGame = useCallback(async () => {
@@ -395,6 +469,13 @@ const MainLayout = () => {
       console.error("[StartGame] Error:", error);
     }
   }, [roomId, client, dispatch]);
+
+  // gameState 변경 감지를 위한 useEffect 추가
+  useEffect(() => {
+    if (gameState.isGameStart) {
+      setHasPlayedGame(true);
+    }
+  }, [gameState.isGameStart]);
 
   // 제시어 가져오기
   const currentWord = useMemo(() => {
@@ -514,6 +595,11 @@ const MainLayout = () => {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+      <ExitConfirmationModal
+        isOpen={isExitModalOpen}
+        onClose={handleCloseExitModal}
+        onConfirm={handleConfirmExit}
+      />
       <div className="flex-1 p-4">
         <div className="h-full flex flex-col space-y-4">
           <GameInfo
@@ -561,6 +647,11 @@ const MainLayout = () => {
           correctAnswer={gameState?.currentWord || ""}
         />
       </div>
+      <GameReviewModal
+        isOpen={isReviewModalOpen}
+        onClose={handleReviewClose}
+        gameInfoId={3} // 캐치마인드 게임의 gameInfoId를 여기에 입력
+      />
     </div>
   );
 };
