@@ -1,14 +1,14 @@
 package com.meeple.meeple_back.game.bluemarble.domain;
 
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
-import java.util.Objects;
-import lombok.Getter;
-import org.springframework.data.annotation.PersistenceConstructor;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Logger;
+import lombok.Data;
+import lombok.Getter;
+import org.springframework.data.annotation.PersistenceConstructor;
 
 /**
  * 턴 관리 클래스. 플레이어 순서를 관리하고, 더블 카운트, 현재 라운드를 관리한다.
@@ -28,11 +28,32 @@ import java.util.logging.Logger;
  * ROLL_DICE), 주사위 더블인 경우(주사위 더블인 플레이어 주기, 다음 액션 : ROLL_DICE)
  */
 @Getter
+@Data
 public class TurnManager {
 
 	private static Logger logger = Logger.getLogger(TurnManager.class.getName());
 	private int initialPlayerCount;
 	private List<Player> players;
+	private int doubleCount;
+	private int round;
+	private int currentPlayerIndex;
+
+	public TurnManager() {
+	}
+
+	@PersistenceConstructor
+	private TurnManager(List<Player> players, int doubleCount, int round,
+			int currentPlayerIndex) {
+		this.players = players;
+		this.doubleCount = doubleCount;
+		this.round = round;
+		this.currentPlayerIndex = currentPlayerIndex;
+		this.initialPlayerCount = players.size();
+	}
+
+	public static TurnManager init(List<Player> players) {
+		return new TurnManager(new ArrayList<>(players), 0, 1, 0);
+	}
 
 	@Override
 	public boolean equals(Object o) {
@@ -49,28 +70,6 @@ public class TurnManager {
 	public int hashCode() {
 		return Objects.hash(getInitialPlayerCount(), getPlayers(), getDoubleCount(), getRound(),
 				getCurrentPlayerIndex());
-	}
-
-	private int doubleCount;
-	private int round;
-	private int currentPlayerIndex;
-
-	public TurnManager() {
-	}
-
-	@PersistenceConstructor
-	private TurnManager(List<Player> players, int doubleCount, int round,
-	                    int currentPlayerIndex) {
-		this.players = players;
-		this.doubleCount = doubleCount;
-		this.round = round;
-		this.currentPlayerIndex = currentPlayerIndex;
-		this.initialPlayerCount = players.size();
-	}
-
-
-	public static TurnManager init(List<Player> players) {
-		return new TurnManager(new ArrayList<>(players), 0, 1, 0);
 	}
 
 	public Player nextTurn() {
@@ -100,13 +99,24 @@ public class TurnManager {
 		}
 
 		if (isCurrentPlayerBankrupt()) {
-			return handleBankruptCurrentPlayer(board);
+			// 파산 처리: 현재 플레이어를 게임에서 제거하는 로직 추가
+			// handleBankruptCurrentPlayer 메서드를 수정하여, 파산한 플레이어를 players 리스트에서 제거하도록 변경
+			Player removed = handleBankruptCurrentPlayer(board);
+
+			// 파산 처리 후, 남은 플레이어 수를 다시 확인
+			if (checkWinnerByPlayerSize()) {
+				return TurnEndResponse.gameEnd(determineWinner(board));
+			}
+
+			// 남은 플레이어가 있으면 다음 플레이어로 턴을 넘김
+			Player nextPlayer = nextTurn();
+			return TurnEndResponse.nextTurn(removed,
+					nextPlayer, currentPlayerIndex, round, ActionType.START_TURN);
 		}
 
 		if (hasMetConstructionWinCondition(getCurrentPlayer(), board)) {
 			return TurnEndResponse.gameEnd(getCurrentPlayer());
 		}
-
 
 		if (rolledDouble()) {
 			doubleCount = 2;
@@ -114,9 +124,6 @@ public class TurnManager {
 					round);
 		}
 		doubleCount = 0;
-
-
-
 
 		Player nextPlayer = nextTurn();
 
@@ -130,7 +137,7 @@ public class TurnManager {
 	 * @param board
 	 * @return
 	 */
-	private TurnEndResponse handleBankruptCurrentPlayer(List<Tile> board) {
+	private Player handleBankruptCurrentPlayer(List<Tile> board) {
 
 		Player removed = getCurrentPlayer();
 		board.forEach(tile -> {
@@ -141,12 +148,12 @@ public class TurnManager {
 		});
 		removePlayer(removed);
 
-		if (checkWinnerByPlayerSize()) {
-			return TurnEndResponse.gameEnd(determineWinner(board));
+		if (!players.isEmpty()) {
+			currentPlayerIndex = currentPlayerIndex % players.size();
+		} else {
+			currentPlayerIndex = 0;
 		}
-		Player nextPlayer = nextTurn();
-		return TurnEndResponse.nextTurn(removed, nextPlayer, currentPlayerIndex, round,
-				ActionType.START_TURN);
+		return removed;
 	}
 
 	/**
