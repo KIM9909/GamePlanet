@@ -8,7 +8,6 @@ import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CardResp
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomElementListResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomElementResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomTileCardResponse;
-import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomTileResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.TileImageResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.TileResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.domain.CustomElementUpdate;
@@ -28,7 +27,6 @@ import com.meeple.meeple_back.user.model.User;
 import com.meeple.meeple_back.user.repository.UserRepository;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class CustomElementService {
+
 	private final CustomElementJpaRepository customElementRepository;
 	private final TileJpaRepository tileJpaRepository;
 	private final CardJpaRepository cardJpaRepository;
@@ -46,7 +45,8 @@ public class CustomElementService {
 
 	public CustomElementResponse create(CustomElementRequest customElementRequest) {
 		User user = userRepository.findById(customElementRequest.getUserId()).orElseThrow();
-		return CustomElementResponse.from(customElementRepository.save(CustomElementEntity.from(customElementRequest, user)));
+		return CustomElementResponse.from(
+				customElementRepository.save(CustomElementEntity.from(customElementRequest, user)));
 	}
 
 	public CustomElementResponse findById(Integer integer) {
@@ -55,7 +55,8 @@ public class CustomElementService {
 
 	public CustomElementResponse update(Integer customId,
 			CustomElementUpdate update) {
-		CustomElementEntity customElementEntity = customElementRepository.findById(customId).orElseThrow();
+		CustomElementEntity customElementEntity = customElementRepository.findById(customId)
+				.orElseThrow();
 		customElementEntity.update(update);
 		return CustomElementResponse.from(customElementRepository.save(customElementEntity));
 	}
@@ -68,80 +69,107 @@ public class CustomElementService {
 		return customElementRepository.findAll().stream().map(CustomElementEntity::to).toList();
 	}
 
-    public CustomTileCardResponse createTileAndCard(int customId, CustomTileCardRequest request) {
+	public CustomTileCardResponse createTileAndCard(int customId, CustomTileCardRequest request) {
 		// 타일 생성
-		TileEntity tileEntity = new TileEntity(request.getName(), TileType.SEED_CERTIFICATE_CARD.name(), request.getImageUrl(), request.getSeedCount(),request.getNumber());
+		TileEntity tileEntity = new TileEntity(request.getName(),
+				TileType.SEED_CERTIFICATE_CARD.name(), request.getImageUrl(),
+				request.getSeedCount(), request.getNumber());
 		// 카드 생성
-		CardEntity cardEntity = new CardEntity(request.getNumber(), request.getName(), request.getDescription(),
-			CardType.SEED_CERTIFICATE_CARD.name(), request.getCardColor(), request.getSeedCount(), request.getBaseConstructionCost(),request.getHeadquartersUsageFee(),request.getBaseUsageFee());
+		CardEntity cardEntity = new CardEntity(request.getNumber(), request.getName(),
+				request.getDescription(),
+				CardType.SEED_CERTIFICATE_CARD.name(), request.getCardColor(),
+				request.getSeedCount(), request.getBaseConstructionCost(),
+				request.getHeadquartersUsageFee(), request.getBaseUsageFee());
 
 		tileJpaRepository.save(tileEntity);
 		cardJpaRepository.save(cardEntity);
 
-		CustomElementEntity customElementEntity = customElementRepository.findById(customId).orElseThrow();
+		CustomElementEntity customElementEntity = customElementRepository.findById(customId)
+				.orElseThrow();
 		// 커스텀 타일 생성
 		// 커스텀 카드 생성
 		CustomTileId customTileId = new CustomTileId(customId, tileEntity.getTileId());
 		CustomCardId customCardId = new CustomCardId(customId, cardEntity.getCardId());
-		CustomTileEntity customTileEntity = new CustomTileEntity(customTileId, customElementEntity, tileEntity);
-		CustomCardEntity customCardEntity = new CustomCardEntity(customCardId, customElementEntity, cardEntity);
+		CustomTileEntity customTileEntity = new CustomTileEntity(customTileId, customElementEntity,
+				tileEntity);
+		CustomCardEntity customCardEntity = new CustomCardEntity(customCardId, customElementEntity,
+				cardEntity);
 
 		// 저장 후 tile, card 정보 담아서 return
 		customTileJpaRepository.save(customTileEntity);
 		customCardJpaRepository.save(customCardEntity);
 		TileResponse tileResponse = TileResponse.from(tileEntity);
-		CardResponse cardResponse = new CardResponse(cardEntity.getCardId(), cardEntity.getCardNumber(), cardEntity.getCardName(), cardEntity.getCardDescription(), cardEntity.getCardType(),cardEntity.getCardColor(), cardEntity.getCardSeedCount(),cardEntity.getCardBaseConstructionCost() , cardEntity.getCardHeadquartersUsageFee(),cardEntity.getCardBaseUsageFee());
+		CardResponse cardResponse = new CardResponse(cardEntity.getCardId(),
+				cardEntity.getCardNumber(), cardEntity.getCardName(),
+				cardEntity.getCardDescription(), cardEntity.getCardType(),
+				cardEntity.getCardColor(), cardEntity.getCardSeedCount(),
+				cardEntity.getCardBaseConstructionCost(), cardEntity.getCardHeadquartersUsageFee(),
+				cardEntity.getCardBaseUsageFee());
 		return new CustomTileCardResponse(tileResponse, cardResponse);
-    }
+	}
 
 	public List<TileImageResponse> findTileImageUrlByCustomId(Integer customId) {
 		// customID에 해당하는 타일의 번호에 해당하는 이미지 목록을 반환한다.
-		List<TileEntity> tileEntities = customTileJpaRepository.findTileEntitiesByCustomId(customId);
+		List<TileEntity> tileEntities = customTileJpaRepository.findTileEntitiesByCustomId(
+				customId);
 		List<TileImageResponse> result = new ArrayList<>();
-		for(int i=0; i<tileEntities.size(); i++){
+		for (int i = 0; i < tileEntities.size(); i++) {
 			TileEntity tileEntity = tileEntities.get(i);
-			result.add(new TileImageResponse(tileEntity.getTileNumber(), tileEntity.getTileImageUrl()));
+			result.add(new TileImageResponse(tileEntity.getTileNumber(),
+					tileEntity.getTileImageUrl()));
 		}
 		return result;
 	}
+
 	@Transactional
 	public String getExistingImageUrl(int customId, int number) {
 		return customElementJpaRepository.findImageUrlByCustomIdAndNumber(customId, number);
 	}
+
 	@Transactional
 	public CustomTileCardResponse updateTileAndCard(int customId, CustomTileCardRequest request) {
-		TileEntity tileEntity = tileJpaRepository.findByTileNumberAndCustomId(customId, request.getNumber());
-		CardEntity cardEntity = cardJpaRepository.findByCardNumberAndCustomId(customId, request.getNumber());
+		TileEntity tileEntity = tileJpaRepository.findByTileNumberAndCustomId(customId,
+				request.getNumber());
+		CardEntity cardEntity = cardJpaRepository.findByCardNumberAndCustomId(customId,
+				request.getNumber());
 
 		tileEntity = tileJpaRepository.save(tileEntity.update(request));
 		cardEntity = cardJpaRepository.save(cardEntity.update(request));
 
-
 		TileResponse tileResponse = TileResponse.from(tileEntity);
-		CardResponse cardResponse = new CardResponse(cardEntity.getCardId(), cardEntity.getCardNumber(), cardEntity.getCardName(), cardEntity.getCardDescription(), cardEntity.getCardType(),cardEntity.getCardColor(), cardEntity.getCardSeedCount(),cardEntity.getCardBaseConstructionCost() , cardEntity.getCardHeadquartersUsageFee(),cardEntity.getCardBaseUsageFee());
+		CardResponse cardResponse = new CardResponse(cardEntity.getCardId(),
+				cardEntity.getCardNumber(), cardEntity.getCardName(),
+				cardEntity.getCardDescription(), cardEntity.getCardType(),
+				cardEntity.getCardColor(), cardEntity.getCardSeedCount(),
+				cardEntity.getCardBaseConstructionCost(), cardEntity.getCardHeadquartersUsageFee(),
+				cardEntity.getCardBaseUsageFee());
 		return new CustomTileCardResponse(tileResponse, cardResponse);
 	}
 
 	public CustomTileCardResponse findByCustomIdAndCardNumber(int customId, int cardNumber) {
 		TileEntity tileEntity = tileJpaRepository.findByTileNumberAndCustomId(customId, cardNumber);
 		CardEntity cardEntity = cardJpaRepository.findByCardNumberAndCustomId(customId, cardNumber);
-		return new CustomTileCardResponse(TileResponse.from(tileEntity), CardResponse.from(cardEntity));
+		return new CustomTileCardResponse(TileResponse.from(tileEntity),
+				CardResponse.from(cardEntity));
 	}
 
 	public CustomElementListResponse findCompleteElementList(Integer customId) {
-		List<Integer> completeIdList = customElementJpaRepository.findCompleteElementListByCustomId(customId);
+		List<Integer> completeIdList = customElementJpaRepository.findCompleteElementListByCustomId(
+				customId);
 		return new CustomElementListResponse(customId, completeIdList);
 	}
 
-	public void create(String customName, Long userId, String fileUrl) {
+	public CustomElementResponse create(String customName, Long userId, String fileUrl) {
 		User user = userRepository.findById(userId).orElseThrow();
 		CustomElementEntity entity = new CustomElementEntity(user, customName, fileUrl);
 		customElementJpaRepository.save(entity);
+		return CustomElementResponse.from(entity);
 	}
-	
+
 	public List<CustomElementResponse> findByUserId(Integer customId, Long userId) {
-		return customElementJpaRepository.findByCustomIdAndUserId(customId, userId).stream().map(CustomElementResponse::from)
-			.toList();
+		return customElementJpaRepository.findByCustomIdAndUserId(customId, userId).stream()
+				.map(CustomElementResponse::from)
+				.toList();
 	}
 
 }
