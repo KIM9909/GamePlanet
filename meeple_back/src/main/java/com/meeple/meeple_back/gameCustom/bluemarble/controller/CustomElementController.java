@@ -53,7 +53,7 @@ public class CustomElementController {
 	 * @return 조회된 CustomElementResponse 객체 목록을 포함한 ResponseEntity
 	 */
 	@Operation(tags = "customElement 목록중 입력받은 userId가 현재 접속한 유저의 것을 찾는다.")
-	@GetMapping("/{customId}/find-by-user-id/{userId}")
+	@GetMapping("/find-by-user-id/{userId}")
 	public ResponseEntity<List<CustomElementResponse>> findByUserId(
 			@PathVariable("userId") Long userId) {
 		List<CustomElementResponse> response = customElementService.findByUserId(userId);
@@ -308,6 +308,20 @@ public class CustomElementController {
 	@DeleteMapping("/{customId}/delete")
 	public ResponseEntity<Void> deleteCustomElement(@PathVariable Integer customId) {
 		customElementService.delete(customId);
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+	}
+
+	/**
+	 * 특정 customId와 tileNumber에 해당하는 커스텀 타일을 삭제하는 엔드포인트입니다.
+	 *
+	 * @param customId   삭제할 커스텀 요소의 ID
+	 * @param tileNumber 삭제할 타일의 번호
+	 * @return HTTP 상태 코드 204 (No Content)
+	 */
+	@DeleteMapping("/{customId}/delete-tile/{tileNumber}")
+	public ResponseEntity<Void> deleteCustomTile(@PathVariable("customId") Integer customId,
+			@PathVariable("tileNumber") Integer tileNumber) {
+		customElementService.deleteCustomTileByCustomIdAndTileNumber(customId, tileNumber);
 		return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
 	}
 

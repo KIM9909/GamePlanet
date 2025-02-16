@@ -23,4 +23,18 @@ public interface CustomTileJpaRepository extends JpaRepository<CustomTileEntity,
 	@Modifying
 	@Query("DELETE FROM CustomTileEntity ct WHERE ct.customElement.customId = :customId")
 	void deleteByCustomId(@Param("customId") Integer customId);
+
+
+	@Query("SELECT ct.tileEntity.tileId FROM CustomTileEntity ct WHERE ct.customElement.customId = :customId AND ct.tileEntity.tileNumber = :tileNumber")
+	int findByIdByCustomIdAndTileNumber(@Param("customId") Integer customId,
+			@Param("tileNumber") Integer tileNumber);
+
+
+	@Modifying
+	@Query("DELETE FROM CustomTileEntity ct WHERE ct.customElement.customId = :customId AND ct.tileEntity.tileNumber = :tileNumber")
+	void deleteByCustomIdAndTileNumber(@Param("customId") Integer customId,
+			@Param("tileNumber") Integer tileNumber);
+
+	@Query("SELECT ct.tileEntity.tileId FROM CustomTileEntity ct WHERE ct.customElement.customId = :customId")
+	List<Integer> findByIdsByCustomIdAndTileNumber(@Param("customId") Integer customId);
 }

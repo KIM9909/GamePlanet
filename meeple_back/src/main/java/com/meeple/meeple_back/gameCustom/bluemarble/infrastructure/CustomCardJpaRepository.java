@@ -29,4 +29,16 @@ public interface CustomCardJpaRepository extends JpaRepository<CustomCardEntity,
 	@Modifying
 	@Query("DELETE FROM CustomCardEntity ce WHERE ce.customElement.customId = :customId")
 	void deleteByCustomId(@Param("customId") Integer customId);
+
+	@Query("SELECT c.card.cardId FROM CustomCardEntity c WHERE c.customElement.customId = :customId AND c.card.cardNumber = :tileNumber")
+	int findIdByCustomIdAndTileNumber(@Param("customId") Integer customId,
+			@Param("tileNumber") Integer tileNumber);
+
+	@Modifying
+	@Query("DELETE FROM CustomCardEntity c WHERE c.customElement.customId = :customId AND c.card.cardNumber = :tileNumber")
+	void deleteByCustomIdAndTileNumber(@Param("customId") Integer customId,
+			@Param("tileNumber") Integer tileNumber);
+
+	@Query("SELECT c.card.cardId FROM CustomCardEntity c WHERE c.customElement.customId = :customId")
+	List<Integer> findIdsByCustomIdAndTileNumber(@Param("customId") Integer customId);
 }
