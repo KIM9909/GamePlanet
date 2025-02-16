@@ -12,9 +12,12 @@ const CustomDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [customData, setCustomData] = useState(null);
-  const [submissionStatus, setSubmissionStatus] = useState('not_submitted');
+  const [completeTiles, setCompleteTiles] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { gameInfo, customGame } = location.state;
+
+  const customizableTiles = [1, 3, 4, 5, 6, 8, 9, 11, 12, 14, 16, 18, 19, 21, 22, 24, 25, 26, 27, 28, 31, 32, 34, 36, 38, 39];
 
   const getStatusText = (status) => {
     switch(status) {
@@ -43,6 +46,12 @@ const CustomDetail = () => {
         // 커스텀 게임 기본 정보 로드
         const customResponse = await CustomAPI.getElementById(customGame.id);
         setCustomData(customResponse);
+
+        // 완성된 타일 목록 로드
+        const completeTilesResponse = await CustomAPI.getCompleteTiles(customGame.id);
+        // customCompleteList 배열 추출
+        const completedTileNumbers = completeTilesResponse?.customCompleteList || [];
+        setCompleteTiles(completedTileNumbers);
       } catch (err) {
         setError(err.message || "데이터를 불러오는데 실패했습니다.");
       } finally {
@@ -52,6 +61,42 @@ const CustomDetail = () => {
 
     fetchData();
   }, [customGame.id]);
+
+
+  // 완성된 커스터마이징 가능한 타일 수 계산
+  const getCompletedCustomTilesCount = () => {
+    if (!Array.isArray(completeTiles)) {
+      console.error('completeTiles is not an array:', completeTiles);
+      return 0;
+    }
+    
+    // 완성된 타일 중 커스터마이징 가능한 타일의 수를 계산
+    return completeTiles.filter(tileNumber => 
+      customizableTiles.includes(tileNumber)
+    ).length;
+  };
+
+  const handleSubmit = async () => {
+    const completedCount = getCompletedCustomTilesCount();
+    if (completedCount < customizableTiles.length) {
+      alert('모든 커스터마이징 가능한 타일을 완성해야 신청할 수 있습니다.');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await CustomAPI.updateStatus(customGame.id, 'SUBMITTED');
+      // 상태 업데이트 후 데이터 새로고침
+      const updatedCustom = await CustomAPI.getElementById(customGame.id);
+      setCustomData(updatedCustom);
+    } catch (error) {
+      alert('신청 중 오류가 발생했습니다.');
+      console.error('Submit error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
 
   const getIndex = (position) => {
     if (position >= 0 && position <= 10) return 30 - position;
@@ -193,24 +238,34 @@ const CustomDetail = () => {
             <div className="flex-1 flex items-center justify-center p-12">
               <div className="text-center space-y-6 max-w-xl w-full">
                 <div className="bg-slate-800/50 rounded-xl p-8 space-y-6">
-                  {status === 'before' && (
-                    <>
-                      <h2 className="text-2xl font-bold text-cyan-400">커스텀 게임 신청</h2>
-                      <p className="text-slate-300">
-                        커스텀 게임을 공개하기 위해서는 관리자의 검토가 필요합니다.
-                        아래 버튼을 눌러 신청해주세요.
-                      </p>
-                      <button
-                        onClick={() => {
-                          // 백엔드 API 호출 예정
-                          console.log('신청하기 버튼 클릭');
-                        }}
-                        className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-bold transition-all active:scale-95"
-                      >
-                        신청하기
-                      </button>
-                    </>
-                  )}
+                {status === 'before' && (
+                  <>
+                    <h2 className="text-2xl font-bold text-cyan-400">커스텀 게임 신청</h2>
+                    <p className="text-slate-300">
+                      커스텀 게임을 공개하기 위해서는 관리자의 검토가 필요합니다.
+                      아래 버튼을 눌러 신청해주세요.
+                    </p>
+                    <div className="text-slate-300 mt-2">
+                      커스터마이징 가능한 타일 완성도: {getCompletedCustomTilesCount()}/{customizableTiles.length}
+                    </div>
+                    {getCompletedCustomTilesCount() < customizableTiles.length && (
+                      <div className="text-amber-400 mt-2">
+                        신청하기 위해서는 모든 커스터마이징 가능한 타일을 완성해야 합니다.
+                      </div>
+                    )}
+                    <button
+                      onClick={handleSubmit}
+                      disabled={isSubmitting || getCompletedCustomTilesCount() < customizableTiles.length}
+                      className={`px-6 py-3 ${
+                        isSubmitting || getCompletedCustomTilesCount() < customizableTiles.length
+                          ? 'bg-slate-500 cursor-not-allowed'
+                          : 'bg-cyan-500 hover:bg-cyan-600'
+                      } text-white rounded-lg font-bold transition-all active:scale-95`}
+                    >
+                      {isSubmitting ? '신청 중...' : '신청하기'}
+                    </button>
+                  </>
+                )}
 
                   {status === 'submitted' && (
                     <>
