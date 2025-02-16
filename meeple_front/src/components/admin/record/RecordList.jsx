@@ -22,6 +22,8 @@ const RecordList = () => {
       try {
         setLoading(true);
         const response = await AdminAPI.getVoiceLogList();
+        console.log(response);
+        
         if (response && response.voiceLogList) {
           setRecords(response.voiceLogList);
         } else {

@@ -5,6 +5,7 @@ import { CustomAPI } from '../../../sources/api/CustomAPI';
 import Loading from '../../../components/Loading';
 import CustomModal from './modal/CustomModal';
 import ConfirmModal from './modal/ConfirmModal';
+import CelebrationModal from './modal/CelebrationModal'
 
 const CUSTOMIZABLE_ITEMS = [1, 3, 4, 5, 6, 8, 9, 11, 12, 14, 16, 18, 19, 21, 22, 24, 25, 26, 27, 28, 31, 32, 34, 36, 38, 39];
 
@@ -44,6 +45,7 @@ const CustomEditor = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState(null);
   const [completedItems, setCompletedItems] = useState(new Set());
+  const [showCompletion, setShowCompletion] = useState(false);
   
   const maxIndex = Math.max(0, Math.floor((CUSTOMIZABLE_ITEMS.length - 1) / 5));
   const progress = (completedItems.size / CUSTOMIZABLE_ITEMS.length) * 100;
@@ -65,7 +67,14 @@ const CustomEditor = () => {
       console.error('완료된 타일 정보를 불러오는데 실패했습니다:', error);
     }
   };
-  
+  useEffect(() => {
+    if (progress === 100 && !showCompletion) {
+      setShowCompletion(true);
+      // 자동 저장 트리거 (선택적)
+      handleSave(true);
+    }
+  }, [progress]);
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -109,6 +118,26 @@ const CustomEditor = () => {
   const handleCardClick = (cardId) => {
     setSelectedCardId(cardId);
     setShowModal(true);
+    // isEdit prop은 모달 컴포넌트에서 completedItems.has(selectedCardId)로 결정됨
+  };
+
+  const handleSave = async (isTemp = false) => {
+    try {
+      console.log("이름 : ", customName);
+      
+      const updateData = { customName }; // customId는 제외하고 customName만 전송
+      
+      await CustomAPI.updateElement(customId, updateData);
+  
+      if (isTemp) {
+        console.log("임시저장 되었습니다.");
+        
+      } else {
+        setShowConfirm(true);
+      }
+    } catch (error) {
+      console.error('저장 실패:', error?.response?.data);
+    }
   };
 
 // CustomModal에서 저장 완료 후 호출될 handleSaveComplete 함수도 수정
@@ -152,7 +181,6 @@ const handleSaveComplete = async (response) => {
       </div>
     );
   };
-
   const renderCard = (cardId, actualNumber) => {
     const isCompleted = completedItems.has(cardId);
     
@@ -164,7 +192,7 @@ const handleSaveComplete = async (response) => {
           cursor-pointer hover:bg-slate-600 relative border
           ${isCompleted ? 'border-green-400' : 'border-slate-600'}
         `}
-        // onClick={() => handleCardClick(cardId)}
+        onClick={() => handleCardClick(cardId)}
       >
         <div className="absolute top-0 left-0 w-full h-1 bg-slate-600 rounded-t-lg overflow-hidden">
           <div 
@@ -416,9 +444,15 @@ const handleSaveComplete = async (response) => {
       </div>
 
       {/* 완료 버튼 */}
-      <div className="text-center">
+      <div className="text-center space-x-4">
         <button
-          onClick={() => setShowConfirm(true)}
+          onClick={() => handleSave(true)}
+          className="px-8 py-4 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors text-lg font-semibold"
+        >
+          임시저장
+        </button>
+        <button
+          onClick={() => handleSave(false)}
           className="px-8 py-4 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors text-lg font-semibold"
         >
           커스터마이징 완료
@@ -433,9 +467,21 @@ const handleSaveComplete = async (response) => {
             onSuccess={handleSaveComplete}
             cardId={selectedCardId}
             customId={customId}
+            isEdit={completedItems.has(selectedCardId)} // isEdit prop 추가
             onSaveComplete={() => handleSaveComplete(selectedCardId)}
           />
         </div>
+      )}
+
+       {/* 완료 축하 모달 */}
+       {showCompletion && (
+        <CelebrationModal 
+          onClose={() => {
+            setShowCompletion(false);
+            handleSave(false);
+          }}
+          gameInfoId={gameInfo.gameInfoId} // gameInfoId 전달
+        />
       )}
 
       {showConfirm && (

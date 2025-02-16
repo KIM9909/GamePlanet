@@ -24,19 +24,21 @@ const Custom = () => {
   const gameInfo = location.state?.gameInfo;
 
   const userId = useSelector(state => state.user.userId);
+  console.log(userId)
 
   useEffect(() => {
     const fetchCustomElements = async () => {
       try {
         setIsLoading(true);
         // customId를 0으로 전달하여 모든 해당 유저의 커스텀 요소 조회
-        const response = await CustomAPI.findByUserId(0, userId);
+        const response = await CustomAPI.findByUserId(userId);
         
         const formattedGames = response.map(element => ({
           id: element.customId,
           title: element.customName,
           createdAt: element.createdAt ? new Date(element.createdAt).toLocaleDateString() : '',
-          thumbnail: element.fileUrl || buruMabulImage
+          thumbnail: element.imageUrl || buruMabulImage,
+          status : element.customStatus
         }));
         
         setCustomGames(formattedGames);
@@ -133,9 +135,15 @@ const Custom = () => {
                 alt={game.title}
                 className="w-full h-48 object-cover"
               />
-              <div className="p-4">
-                <h3 className="text-xl font-semibold text-white mb-2">{game.title}</h3>
-              </div>
+                <div className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="text-xl font-semibold text-white">{game.title}</h3>
+                    <span className="px-2 py-1 text-sm rounded bg-slate-700 text-white">
+                      {game.status}
+                    </span>
+                  </div>
+                  <p className="text-white mb-2">제작일 : {game.createdAt}</p>
+                </div>
                 <button
                 onClick={(e) => handleDeleteGame(e, game)}
                 className="absolute bottom-4 right-4 p-2 bg-opacity-0 group-hover:bg-opacity-100 bg-slate-500 hover:bg-slate-600 text-white rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100"
@@ -170,17 +178,26 @@ const Custom = () => {
       {showTutorial && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-slate-800 rounded-lg w-11/12 max-w-6xl h-5/6 p-5">
-            <CustomTutorial onClose={() => setShowTutorial(false)} />
+            <CustomTutorial onClose={() => setShowTutorial(false)}
+            onStartCustomizing={() => {
+              setShowTutorial(false);  // 튜토리얼 닫기
+              setShowCreateModal(true); // 생성 모달 열기
+            }}
+            />
           </div>
         </div>
         )}
       {deleteGame && (
-      <DeleteConfirmModal
-        gameName={deleteGame.title}
-        onClose={() => setDeleteGame(null)}
-        onConfirm={handleConfirmDelete}
-      />
-    )}
+        <DeleteConfirmModal
+          onClose={() => setDeleteGame(null)}
+          onConfirm={handleConfirmDelete}
+          title="게임 삭제"
+          targetName={deleteGame.title}
+          message="을(를) 정말 삭제하시겠습니까?"
+          confirmButtonText="삭제"
+          cancelButtonText="취소"
+        />
+      )}
           {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <CreateModal 

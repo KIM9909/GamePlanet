@@ -89,7 +89,11 @@ export const CustomAPI = {
 
   updateElement: async (customId, elementData) => {
     try {
-      const response = await API.put(`/custom-element/${customId}/update`, elementData);
+      const response = await API.put(`/custom-element/${customId}/update`, elementData, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       return response;
     } catch (error) {
       throw error || "커스텀 요소 수정에 실패했습니다.";
@@ -163,9 +167,9 @@ export const CustomAPI = {
    /**
    * 특정 유저의 커스텀 요소 찾기
    */
-   findByUserId: async (customId, userId) => {
+   findByUserId: async (userId) => {
     try {
-      const response = await API.get(`/custom-element/${customId}/find-by-user-id/${userId}`);
+      const response = await API.get(`/custom-element/find-by-user-id/${userId}`);
       return response;
     } catch (error) {
       throw error || "유저의 커스텀 요소를 찾는데 실패했습니다.";
@@ -372,6 +376,25 @@ export const CustomAPI = {
       throw error || "타일 카드를 찾는데 실패했습니다.";
     }
   },
+  // 특정 커스텀 ID에 해당하는 타일 삭제
+deleteCustomTileByNumber: async (customId, tileNumber) => {
+  try {
+    const response = await API.delete(`/custom-element/${customId}/delete-tile/${tileNumber}`);
+    return response;
+  } catch (error) {
+    throw error || "타일 삭제에 실패했습니다.";
+  }
+},
+// 상태 업데이트
+updateStatus: async (customId, status) => {
+  try {
+    const response = await API.put(`/custom-element/${customId}/update-status?status=${status}`);
+    return response;
+  } catch (error) {
+    throw error || "상태 업데이트에 실패했습니다.";
+  }
+},
+
 };
 
 export default CustomAPI;
