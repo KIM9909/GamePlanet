@@ -707,11 +707,13 @@ public class CatchMindServiceImpl implements CatchMindService {
             gameInfo.put("currentTurn", nextTurn);
         }
 
+
+        roomInfo.put("gameInfo", gameInfo);
         roomInfo.put("players", userList);
-        if (userList.size() == 0) {
+        redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
+
+        if (userList.isEmpty()) {
             redisTemplate.opsForHash().delete(ROOM_KEY, roomId);
-        } else {
-            redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
         }
 
         messagingTemplate.convertAndSend("/topic/ai-record" + userName, "녹음 종료");
