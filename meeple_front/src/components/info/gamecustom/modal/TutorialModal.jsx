@@ -2,7 +2,7 @@ import React from 'react';
 import { X } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-const CustomTutorial = ({ onClose }) => {
+const CustomTutorial = ({ onClose, onStartCustomizing }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const gameInfo = location.state?.gameInfo;
@@ -73,12 +73,9 @@ const CustomTutorial = ({ onClose }) => {
             닫기
           </button>
           <button
-            onClick={() => {
-              navigate(`/game-info/${gameInfo.gameInfoId}/custom/editor`, { state: { gameInfo } });
-              onClose();
-            }}
-            className="px-6 py-2 text-white bg-cyan-500 hover:bg-cyan-600 rounded transition-colors"
-          >
+              onClick={onStartCustomizing}  // 여기에 prop 연결
+              className="px-6 py-2 text-white bg-cyan-500 hover:bg-cyan-600 rounded transition-colors"
+            >
             커스터마이징 시작하기
           </button>
         </div>

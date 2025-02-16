@@ -20,7 +20,7 @@ const ReportDetail = () => {
     const fetchReportDetail = async () => {
       try {
         setLoading(true);
-        const response = await AdminAPI.getReport(reportId);
+        const response = await AdminAPI.getReport(reportId);        
         setReport(response);
         setProcessMemo(response.reportMemo || "");
         setError(null);

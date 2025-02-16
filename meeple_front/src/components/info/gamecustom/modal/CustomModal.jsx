@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import CustomAPI from '../../../../sources/api/CustomAPI';
 import toast from 'react-hot-toast'; 
+import DeleteConfirmModal from './DeleteConfirmModal';
 
 const CUSTOMIZABLE_TILES = [1, 3, 4, 5, 6, 8, 9, 11, 12, 14, 16, 18, 19, 21, 22, 24, 25, 26, 27, 28, 31, 32, 34, 36, 38, 39];
 
@@ -21,7 +22,7 @@ const getRotationInfo = (tileNumber) => {
   return { rotation: 0, type: 'vertical', width: 180, height: 250 };
 };
 
-const CustomModal = ({ onClose, cardId, customId, onSuccess }) => {
+const CustomModal = ({ onClose, cardId, customId, onSuccess, isEdit  }) => {
   const actualTileNumber = CUSTOMIZABLE_TILES[cardId - 1];
   
   // 공통 state
@@ -30,6 +31,8 @@ const CustomModal = ({ onClose, cardId, customId, onSuccess }) => {
   const [backgroundColor, setBackgroundColor] = useState('#FFD700');
   const [priceColor, setPriceColor] = useState('#FFFFFF');
   const [description, setDescription] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   // 씨앗은행 카드 추가 state
   const [baseBuildPrice, setBaseBuildPrice] = useState('');
@@ -40,6 +43,7 @@ const CustomModal = ({ onClose, cardId, customId, onSuccess }) => {
   const [uploadedImage, setUploadedImage] = useState(null);
   const canvasRef = useRef(null);
   const [isImageLoading, setIsImageLoading] = useState(false);
+  const [existingImage, setExistingImage] = useState(null);
 
   // 타일 이미지 생성
   const generateImage = () => {
@@ -127,40 +131,128 @@ const CustomModal = ({ onClose, cardId, customId, onSuccess }) => {
     });
 };
 
-    const handleSave = async () => {
-      if (!name || !price || !description || !baseBuildPrice || !hqPrice || !basePrice) {
-        toast.error('모든 필드를 입력해주세요.');
+  const handleDelete = async () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await CustomAPI.deleteCustomTileByNumber(customId, actualTileNumber);
+      onSuccess(); // Editor의 completedItems 갱신을 위해
+      onClose();
+    } catch (error) {
+      console.log(error);
+      
+    }
+  };
+
+const handleSave = async () => {
+  if (!name || !price || !description || !baseBuildPrice || !hqPrice || !basePrice) {
+    return;
+  }
+
+  try {
+    const imageToSend = isEdit && !uploadedImage ? null : await rotateAndGetBlob();
+    
+    const tileCardData = {
+      name: name,
+      cardColor: backgroundColor,
+      description: description,
+      baseConstructionCost: parseInt(baseBuildPrice),
+      headquartersUsageFee: parseInt(hqPrice),
+      baseUsageFee: parseInt(basePrice),
+      imgFile: imageToSend, // 새 이미지가 없으면 null
+      number: actualTileNumber,
+      seedCount: parseInt(price),
+    };
+
+    let response;
+    if (isEdit) {
+      response = await CustomAPI.updateTileCard(customId, tileCardData);
+      toast.success('타일과 카드가 성공적으로 수정되었습니다.');
+    } else {
+      if (!imageToSend) {
+        toast.error('이미지를 업로드해주세요.');
         return;
       }
+      response = await CustomAPI.createTileCard(customId, tileCardData);
+      toast.success('타일과 카드가 성공적으로 생성되었습니다.');
+    }
+    
+    onSuccess(response);
+  } catch (error) {
+    console.error('타일/카드 처리 에러:', error);
+    toast.error(error.message || '타일과 카드 처리에 실패했습니다.');
+  }
+};
 
-      try {
-        const rotatedBlob = await rotateAndGetBlob();
-        if (!rotatedBlob) {
-          toast.error('이미지 생성에 실패했습니다.');
-          return;
+
+    useEffect(() => {
+      const loadExistingData = async () => {
+        if (isEdit) {
+          try {
+            setIsLoading(true);
+            const response = await CustomAPI.findTileCardByNumber(customId, actualTileNumber);
+            
+            if (response) {
+              setName(response.card.cardName);
+              setPrice(response.card.cardSeedCount.toString());
+              setBackgroundColor(response.card.cardColor);
+              setDescription(response.card.cardDescription);
+              setBaseBuildPrice(response.card.cardBaseConstructionCost.toString());
+              setHqPrice(response.card.cardHeadquartersUsageFee.toString());
+              setBasePrice(response.card.cardBaseUsageFee.toString());
+              
+              if (response.tile.tileImageUrl) {
+                setExistingImage(response.tile.tileImageUrl);
+              }
+            }
+          } catch (error) {
+            console.error('기존 데이터 로딩 실패:', error);
+            toast.error('데이터 로딩에 실패했습니다.');
+          } finally {
+            setIsLoading(false);
+          }
+        } else {
+          setIsLoading(false);
         }
+      };
+  
+      loadExistingData();
+    }, [isEdit, customId, actualTileNumber]);
 
-        const tileCardData = {
-          name: name,
-          cardColor: backgroundColor,
-          description: description,
-          baseConstructionCost: parseInt(baseBuildPrice),
-          headquartersUsageFee: parseInt(hqPrice),
-          baseUsageFee: parseInt(basePrice),
-          imgFile: rotatedBlob,
-          number: actualTileNumber,
-          seedCount: parseInt(price),
-        };
-
-        // 타일과 카드 생성
-        const response = await CustomAPI.createTileCard(customId, tileCardData);
-        toast.success('타일과 카드가 성공적으로 생성되었습니다.');
-        onSuccess(response);
-      } catch (error) {
-        console.error('타일/카드 생성 에러:', error);
-        toast.error(error.message || '타일과 카드 생성에 실패했습니다.');
+    const renderImagePreview = () => {
+      if (isEdit && !uploadedImage) {
+        // 수정 모드이고 새로 업로드한 이미지가 없을 때
+        return (
+          <div className="flex-1 flex items-center justify-center bg-slate-800/50 rounded-lg p-4">
+            <div className="relative w-full h-full">
+              <img 
+                src={existingImage} 
+                alt="Current tile" 
+                className="max-h-[400px] w-auto object-contain mx-auto"
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity">
+                <p className="text-white text-sm">새 이미지를 업로드하여 수정할 수 있습니다</p>
+              </div>
+            </div>
+          </div>
+        );
+      } else {
+        // 새로 만들기 모드이거나 새 이미지가 업로드된 경우
+        return (
+          <div className="flex-1 flex items-center justify-center bg-slate-800/50 rounded-lg p-4">
+            <canvas 
+              ref={canvasRef}
+              width={180}
+              height={250}
+              className="max-h-[400px] w-auto object-contain" 
+            />
+          </div>
+        );
       }
     };
+  
 
 
   useEffect(() => {
@@ -196,7 +288,9 @@ const CustomModal = ({ onClose, cardId, customId, onSuccess }) => {
         <X size={24} />
       </button>
       
-      <h2 className="text-2xl font-bold text-cyan-400 mb-6">타일/씨앗은행카드 {actualTileNumber} 커스터마이징</h2>
+      <h2 className="text-2xl font-bold text-cyan-400 mb-6">
+        타일/씨앗은행카드 {actualTileNumber} {isEdit ? '수정' : '생성'}
+      </h2>
 
       <div className="grid grid-cols-3 gap-6 h-[calc(100%-100px)]">
         {/* 공통 설정 섹션 */}
@@ -337,42 +431,43 @@ const CustomModal = ({ onClose, cardId, customId, onSuccess }) => {
             />
           </div>
 
-          <div className="bg-slate-700/50 rounded-lg p-4 flex flex-col">
-            <h4 className="text-white mb-4">타일 미리보기</h4>
-            <div className="flex-1 flex items-center justify-center bg-slate-800/50 rounded-lg p-4">
-              <canvas 
-                ref={canvasRef}
-                width={180}
-                height={250}
-                className="max-h-[400px] w-auto object-contain" 
-              />
-            </div>
-          </div>
+          <div className="bg-slate-700/50 rounded-lg p-4">
+        <h4 className="text-white mb-4">타일 미리보기</h4>
+        {renderImagePreview()}
+      </div>
         </div>
       </div>
 
-      {/* 저장 버튼 */}
-      <div className="mt-6 flex justify-end gap-4">
-        <button
-          onClick={onClose}
-          className="px-6 py-2 text-white bg-slate-600 hover:bg-slate-700 rounded transition-colors"
-        >
-          취소
-        </button>
-        <button
-          onClick={handleSave}
-          disabled={isImageLoading}
-          className={`px-6 py-2 text-white rounded transition-colors ${
-            isImageLoading 
-              ? 'bg-slate-500 cursor-not-allowed' 
-              : 'bg-cyan-500 hover:bg-cyan-600'
-          }`}
-        >
-          {isImageLoading ? '이미지 로딩 중...' : '저장'}
-        </button>
-      </div>
+        {/* 저장 버튼 */}
+        <div className="mt-6 flex justify-end gap-4">
+          <div className="flex gap-4">
+            {isEdit && (
+              <button
+                onClick={handleDelete}
+                className="px-6 py-2 text-white bg-slate-500 hover:bg-red-600 rounded transition-colors"
+              >
+                초기화
+              </button>
+            )}
+            <button 
+              onClick={handleSave} 
+              className="px-6 py-2 text-white bg-slate-500 hover:bg-cyan-600 rounded"
+            >
+              {isEdit ? '수정' : '저장'}
+            </button>
+          </div>
+        </div>
+        {showDeleteConfirm && (
+        <DeleteConfirmModal
+          onClose={() => setShowDeleteConfirm(false)}
+          onConfirm={handleConfirmDelete}
+          title="타일 초기화"
+          targetName={`${actualTileNumber}번 타일`}
+          message="를 초기화하면 복구할 수 없습니다. 계속하시겠습니까?"
+          confirmButtonText="초기화"
+        />
+      )}
     </div>
   );
 };
-
 export default CustomModal;
