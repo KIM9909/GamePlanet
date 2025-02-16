@@ -61,12 +61,15 @@ public class CustomElementService {
 		return CustomElementResponse.from(customElementRepository.save(customElementEntity));
 	}
 
+	@Transactional
 	public void delete(Integer customId) {
-		customTileJpaRepository.deleteTileById(customId);
-		// 커스텀 ID와 같은 타일, 카드 삭제하기
-		// 커스텀 타일, 커스텀 카드에서 customId가 매개변수인거 찾아서 삭제하기
-		// customElementRepository에서 아이디로 삭제한다.
-		customElementRepository.deleteById(integer);
+		customTileJpaRepository.deleteTileByCustomId(customId);
+		customTileJpaRepository.deleteByCustomId(customId);
+
+		customCardJpaRepository.deleteCardByCustomId(customId);
+		customCardJpaRepository.deleteByCustomId(customId);
+		
+		customElementRepository.deleteById(customId);
 	}
 
 	public List<CustomElementResponse> findAll() {
