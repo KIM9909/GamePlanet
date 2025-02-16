@@ -22,9 +22,20 @@ const getRotationInfo = (tileNumber) => {
   return { rotation: 0, type: 'vertical', width: 180, height: 250 };
 };
 
-const CustomModal = ({ onClose, cardId, customId, onSuccess, isEdit  }) => {
+const CustomModal = ({ onClose, cardId, customId, onSuccess, isEdit }) => {
   const actualTileNumber = CUSTOMIZABLE_TILES[cardId - 1];
   
+  // 색상 팔레트 정의
+  const colorPalette = [
+    { name: '빨강', color: '#FF0000' },
+    { name: '주황', color: '#FFA500' },
+    { name: '노랑', color: '#FFFF00' },
+    { name: '초록', color: '#008000' },
+    { name: '파랑', color: '#0000FF' },
+    { name: '남색', color: '#000080' },
+    { name: '보라', color: '#800080' }
+  ];
+
   // 공통 state
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
@@ -89,21 +100,17 @@ const CustomModal = ({ onClose, cardId, customId, onSuccess, isEdit  }) => {
     ctx.fillText('만마불', width / 2 + 25, 60);
   };
 
-
-
   const rotateAndGetBlob = async () => {
     const sourceCanvas = canvasRef.current;
     if (!sourceCanvas || isImageLoading) return null;
 
     const { rotation, type } = getRotationInfo(actualTileNumber);
     
-    // 회전 캔버스 크기 조정
     const rotatedCanvas = document.createElement('canvas');
     if (type === 'vertical') {
       rotatedCanvas.width = 180;
       rotatedCanvas.height = 250;
     } else {
-      // 가로형 타일일 때는 크기를 반대로
       rotatedCanvas.width = 250;
       rotatedCanvas.height = 180;
     }
@@ -111,17 +118,14 @@ const CustomModal = ({ onClose, cardId, customId, onSuccess, isEdit  }) => {
     const ctx = rotatedCanvas.getContext('2d');
     ctx.save();
     
-    // 회전 중심점 조정
     if (type === 'horizontal') {
-      // 가로형 타일의 경우
       ctx.translate(rotatedCanvas.width / 2, rotatedCanvas.height / 2);
       ctx.rotate((rotation * Math.PI) / 180);
-      ctx.drawImage(sourceCanvas, -125, -125, 250, 250); // 크기 정확히 맞춤
+      ctx.drawImage(sourceCanvas, -125, -125, 250, 250);
     } else {
-      // 세로형 타일의 경우
       ctx.translate(rotatedCanvas.width / 2, rotatedCanvas.height / 2);
       ctx.rotate((rotation * Math.PI) / 180);
-      ctx.drawImage(sourceCanvas, -90, -125, 180, 250); // 크기 정확히 맞춤
+      ctx.drawImage(sourceCanvas, -90, -125, 180, 250);
     }
     
     ctx.restore();
@@ -129,7 +133,7 @@ const CustomModal = ({ onClose, cardId, customId, onSuccess, isEdit  }) => {
     return new Promise(resolve => {
       rotatedCanvas.toBlob(resolve, 'image/png');
     });
-};
+  };
 
   const handleDelete = async () => {
     setShowDeleteConfirm(true);
@@ -138,122 +142,116 @@ const CustomModal = ({ onClose, cardId, customId, onSuccess, isEdit  }) => {
   const handleConfirmDelete = async () => {
     try {
       await CustomAPI.deleteCustomTileByNumber(customId, actualTileNumber);
-      onSuccess(); // Editor의 completedItems 갱신을 위해
+      onSuccess();
       onClose();
     } catch (error) {
       console.log(error);
-      
     }
   };
 
-const handleSave = async () => {
-  if (!name || !price || !description || !baseBuildPrice || !hqPrice || !basePrice) {
-    return;
-  }
-
-  try {
-    const imageToSend = isEdit && !uploadedImage ? null : await rotateAndGetBlob();
-    
-    const tileCardData = {
-      name: name,
-      cardColor: backgroundColor,
-      description: description,
-      baseConstructionCost: parseInt(baseBuildPrice),
-      headquartersUsageFee: parseInt(hqPrice),
-      baseUsageFee: parseInt(basePrice),
-      imgFile: imageToSend, // 새 이미지가 없으면 null
-      number: actualTileNumber,
-      seedCount: parseInt(price),
-    };
-
-    let response;
-    if (isEdit) {
-      response = await CustomAPI.updateTileCard(customId, tileCardData);
-      toast.success('타일과 카드가 성공적으로 수정되었습니다.');
-    } else {
-      if (!imageToSend) {
-        toast.error('이미지를 업로드해주세요.');
-        return;
-      }
-      response = await CustomAPI.createTileCard(customId, tileCardData);
-      toast.success('타일과 카드가 성공적으로 생성되었습니다.');
+  const handleSave = async () => {
+    if (!name || !price || !description || !baseBuildPrice || !hqPrice || !basePrice) {
+      return;
     }
-    
-    onSuccess(response);
-  } catch (error) {
-    console.error('타일/카드 처리 에러:', error);
-    toast.error(error.message || '타일과 카드 처리에 실패했습니다.');
-  }
-};
 
+    try {
+      const imageToSend = isEdit && !uploadedImage ? null : await rotateAndGetBlob();
+      
+      const tileCardData = {
+        name: name,
+        cardColor: backgroundColor,
+        description: description,
+        baseConstructionCost: parseInt(baseBuildPrice),
+        headquartersUsageFee: parseInt(hqPrice),
+        baseUsageFee: parseInt(basePrice),
+        imgFile: imageToSend,
+        number: actualTileNumber,
+        seedCount: parseInt(price),
+      };
 
-    useEffect(() => {
-      const loadExistingData = async () => {
-        if (isEdit) {
-          try {
-            setIsLoading(true);
-            const response = await CustomAPI.findTileCardByNumber(customId, actualTileNumber);
+      let response;
+      if (isEdit) {
+        response = await CustomAPI.updateTileCard(customId, tileCardData);
+        toast.success('타일과 카드가 성공적으로 수정되었습니다.');
+      } else {
+        if (!imageToSend) {
+          toast.error('이미지를 업로드해주세요.');
+          return;
+        }
+        response = await CustomAPI.createTileCard(customId, tileCardData);
+        toast.success('타일과 카드가 성공적으로 생성되었습니다.');
+      }
+      
+      onSuccess(response);
+    } catch (error) {
+      console.error('타일/카드 처리 에러:', error);
+      toast.error(error.message || '타일과 카드 처리에 실패했습니다.');
+    }
+  };
+
+  useEffect(() => {
+    const loadExistingData = async () => {
+      if (isEdit) {
+        try {
+          setIsLoading(true);
+          const response = await CustomAPI.findTileCardByNumber(customId, actualTileNumber);
+          
+          if (response) {
+            setName(response.card.cardName);
+            setPrice(response.card.cardSeedCount.toString());
+            setBackgroundColor(response.card.cardColor);
+            setDescription(response.card.cardDescription);
+            setBaseBuildPrice(response.card.cardBaseConstructionCost.toString());
+            setHqPrice(response.card.cardHeadquartersUsageFee.toString());
+            setBasePrice(response.card.cardBaseUsageFee.toString());
             
-            if (response) {
-              setName(response.card.cardName);
-              setPrice(response.card.cardSeedCount.toString());
-              setBackgroundColor(response.card.cardColor);
-              setDescription(response.card.cardDescription);
-              setBaseBuildPrice(response.card.cardBaseConstructionCost.toString());
-              setHqPrice(response.card.cardHeadquartersUsageFee.toString());
-              setBasePrice(response.card.cardBaseUsageFee.toString());
-              
-              if (response.tile.tileImageUrl) {
-                setExistingImage(response.tile.tileImageUrl);
-              }
+            if (response.tile.tileImageUrl) {
+              setExistingImage(response.tile.tileImageUrl);
             }
-          } catch (error) {
-            console.error('기존 데이터 로딩 실패:', error);
-            toast.error('데이터 로딩에 실패했습니다.');
-          } finally {
-            setIsLoading(false);
           }
-        } else {
+        } catch (error) {
+          console.error('기존 데이터 로딩 실패:', error);
+          toast.error('데이터 로딩에 실패했습니다.');
+        } finally {
           setIsLoading(false);
         }
-      };
-  
-      loadExistingData();
-    }, [isEdit, customId, actualTileNumber]);
-
-    const renderImagePreview = () => {
-      if (isEdit && !uploadedImage) {
-        // 수정 모드이고 새로 업로드한 이미지가 없을 때
-        return (
-          <div className="flex-1 flex items-center justify-center bg-slate-800/50 rounded-lg p-4">
-            <div className="relative w-full h-full">
-              <img 
-                src={existingImage} 
-                alt="Current tile" 
-                className="max-h-[400px] w-auto object-contain mx-auto"
-              />
-              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity">
-                <p className="text-white text-sm">새 이미지를 업로드하여 수정할 수 있습니다</p>
-              </div>
-            </div>
-          </div>
-        );
       } else {
-        // 새로 만들기 모드이거나 새 이미지가 업로드된 경우
-        return (
-          <div className="flex-1 flex items-center justify-center bg-slate-800/50 rounded-lg p-4">
-            <canvas 
-              ref={canvasRef}
-              width={180}
-              height={250}
-              className="max-h-[400px] w-auto object-contain" 
-            />
-          </div>
-        );
+        setIsLoading(false);
       }
     };
-  
 
+    loadExistingData();
+  }, [isEdit, customId, actualTileNumber]);
+
+  const renderImagePreview = () => {
+    if (isEdit && !uploadedImage) {
+      return (
+        <div className="flex-1 flex items-center justify-center bg-slate-800/50 rounded-lg p-4">
+          <div className="relative w-full h-full">
+            <img 
+              src={existingImage} 
+              alt="Current tile" 
+              className="max-h-[400px] w-auto object-contain mx-auto"
+            />
+            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity">
+              <p className="text-white text-sm">새 이미지를 업로드하여 수정할 수 있습니다</p>
+            </div>
+          </div>
+        </div>
+      );
+    } else {
+      return (
+        <div className="flex-1 flex items-center justify-center bg-slate-800/50 rounded-lg p-4">
+          <canvas 
+            ref={canvasRef}
+            width={180}
+            height={250}
+            className="max-h-[400px] w-auto object-contain" 
+          />
+        </div>
+      );
+    }
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -273,7 +271,6 @@ const handleSave = async () => {
     }
   };
 
-  // 가격 제한 체크 함수
   const handlePriceChange = (value, setter, maxLimit) => {
     const numberValue = Math.min(maxLimit, parseInt(value) || 0);
     setter(numberValue);
@@ -297,8 +294,9 @@ const handleSave = async () => {
         <div className="space-y-6 overflow-y-auto pr-4">
           <h3 className="text-lg font-semibold text-white">공통 설정</h3>
           
+          {/* 색상 선택 섹션 */}
           <div className="bg-slate-700/50 p-4 rounded-lg">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-3">
               <label className="text-white">상단 색상</label>
               <input
                 type="color"
@@ -307,8 +305,29 @@ const handleSave = async () => {
                 className="w-10 h-8 rounded cursor-pointer"
               />
             </div>
+            <div className="inline-flex gap-2 mt-2">
+              {colorPalette.map(({ name, color }) => (
+                <button
+                  key={color}
+                  onClick={() => setBackgroundColor(color)}
+                  className="group relative h-8"
+                >
+                  <div
+                    className={`w-8 h-8 border-2 ${
+                      backgroundColor === color ? 'border-white' : 'border-transparent'
+                    } hover:border-white transition-colors`}
+                    style={{ backgroundColor: color }}
+                  />
+                  <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap
+                                  bg-slate-900 text-white text-xs px-2 py-1 rounded-md
+                                  opacity-0 group-hover:opacity-100 transition-opacity
+                                  pointer-events-none">
+                    {name}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
-
           <div className="bg-slate-700/50 p-4 rounded-lg">
             <label className="block text-white mb-2">이름</label>
             <input

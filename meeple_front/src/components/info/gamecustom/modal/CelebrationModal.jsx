@@ -12,7 +12,7 @@ const CompletionCelebration = ({ onClose, gameInfoId }) => {
   const navigate = useNavigate();
 
   const handleComplete = () => {
-    navigate(`/game-info/${gameInfoId}/custom`);
+    onClose();
   };
 
   return (

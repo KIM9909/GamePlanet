@@ -248,7 +248,7 @@ const CustomDetail = () => {
                       아래 버튼을 눌러 신청해주세요.
                     </p>
                     <div className="text-slate-300 mt-2">
-                      커스터마이징 가능한 타일 완성도: {getCompletedCustomTilesCount()}/{customizableTiles.length}
+                      심사신청까지 남은 타일의 개수 : {customizableTiles.length-getCompletedCustomTilesCount()}
                     </div>
                     {getCompletedCustomTilesCount() < customizableTiles.length && (
                       <div className="text-amber-400 mt-2">
