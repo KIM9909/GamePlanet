@@ -120,6 +120,7 @@ public class CatchMindServiceImpl implements CatchMindService {
 
     @Override
     public ResponseJoinRoom joinRoom(RequestJoinRoom request) {
+        System.out.println(request.getPlayerName() + "joinRoom 서비스 호출");
         if (!redisTemplate.opsForHash().get(AI_KEY, request.getPlayerName()).equals("ON")
         ) {
             ResponseJoinRoom response = ResponseJoinRoom.builder()
@@ -666,6 +667,7 @@ public class CatchMindServiceImpl implements CatchMindService {
 
     @Override
     public ResponseExitCatchmindRoom exitRoom(String roomId, String userName) {
+        System.out.println(userName + "exitRoom 호출");
         Map<String, Object> roomInfo =
                 (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
 
