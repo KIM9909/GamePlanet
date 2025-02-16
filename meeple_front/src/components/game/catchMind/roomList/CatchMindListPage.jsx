@@ -5,8 +5,6 @@ import { CatchMindAPI } from "../../../../sources/api/CatchMindAPI";
 import CatchMindCreateRoomModal from "./CatchMindCreateRoomModal";
 import CatchMindPasswordModal from "./CatchMindPasswordModal";
 import CatchMindImg from "../../../../assets/images/games/MainImage/CatchMind.jpg";
-import { toast } from "react-toastify";
-import CustomToastContent from "../../../CustomToastContent";
 import GuideModal from "./GuideModal";
 
 const CatchMindListPage = () => {
@@ -46,56 +44,11 @@ const CatchMindListPage = () => {
         setSelectedRoom(room);
         setIsPasswordModalOpen(true);
       } else {
-        const response = await CatchMindAPI.joinRoom(room.roomId, userNickname);
-
-        // 400 상태 코드 처리
-        if (response && response.code === 400) {
-          toast(
-            ({ closeToast }) => <CustomToastContent closeToast={closeToast} />,
-            {
-              position: "top-center",
-              autoClose: false,
-              hideProgressBar: true,
-              closeOnClick: false,
-              pauseOnHover: true,
-              draggable: true,
-              className: "!bg-transparent !p-0 !shadow-none",
-              toastClassName: "!bg-transparent !p-0",
-              bodyClassName: "!p-0 !m-0",
-              closeButton: false,
-              style: {
-                background: "transparent",
-                padding: 0,
-              },
-            }
-          );
-          return;
-        }
-
+        await CatchMindAPI.joinRoom(room.roomId, userNickname);
         navigate(`/catch-mind/${room.roomId}`);
       }
     } catch (error) {
       console.error("방 입장 실패:", error);
-      // 일반적인 에러에 대해서도 토스트 표시
-      toast(
-        ({ closeToast }) => <CustomToastContent closeToast={closeToast} />,
-        {
-          position: "top-center",
-          autoClose: false,
-          hideProgressBar: true,
-          closeOnClick: false,
-          pauseOnHover: true,
-          draggable: true,
-          className: "!bg-transparent !p-0 !shadow-none",
-          toastClassName: "!bg-transparent !p-0",
-          bodyClassName: "!p-0 !m-0",
-          closeButton: false,
-          style: {
-            background: "transparent",
-            padding: 0,
-          },
-        }
-      );
     }
   };
 
