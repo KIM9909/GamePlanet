@@ -148,12 +148,12 @@ export const requestFriendList = async (userId) => {
 };
 
 // 차단 목록
-export const blokingFriendList = async (userId) => {
+export const blockingFriendList = async (userId) => {
   if (!userId) throw new Error("유저 아이디가 없습니다.");
   if (userId) {
     try {
       const response = await axios.get(
-        `${FRIEND_API_BASE_URL}/blocking-list?=${userId}`
+        `${FRIEND_API_BASE_URL}/blocking-list?userId=${userId}`
       );
       return response.data;
     } catch (error) {
