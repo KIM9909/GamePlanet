@@ -132,7 +132,7 @@ const WaitingChat = ({ roomId, players }) => {
       {/* Message Input Area */}
       <form
         onSubmit={handleSend}
-        className="p-4 border-t border-cyan-500/30 bg-gray-900/95"
+        className="p-2 border-t border-cyan-500/30 bg-gray-900/95"
       >
         <div className="flex items-center gap-2">
           <input
@@ -140,7 +140,7 @@ const WaitingChat = ({ roomId, players }) => {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="메시지를 입력하세요"
-            className="flex-1 px-4 py-2 rounded-xl bg-gray-800 border border-cyan-500/30 
+            className="flex-1 px-2 py-2 rounded-xl bg-gray-800 border border-cyan-500/30 
               text-gray-100 placeholder-gray-500 focus:outline-none focus:border-cyan-400
               focus:ring-1 focus:ring-cyan-400 transition-colors"
             disabled={!connected}
@@ -152,7 +152,7 @@ const WaitingChat = ({ roomId, players }) => {
               transition-colors disabled:bg-gray-700 disabled:text-gray-500 
               disabled:cursor-not-allowed shadow-lg hover:shadow-cyan-500/20"
           >
-            <Send size={20} />
+            <Send size={18} />
           </button>
         </div>
       </form>

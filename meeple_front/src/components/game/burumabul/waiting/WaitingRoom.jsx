@@ -177,20 +177,19 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
         .thin-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
         .thin-scrollbar::-webkit-scrollbar-thumb { background: #888; border-radius: 15px;}
         .thin-scrollbar::-webkit-scrollbar-track { display: none; }
-        .thin-scrollbar {padding-right: 10px;}
       `}</style>
       <div
         className="h-screen w-full bg-cover bg-center relative flex justify-center items-center"
         style={{ backgroundImage: `url(${background}` }}
       >
-        <div className="min-h-[600px] w-[880px] bg-black bg-opacity-30 rounded-lg flex flex-col justify-start items-center">
-          {/* 친구 검색해서 친구 추가 */}
+        <div className="min-h-[600px] w-[880px] bg-gray-900 bg-opacity-90 rounded-xl border border-cyan-500/60  flex flex-col justify-center items-center">
+          {/* 친구 검색해서 친구 추가
           <div className="mt-5">
             <FriendSearch friendList={friendList} />
-          </div>
+          </div> */}
           <div className="flex flex-col items-center my-5">
-            <div className="flex flex-row justify-center items-center mt-5">
-              <h1 className="text-white text-3xl mx-2 text-center break-words w-[400px] truncate">
+            <div className="flex flex-row justify-center items-center mt-5 my-14">
+              <h1 className="text-cyan-500 text-3xl mx-2 text-center break-words w-[400px] truncate">
                 {roomName}
               </h1>
               <span className="mx-2">
@@ -213,41 +212,43 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
             </div>
 
             {/* 플레이어 카드 */}
-            <div className="mt-10 mx-auto flex flex-wrap justify-center gap-6 my-4 overflow-y-auto thin-scrollbar">
-              {playersInfo.map((player, index) => (
-                <PlayerCard key={index} playerInfo={player} />
-              ))}
+            <div className="w-full px-4 mb-8">
+              <div className="flex justify-center gap-4 overflow-x-auto py-4 thin-scrollbar">
+                {playersInfo.map((player, index) => (
+                  <PlayerCard key={index} playerInfo={player} />
+                ))}
+              </div>
             </div>
 
             {/* 하단 버튼 */}
-            <div className="w-full flex flex-row justify-between my-10 px-10">
+            <div className="w-full flex flex-row justify-between px-8 mt-auto">
               {userId && creatorId && Number(userId) === Number(creatorId) ? (
                 // 방장인 경우
-                <div>
+                <div className="flex justify-center gap-4">
                   {Number(maxPlayers) === Number(playerLen) ? (
                     <div className="flex flex-row">
                       <button
-                        className="relative overflow-hidden text-lg font-semibold text-white mx-10 bg-gradient-to-r from-red-400 to-red-500 border-2 border-red-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
+                        className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
                         onClick={leaveTheRoom}
                       >
                         방 나가기
                       </button>
                       {isPrivate && (
                         <button
-                          className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-fuchsia-200 to-fuchsia-400 border-2 border-fuchsia-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                          className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
                           onClick={showChangePassword}
                         >
                           비밀번호 변경
                         </button>
                       )}
                       <button
-                        className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-yellow-200 to-yellow-500 border-2 border-yellow-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                        className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
                         onClick={handlePutRoom}
                       >
                         게임방 수정
                       </button>
                       <button
-                        className="relative overflow-hidden text-lg font-semibold text-white mx-10 bg-gradient-to-r from-cyan-500 to-blue-500 border-2 border-blue-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                        className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
                         onClick={goToGame}
                       >
                         게임 시작
@@ -256,7 +257,7 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
                   ) : (
                     <div className="flex flex-row">
                       <button
-                        className="relative overflow-hidden text-lg font-semibold text-white mx-10 bg-gradient-to-r from-red-400 to-red-500 border-2 border-red-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-white before:opacity-20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-all before:duration-700"
+                        className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
                         onClick={leaveTheRoom}
                       >
                         방 나가기
@@ -264,19 +265,19 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
                       {isPrivate && (
                         <button
                           onClick={showChangePassword}
-                          className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-fuchsia-200 to-fuchsia-400 border-2 border-fuchsia-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                          className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
                         >
                           비밀번호 변경
                         </button>
                       )}
                       <button
-                        className="relative overflow-hidden text-lg font-semibold text-white mx-5 bg-gradient-to-r from-yellow-200 to-yellow-500 border-2 border-yellow-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                        className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
                         onClick={handlePutRoom}
                       >
                         게임방 수정
                       </button>
                       <button
-                        className="text-lg text-white mx-10 bg-gray-500 border-2 w-32 h-12 rounded"
+                        className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
                         onClick={handleAlertModal}
                       >
                         게임 시작
@@ -288,7 +289,7 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
                 // 방장이 아닌 경우
                 <div className="flex justify-center w-full">
                   <button
-                    className="relative overflow-hidden text-lg font-semibold text-white bg-gradient-to-r from-red-400 to-red-500 border-2 border-red-600 w-32 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                    className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
                     onClick={leaveTheRoom}
                   >
                     방 나가기
@@ -298,7 +299,7 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
             </div>
           </div>
         </div>
-        <div className="w-[250px] bg-white rounded-lg">
+        <div className="w-[250px]">
           <WaitingChat roomId={roomId} players={playersInfo} />
         </div>
       </div>
