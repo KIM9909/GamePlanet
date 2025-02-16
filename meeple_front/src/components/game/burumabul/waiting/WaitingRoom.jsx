@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import background from "../../../../assets/burumabul_images/waitingroom.gif";
 import PlayerCard from "./PlayerCard";
@@ -14,8 +14,15 @@ import { findBurumabulRoom } from "../../../../sources/api/BurumabulRoomAPI";
 import { SocketContext } from "../../../layout/SocketLayout";
 import ChangePasswordModal from "../play/burumabul_Modal/ChangePasswordModal";
 import WaitingChat from "../play/burumabul_Modal/WaitingChat";
+import GameReviewModal from "../../catchMind/inGame/GameReivewModal";
 
-const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
+const WaitingRoom = ({
+  roomId,
+  roomInfo,
+  setIsStart,
+  setPlayData,
+  gameStatus,
+}) => {
   const userId = Number(useSelector((state) => state.user.userId));
   const [currentRoomInfo, setCurrentRoomInfo] = useState(roomInfo);
   useEffect(() => {
@@ -51,6 +58,8 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
   const [playerLen, setPlayerLen] = useState(currentRoomInfo.players.length);
   const creatorId = Number(currentRoomInfo.creator.playerId);
   const isPrivate = currentRoomInfo.private;
+
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   // 준비 됐는지 안 됐는지
   const [isReady, setIsReady] = useState(false);
@@ -113,6 +122,28 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
     }
   }, [connected, roomSocketData]);
 
+  const leaveTheRoom = () => {
+    console.log("방 나가기 버튼 클릭됨, gameStatus:", gameStatus);
+    if (gameStatus === "GAME_END") {
+      setIsReviewModalOpen(true);
+    } else {
+      leaveGame();
+      setTimeout(() => {
+        navigate("/home");
+      }, 2000);
+    }
+  };
+
+  const handleReviewClose = useCallback(() => {
+    if (connected) {
+      leaveGame();
+      setIsReviewModalOpen(false);
+    }
+    setTimeout(() => {
+      navigate("/home");
+    }, 1000);
+  }, [connected, leaveGame, navigate]);
+
   if (loading) {
     return <div>Loading Room Informangition</div>;
   }
@@ -147,28 +178,6 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
       }
     }
   };
-
-  const leaveTheRoom = () => {
-    if (connected) {
-      leaveGame();
-      navigate("/home");
-    }
-  };
-
-  // // 게임 준비 정원 => 방장은 무조건 Ready
-  // let readyPeople = 1;
-
-  // // 게임 준비 취소
-  // const handleCancel = () => {
-  //   setIsReady(false);
-  //   readyPeople -= 1
-  // };
-
-  // // 게임 준비 완료
-  // const handleReady = () => {
-  //   setIsReady(true);
-  //   ready += 1
-  // };
 
   return (
     <>
@@ -326,6 +335,19 @@ const WaitingRoom = ({ roomId, roomInfo, setIsStart, setPlayData }) => {
             <ChangePasswordModal
               onClick={showChangePassword}
               onClose={() => setShowPasswordModal(false)}
+            />
+          </div>,
+          document.body
+        )}
+
+      {gameStatus === "GAME_END" &&
+        isReviewModalOpen &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex flex-row justify-center items-center">
+            <GameReviewModal
+              isOpen={isReviewModalOpen}
+              onClose={handleReviewClose}
+              gameInfoId={2}
             />
           </div>,
           document.body
