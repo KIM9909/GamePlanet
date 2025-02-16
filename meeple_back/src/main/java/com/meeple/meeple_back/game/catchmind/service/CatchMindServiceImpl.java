@@ -82,12 +82,16 @@ public class CatchMindServiceImpl implements CatchMindService {
             throw new RuntimeException("OpenVidu HttpException 발생"+ e);
         }
 
+        Map<String, Object> gameData = new HashMap<>();
+
+        gameData.put("currentTurn", request.getCreator());
+
         Set<String> readyPlayer = new HashSet<>();
         readyPlayer.add(request.getCreator());
 
         roomInfo.put("roomId", savedRoom.getRoomId());
         roomInfo.put("players", players);
-        roomInfo.put("gameData", new HashMap<>());
+        roomInfo.put("gameData", gameData);
         roomInfo.put("gameType", "캐치마인드");
         roomInfo.put("isPrivate", request.isPrivate());
         roomInfo.put("password", request.getPassword());
@@ -699,9 +703,10 @@ public class CatchMindServiceImpl implements CatchMindService {
             }
         }
 
-        Map<String, Object> gameInfo = (Map<String, Object>) roomInfo.getOrDefault("gameInfo", "");
+        Map<String, Object> gameInfo = (Map<String, Object>) roomInfo.get("gameInfo");
 
-        if (userList != null && !userList.isEmpty() && !gameInfo.equals("")) {
+        if (userList != null && !userList.isEmpty() &&
+                !gameInfo.getOrDefault("currentTurn", "").equals("")) {
             String currentTurn = (String) gameInfo.get("currentTurn");
             int currentIndex = currentTurn != null ? userList.indexOf(currentTurn) : 0;
             int nextIndex = (currentIndex + 1) % userList.size();
