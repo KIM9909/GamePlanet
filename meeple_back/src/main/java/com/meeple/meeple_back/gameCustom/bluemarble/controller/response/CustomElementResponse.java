@@ -14,6 +14,7 @@ public class CustomElementResponse {
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 	private Long userId;
+	private String userNickName;
 	private String customStatus;
 	private String imageUrl;
 
@@ -26,6 +27,7 @@ public class CustomElementResponse {
 				.updatedAt(entity.getUpdatedAt())
 				.customStatus(entity.getCustomStatus().getName())
 				.imageUrl(entity.getFileUrl())
+				.userNickName(entity.getUser().getUserNickname())
 				.build();
 	}
 }
