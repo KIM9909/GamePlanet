@@ -49,16 +49,14 @@ public class CustomElementController {
 	/**
 	 * 특정 customId와 userId에 해당하는 CustomElement 목록을 조회하는 엔드포인트입니다.
 	 *
-	 * @param customId 조회할 커스텀 요소의 ID
-	 * @param userId   조회할 사용자의 ID
+	 * @param userId 조회할 사용자의 ID
 	 * @return 조회된 CustomElementResponse 객체 목록을 포함한 ResponseEntity
 	 */
 	@Operation(tags = "customElement 목록중 입력받은 userId가 현재 접속한 유저의 것을 찾는다.")
 	@GetMapping("/{customId}/find-by-user-id/{userId}")
 	public ResponseEntity<List<CustomElementResponse>> findByUserId(
-			@PathVariable(name = "customId") Integer customId,
 			@PathVariable("userId") Long userId) {
-		List<CustomElementResponse> response = customElementService.findByUserId(customId, userId);
+		List<CustomElementResponse> response = customElementService.findByUserId(userId);
 		return ResponseEntity.ok(response);
 	}
 
@@ -301,6 +299,12 @@ public class CustomElementController {
 
 	}
 
+	/**
+	 * 특정 customId에 해당하는 커스텀 요소를 삭제하는 엔드포인트입니다.
+	 *
+	 * @param customId 삭제할 커스텀 요소의 ID
+	 * @return HTTP 상태 코드 204 (No Content)
+	 */
 	@DeleteMapping("/{customId}/delete")
 	public ResponseEntity<Void> deleteCustomElement(@PathVariable Integer customId) {
 		customElementService.delete(customId);
