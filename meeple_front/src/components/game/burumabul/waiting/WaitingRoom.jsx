@@ -2,7 +2,7 @@ import React, { useCallback, useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import background from "../../../../assets/burumabul_images/waitingroom.gif";
 import PlayerCard from "./PlayerCard";
-import { LockKeyhole, LockKeyholeOpen } from "lucide-react";
+import { LockKeyhole, LockKeyholeOpen, Sparkles, Users } from "lucide-react";
 import FriendSearch from "../../FriendSearch";
 import { connect, useDispatch, useSelector } from "react-redux";
 import { putBurumabulRoom } from "../../../../sources/api/BurumabulRoomAPI";
@@ -185,23 +185,100 @@ const WaitingRoom = ({
         .thin-scrollbar::-webkit-scrollbar { width: 5px; padding-right: 12px; position: absolute; right: 0;}
         .thin-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
         .thin-scrollbar::-webkit-scrollbar-thumb { background: #888; border-radius: 15px;}
-        .thin-scrollbar::-webkit-scrollbar-track { display: none; }
+        .thin-scrollbar::-webkit-scrollbar-track { display: none; }.neon-border {
+          box-shadow: 0 0 10px #22d3ee, 0 0 20px #22d3ee, 0 0 30px #22d3ee;
+          animation: neon-pulse 1.5s infinite alternate;
+        }
+        
+       .neon-border {
+          box-shadow: 0 0 10px #22d3ee, 0 0 20px #22d3ee, 0 0 30px #22d3ee;
+          animation: neon-pulse 1.5s infinite alternate;
+        }
+        
+        .neon-text {
+          text-shadow: 0 0 2px #22d3ee;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+        }
+        
+        .cyber-gradient {
+          background: linear-gradient(45deg, rgba(34,211,238,0.1), rgba(206,71,255,0.1));
+        }
+        
+        @keyframes neon-pulse {
+          from {
+            box-shadow: 0 0 10px #22d3ee, 0 0 20px #22d3ee, 0 0 30px #22d3ee;
+          }
+          to {
+            box-shadow: 0 0 15px #22d3ee, 0 0 25px #22d3ee, 0 0 35px #22d3ee;
+          }
+        }
+        
+        .glitch-effect {
+          position: relative;
+        }
+        
+        .glitch-effect::before,
+        .glitch-effect::after {
+          content: attr(data-text);
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+        }
+        
+        .glitch-effect::before {
+          left: 1px;
+          text-shadow: -1px 0 rgba(206,71,255,0.7);
+          animation: glitch-1 3s infinite linear alternate-reverse;
+        }
+        
+        .glitch-effect::after {
+          left: -1px;
+          text-shadow: 1px 0 rgba(34,211,238,0.7);
+          animation: glitch-2 3s infinite linear alternate-reverse;
+        }
+        
+        @keyframes glitch-1 {
+          0% { clip-path: inset(20% 0 80% 0); }
+          20% { clip-path: inset(60% 0 40% 0); }
+          40% { clip-path: inset(40% 0 60% 0); }
+          60% { clip-path: inset(80% 0 20% 0); }
+          80% { clip-path: inset(10% 0 90% 0); }
+          100% { clip-path: inset(30% 0 70% 0); }
+        }
+        
+        @keyframes glitch-2 {
+          0% { clip-path: inset(80% 0 20% 0); }
+          20% { clip-path: inset(40% 0 60% 0); }
+          40% { clip-path: inset(60% 0 40% 0); }
+          60% { clip-path: inset(20% 0 80% 0); }
+          80% { clip-path: inset(90% 0 10% 0); }
+          100% { clip-path: inset(70% 0 30% 0); }
+        }
       `}</style>
       <div
         className="h-screen w-full bg-cover bg-center relative flex justify-center items-center"
         style={{ backgroundImage: `url(${background}` }}
       >
-        <div className="min-h-[600px] w-[880px] bg-gray-900 bg-opacity-90 rounded-xl border border-cyan-500/60  flex flex-col justify-center items-center">
+        <div className="min-h-[600px] w-[880px] bg-gray-900 bg-opacity-90 rounded-xl border border-cyan-500 neon-border cyber-gradient backdrop-blur-sm flex flex-col justify-center items-center relative z-10">
           {/* 친구 검색해서 친구 추가
           <div className="mt-5">
             <FriendSearch friendList={friendList} />
           </div> */}
-          <div className="flex flex-col items-center my-5">
-            <div className="flex flex-row justify-center items-center mt-5 my-14">
-              <h1 className="text-cyan-500 text-3xl mx-2 text-center break-words w-[400px] truncate">
+          <div className="flex flex-col items-center my-5 w-full">
+            <div className="flex items-center gap-4 mb-8">
+              <Sparkles className="w-6 h-6 text-purple-500" />
+              <h1
+                className="text-cyan-500 text-4xl font-semibold glitch-effect neon-text"
+                data-text={roomInfo.roomName}
+              >
                 {roomName}
               </h1>
-              <span className="mx-2">
+              <Sparkles className="w-6 h-6 text-purple-500" />
+
+              <div className="flex items-center gap-3 bg-gray-800 px-4 py-2 rounded-full border border-purple-500/30">
                 {/* 비밀방이면 자물쇠 걸려있고 */}
                 {isPrivate && (
                   <LockKeyhole size={20} color="#ce47ff" strokeWidth={2.25} />
@@ -214,10 +291,13 @@ const WaitingRoom = ({
                     strokeWidth={2.25}
                   />
                 )}
-              </span>
-              <span className="mx-1 text-white text-nowrap">
-                {playerLen} / {maxPlayers}
-              </span>
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-cyan-500" />
+                  <span className="text-white font-medium">
+                    {playersInfo.length} / {roomInfo.maxPlayers}
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* 플레이어 카드 */}
@@ -230,81 +310,83 @@ const WaitingRoom = ({
             </div>
 
             {/* 하단 버튼 */}
-            <div className="w-full flex flex-row justify-between px-8 mt-auto">
-              {userId && creatorId && Number(userId) === Number(creatorId) ? (
-                // 방장인 경우
-                <div className="flex justify-center gap-4">
-                  {Number(maxPlayers) === Number(playerLen) ? (
-                    <div className="flex flex-row">
-                      <button
-                        className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
-                        onClick={leaveTheRoom}
-                      >
-                        방 나가기
-                      </button>
-                      {isPrivate && (
+            <div className="w-full px-8 mt-auto mb-6">
+              <div className="flex justify-center gap-4">
+                {userId && creatorId && Number(userId) === Number(creatorId) ? (
+                  // 방장인 경우
+                  <div className="flex justify-center gap-4">
+                    {Number(maxPlayers) === Number(playerLen) ? (
+                      <div className="flex flex-row">
                         <button
                           className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
-                          onClick={showChangePassword}
+                          onClick={leaveTheRoom}
                         >
-                          비밀번호 변경
+                          방 나가기
                         </button>
-                      )}
-                      <button
-                        className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
-                        onClick={handlePutRoom}
-                      >
-                        게임방 수정
-                      </button>
-                      <button
-                        className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
-                        onClick={goToGame}
-                      >
-                        게임 시작
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-row">
-                      <button
-                        className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
-                        onClick={leaveTheRoom}
-                      >
-                        방 나가기
-                      </button>
-                      {isPrivate && (
+                        {isPrivate && (
+                          <button
+                            className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
+                            onClick={showChangePassword}
+                          >
+                            비밀번호 변경
+                          </button>
+                        )}
                         <button
-                          onClick={showChangePassword}
                           className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
+                          onClick={handlePutRoom}
                         >
-                          비밀번호 변경
+                          게임방 수정
                         </button>
-                      )}
-                      <button
-                        className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
-                        onClick={handlePutRoom}
-                      >
-                        게임방 수정
-                      </button>
-                      <button
-                        className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
-                        onClick={handleAlertModal}
-                      >
-                        게임 시작
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                // 방장이 아닌 경우
-                <div className="flex justify-center w-full">
-                  <button
-                    className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
-                    onClick={leaveTheRoom}
-                  >
-                    방 나가기
-                  </button>
-                </div>
-              )}
+                        <button
+                          className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
+                          onClick={goToGame}
+                        >
+                          게임 시작
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-row">
+                        <button
+                          className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
+                          onClick={leaveTheRoom}
+                        >
+                          방 나가기
+                        </button>
+                        {isPrivate && (
+                          <button
+                            onClick={showChangePassword}
+                            className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
+                          >
+                            비밀번호 변경
+                          </button>
+                        )}
+                        <button
+                          className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
+                          onClick={handlePutRoom}
+                        >
+                          게임방 수정
+                        </button>
+                        <button
+                          className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
+                          onClick={handleAlertModal}
+                        >
+                          게임 시작
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  // 방장이 아닌 경우
+                  <div className="flex justify-center w-full">
+                    <button
+                      className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
+                      onClick={leaveTheRoom}
+                    >
+                      방 나가기
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

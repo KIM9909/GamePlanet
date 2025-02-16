@@ -50,7 +50,7 @@ const PlayerCard = ({ playerInfo, onClick }) => {
   };
 
   return (
-    <div className="w-36 h-48 flex-shrink-0 bg-white bg-opacity-70 rounded-lg flex flex-col items-center justify-center">
+    <div className="w-36 h-48 flex-shrink-0 bg-gray-900 bg-opacity-80 border-2 border-cyan-400 rounded-lg flex flex-col items-center justify-center">
       <div className="mb-3">
         <img
           src={userProfile}
@@ -63,7 +63,9 @@ const PlayerCard = ({ playerInfo, onClick }) => {
         />
       </div>
       <div className="text-center my-3">
-        <p className="font-medium truncate w-28">{userNickName}</p>
+        <p className="font-medium truncate w-28 text-cyan-400">
+          {userNickName}
+        </p>
       </div>
 
       {isModalOpen && (

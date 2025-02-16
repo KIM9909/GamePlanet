@@ -65,14 +65,14 @@ const BurumabulRoomListCard = ({ roomInfo }) => {
   return (
     <>
       {
-        <div className="bg-white bg-opacity-70 rounded-lg w-[300px] shadow-lg overflow-hidden">
+        <div className="bg-white bg-opacity-70 border-2 border-cyan-500 rounded-lg w-[300px] shadow-lg overflow-hidden">
           {/* 카드 내용을 감싸는 컨테이너 */}
           <div className="w-full h-[120px] flex items-center justify-center">
             {/* 여기에 게임 관련 이미지나 아이콘을 추가*/}
           </div>
 
           {/* 방 정보 영역 */}
-          <div className="bg-gray-800 bg-opacity-90 p-4 w-full">
+          <div className="bg-gray-900 bg-opacity-90 p-4 w-full border border-cyan-500">
             <div className="flex justify-between items-start">
               <div className="flex-1">
                 <div className="flex items-center gap-2">
@@ -82,11 +82,11 @@ const BurumabulRoomListCard = ({ roomInfo }) => {
                     onMouseEnter={() => setShowTooltip(true)}
                     onMouseLeave={() => setShowTooltip(false)}
                   >
-                    <div className="text-white overflow-hidden truncate max-w-[120px]">
+                    <div className="text-white overflow-hidden truncate max-w-[100px]">
                       {roomInfo.roomName}
                     </div>
                     {/* 커스텀 툴팁 */}
-                    {showTooltip && roomInfo.roomName.length > 7 && (
+                    {showTooltip && roomInfo.roomName.length > 5 && (
                       <div className="absolute left-0 top-[-30px] bg-black text-white px-2 py-1 rounded text-sm whitespace-nowrap z-10">
                         {roomInfo.roomName}
                       </div>
@@ -105,14 +105,14 @@ const BurumabulRoomListCard = ({ roomInfo }) => {
                 {!roomInfo.private ? (
                   <button
                     onClick={() => goToGeneralWaitingRoom(roomId)}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors"
+                    className="bg-cyan-400 hover:bg-cyan-600 text-white px-4 py-2 rounded-lg transition-colors"
                   >
                     입장
                   </button>
                 ) : (
                   <button
                     onClick={() => goToSecretWaitingRoom(roomId)}
-                    className="bg-indigo-600 hover:bg-indigo-700 p-2 rounded-lg transition-colors"
+                    className="bg-cyan-400 hover:bg-cyan-600 p-2 rounded-lg transition-colors"
                   >
                     <LockKeyhole size={24} color="#ffffff" />
                   </button>

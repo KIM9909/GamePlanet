@@ -38,15 +38,15 @@ const PutBurumabulRoom = ({ onClose, originRoomData }) => {
 
   return (
     <div className="fixed inset-0 bg-blue-200 bg-opacity-50 flex justify-center items-center z-50">
-      <div className="w-96 p-6 bg-slate-900 bg-opacity-80 rounded-lg flex flex-col justify-center items-center">
-        <h1 className="text-3xl text-white ">방 수정</h1>
+      <div className="w-96 p-6 bg-gray-900 bg-opacity-80 rounded-lg flex flex-col justify-center items-center">
+        <h1 className="text-3xl text-cyan-400 ">방 수정</h1>
         <hr className="w-80 border-t-2 border-white my-2" />
-        <div className="bg-white w-full py-3 my-3 rounded-lg">
+        <div className="bg-gray-900 bg-opacity-80 w-full py-3 my-3 rounded-lg">
           <form onSubmit={handleSubmit} className="text-center">
             {/* 방 제목 */}
             <div className="flex flex-col items-center ">
               <label
-                className="text-xl block mt-2 text-gray-900"
+                className="text-xl block mt-2 text-cyan-400"
                 htmlFor="roomTitle"
               >
                 방 제목
@@ -65,13 +65,13 @@ const PutBurumabulRoom = ({ onClose, originRoomData }) => {
 
             {/* 플레이어 수 선택 */}
             <div className="flex flex-col items-center my-5">
-              <h2 className="text-lg ">플레이어 수 선택</h2>
+              <h2 className="text-lg text-cyan-400 ">플레이어 수 선택</h2>
               <hr className="w-80 border-t-2 border-gray-400 my-2" />
               <div className="my-1">
                 {currentPlayers <= 2 && (
                   <button
                     className={`bg-blue-200 text-gray-500 w-14 rounded mx-2 ${
-                      roomData.maxPlayers === 2 ? "bg-blue-400" : "bg-blue-200"
+                      roomData.maxPlayers === 2 ? "bg-cyan-400" : "bg-blue-200"
                     }`}
                     value={roomData.maxPlayers}
                     onClick={() =>
@@ -89,7 +89,7 @@ const PutBurumabulRoom = ({ onClose, originRoomData }) => {
                 {currentPlayers <= 3 && (
                   <button
                     className={`bg-blue-200 text-gray-500 w-14 rounded mx-2 ${
-                      roomData.maxPlayers === 3 ? "bg-blue-400" : "bg-blue-200"
+                      roomData.maxPlayers === 3 ? "bg-cyan-400" : "bg-blue-200"
                     }`}
                     value={roomData.maxPlayers}
                     onClick={() =>
@@ -106,7 +106,7 @@ const PutBurumabulRoom = ({ onClose, originRoomData }) => {
                 {currentPlayers <= 4 && (
                   <button
                     className={`bg-blue-200 text-gray-500 w-14 rounded mx-2 ${
-                      roomData.maxPlayers === 4 ? "bg-blue-400" : "bg-blue-200"
+                      roomData.maxPlayers === 4 ? "bg-cyan-400" : "bg-blue-200"
                     }`}
                     value={roomData.maxPlayers}
                     onClick={() =>
@@ -125,14 +125,14 @@ const PutBurumabulRoom = ({ onClose, originRoomData }) => {
             {/* 방 수정 or 취소 */}
             <div className="flex flex-row justify-evenly my-3">
               <button
-                className="bg-red-500 rounded-lg text-white w-24"
+                className="bg-gray-500  rounded-lg text-white w-24"
                 onClick={handleCancel}
               >
                 취소
               </button>
               {/* 수정 누르면 부루마불 대기방으로 */}
               <button
-                className="bg-green-500 rounded-lg text-white w-24"
+                className="bg-cyan-500 rounded-lg text-white w-24"
                 onClick={handleSubmit}
                 type="submit"
               >
