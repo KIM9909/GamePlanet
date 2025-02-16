@@ -169,36 +169,89 @@ const ProfileModal = ({
     setShowReportForm(true);
   };
 
+  // ProfileModal.jsx의 handleReportSubmit 함수
   const handleReportSubmit = async (formData) => {
     try {
       const searchResponse = await fetch(
         `${
           import.meta.env.VITE_API_BASE_URL
         }/friend/search?userNickName=${userNickname}`
-        // `${
-        //   import.meta.env.VITE_LOCAL_API_BASE_URL
-        // }/friend/search?userNickName=${userNickname}`
       );
       const searchData = await searchResponse.json();
 
       if (searchData.code === 200 && searchData.userId) {
-        const reportData = {
-          ...formData,
-          userId: searchData.userId,
-          reporterId: userId,
-        };
+        // 새로운 FormData 객체 생성
+        const submitFormData = new FormData();
 
-        const response = await axios.post(
+        // 파일 처리 로깅
+        const file = formData.get("reportDocument");
+        console.log("File object:", file);
+
+        if (file instanceof Blob) {
+          submitFormData.append("reportDocument", file);
+          console.log("Adding file to FormData:", {
+            fileName: file.name,
+            fileType: file.type,
+            fileSize: file.size,
+          });
+        } else {
+          const emptyBlob = new Blob([], { type: "application/octet-stream" });
+          submitFormData.append("reportDocument", emptyBlob, "empty.txt");
+          console.log("Adding empty blob to FormData");
+        }
+
+        // ID 값들을 숫자로 변환
+        const targetUserId = Number(searchData.userId);
+        const reporterUserId = Number(userId);
+
+        // 나머지 필드 추가
+        submitFormData.append("reportReason", formData.get("reportReason"));
+        submitFormData.append("reportTitle", formData.get("reportTitle"));
+        submitFormData.append("reportContent", formData.get("reportContent"));
+        submitFormData.append("userId", targetUserId);
+        submitFormData.append("reporterId", reporterUserId);
+
+        // FormData 내용 확인
+        console.log("FormData contents:");
+        for (let [key, value] of submitFormData.entries()) {
+          if (value instanceof Blob) {
+            console.log(key, ":", {
+              type: value.type,
+              size: value.size,
+              name: value instanceof File ? value.name : "empty.txt",
+            });
+          } else {
+            console.log(key, ":", value);
+          }
+        }
+
+        const response = await fetch(
           `${import.meta.env.VITE_API_BASE_URL}/report`,
-          // `${import.meta.env.VITE_LOCAL_API_BASE_URL}/report`,
-          reportData
+          {
+            method: "POST",
+            body: submitFormData,
+          }
         );
 
-        if (response.data.code === 200) {
+        // 응답 로깅
+        const responseText = await response.text();
+        console.log("Raw response:", responseText);
+
+        if (!response.ok) {
+          console.error("Error response:", responseText);
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = JSON.parse(responseText);
+
+        if (data.code === 200) {
           setShowReportForm(false);
           showAlert("신고가 접수되었습니다.", "success");
         } else {
-          showAlert("신고 접수에 실패했습니다.", "error");
+          showAlert(
+            data.message || "신고 처리 중 오류가 발생했습니다.",
+            "error"
+          );
         }
       } else {
         showAlert("유저를 찾을 수 없습니다.", "error");

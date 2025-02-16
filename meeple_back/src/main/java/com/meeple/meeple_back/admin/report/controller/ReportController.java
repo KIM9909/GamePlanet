@@ -36,11 +36,11 @@ public class ReportController {
     @PostMapping
     public ResponseEntity<ResponseCreateReport> createReport(
             @RequestPart("reportDocument") MultipartFile reportDocument,
-            @RequestPart("reportReason") ReportReason reportReason,
-            @RequestPart("reportTitle") String reportTitle,
-            @RequestPart("reportContent") String reportContent,
-            @RequestPart("userId") long userId,
-            @RequestPart("reporterId") long reporterId
+            @RequestParam("reportReason") ReportReason reportReason,
+            @RequestParam("reportTitle") String reportTitle,
+            @RequestParam("reportContent") String reportContent,
+            @RequestParam("userId") long userId,
+            @RequestParam("reporterId") long reporterId
     ) {
         ResponseCreateReport response = reportService.createReport(
                 reportDocument, reportReason, reportTitle, reportContent,
