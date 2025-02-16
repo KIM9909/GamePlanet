@@ -15,7 +15,7 @@ const PlayerCard = ({ playerInfo, onClick }) => {
   // 유저 프로필 조회
   useEffect(() => {
     const getUserInfo = async () => {
-      if (playerId && playerId !== userId) {
+      if (playerId) {
         try {
           const response = await getProfile(playerId);
           console.log("프로필 응답:", response);
@@ -27,7 +27,7 @@ const PlayerCard = ({ playerInfo, onClick }) => {
     };
 
     getUserInfo();
-  }, [playerId, userId, getProfile]);
+  }, [playerId, userId]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showReportForm, setShowReportForm] = useState(false);
@@ -48,20 +48,20 @@ const PlayerCard = ({ playerInfo, onClick }) => {
   };
 
   return (
-    <div className="md:w-44 md:h-60 lg:w-52 lg:h-64  bg-white bg-opacity-70  rounded-lg flex flex-col justify-center items-center">
-      <div className="my-3">
+    <div className="w-36 h-48 flex-shrink-0 bg-white bg-opacity-70 rounded-lg flex flex-col items-center justify-center">
+      <div className="mb-3">
         <img
           src={virgo}
           alt="플레이어 이미지"
-          className="w-16 h-16 md:w-20 md:h-20 lg:w-28 lg:h-28 max-w-28 max-h-28 rounded-full "
+          className="w-16 h-16 rounded-full cursor-pointer"
           ref={buttonRef}
           onClick={
             userId !== playerId ? () => setIsModalOpen((prev) => !prev) : null
           }
         />
       </div>
-      <div className="mx-3 flex flex-col justify-center items-center">
-        <p className="my-1">{playerInfo.playerName}</p>
+      <div className="text-center">
+        <p className="font-medium truncate w-28">{userNickName}</p>
       </div>
 
       {isModalOpen && (
