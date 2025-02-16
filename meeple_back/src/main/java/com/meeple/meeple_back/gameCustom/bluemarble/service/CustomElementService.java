@@ -61,8 +61,15 @@ public class CustomElementService {
 		return CustomElementResponse.from(customElementRepository.save(customElementEntity));
 	}
 
-	public void delete(Integer integer) {
-		customElementRepository.deleteById(integer);
+	@Transactional
+	public void delete(Integer customId) {
+		customTileJpaRepository.deleteTileByCustomId(customId);
+		customTileJpaRepository.deleteByCustomId(customId);
+
+		customCardJpaRepository.deleteCardByCustomId(customId);
+		customCardJpaRepository.deleteByCustomId(customId);
+		
+		customElementRepository.deleteById(customId);
 	}
 
 	public List<CustomElementResponse> findAll() {
