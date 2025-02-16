@@ -11,6 +11,7 @@ import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.CustomTi
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.TileImageResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.TileResponse;
 import com.meeple.meeple_back.gameCustom.bluemarble.domain.CustomElementUpdate;
+import com.meeple.meeple_back.gameCustom.bluemarble.domain.CustomStatus;
 import com.meeple.meeple_back.gameCustom.bluemarble.infrastructure.CardEntity;
 import com.meeple.meeple_back.gameCustom.bluemarble.infrastructure.CardJpaRepository;
 import com.meeple.meeple_back.gameCustom.bluemarble.infrastructure.CustomCardEntity;
@@ -189,5 +190,27 @@ public class CustomElementService {
 		int cardId = customCardJpaRepository.findIdByCustomIdAndTileNumber(customId, tileNumber);
 		customCardJpaRepository.deleteByCustomIdAndTileNumber(customId, tileNumber);
 		cardJpaRepository.deleteById(cardId);
+	}
+
+	public CustomElementResponse updateStatus(Integer customId, String status) {
+		CustomElementEntity entity = customElementJpaRepository.findById(customId).orElseThrow();
+		if (status.equals("BEFORE")) {
+			entity.setCustomStatus(CustomStatus.BEFORE);
+		}
+
+		if (status.equals("SUBMITTED")) {
+			entity.setCustomStatus(CustomStatus.SUBMITTED);
+		}
+
+		if (status.equals("IN_REVIEW")) {
+			entity.setCustomStatus(CustomStatus.IN_REVIEW);
+		}
+
+		if (status.equals("COMPLETED")) {
+			entity.setCustomStatus(CustomStatus.COMPLETED);
+		}
+
+		customElementJpaRepository.save(entity);
+		return CustomElementResponse.from(entity);
 	}
 }
