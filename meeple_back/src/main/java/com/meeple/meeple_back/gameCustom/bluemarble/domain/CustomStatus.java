@@ -4,12 +4,12 @@ import lombok.Getter;
 
 @Getter
 public enum CustomStatus {
-    BEFORE("신청"), SUBMITTED("신청완료"), IN_REVIEW("심사진행중"), COMPLETED("심사완료");
+	BEFORE("신청전"), SUBMITTED("신청완료"), IN_REVIEW("심사진행중"), COMPLETED("심사완료");
 
-    private final String name;
+	private final String name;
 
-    CustomStatus(String name) {
-        this.name = name;
-    }
+	CustomStatus(String name) {
+		this.name = name;
+	}
 
 }
