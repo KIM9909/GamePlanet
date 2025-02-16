@@ -1,11 +1,14 @@
 package com.meeple.meeple_back.game.bluemarble.controller.response;
 
-import com.meeple.meeple_back.game.bluemarble.domain.*;
+import com.meeple.meeple_back.game.bluemarble.domain.ActionType;
+import com.meeple.meeple_back.game.bluemarble.domain.Card;
+import com.meeple.meeple_back.game.bluemarble.domain.GamePlay;
+import com.meeple.meeple_back.game.bluemarble.domain.Player;
+import com.meeple.meeple_back.game.bluemarble.domain.Tile;
+import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
-
-import java.util.List;
 
 @Builder
 @Getter
@@ -28,13 +31,13 @@ public class GamePlayResponse {
 		return GamePlayResponse.builder()
 				.gamePlayId(gamePlay.getGamePlayId())
 				.currentPlayerIndex(gamePlay.getTurnManager().getCurrentPlayerIndex())
-				.players(gamePlay.getPlayers())
 				.gameStatus(gamePlay.getGameStatus())
 				.round(gamePlay.getRound())
 				.board(gamePlay.getBoard())
 				.cards(gamePlay.getCards())
 				.nextAction(actionType.name())
 				.doubleState(gamePlay.getTurnManager().checkDoubleState())
+				.players(gamePlay.getTurnManager().getPlayers())
 				.build();
 	}
 }
