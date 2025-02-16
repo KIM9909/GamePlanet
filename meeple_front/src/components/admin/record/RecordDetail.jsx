@@ -15,7 +15,7 @@ const RecordDetail = () => {
   const { recordId } = useParams();
 
   const getStatusText = (record) => {
-    if (!record.voiceProcessStatus) return '미처리';
+    if (!record.voiceProcessStatus) return(console.log(record, '미처리'), '미처리');
     // 처리가 완료되었고 (Y), userDeletedAt이 있다면 제재된 것
     if (record.voiceProcessStatus === 'Y' && record.user?.userDeletedAt) {
       return '영구제재';
@@ -144,8 +144,8 @@ const RecordDetail = () => {
             </span>
           </div>
           {record.voiceProcessStatus && (
-            <span className={`px-3 py-1 text-white text-sm rounded-full ${getStatusColor(record.voiceProcessStatus)}`}>
-              {getStatusText(record.voiceProcessStatus)}
+            <span className={`px-3 py-1 text-white text-sm rounded-full ${getStatusColor(record)}`}>
+              {getStatusText(record)}
             </span>
           )}
         </div>
