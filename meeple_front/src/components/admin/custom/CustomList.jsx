@@ -1,26 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Eye } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import Pagination from './Pagination';
+import Pagination from '../Pagination';
+import CustomAPI from '../../../sources/api/CustomAPI';
+import AdminCustomModal from './AdminCustomModal';
 
 const CustomList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchType, setSearchType] = useState('nickname');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('전체');
+  const [customGames, setCustomGames] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedCustomId, setSelectedCustomId] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const itemsPerPage = 10;
-  const navigate = useNavigate();
 
-  // 더미 데이터
-  const [customGames] = useState(Array.from({ length: 28 }, (_, index) => ({
-    id: index + 1,
-    nickname: `Player${index + 1}`,
-    gameName: `커스텀 게임 ${index + 1}`,
-    submitDate: new Date(2024, 1, 1 + index).toLocaleDateString(),
-    status: index % 3 === 0 ? '신청완료' : index % 3 === 1 ? '심사진행중' : '심사완료'
-  })));
+  useEffect(() => {
+    const fetchCustomGames = async () => {
+      try {
+        setLoading(true);
+        const response = await CustomAPI.getAllElements();
+        
+        // 신청전 상태를 제외한 게임만 필터링
+        const formattedGames = response
+          .filter(game => game.customStatus !== '신청전')
+          .map(game => ({
+            id: game.customId,
+            nickname: game.userNickName,
+            gameName: game.customName,
+            submitDate: new Date(game.createdAt).toLocaleDateString(),
+            status: game.customStatus,
+            imageUrl: game.imageUrl,
+            userId: game.userId,
+            updatedAt: game.updatedAt
+          }));
+        setCustomGames(formattedGames);
+      } catch (err) {
+        setError('커스텀 게임 목록을 불러오는데 실패했습니다.');
+        console.error('Error fetching custom games:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // 검색 및 상태 필터링
+    fetchCustomGames();
+  }, []);
+
   const filteredGames = customGames.filter(game => {
     const matchesSearch = !searchTerm || (
       searchType === 'nickname' 
@@ -56,14 +82,39 @@ const CustomList = () => {
     }
   };
 
+  const refreshList = async () => {
+    try {
+      const response = await CustomAPI.getAllElements();
+      const formattedGames = response
+        .filter(game => game.customStatus !== '신청전')
+        .map(game => ({
+          id: game.customId,
+          nickname: game.userNickName,
+          gameName: game.customName,
+          submitDate: new Date(game.createdAt).toLocaleDateString(),
+          status: game.customStatus,
+        }));
+      setCustomGames(formattedGames);
+    } catch (err) {
+      console.error('Error refreshing list:', err);
+    }
+  };
+
   const getStatusCount = (status) => {
     if (status === '전체') return customGames.length;
     return customGames.filter(game => game.status === status).length;
   };
 
+  if (loading) {
+    return <div className="text-center py-8">로딩 중...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-8 text-red-500">{error}</div>;
+  }
+
   return (
     <div>
-      
       <div className="flex justify-between items-center mb-6">
         {/* 상태 필터 버튼들 */}
         <div className="flex gap-2">
@@ -157,7 +208,10 @@ const CustomList = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <button 
-                    // onClick={} 
+                    onClick={() => {
+                      setSelectedCustomId(game.id);
+                      setIsModalOpen(true);
+                    }}
                     className="text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1"
                   >
                     <Eye size={16} />
@@ -175,6 +229,18 @@ const CustomList = () => {
         itemsPerPage={itemsPerPage}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
+      />
+
+      {/* 상세보기 모달 */}
+      <AdminCustomModal 
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedCustomId(null);
+        }}
+        customId={selectedCustomId}
+        onStatusUpdate={refreshList}
+        getStatusColor={getStatusColor}
       />
     </div>
   );

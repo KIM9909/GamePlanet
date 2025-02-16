@@ -42,13 +42,11 @@ const RecordList = () => {
   }, []);
 
   // 상태 텍스트 변환
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'Y':
-        return '처리완료';
-      default:
-        return '미처리';
+  const getStatusText = (status, userDeletedAt) => {
+    if (status === "Y") {
+      return userDeletedAt ? "영구제재" : "무혐의";
     }
+    return "미처리";
   };
 
   // 상태 색상 설정
@@ -57,7 +55,7 @@ const RecordList = () => {
       case 'Y':
         return 'bg-green-500';
       default:
-        return 'bg-gray-500';
+        return 'bg-red-500';
     }
   };
 
@@ -214,7 +212,7 @@ const RecordList = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-3 py-1 rounded-full text-xs font-medium text-white ${getStatusColor(record.voiceProcessStatus)}`}>
-                    {getStatusText(record.voiceProcessStatus)}
+                    {getStatusText(record.voiceProcessStatus, record.user.userDeletedAt)}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
