@@ -699,9 +699,9 @@ public class CatchMindServiceImpl implements CatchMindService {
             }
         }
 
-        Map<String, Object> gameInfo = (Map<String, Object>) roomInfo.get("gameInfo");
+        Map<String, Object> gameInfo = (Map<String, Object>) roomInfo.getOrDefault("gameInfo", "");
 
-        if (userList != null && !userList.isEmpty()) {
+        if (userList != null && !userList.isEmpty() && !gameInfo.equals("")) {
             String currentTurn = (String) gameInfo.get("currentTurn");
             int currentIndex = currentTurn != null ? userList.indexOf(currentTurn) : 0;
             int nextIndex = (currentIndex + 1) % userList.size();
