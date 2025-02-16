@@ -15,6 +15,7 @@ const BurumabulPage = () => {
   const [currentRoomInfo, setCurrentRoomInfo] = useState({});
   // 초기 게임 플레이 데이터
   const [playData, setPlayData] = useState(null);
+  const [gameStatus, setGameStatus] = useState(null);
 
   useEffect(() => {
     const getRoomInfo = async () => {
@@ -72,6 +73,7 @@ const BurumabulPage = () => {
     if (gamePlaySocketData) {
       console.log("새로운 gamePalySocetData 수신:", gamePlaySocketData);
       setPlayData(gamePlaySocketData);
+      setGameStatus(gamePlaySocketData.gameStatus);
       setIsStart(true);
     }
   }, [gamePlaySocketData]);
@@ -90,14 +92,36 @@ const BurumabulPage = () => {
     <>
       {Object.keys(currentRoomInfo).length === 0 ? (
         <div>Loading...</div>
-      ) : playData && playData.gameStatus === "IN_PROGRESS" ? (
-        <BurumabulPlay
-          roomId={roomId}
-          currentRoomInfo={currentRoomInfo}
-          setIsStart={setIsStart}
-          playData={playData}
-        />
+      ) : playData ? (
+        // playData가 있는 경우
+        gameStatus === "IN_PROGRESS" ? (
+          // 게임 진행 중
+          <BurumabulPlay
+            roomId={roomId}
+            currentRoomInfo={currentRoomInfo}
+            setIsStart={setIsStart}
+            playData={playData}
+            setGameStatus={setGameStatus}
+          />
+        ) : gameStatus === "GAME_END" ? (
+          // 게임 종료
+          <WaitingRoom
+            roomId={roomId}
+            roomInfo={currentRoomInfo}
+            setIsStart={setIsStart}
+            setPlayData={setPlayData}
+          />
+        ) : (
+          // 그 외의 상태 (대기 중)
+          <WaitingRoom
+            roomId={roomId}
+            roomInfo={currentRoomInfo}
+            setIsStart={setIsStart}
+            setPlayData={setPlayData}
+          />
+        )
       ) : (
+        // playData가 없는 경우 (초기 상태)
         <WaitingRoom
           roomId={roomId}
           roomInfo={currentRoomInfo}

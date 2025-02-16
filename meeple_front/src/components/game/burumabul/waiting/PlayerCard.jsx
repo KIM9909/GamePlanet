@@ -17,7 +17,7 @@ const PlayerCard = ({ playerInfo, onClick }) => {
     const getUserInfo = async () => {
       if (playerId) {
         try {
-          const response = await getProfile(playerId);
+          const response = await getProfile(String(playerId));
           console.log("프로필 응답:", response);
           setUserNickName(response.userNickname);
         } catch (error) {

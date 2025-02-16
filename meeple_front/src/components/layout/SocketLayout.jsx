@@ -111,6 +111,9 @@ const SocketLayout = ({ children }) => {
   const [socketTravelNextPosition, setSocketTravelNextPosition] =
     useState(null);
 
+  // 게임 종료
+  const [socketEnd, setSocketEnd] = useState(null);
+
   const location = useLocation();
 
   const stompClientRef = useRef(null);
@@ -205,7 +208,6 @@ const SocketLayout = ({ children }) => {
               setSocketCurrentRound(receivedData.data.round);
               setGameSocketNotifi(receivedData.message);
               setSocketWinner(receivedData.data.winner);
-              setSocketRemovedPlayer(receivedData.data.removedPlayer);
             } else if (receivedData.type === "pay-fee") {
               setSocketPayTollData(receivedData.data);
               setSocketTollPrice(receivedData.data.tollprice);
@@ -227,6 +229,9 @@ const SocketLayout = ({ children }) => {
               setSocketTravelNextPosition(receivedData.data.nextPosition);
               setGameSocketNotifi(receivedData.message);
               setSocketNext(receivedData.data.nextAction);
+            } else if (receivedData.type === "game-end") {
+              setGameSocketNotifi(receivedData.message);
+              setSocketEnd(receivedData.data);
             }
             if (receivedData.status) {
               setSocketStatus(receivedData.status);
@@ -682,6 +687,7 @@ const SocketLayout = ({ children }) => {
           setSocketTravelPrevPosition,
           socketTravelNextPosition,
           setSocketTravelNextPosition,
+          socketEnd,
           enterWaitingRoom,
           chatWaitingRoom,
           changePassword,

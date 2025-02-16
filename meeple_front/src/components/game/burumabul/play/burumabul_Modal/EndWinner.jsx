@@ -15,12 +15,12 @@ const Firework = ({ delay }) => (
 
 const EndWinner = ({ onClose }) => {
   const { socketWinner } = useContext(SocketContext);
-  const [winner, setWinner] = useState(socketWinner);
+  const [winnerName, setWinnerName] = useState("");
   const [showFireworks, setShowFireworks] = useState(false);
 
   useEffect(() => {
-    if (socketWinner) {
-      setWinner(socketWinner);
+    if (socketWinner && socketWinner.playerName) {
+      setWinnerName(socketWinner.playerName);
       setShowFireworks(true);
     }
   }, [socketWinner]);
@@ -42,9 +42,11 @@ const EndWinner = ({ onClose }) => {
             <PartyPopper className="mx-auto h-16 w-16 text-yellow-500 animate-bounce" />
           </div>
 
-          <h1 className="text-4xl font-bold text-purple-600 mb-4 animate-pulse">
-            🎉 {winner} 🎉
-          </h1>
+          {winnerName && (
+            <h1 className="text-4xl font-bold text-purple-600 mb-4 animate-pulse">
+              🎉 {winnerName} 🎉
+            </h1>
+          )}
 
           <div className="text-2xl font-semibold text-gray-800 mb-4 animate-fade-in">
             승자입니다!
