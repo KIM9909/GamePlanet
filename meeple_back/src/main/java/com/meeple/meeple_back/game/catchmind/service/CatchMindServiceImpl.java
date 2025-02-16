@@ -671,7 +671,9 @@ public class CatchMindServiceImpl implements CatchMindService {
 
         List<String> userList = (List<String>) roomInfo.get("players");
 
-        if (!userName.equals(roomInfo.get("creator"))) {
+        String creator = (String) roomInfo.get("creator");
+
+        if (!userName.equals(creator)) {
             for (int i = 0; i < userList.size(); i++) {
                 String user = userList.get(i);
                 if (user.equals(userName)) {
@@ -681,7 +683,7 @@ public class CatchMindServiceImpl implements CatchMindService {
             }
         } else {
             for (int i = 0; i < userList.size(); i++) {
-                if (!userList.get(i).equals(roomInfo.get("creator"))) {
+                if (!userList.get(i).equals(creator)) {
                     roomInfo.put("creator", userList.get(i));
                     break;
                 }
@@ -706,7 +708,6 @@ public class CatchMindServiceImpl implements CatchMindService {
             // 다음 출제자를 gameInfo에 저장
             gameInfo.put("currentTurn", nextTurn);
         }
-
 
         roomInfo.put("gameInfo", gameInfo);
         roomInfo.put("players", userList);
