@@ -49,15 +49,15 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-blue-200 bg-opacity-50 flex justify-center items-center z-50">
-      <div className="w-96 p-6 bg-slate-900 bg-opacity-80 rounded-lg flex flex-col justify-center items-center">
-        <h1 className="text-3xl text-white ">부루마불 방 만들기</h1>
+      <div className="w-96 p-6 bg-gray-900 bg-opacity-80  rounded-lg flex flex-col justify-center items-center">
+        <h1 className="text-3xl text-cyan-400 ">부루마불 방 만들기</h1>
         <hr className="w-80 border-t-2 border-white my-2" />
-        <div className="bg-white w-full py-3 my-3 rounded-lg">
+        <div className="bg-gray-900 bg-opacity-80 w-full py-3 my-3 rounded-lg">
           <form onSubmit={handleSubmit} className="text-center">
             {/* 방 제목 */}
             <div className="flex flex-col items-center">
               <label
-                className="text-xl block mt-2 text-gray-900"
+                className="text-xl block mt-2 text-cyan-400 "
                 htmlFor="roomTitle"
               >
                 방 제목
@@ -77,15 +77,15 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
             {/* 비밀방 선택 */}
             <div className="flex flex-row justify-center items-center my-2">
               <label
-                className="text-xl block my-2 text-gray-900"
+                className="text-xl block my-2 text-cyan-400 "
                 htmlFor="privateCheck"
               >
                 비밀방
               </label>
               <div>
                 <button
-                  className={`bg-green-500 mx-2 text-white w-14 rounded ${
-                    roomData.isPrivate ? "bg-green-500" : "bg-slate-500"
+                  className={`bg-cyan-500 mx-2 text-white w-14 rounded ${
+                    roomData.isPrivate ? "bg-cyan-500" : "bg-slate-500"
                   }`}
                   value={roomData.isPrivate}
                   onClick={() =>
@@ -101,7 +101,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
                 </button>
                 <button
                   className={`"bg-red-500" mx-2 text-white w-14 rounded ${
-                    roomData.isPrivate ? "bg-slate-500" : "bg-red-500"
+                    roomData.isPrivate ? "bg-slate-500" : "bg-gray-500"
                   }`}
                   value={roomData.isPrivate}
                   onClick={() =>
@@ -122,7 +122,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
             <div>
               {roomData.isPrivate && (
                 <div className="flex flex-col items-center my-3">
-                  <label className="text-lg" htmlFor="password">
+                  <label className="text-lg text-cyan-400" htmlFor="password">
                     비밀번호 설정(숫자 8자리)
                   </label>
                   <hr className="w-80 border-t-2 border-gray-400 my-2" />
@@ -148,12 +148,12 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
             </div>
             {/* 플레이어 수 선택 */}
             <div className="flex flex-col items-center">
-              <h2 className="text-lg">플레이어 수 선택</h2>
+              <h2 className="text-lg text-cyan-400 ">플레이어 수 선택</h2>
               <hr className="w-80 border-t-2 border-gray-400 my-2" />
               <div className="my-1">
                 <button
                   className={`bg-blue-200 text-gray-500 w-14 rounded mx-2 ${
-                    roomData.maxPlayers === 2 ? "bg-blue-400" : "bg-blue-200"
+                    roomData.maxPlayers === 2 ? "bg-cyan-400" : "bg-blue-200"
                   }`}
                   value={roomData.maxPlayers}
                   onClick={() =>
@@ -168,7 +168,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
                 </button>
                 <button
                   className={`bg-blue-200 text-gray-500 w-14 rounded mx-2 ${
-                    roomData.maxPlayers === 3 ? "bg-blue-400" : "bg-blue-200"
+                    roomData.maxPlayers === 3 ? "bg-cyan-400" : "bg-blue-200"
                   }`}
                   value={roomData.maxPlayers}
                   onClick={() =>
@@ -183,7 +183,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
                 </button>
                 <button
                   className={`bg-blue-200 text-gray-500 w-14 rounded mx-2 ${
-                    roomData.maxPlayers === 4 ? "bg-blue-400" : "bg-blue-200"
+                    roomData.maxPlayers === 4 ? "bg-cyan-400" : "bg-blue-200"
                   }`}
                   value={roomData.maxPlayers}
                   onClick={() =>
@@ -201,14 +201,14 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
             {/* 방 생성 or 취소 */}
             <div className="flex flex-row justify-evenly my-3">
               <button
-                className="bg-red-500 rounded-lg text-white w-24"
+                className="bg-gray-500 rounded-lg text-white w-24"
                 onClick={handleCancel}
               >
                 취소
               </button>
               {/* 일단 생성 누르면 부루마불 대기방으로 */}
               <button
-                className="bg-green-500 rounded-lg text-white w-24"
+                className="bg-cyan-500 rounded-lg text-white w-24"
                 onClick={handleSubmit}
                 type="submit"
               >

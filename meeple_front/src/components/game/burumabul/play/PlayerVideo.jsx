@@ -18,11 +18,11 @@ const PlayerVideo = ({ playerInfo, sessionId }) => {
   const [subscribers, setSubscribers] = useState([]);
   const memoizedSubscribers = useMemo(() => subscribers, [subscribers]);
   const [audioEnabled, setAudioEnabled] = useState(true);
-  const [videoEnabled, setVideoEnabled] = useState(true);
+  const [videoEnabled, setVideoEnabled] = useState(false);
   const [connectionError, setConnectionError] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [currentStream, setCurrentStream] = useState(null);
-  const [reconnectAttempts, setReconnectAttempts] = useState(0);
+
   const tokenRef = useRef(null);
   const videoRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
@@ -32,6 +32,19 @@ const PlayerVideo = ({ playerInfo, sessionId }) => {
 
   const MAX_RECONNECT_ATTEMPTS = 3;
   const RECONNECT_DELAY = 10000; // 10초
+
+  // 비디오 활성화 상태를 스트림별로 관리
+  const [publisherVideoEnabled, setPublisherVideoEnabled] = useState(false);
+  const [subscriberVideos, setSubscriberVideos] = useState({});
+
+  const toggleVideo = () => {
+    if (publisher) {
+      publisher.publishVideo(!publisherVideoEnabled);
+      setPublisherVideoEnabled(!publisherVideoEnabled);
+      publisher.stream.getMediaStream().getVideoTracks()[0].enabled =
+        !publisherVideoEnabled;
+    }
+  };
 
   const cleanupSession = async (currentSession) => {
     try {
@@ -75,9 +88,13 @@ const PlayerVideo = ({ playerInfo, sessionId }) => {
           const subscriber = currentSession.subscribe(event.stream, undefined);
           setSubscribers((prev) => [...prev, subscriber]);
           setCurrentStream(subscriber.stream);
+          // 구독자의 비디오 상태 초기화
+          setSubscriberVideos((prev) => ({
+            ...prev,
+            [subscriber.stream.streamId]: true,
+          }));
         }
       });
-
       currentSession.on("streamDestroyed", (event) => {
         setSubscribers((prev) =>
           prev.filter((sub) => sub.stream.streamId !== event.stream.streamId)
@@ -87,12 +104,22 @@ const PlayerVideo = ({ playerInfo, sessionId }) => {
         }
       });
 
+      currentSession.on("streamPropertyChanged", (event) => {
+        if (event.changedProperty === "videoActive") {
+          // 다른 참가자의 비디오 상태가 변경됨
+          const streamId = event.stream.streamId;
+          if (!isMyStream) {
+            setVideoEnabled(event.newValue);
+          }
+        }
+      });
+
       // 토큰 가져오기
       if (!tokenRef.current) {
         const response = await axios.post(
           `${
             import.meta.env.VITE_API_BASE_URL
-          }/video/generate-token/${sessionId}`,
+          }/api/video/generate-token/${sessionId}`,
           {},
           { headers: { "Content-Type": "application/json" }, timeout: 30000 }
         );
@@ -129,7 +156,6 @@ const PlayerVideo = ({ playerInfo, sessionId }) => {
       }
 
       setConnectionError(null);
-      setReconnectAttempts(0);
     } catch (error) {
       console.error("Error in video connection:", error);
       setConnectionError(error.message);
@@ -153,24 +179,25 @@ const PlayerVideo = ({ playerInfo, sessionId }) => {
   }, [sessionId, playerInfo.playerName, isMyStream]);
 
   const reconnectToSession = async () => {
-    if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-      console.warn("Max reconnect attempts reached.");
-      return;
+    setConnectionError(null);
+    setIsConnecting(true);
+    try {
+      // 기존 세션 정리 후 재연결 시도
+      if (session) {
+        await session.disconnect();
+      }
+      // 새로운 세션 연결
+      setSession(null);
+      setPublisher(null);
+      setSubscribers([]);
+      setCurrentStream(null);
+    } catch (error) {
+      console.error("Error during reconnection:", error);
+      setConnectionError("재연결 실패");
+    } finally {
+      setIsConnecting(false);
     }
-
-    console.log(`Reconnecting... Attempt ${reconnectAttempts + 1}`);
-    setReconnectAttempts((prev) => prev + 1);
-
-    reconnectTimeoutRef.current = setTimeout(() => {
-      connectToSession();
-    }, RECONNECT_DELAY);
   };
-
-  useEffect(() => {
-    if (connectionError) {
-      reconnectToSession();
-    }
-  }, [connectionError]);
 
   const toggleAudio = () => {
     if (publisher) {
@@ -179,12 +206,32 @@ const PlayerVideo = ({ playerInfo, sessionId }) => {
     }
   };
 
-  const toggleVideo = () => {
-    if (publisher) {
-      publisher.publishVideo(!videoEnabled);
-      setVideoEnabled(!videoEnabled);
+  useEffect(() => {
+    if (session) {
+      session.on("streamPropertyChanged", (event) => {
+        if (event.changedProperty === "videoActive") {
+          setVideoEnabled(event.newValue);
+        }
+      });
     }
-  };
+  }, [session]);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (session) {
+        session.disconnect();
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      if (session) {
+        session.disconnect();
+      }
+    };
+  }, [session]);
 
   // 프로필 모달 관련 상태
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -206,27 +253,44 @@ const PlayerVideo = ({ playerInfo, sessionId }) => {
 
   return (
     <div className="bg-white rounded-md w-full flex flex-col h-32 border-2 border-violet-400">
-      <div className="relative bg-black w-full rounded-t-sm h-28 sm:h-20 md:h-24 overflow-hidden">
+      <div className="relative bg-black w-full rounded-t-sm h-28 sm:h-20 md:h-24 overflow-hidden flex items-center justify-center">
         {currentStream ? (
-          <video
-            ref={(video) => {
-              if (video) {
-                video.srcObject = currentStream.getMediaStream();
-                video.muted = isMyStream;
-              }
-              videoRef.current = video;
-            }}
-            autoPlay
-            playsInline
-            className={`w-full h-full object-cover ${
-              !videoEnabled ? "hidden" : ""
-            }`}
-          />
+          <>
+            <video
+              ref={(video) => {
+                if (video) {
+                  video.srcObject = currentStream.getMediaStream();
+                  video.muted = isMyStream;
+                }
+                videoRef.current = video;
+              }}
+              autoPlay
+              playsInline
+              className={`w-full h-full object-cover ${
+                !videoEnabled ? "hidden" : ""
+              }`}
+            />
+            {!videoEnabled && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-800 text-white text-sm">
+                <CameraOff className="w-4 h-4 mr-2" /> 카메라 꺼짐
+              </div>
+            )}
+          </>
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-            <div className="text-white text-sm">
-              {connectionError || "비디오 연결 중..."}
-            </div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-800 text-white text-sm">
+            {connectionError ? (
+              <>
+                <p>{connectionError}</p>
+                <button
+                  onClick={reconnectToSession}
+                  className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                >
+                  재연결 시도
+                </button>
+              </>
+            ) : (
+              <p>비디오 연결 중...</p>
+            )}
           </div>
         )}
       </div>
