@@ -152,7 +152,14 @@ const Cell = ({
   );
 };
 
-const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
+const TravelMap = ({
+  onBasesInfo,
+  gameData,
+  roomId,
+  setIsStart,
+  onGameEnd,
+  setGameStatus,
+}) => {
   // cities 배열
   const cities = [
     "지구 Start",
@@ -217,6 +224,7 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
     socketBoard,
     socketCards,
     socketNext,
+    socketEnd,
     socketUserUpdate,
     socketTileUpdate,
     buyLandSocketData,
@@ -698,10 +706,10 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
         try {
           const diceInfo = {
             playerId: currentPlayer.playerId,
-            firstDice: firstDice,
-            secondDice: secondDice,
-            // firstDice: 2,
-            // secondDice: 2,
+            // firstDice: firstDice,
+            // secondDice: secondDice,
+            firstDice: 2,
+            secondDice: 2,
           };
           console.log("주사위 정보 :", diceInfo);
           await rollDice(diceInfo);
@@ -1226,10 +1234,24 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
 
   useEffect(() => {
     if (socketWinner && nextAction && nextAction === "GAME_END") {
-      setIsEnd(true);
-      setShowEndWinner(true);
+      setTimeout(() => {
+        setIsEnd(true);
+        setShowEndWinner(true);
+      }, 5000);
     }
   }, [socketWinner, nextAction]);
+
+  useEffect(() => {
+    if (socketWinner && socketEnd === "게임 끝") {
+      console.log("Game fully ended - preparing to return to waiting room");
+      if (setIsStart) {
+        setIsStart(false);
+      }
+      if (onGameEnd) {
+        onGameEnd();
+      }
+    }
+  });
 
   const closeBuyLand = () => {
     setShowBuyLand(false);
@@ -1278,12 +1300,20 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
   };
 
   const closeEndWinner = () => {
+    console.log("Closing winner modal");
     setShowEndWinner(false);
-    setTimeout(() => {
-      console.log("대기방으로 이동합니다.");
+
+    console.log("Ending game and returning to waiting room");
+    endGame();
+
+    if (setIsStart) {
       setIsStart(false);
-      endGame();
-    }, 5000);
+    }
+    setGameStatus("GAME_END");
+
+    if (onGameEnd) {
+      onGameEnd();
+    }
   };
 
   useEffect(() => {
@@ -1872,7 +1902,8 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
         createPortal(
           <div className="fixed inset-0 z-50 w-full text-center flex items-center justify-center">
             <EndWinner onClose={closeEndWinner} />
-          </div>
+          </div>,
+          document.body
         )}
     </div>
   );

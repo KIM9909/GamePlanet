@@ -10,7 +10,13 @@ import { SocketContext } from "../../../layout/SocketLayout";
 
 import SeedCard from "./burumabul_Modal/SeedCard";
 
-const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
+const BurumabulPlay = ({
+  roomId,
+  currentRoomInfo,
+  setIsStart,
+  playData,
+  setGameStatus,
+}) => {
   // console.log("부루마불 플레이 현재 방 정보 :", currentRoomInfo);
   const userId = Number(useSelector((state) => state.user.userId));
   // 소켓 사용
@@ -43,6 +49,8 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
   // 게임 데이터
   const [currentPlayData, setCurrentPlayData] = useState(playData);
 
+  const [isGameEnded, setIsGameEnded] = useState(false);
+
   const [board, setBoard] = useState(null);
   const [cards, setCards] = useState(null);
   const [players, setPlayers] = useState(currentPlayData?.players || []);
@@ -62,7 +70,11 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     }
   }, [socketBurumabulOpenVidu]);
 
-  // console.log(burumabulOpenViduId);
+  // 게임 종료 시 오픈비두 세션 종료 요청
+  const handleGameEnd = () => {
+    console.log("게임 종료됨 - PlayerVideo에 OpenVidu 종료 요청 보냄");
+    setIsGameEnded(true);
+  };
 
   const currentPlayer = players?.[currentPlayData?.currentPlayerIndex];
   // console.log("현재 플레이어: ", currentPlayer);
@@ -325,6 +337,9 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
               onBasesInfo={handlePlayerBasesRef}
               gameData={currentPlayData}
               roomId={roomId}
+              setIsStart={setIsStart}
+              onGameEnd={handleGameEnd}
+              setGameStatus={setGameStatus}
             />
           </div>
 
@@ -343,6 +358,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
                       key={index}
                       playerInfo={player}
                       sessionId={burumabulOpenViduId}
+                      isGameEnded={isGameEnded}
                     />
                   ))}
                 </div>
