@@ -466,7 +466,7 @@ public class CatchMindServiceImpl implements CatchMindService {
                 int finalScore = currentScore + 30;
                 playerScore.put(request.getSender(), finalScore);
 
-                roomInfo.put("isGameStart", false);
+                roomInfo.put("isGameStart", "N");
 
                 // Redis에 업데이트된 점수 저장
                 gameInfo.put("playerScore", playerScore);
@@ -743,7 +743,7 @@ public class CatchMindServiceImpl implements CatchMindService {
         List<String> quizList = (List<String>) gameInfo.get("quizList");
 
         if (quizList.isEmpty()) {
-            roomInfo.put("isGameStart", false);
+            roomInfo.put("isGameStart", "N");
             List<GameResultDTO> gameResult = gameResult(roomId);
 
             ResponseGameResult responseResult = ResponseGameResult.builder()

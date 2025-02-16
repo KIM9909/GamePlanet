@@ -20,8 +20,12 @@ public class ResponseReport {
     private String reportTitle;
     @Schema(description = "신고 내용", example = "부적절한 내용이라 신고합니다")
     private String reportContent;
+    @Schema(description = "처리 메모", example = "경고 조치 완료")
+    private String reportMemo;
     @Schema(description = "신고 대상", example = "{userId: 1, userName: 홍길동, ...}")
     private User user;
     @Schema(description = "신고자", example = "{userId: 2, userName: 유관순, ...}")
     private User reporter;
+    @Schema(description = "신고 첨부 파일 URL")
+    private String reportDocumentUrl;
 }
