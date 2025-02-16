@@ -40,7 +40,7 @@ public class ReportController {
             @RequestPart("reportTitle") String reportTitle,
             @RequestPart("reportContent") String reportContent,
             @RequestPart("userId") long userId,
-            @RequestPart("userId") long reporterId
+            @RequestPart("reporterId") long reporterId
     ) {
         ResponseCreateReport response = reportService.createReport(
                 reportDocument, reportReason, reportTitle, reportContent,
