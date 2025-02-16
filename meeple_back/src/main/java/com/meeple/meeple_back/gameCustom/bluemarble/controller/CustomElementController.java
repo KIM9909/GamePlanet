@@ -47,6 +47,20 @@ public class CustomElementController {
 	private String bucketName;
 
 	/**
+	 * 특정 customId에 해당하는 커스텀 요소의 상태를 업데이트하는 엔드포인트입니다.
+	 *
+	 * @param customId 업데이트할 커스텀 요소의 ID
+	 * @param status   업데이트할 상태 값
+	 * @return 업데이트된 CustomElementResponse 객체를 포함한 ResponseEntity
+	 */
+	@PutMapping("/{customId}/update-status")
+	public ResponseEntity<CustomElementResponse> updateStatus(
+			@PathVariable("customId") Integer customId, @RequestParam("status") String status) {
+		CustomElementResponse response = customElementService.updateStatus(customId, status);
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
+	}
+
+	/**
 	 * 특정 customId와 userId에 해당하는 CustomElement 목록을 조회하는 엔드포인트입니다.
 	 *
 	 * @param userId 조회할 사용자의 ID
@@ -61,7 +75,7 @@ public class CustomElementController {
 	}
 
 	/**
-	 * 새로운 커스텀 요소를 생성하는 엔드포인트입니다.
+	 * S 새로운 커스텀 요소를 생성하는 엔드포인트입니다.
 	 *
 	 * @param customName 생성할 커스텀 요소의 이름
 	 * @param userId     생성할 사용자의 ID
