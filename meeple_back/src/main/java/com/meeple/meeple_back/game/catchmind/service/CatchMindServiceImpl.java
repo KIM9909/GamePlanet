@@ -703,20 +703,20 @@ public class CatchMindServiceImpl implements CatchMindService {
             }
         }
 
-        Map<String, Object> gameInfo = (Map<String, Object>) roomInfo.get("gameInfo");
+        Map<String, Object> gameData = (Map<String, Object>) roomInfo.get("gameData");
 
         if (userList != null && !userList.isEmpty() &&
-                !gameInfo.getOrDefault("currentTurn", "").equals("")) {
-            String currentTurn = (String) gameInfo.get("currentTurn");
+                !gameData.getOrDefault("currentTurn", "").equals("")) {
+            String currentTurn = (String) gameData.get("currentTurn");
             int currentIndex = currentTurn != null ? userList.indexOf(currentTurn) : 0;
             int nextIndex = (currentIndex + 1) % userList.size();
             String nextTurn = userList.get(nextIndex);
 
             // 다음 출제자를 gameInfo에 저장
-            gameInfo.put("currentTurn", nextTurn);
+            gameData.put("currentTurn", nextTurn);
         }
 
-        roomInfo.put("gameInfo", gameInfo);
+        roomInfo.put("gameData", gameData);
         roomInfo.put("players", userList);
         redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
 
