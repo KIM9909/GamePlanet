@@ -53,7 +53,7 @@ public class CustomElementController {
 	 * @return 조회된 CustomElementResponse 객체 목록을 포함한 ResponseEntity
 	 */
 	@Operation(tags = "customElement 목록중 입력받은 userId가 현재 접속한 유저의 것을 찾는다.")
-	@GetMapping("/{customId}/find-by-user-id/{userId}")
+	@GetMapping("/find-by-user-id/{userId}")
 	public ResponseEntity<List<CustomElementResponse>> findByUserId(
 			@PathVariable("userId") Long userId) {
 		List<CustomElementResponse> response = customElementService.findByUserId(userId);
