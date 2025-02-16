@@ -68,7 +68,7 @@ public class CustomElementService {
 
 		customCardJpaRepository.deleteCardByCustomId(customId);
 		customCardJpaRepository.deleteByCustomId(customId);
-		
+
 		customElementRepository.deleteById(customId);
 	}
 
@@ -173,8 +173,8 @@ public class CustomElementService {
 		return CustomElementResponse.from(entity);
 	}
 
-	public List<CustomElementResponse> findByUserId(Integer customId, Long userId) {
-		return customElementJpaRepository.findByCustomIdAndUserId(customId, userId).stream()
+	public List<CustomElementResponse> findByUserId(Long userId) {
+		return customElementJpaRepository.findByUserId(userId).stream()
 				.map(CustomElementResponse::from)
 				.toList();
 	}
