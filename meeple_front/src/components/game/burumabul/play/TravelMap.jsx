@@ -698,10 +698,10 @@ const TravelMap = ({ onBasesInfo, gameData, roomId, setIsStart }) => {
         try {
           const diceInfo = {
             playerId: currentPlayer.playerId,
-            // firstDice: firstDice,
-            // secondDice: secondDice,
-            firstDice: 2,
-            secondDice: 2,
+            firstDice: firstDice,
+            secondDice: secondDice,
+            // firstDice: 2,
+            // secondDice: 2,
           };
           console.log("주사위 정보 :", diceInfo);
           await rollDice(diceInfo);
