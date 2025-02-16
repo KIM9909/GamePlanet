@@ -174,13 +174,18 @@ const useCatchSocket = (roomId) => {
                   return;
                 }
 
+                //useCatchSocket.js 의 result 핸들러 부분
+
                 if (data.type === "result" && Array.isArray(data.result)) {
                   console.log("게임 결과 수신:", data.result);
 
                   // 게임 상태를 종료 상태로 변경
                   dispatch(setGameStarted(false));
 
-                  // 결과 발표 메시지를 채팅창에 추가
+                  // 현재 store의 상태 가져오기
+                  const currentGameState = store.getState().catchmind;
+
+                  // 게임 종료 메시지 추가
                   setMessages((prev) => [
                     ...prev,
                     {
@@ -195,56 +200,72 @@ const useCatchSocket = (roomId) => {
                       timestamp: new Date(),
                       isNotice: true,
                     })),
-                    {
-                      sender: "SYSTEM",
-                      content: "5초 후에 새로고침됩니다...",
-                      timestamp: new Date(),
-                      isNotice: true,
-                    },
                   ]);
 
-                  // 5초 후 게임 상태 초기화 및 새로고침
-                  setTimeout(() => {
-                    // 캔버스 초기화 메시지 전송
-                    if (client) {
-                      client.publish({
-                        destination: `/app/drawing/${roomId}`,
-                        body: JSON.stringify({
-                          type: "clear",
-                          roomId: parseInt(roomId),
-                        }),
-                        headers: { "content-type": "application/json" },
-                      });
+                  // 게임 종료 후 처리
+                  const cleanupGame = async () => {
+                    try {
+                      // 1. 캔버스 초기화 메시지 전송
+                      if (clientRef.current?.connected) {
+                        clientRef.current.publish({
+                          destination: `/app/drawing/${roomId}`,
+                          body: JSON.stringify({
+                            type: "clear",
+                            roomId: parseInt(roomId),
+                          }),
+                          headers: { "content-type": "application/json" },
+                        });
+                      }
+
+                      // 2. 게임 상태 초기화
+                      dispatch(resetGameState());
+                      dispatch(
+                        updateGameState({
+                          currentWord: null,
+                          remainQuizCount: 0,
+                          currentRound: 1,
+                          quizCategory: null,
+                          isGameStart: false,
+                        })
+                      );
+
+                      // 3. 플레이어 점수 초기화
+                      const resetPlayers = currentGameState.players.map(
+                        (player) => ({
+                          ...player,
+                          score: 0,
+                          isTurn: false,
+                          rank: null,
+                        })
+                      );
+                      dispatch(updatePlayers({ players: resetPlayers }));
+
+                      // 4. 추가 메시지 표시
+                      setMessages((prev) => [
+                        ...prev,
+                        {
+                          sender: "SYSTEM",
+                          content: "🎨 새 게임을 시작할 수 있습니다!",
+                          timestamp: new Date(),
+                          isNotice: true,
+                        },
+                      ]);
+                    } catch (error) {
+                      console.error("Game cleanup error:", error);
+                      setMessages((prev) => [
+                        ...prev,
+                        {
+                          sender: "SYSTEM",
+                          content: "⚠️ 게임 초기화 중 오류가 발생했습니다.",
+                          timestamp: new Date(),
+                          isNotice: true,
+                        },
+                      ]);
                     }
+                  };
 
-                    // 게임 상태 초기화
-                    dispatch(resetGameState());
-
-                    // 플레이어 점수 초기화
-                    const resetPlayers = currentGameState.players.map(
-                      (player) => ({
-                        ...player,
-                        score: 0,
-                        isTurn: false,
-                        rank: null,
-                      })
-                    );
-                    dispatch(updatePlayers({ players: resetPlayers }));
-
-                    // 게임 상태 업데이트
-                    dispatch(
-                      updateGameState({
-                        currentWord: null,
-                        remainQuizCount: 0,
-                        currentRound: 1,
-                        quizCategory: null,
-                        isGameStart: false,
-                      })
-                    );
-
-                    // 페이지 새로고침
-                    window.location.reload();
-                  }, 5000);
+                  // 잠시 대기 후 정리 작업 시작
+                  setTimeout(cleanupGame, 2000);
 
                   return;
                 }
