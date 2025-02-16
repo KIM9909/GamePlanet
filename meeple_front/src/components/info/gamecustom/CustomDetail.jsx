@@ -21,15 +21,17 @@ const CustomDetail = () => {
 
   const getStatusText = (status) => {
     switch(status) {
-      case 'before': return '신청전';
-      case 'submitted': return '신청완료';
-      case 'in_review': return '심사진행중';
-      case 'completed': return '심사완료';
+      case '신청전': return '신청전';
+      case '신청완료': return '신청완료';
+      case '심사진행중': return '심사진행중';
+      case '심사완료': return '심사완료';
       default: return '신청전';
     }
   };
 
-  const status = customData?.status || 'before';
+  const status = customData?.customStatus ?? '신청전';
+  console.log(customData)
+  
 
 
   useEffect(() => {
@@ -238,7 +240,7 @@ const CustomDetail = () => {
             <div className="flex-1 flex items-center justify-center p-12">
               <div className="text-center space-y-6 max-w-xl w-full">
                 <div className="bg-slate-800/50 rounded-xl p-8 space-y-6">
-                {status === 'before' && (
+                {status === '신청전' && (
                   <>
                     <h2 className="text-2xl font-bold text-cyan-400">커스텀 게임 신청</h2>
                     <p className="text-slate-300">
@@ -267,19 +269,19 @@ const CustomDetail = () => {
                   </>
                 )}
 
-                  {status === 'submitted' && (
+                  {status === '신청완료' && (
                     <>
                       <h2 className="text-2xl font-bold text-cyan-400">신청완료</h2>
                       <p className="text-slate-300">
                         신청이 완료되었습니다. 곧 심사가 진행될 예정입니다.
                       </p>
                       <div className="text-sm text-slate-400">
-                        신청일: {customData?.submittedAt ? new Date(customData.submittedAt).toLocaleDateString() : '-'}
+                        신청일: {customData.createdAt ? new Date(customData.createdAt).toLocaleDateString() : '-'}
                       </div>
                     </>
                   )}
 
-                  {status === 'in_review' && (
+                  {status === '심사진행중' && (
                     <>
                       <div className="flex items-center justify-center">
                         <div className="relative">
@@ -291,12 +293,12 @@ const CustomDetail = () => {
                         관리자가 검토 중입니다. 심사에는 1-2일 정도 소요될 수 있습니다.
                       </p>
                       <div className="text-sm text-slate-400">
-                        심사 시작일: {customData?.reviewStartedAt ? new Date(customData.reviewStartedAt).toLocaleDateString() : '-'}
+                        심사 시작일: {customData?.updatedAt ? new Date(customData.updatedAt).toLocaleDateString() : '-'}
                       </div>
                     </>
                   )}
 
-                  {status === 'completed' && (
+                  {status === '심사완료' && (
                     <>
                       <div className="flex items-center justify-center text-green-400 mb-4">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -305,10 +307,10 @@ const CustomDetail = () => {
                       </div>
                       <h2 className="text-2xl font-bold text-green-400">심사 완료</h2>
                       <p className="text-slate-300">
-                        심사가 완료되었습니다. 이제 게임에서 사용할 수 있습니다.
+                        심사가 완료되었습니다. 결과를 확인해 주세요.
                       </p>
                       <div className="text-sm text-slate-400">
-                        완료일: {customData?.completedAt ? new Date(customData.completedAt).toLocaleDateString() : '-'}
+                        완료일: {customData?.updatedAt ? new Date(customData.updatedAt).toLocaleDateString() : '-'}
                       </div>
                     </>
                   )}
