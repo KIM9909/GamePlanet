@@ -187,16 +187,20 @@ const BoardPage = () => {
                 />
                 
               </div>
-              <NewArticleModal 
-              isOpen={isNewArticleModalOpen}
-              onClose={() => setIsNewArticleModalOpen(false)}
-              gameInfoId={gameInfoId}
-              onArticleCreated={fetchArticles} // 게시글 작성 후 목록 새로고침
-            />
+              
             </div>
           </div>
         </div>
       </div>
+          <NewArticleModal 
+        isOpen={isNewArticleModalOpen}
+        onClose={() => setIsNewArticleModalOpen(false)}
+        gameInfoId={gameInfoId}
+        onArticleCreated={fetchArticles} // 게시글 작성 후 목록 새로고침
+        />
+
+
+
     </div>
   );
 };
