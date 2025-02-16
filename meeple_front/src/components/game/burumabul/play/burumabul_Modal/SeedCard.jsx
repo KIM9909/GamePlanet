@@ -119,3 +119,5 @@ const SeedCard = ({ cardList, onClose }) => {
 };
 
 export default SeedCard;
+
+// "seedCount":150000,"baseConstructionCost":80000,"headquartersUsageFee":100000,"baseUsageFee":250000

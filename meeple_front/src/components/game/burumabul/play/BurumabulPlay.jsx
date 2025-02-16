@@ -266,11 +266,11 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
   // console.log("myColorIndex:", myColorIndex);
 
   return (
-    <>
+    <div className="fixed inset-0 w-full h-full bg-gray-900 overflow-hidden">
       <style>{`
         .thin-scrollbar::-webkit-scrollbar { width: 5px; position: absolute; right: 0;}
-        .thin-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
-        .thin-scrollbar::-webkit-scrollbar-thumb { background: #888; border-radius: 15px;}
+        .thin-scrollbar::-webkit-scrollbar-track { background: #1a1a1a; }
+        .thin-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 15px;}
         .thin-scrollbar::-webkit-scrollbar-track { display: none; }
         .game-stats { backdrop-filter: blur(8px); }
       `}</style>
@@ -278,18 +278,15 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
       {/* 사이드바 */}
       <div className="fixed left-0 top-0 h-full z-50 flex">
         <div
-          className={`transition-transform duration-300 ease-in-out transform 
-            ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} relative`}
+          className={`transition-transform duration-300 ease-in-out transform ${
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } relative`}
         >
           <BurumabulSidebar playerInfoList={playerInfoList} />
           {isSidebarOpen && (
             <button
               onClick={toggleSidebar}
-              className="absolute -right-12 top-1/2 -translate-y-1/2 w-12 h-12 
-                bg-indigo-600 rounded-r text-white
-                hover:bg-indigo-700 focus:outline-none 
-                flex items-center justify-center
-                shadow-lg"
+              className="absolute -right-12 top-1/2 -translate-y-1/2 w-12 h-12 bg-indigo-600 rounded-r text-white hover:bg-indigo-700 focus:outline-none flex items-center justify-center shadow-lg"
             >
               <X className="w-6 h-6" />
             </button>
@@ -297,40 +294,33 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
         </div>
       </div>
 
-      {/* 게임 상태 바 */}
-      <div className="fixed top-0 left-0 right-0 bg-white/80 game-stats z-40">
-        <div className="container mx-auto px-4 py-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              <div className="flex items-center space-x-2">
-                <div className="text-indigo-600 font-medium">
-                  Round {currentRound}
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="bg-indigo-100 rounded-lg px-3 py-1">
-                  🎲 {firstDice} + {secondDice} = {totalDice}
-                  {isDouble && (
-                    <span className="ml-2 text-indigo-600 font-bold">
-                      Double!
-                    </span>
-                  )}
-                </div>
-              </div>
+      {/* Game Status Bar */}
+      <div className="absolute top-0 left-0 right-0 h-14 bg-gray-900/90 border-b border-cyan-500/30 z-40">
+        <div className="h-full px-4 flex items-center justify-between">
+          <div className="flex items-center space-x-6">
+            <div className="text-cyan-400 font-medium">
+              Round {currentRound}
             </div>
-            <div className="text-gray-600">{gameSocketNotifi}</div>
+            <div className="bg-gray-800 rounded-lg px-3 py-1 text-cyan-300">
+              🎲 {firstDice} + {secondDice} = {totalDice}
+              {isDouble && (
+                <span className="ml-2 text-cyan-400 font-bold">Double!</span>
+              )}
+            </div>
           </div>
+          <div className="text-cyan-300/80">{gameSocketNotifi}</div>
         </div>
       </div>
 
-      {/* 메인 게임 영역 */}
+      {/* Main Game Layout */}
       <div
-        className={`transition-all duration-300 ease-in-out pt-12
-        ${isSidebarOpen ? "ml-64" : "ml-0"}`}
+        className={`fixed top-14 left-0 right-0 bottom-0 transition-all duration-300 ease-in-out ${
+          isSidebarOpen ? "ml-64" : "ml-0"
+        }`}
       >
-        <div className="h-screen w-full flex bg-gradient-to-br from-gray-50 to-gray-100">
-          {/* 게임 맵 영역 */}
-          <div className="w-3/4">
+        <div className="flex h-full">
+          {/* Game Map Area */}
+          <div className="flex-1 h-full">
             <TravelMap
               onBasesInfo={handlePlayerBasesRef}
               gameData={currentPlayData}
@@ -338,59 +328,52 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
             />
           </div>
 
-          {/* 플레이어 정보 영역 */}
-          <div className="w-1/4 bg-white/90 shadow-lg flex flex-col">
-            <div className="flex flex-col h-full">
-              {/* 플레이어 비디오 및 순위 영역 */}
-              <div className="h-[60%] overflow-y-auto thin-scrollbar border-b">
-                <h2 className="text-xl font-semibold text-gray-800 p-4 border-b">
-                  Players
-                </h2>
-                <div className="p-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    {playerInfoList.map((player, index) => (
-                      <PlayerVideo
-                        key={index}
-                        playerInfo={player}
-                        sessionId={burumabulOpenViduId}
-                      />
-                    ))}
-                  </div>
+          {/* Right Sidebar */}
+          <div className="w-96 bg-gray-900 border-l border-cyan-500/30 flex flex-col">
+            {/* Players Section */}
+            <div className="flex-1 overflow-hidden">
+              <div className="p-4 border-b border-cyan-500/30">
+                <h2 className="text-lg font-bold text-cyan-400">Players</h2>
+              </div>
+
+              <div className="h-[calc(100%-4rem)] overflow-y-auto thin-scrollbar">
+                <div className="p-4 grid grid-cols-2 gap-3">
+                  {playerInfoList.map((player, index) => (
+                    <PlayerVideo
+                      key={index}
+                      playerInfo={player}
+                      sessionId={burumabulOpenViduId}
+                    />
+                  ))}
                 </div>
 
-                {/* 순위 보드 */}
-                <div className="mx-4 mb-4 bg-gray-50 rounded-xl p-4">
+                {/* Ranking Board */}
+                <div className="mx-4 mb-4 bg-gray-800/50 rounded-xl p-4 border border-cyan-500/20">
                   <div className="flex items-center mb-3">
                     <Trophy className="w-5 h-5 text-yellow-500 mr-2" />
-                    <h2 className="font-semibold text-gray-800">Ranking</h2>
+                    <h2 className="font-semibold text-cyan-400">Ranking</h2>
                   </div>
                   <div className="space-y-2">
-                    {/* 순위 매기기 */}
                     {players
                       .map((player, index) => ({
                         ...player,
                         originalIndex: index,
-                      })) // 기존 인덱스 추가
-                      .sort((a, b) => {
-                        if (b.balance !== a.balance) {
-                          return b.balance - a.balance; // balance 기준 내림차순 정렬
-                        }
-                        return a.originalIndex - b.originalIndex; // balance 같으면 기존 인덱스 기준 정렬
-                      })
+                      }))
+                      .sort((a, b) => b.balance - a.balance)
                       .map((player, index) => (
                         <div
                           key={player.originalIndex}
-                          className="flex items-center justify-between p-2 bg-white rounded-lg shadow-sm"
+                          className="flex items-center justify-between p-2 bg-gray-800/30 rounded-lg hover:bg-gray-800/50 transition-colors"
                         >
                           <div className="flex items-center">
-                            <span className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-sm font-medium text-indigo-600">
+                            <span className="w-6 h-6 rounded-full bg-cyan-900/50 flex items-center justify-center text-sm font-medium text-cyan-400">
                               {index + 1}
                             </span>
-                            <span className="ml-3 font-medium text-gray-700">
+                            <span className="ml-3 font-medium text-gray-300">
                               {player.playerName}
                             </span>
                           </div>
-                          <span className="text-gray-600 font-medium">
+                          <span className="text-cyan-300 font-medium">
                             {player.balance}마불
                           </span>
                         </div>
@@ -398,69 +381,56 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* 내 정보 영역 */}
-              <div
-                className="h-[40%] p-4"
-                style={{ backgroundColor: colors[myColorIndex] }}
-              >
-                <div className="h-full flex flex-col">
-                  <h2 className="text-white font-bold text-lg mb-4">
-                    My Status
-                  </h2>
-                  <div className="flex-1 bg-white/20 rounded-xl p-4">
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-white">My Bases</span>
-                        <button
-                          onClick={handleShowCard}
-                          className="flex items-center px-3 py-1.5 bg-white/90 hover:bg-white
-                            rounded-lg text-sm font-medium text-gray-700 transition-colors"
-                        >
-                          <CreditCard className="w-4 h-4 mr-2" />
-                          View Cards
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        {myInfo?.cardOwned
-                          ?.slice(0, 4)
-                          .map((card, cardIndex) => (
-                            <div
-                              key={cardIndex}
-                              className="bg-white/30 rounded-lg p-2 text-white text-sm truncate"
-                            >
-                              {card.name}
-                            </div>
-                          ))}
-                      </div>
-                      {myInfo?.cardOwned?.length > 4 && (
-                        <div className="text-white text-center text-sm">
-                          +{myInfo.cardOwned.length - 4} more
-                        </div>
-                      )}
-                    </div>
-                  </div>
+            {/* My Status */}
+            <div
+              className="h-48 p-4 border-t border-cyan-500/30"
+              style={{ backgroundColor: colors[myColorIndex] }}
+            >
+              <div className="h-full flex flex-col">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-white font-bold text-lg">My Status</h2>
+                  <button
+                    onClick={handleShowCard}
+                    className="flex items-center px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium text-white transition-colors"
+                  >
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    View Cards
+                  </button>
                 </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {myInfo?.cardOwned?.slice(0, 4).map((card, cardIndex) => (
+                    <div
+                      key={cardIndex}
+                      className="bg-black/20 rounded-lg p-2 text-white text-sm truncate"
+                    >
+                      {card.name}
+                    </div>
+                  ))}
+                </div>
+                {myInfo?.cardOwned?.length > 4 && (
+                  <div className="text-white text-center text-sm mt-2">
+                    +{myInfo.cardOwned.length - 4} more
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 사이드바 토글 버튼 */}
+      {/* Sidebar Toggle Button */}
       {!isSidebarOpen && (
-        <div className="fixed left-0 top-1/2 transform -translate-y-1/2 z-50">
-          <button
-            onClick={toggleSidebar}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-r p-3
-              shadow-lg transition-colors"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
-        </div>
+        <button
+          onClick={toggleSidebar}
+          className="fixed left-4 top-1/2 transform -translate-y-1/2 z-50 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg p-2 shadow-lg transition-colors"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
       )}
 
-      {/* 카드 모달 */}
+      {/* Card Modal */}
       {showCard &&
         createPortal(
           <SeedCard
@@ -469,7 +439,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
           />,
           document.body
         )}
-    </>
+    </div>
   );
 };
 export default BurumabulPlay;
