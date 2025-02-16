@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.logging.Logger;
 import lombok.Data;
 import lombok.Getter;
@@ -92,7 +93,6 @@ public class TurnManager {
 	/**
 	 * 턴 끝내기. 턴 끝내는 조건 확인하고 다음턴 준비하기.
 	 */
-	// TODO : nextPlayer가 잘 안가는 에러 있음.
 	public synchronized TurnEndResponse endTurn(List<Tile> board) {
 		if (checkWinnerByPlayerSize()) {
 			return TurnEndResponse.gameEnd(determineWinner(board));
@@ -102,7 +102,7 @@ public class TurnManager {
 			// 파산 처리: 현재 플레이어를 게임에서 제거하는 로직 추가
 			// handleBankruptCurrentPlayer 메서드를 수정하여, 파산한 플레이어를 players 리스트에서 제거하도록 변경
 			Player removed = handleBankruptCurrentPlayer(board);
-
+			this.doubleCount = 0;
 			// 파산 처리 후, 남은 플레이어 수를 다시 확인
 			if (checkWinnerByPlayerSize()) {
 				return TurnEndResponse.gameEnd(determineWinner(board));
@@ -260,5 +260,15 @@ public class TurnManager {
 
 	public void resetDoubleCount() {
 		this.doubleCount = 0;
+	}
+
+	public Optional<Player> findPlayerById(int playerId) {
+		return players.stream()
+				.filter(player -> player.getPlayerId() == playerId)
+				.findFirst();
+	}
+
+	public List<Player> getAllPlayers() {
+		return this.players;
 	}
 }
