@@ -70,13 +70,17 @@ public class CustomElementEntity {
 				.customStatus(CustomStatus.BEFORE)
 				.build();
 	}
-
+	
 	public static CustomElementResponse to(CustomElementEntity customElementEntity) {
 		return CustomElementResponse.builder()
 				.customId(customElementEntity.getCustomId())
 				.customName(customElementEntity.getCustomName())
 				.createdAt(customElementEntity.getCreatedAt())
 				.updatedAt(customElementEntity.getUpdatedAt())
+				.userId(customElementEntity.user.getUserId())
+				.customStatus(customElementEntity.customStatus.getName())
+				.imageUrl(customElementEntity.getFileUrl())
+				.userNickName(customElementEntity.getUser().getUserNickname())
 				.build();
 	}
 
