@@ -572,17 +572,38 @@ const TravelMap = ({
     }
   }, [socketTravelData]);
 
-  // 상태 변화를 모니터링하기 위한 별도의 useEffect
-  // useEffect(() => {
-  //   if (buyLandSocketData) {
-  //     console.log("상태 업데이트 확인:");
-  //     console.log("Updated Players:", players);
-  //     console.log("Updated Cards:", cards);
-  //     console.log("Updated Board:", board);
-  //   }
-  // }, [ buildBaseSocketData]);
-
-  // 색상
+  // 초기화 함수
+  const resetGameState = () => {
+    setPlayData(null);
+    setPlayers([]);
+    setBoard(null);
+    setCards(null);
+    setCurrentPlayerIndex(0);
+    setNextAction(null);
+    setFirstDice(null);
+    setSecondDice(null);
+    setIsDiceRolling(false);
+    setHasRolledDice(false);
+    setIsEnd(false);
+    setShowEndWinner(false);
+    setShowBuyLand(false);
+    setShowBuildBase(false);
+    setShowPickedCardModal(false);
+    setShowPayTollModal(false);
+    setShowChoosePositionModal(false);
+    setOnRollDice(false);
+    setPlayersPositions(Array(numPlayers).fill(0));
+    setSpaceBases([]);
+    setSocketNext(null);
+    setSocketDrawCardData(null);
+    setSocketPayTollData(null);
+    setSocketDrawNextPosition(null);
+    setSocketDrawPrevPosition(null);
+    setSocketDrawPrevBalance(null);
+    setSocketDrawNextBalance(null);
+    setSocketTravelPrevPosition(null);
+    setSocketTravelNextPosition(null);
+  };
 
   // 통행료 알림 모달 오픈
   const [showPayTollModal, setShowPayTollModal] = useState(false);
@@ -1237,7 +1258,7 @@ const TravelMap = ({
       setTimeout(() => {
         setIsEnd(true);
         setShowEndWinner(true);
-      }, 5000);
+      }, 1000);
     }
   }, [socketWinner, nextAction]);
 
@@ -1264,9 +1285,6 @@ const TravelMap = ({
   const closeBuildBase = () => {
     setShowBuildBase(false);
     setShowCardId(null);
-    // setTimeout(() => {
-    //   setSocketNext("CHECK_END");
-    // }, 100);
   };
 
   const closePayToll = () => {
@@ -1274,9 +1292,6 @@ const TravelMap = ({
     setPaidPlayer(null);
     setReceivedPlayer(null);
     setTollPrice(null);
-    // setTimeout(() => {
-    //   setSocketNext("CHECK_END");
-    // }, 100);
   };
 
   const closePickedCard = () => {
@@ -1288,9 +1303,6 @@ const TravelMap = ({
 
     setShowPickedCardModal(false);
     setIsCardDrawn(false);
-    // setTimeout(() => {
-    //   setSocketNext("CHECK_END");
-    // }, 100);
 
     console.log("모달 닫은 후:", {
       nextAction,
@@ -1300,15 +1312,17 @@ const TravelMap = ({
   };
 
   const closeEndWinner = () => {
-    console.log("Closing winner modal");
+    // 모달 닫고
     setShowEndWinner(false);
-
-    console.log("Ending game and returning to waiting room");
+    // 서버로 게임 삭제 요청하고 난 뒤
     endGame();
+    // 게임 초기화
+    resetGameState();
 
     if (setIsStart) {
       setIsStart(false);
     }
+    // 상태 변경
     setGameStatus("GAME_END");
 
     if (onGameEnd) {

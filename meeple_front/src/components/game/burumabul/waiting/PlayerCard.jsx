@@ -11,6 +11,7 @@ const PlayerCard = ({ playerInfo, onClick }) => {
   const playerId = Number(playerInfo?.playerId);
   const { getProfile } = UserAPI;
   const [userNickName, setUserNickName] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
 
   // 유저 프로필 조회
   useEffect(() => {
@@ -20,6 +21,7 @@ const PlayerCard = ({ playerInfo, onClick }) => {
           const response = await getProfile(String(playerId));
           console.log("프로필 응답:", response);
           setUserNickName(response.userNickname);
+          setUserProfile(response.userProfilePictureUrl);
         } catch (error) {
           console.log("유저 조회 중 오류:", error);
         }
@@ -51,7 +53,7 @@ const PlayerCard = ({ playerInfo, onClick }) => {
     <div className="w-36 h-48 flex-shrink-0 bg-white bg-opacity-70 rounded-lg flex flex-col items-center justify-center">
       <div className="mb-3">
         <img
-          src={virgo}
+          src={userProfile}
           alt="플레이어 이미지"
           className="w-16 h-16 rounded-full cursor-pointer"
           ref={buttonRef}
@@ -60,7 +62,7 @@ const PlayerCard = ({ playerInfo, onClick }) => {
           }
         />
       </div>
-      <div className="text-center">
+      <div className="text-center my-3">
         <p className="font-medium truncate w-28">{userNickName}</p>
       </div>
 

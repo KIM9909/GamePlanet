@@ -110,6 +110,7 @@ const BurumabulPage = () => {
             roomInfo={currentRoomInfo}
             setIsStart={setIsStart}
             setPlayData={setPlayData}
+            gameStatus={gameStatus}
           />
         ) : (
           // 그 외의 상태 (대기 중)
@@ -118,6 +119,7 @@ const BurumabulPage = () => {
             roomInfo={currentRoomInfo}
             setIsStart={setIsStart}
             setPlayData={setPlayData}
+            gameStatus={gameStatus}
           />
         )
       ) : (
@@ -127,6 +129,7 @@ const BurumabulPage = () => {
           roomInfo={currentRoomInfo}
           setIsStart={setIsStart}
           setPlayData={setPlayData}
+          gameStatus={gameStatus}
         />
       )}
     </>
