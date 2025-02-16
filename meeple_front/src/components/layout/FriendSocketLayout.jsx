@@ -8,6 +8,7 @@ import React, {
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
 import { useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
 
 // Context 생성
 export const FriendSocketContext = createContext({
@@ -25,6 +26,7 @@ export const FriendSocketLayout = ({ children }) => {
   const userId = useSelector((state) => state.user.userId);
   const rawToken = localStorage.getItem("token");
   const token = rawToken ? rawToken.trim() : "";
+  const location = useLocation();
 
   useEffect(() => {
     if (!userId) return;
@@ -88,7 +90,13 @@ export const FriendSocketLayout = ({ children }) => {
     };
   }, [userId]);
 
-  if (!userId || !token || location.pathname === "/") {
+  if (
+    !userId ||
+    !token ||
+    (location.pathname === "/" &&
+      location.pathname.match(/^\/game\/burumabul\/[\w-]+$/) &&
+      location.pathname.match(/^\/catch-mind\/[\w-]+$/))
+  ) {
     return children;
   } else {
     return (
