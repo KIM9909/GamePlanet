@@ -12,12 +12,11 @@ const FriendModalLayout = ({ children }) => {
   const location = useLocation();
   const userId = useSelector((state) => state.user.userId);
 
-  const showButton =
-    location.pathname !== "/" &&
-    // location.pathname !== `/profile/${userId}` &&
-    !location.pathname.match(/^\/game\/burumabul\/[\w-]+$/) &&
-    !location.pathname.match(/^\/catch-mind\/[\w-]+$/) &&
-    !location.pathname.match(/^\/game\/cockroach\/[\w-]+$/);
+  const showButton = location.pathname !== "/";
+  // location.pathname !== `/profile/${userId}` &&
+  // !location.pathname.match(/^\/game\/burumabul\/[\w-]+$/) &&
+  // !location.pathname.match(/^\/catch-mind\/[\w-]+$/) &&
+  // !location.pathname.match(/^\/game\/cockroach\/[\w-]+$/);
 
   const handleClose = () => {
     setIsClosing(true);
