@@ -64,7 +64,7 @@ const ReceivedFriendRequest = ({ requestedList }) => {
   const handleBlock = async (friendId) => {
     if (requestList && userId) {
       try {
-        const requirements = "BLOCKING";
+        const requirements = "BLOCK";
         await processFriendRequest(friendId, requirements);
         const response = await requestFriendList(userId);
         setRequestList(response.requestedList);
@@ -84,24 +84,24 @@ const ReceivedFriendRequest = ({ requestedList }) => {
               key={index}
               className="p-4 bg-gray-800 rounded-lg flex items-center justify-between border border-cyan-500/30 hover:border-cyan-400/60 transition-all duration-300"
             >
-              <p className="font-medium text-cyan-400">
+              <p className="font-medium text-cyan-400 truncate mr-4">
                 {list.user.userNickname}
               </p>
-              <div className="flex gap-2">
+              <div className="flex gap-1 shrink-0">
                 <button
-                  className="px-3 py-2 bg-cyan-500/80 text-white rounded-lg hover:bg-cyan-600 transition-all duration-300"
+                  className="px-2 py-1 text-sm bg-cyan-500/90 text-white rounded hover:bg-cyan-600 transition-all duration-300"
                   onClick={() => handleAccept(list.friendId)}
                 >
                   승인
                 </button>
                 <button
-                  className="px-3 py-2 bg-gray-600/80 text-white rounded-lg hover:bg-gray-700 transition-all duration-300"
+                  className="px-2 py-1 text-sm bg-cyan-500/60 text-white rounded hover:bg-cyan-600 transition-all duration-300"
                   onClick={() => handleDeny(list.friendId)}
                 >
                   거절
                 </button>
                 <button
-                  className="px-3 py-2 bg-red-500/80 text-white rounded-lg hover:bg-red-600 transition-all duration-300"
+                  className="px-2 py-1 text-sm bg-cyan-500/40 text-white rounded hover:bg-cyan-600 transition-all duration-300"
                   onClick={() => handleBlock(list.friendId)}
                 >
                   차단
