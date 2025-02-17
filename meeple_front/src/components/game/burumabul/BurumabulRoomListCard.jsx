@@ -9,9 +9,12 @@ import EnterSecretRoom from "../../game/burumabul/play/burumabul_Modal/EnterSecr
 import { CircleX } from "lucide-react";
 import WrongPasswordModal from "./play/burumabul_Modal/WrongPasswordModal";
 import { setLoading } from "../../../sources/store/slices/BoardSlice";
+import { toast } from "react-toastify";
+import CustomToastContent from "../../CustomToastContent";
 
 const BurumabulRoomListCard = ({ roomInfo }) => {
   const {
+    enterWaitingRoom,
     enterSecretWaitingRoom,
     roomSocketData,
     socketStatus,
@@ -28,8 +31,41 @@ const BurumabulRoomListCard = ({ roomInfo }) => {
   const [showTooltip, setShowTooltip] = useState(false);
 
   const goToGeneralWaitingRoom = async (roomId) => {
-    dispatch(setRoomId(roomInfo.roomId));
-    navigate(`/game/burumabul/start/${roomId}`);
+    const enterRoom = async (roomId) => {
+      if (roomId) {
+        try {
+          const response = await enterWaitingRoom();
+          navigate(`/game/burumabul/start/${roomId}`);
+          dispatch(setRoomId(roomInfo.roomId));
+        } catch (error) {
+          console.error("방 입장 중 에러:", error);
+          // if (error.response?.status === 500) {
+          //   toast(
+          //     ({ closeToast }) => (
+          //       <CustomToastContent closeToast={closeToast} />
+          //     ),
+          //     {
+          //       position: "top-center",
+          //       autoClose: false,
+          //       hideProgressBar: true,
+          //       closeOnClick: false,
+          //       pauseOnHover: true,
+          //       draggable: true,
+          //       className: "!bg-transparent !p-0 !shadow-none",
+          //       toastClassName: "!bg-transparent !p-0",
+          //       bodyClassName: "!p-0 !m-0",
+          //       closeButton: false, // 기본 닫기 버튼 비활성화
+          //       style: {
+          //         background: "transparent",
+          //         padding: 0,
+          //       },
+          //     }
+          //   );
+          // }
+        }
+      }
+    };
+    enterRoom(roomId);
   };
 
   const goToSecretWaitingRoom = async (roomId) => {

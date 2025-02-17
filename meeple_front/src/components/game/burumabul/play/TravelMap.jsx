@@ -774,8 +774,8 @@ const TravelMap = ({
             playerId: currentPlayer.playerId,
             // firstDice: firstDice,
             // secondDice: secondDice,
-            firstDice: 2,
-            secondDice: 2,
+            firstDice: 5,
+            secondDice: 5,
           };
           console.log("주사위 정보 :", diceInfo);
           await rollDice(diceInfo);
@@ -1028,39 +1028,46 @@ const TravelMap = ({
   // 시간 여행 -> 가고싶은 곳 정하기
   const [showChoosePositionModal, setShowChoosePositionModal] = useState(false);
 
+  // useEffect(() => {
+  //   if (!isMovementComplete) return;
+  //   if (nextAction === "CHOOSE_POSITION" && myIndex === currentPlayerIndex) {
+  //   }
+  // }, [isMovementComplete, nextAction]);
+
   useEffect(() => {
+    console.log("🔍 CHOOSE_POSITION 체크 시작");
+    console.log("🟢 nextAction:", nextAction);
+    console.log("🟢 isMovementComplete:", isMovementComplete);
+    console.log(
+      "🟢 내 인덱스:",
+      myIndex,
+      "현재 턴 플레이어:",
+      currentPlayerIndex
+    );
+    console.log("🟢 showChoosePositionModal:", showChoosePositionModal);
+
     if (!isMovementComplete) return;
+    console.log("nextAction 값", nextAction);
     if (nextAction === "CHOOSE_POSITION" && myIndex === currentPlayerIndex) {
       setShowChoosePositionModal(true);
+      if (!showChoosePositionModal) {
+        try {
+          const chooseNextPosition = async () => {
+            const chooseInfo = {
+              nextPosition: 0,
+              playerId: currentPlayer.playerId,
+            };
+            console.log(chooseInfo);
+            await choosePosition(chooseInfo);
+          };
+          chooseNextPosition();
+          console.log("가고 싶은 곳 뽑기");
+        } catch (error) {
+          console.error("가고 싶은 곳 뽑는 중 에러:", error);
+        }
+      }
     }
-  }, [isMovementComplete, nextAction]);
-
-  useEffect(() => {
-    if (!isMovementComplete) return;
-
-    if (nextAction === "CHOOSE_POSITION" && myIndex === currentPlayerIndex) {
-      // try {
-      //   const chooseNextPosition = async () => {
-      //     const chooseInfo = {
-      //       nextPosition: chooseNum,
-      //       playerId: currentPlayer.playerId,
-      //     };
-      //     console.log(chooseInfo);
-      //     await choosePosition(chooseInfo);
-      //   };
-      //   chooseNextPosition();
-      //   console.log("가고 싶은 곳 뽑기");
-      // } catch (error) {
-      //   console.error("가고 싶은 곳 뽑는 중 에러:", error);
-      // }
-    }
-  }, [
-    nextAction,
-    isMovementComplete,
-    currentPlayer,
-    myIndex,
-    currentPlayerIndex,
-  ]);
+  }, [isMovementComplete, nextAction, myIndex, currentPlayerIndex]);
 
   useEffect(() => {
     if (socketTravelData) {
@@ -1730,7 +1737,7 @@ const TravelMap = ({
 
   // 컴포넌트 마운트 후 Portal 활성화
   useEffect(() => {
-    setMountPortal(true);
+    setTimeout(() => setMountPortal(true), 100);
   }, []);
 
   useEffect(() => {
