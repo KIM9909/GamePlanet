@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, Link } from "react-router-dom";
+import { useLocation, Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import MiniTetris from "./MiniTetris";
 
 const SideLayout = ({ children }) => {
   const { token } = useSelector((state) => state.user);
   const location = useLocation();
+  const navigate = useNavigate();
   const userId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
   const gameInfo = location.state?.gameInfo;
 
@@ -21,6 +22,21 @@ const SideLayout = ({ children }) => {
     setActiveLink(location.pathname);
   }, [location.pathname]);
 
+  const handleGamePlay = () => {
+    if (gameInfo) {
+      switch (Number(gameInfo.gameInfoId)) {
+        case 2:
+          navigate("/burumabul/room-list");
+          break;
+        case 3:
+          navigate("/catch-mind");
+          break;
+        default:
+          console.warn("Unknown game type");
+      }
+    }
+  };
+
   return (
     <div>
       {!notShowSidebar && gameInfo ? (
@@ -31,6 +47,16 @@ const SideLayout = ({ children }) => {
                 <div className="flex flex-col h-full">
                   {/* Navigation Links */}
                   <div className="flex flex-col text-center py-6 space-y-8 text-[33px]">
+                    {/* GAMEPLAY Button at the top */}
+                    <div>
+                      <button
+                        onClick={handleGamePlay}
+                        className="text-white hover:text-cyan-300 transition-colors duration-300 relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-cyan-400 after:left-0 after:-bottom-1 hover:after:w-full after:transition-all after:duration-300"
+                      >
+                        GAME PLAY
+                      </button>
+                    </div>
+
                     <div>
                       <Link
                         to={`/game-info/${gameInfo.gameInfoId}`}
