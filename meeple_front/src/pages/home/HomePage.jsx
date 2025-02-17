@@ -8,6 +8,7 @@ import { Star } from "lucide-react";
 import CockroachPokerRoyalMainImg from "../../assets/images/games/MainImage/Cockroach_Poker_Royal.png";
 import BurumabulMainImg from "../../assets/images/games/MainImage/BuruMabul.jpg";
 import CatchMindMainImg from "../../assets/images/games/MainImage/CatchMind.jpg";
+import Loading from "../../components/Loading";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -34,7 +35,9 @@ const HomePage = () => {
       } catch (error) {
         setGameList([]);
       } finally {
-        setIsLoading(false);
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 2000);
       }
     };
 
@@ -42,15 +45,7 @@ const HomePage = () => {
   }, []);
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-white bg-[#0a0a2a]">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-white rounded-full animate-pulse" />
-          <div className="w-4 h-4 bg-white rounded-full animate-pulse delay-75" />
-          <div className="w-4 h-4 bg-white rounded-full animate-pulse delay-150" />
-        </div>
-      </div>
-    );
+    return <Loading />;
   }
 
   const GameCard = ({ gameInfo }) => {
@@ -106,7 +101,6 @@ const HomePage = () => {
               {gameInfo.game.gameName}
             </h2>
           </div>
-          {/* <p className="text-gray-300 mb-4">{gameInfo.gameInfoContent}</p> */}
           <div className="text-white ml-7">
             {(() => {
               switch (gameInfo.game.gameName) {
@@ -134,14 +128,6 @@ const HomePage = () => {
               }
             })()}
           </div>
-          {/* {gameInfo.game.gameId === 2 && (
-            <button
-              onClick={() => setIsCreateBurumabulRoomModalOpen(true)}
-              className="w-full px-4 py-2 bg-gradient-to-r from-cyan-600 to-cyan-600 text-white rounded-full hover:from-cyan-500 hover:to-cyan-500 transition-all duration-300 transform hover:scale-105"
-            >
-              방 만들기
-            </button>
-          )} */}
         </div>
       </div>
     );
@@ -151,7 +137,7 @@ const HomePage = () => {
     <div className="min-h-screen relative overflow-hidden">
       <div className="min-h-screen p-8 relative z-5">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-3 backdrop-blur-sm border border-cyan-500/50 h-[650px]">
+          <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-3 backdrop-blur-sm border border-cyan-500/50 h-[750px]">
             <h1 className="text-[43px] font-bold mb-3 text-center bg-gradient-to-r from-cyan-500 to-cyan-500 bg-clip-text text-transparent">
               GAME LIST
             </h1>
@@ -164,7 +150,7 @@ const HomePage = () => {
               ))}
             </div>
 
-            <div className="mt-[80px] text-center">
+            <div className="mt-[120px] text-center">
               <p className="text-gray-400 text-3xl font-medium italic animate-pulse">
                 🛠️ ... COMMING SOON ... 🛠️
               </p>
