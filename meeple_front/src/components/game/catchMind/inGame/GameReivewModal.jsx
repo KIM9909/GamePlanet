@@ -50,7 +50,6 @@ const GameReviewModal = ({ isOpen, onClose, gameInfoId }) => {
       alert("리뷰가 성공적으로 등록되었습니다.");
       onClose();
     } catch (error) {
-      console.error("리뷰 저장 중 오류 발생:", error);
       alert("리뷰 저장에 실패했습니다.");
     } finally {
       setIsSubmitting(false);

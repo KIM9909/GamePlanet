@@ -183,9 +183,7 @@ const Canvas = () => {
         // 이전 context 스타일 복원
         context.strokeStyle = currentStyle.strokeStyle;
         context.lineWidth = currentStyle.lineWidth;
-      } catch (error) {
-        console.error("드로잉 데이터 처리 오류:", error);
-      }
+      } catch (error) {}
     },
     [userId]
   );
@@ -203,9 +201,7 @@ const Canvas = () => {
         `/topic/catch-mind/${roomId}`,
         handleDrawingData
       );
-    } catch (error) {
-      console.error("구독 설정 실패:", error);
-    }
+    } catch (error) {}
 
     return () => {
       if (subscriptionRef.current) {
@@ -245,9 +241,7 @@ const Canvas = () => {
           body: JSON.stringify(message),
           headers: { "content-type": "application/json" },
         });
-      } catch (error) {
-        console.error("드로잉 데이터 전송 실패:", error);
-      }
+      } catch (error) {}
     },
     [client, roomId, connected, userId, getCurrentColor, getCurrentWidth]
   );

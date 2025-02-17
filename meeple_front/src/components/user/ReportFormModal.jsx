@@ -50,7 +50,6 @@ const ReportFormModal = ({ onClose, onSubmit }) => {
 
       await onSubmit(formData);
     } catch (error) {
-      console.error("Form submission error:", error);
     } finally {
       setIsSubmitting(false);
     }

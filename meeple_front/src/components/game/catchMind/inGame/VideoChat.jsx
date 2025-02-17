@@ -30,7 +30,6 @@ const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
 
       try {
         const wsUrl = `${import.meta.env.VITE_SOCKET_API_BASE_URL}`;
-        console.log("Connecting to WebSocket URL:", wsUrl);
 
         // SockJS 설정
         const socket = new SockJS(wsUrl, null, {
@@ -43,9 +42,7 @@ const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
           connectHeaders: {
             Origin: window.location.origin,
           },
-          debug: (str) => {
-            console.log("STOMP Debug:", str);
-          },
+          debug: (str) => {},
           reconnectDelay: 5000,
           heartbeatIncoming: 4000,
           heartbeatOutgoing: 4000,
@@ -53,7 +50,6 @@ const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
         });
 
         client.onConnect = () => {
-          console.log("WebSocket Connected Successfully");
           if (!isComponentMounted) {
             client.deactivate();
             return;
@@ -71,16 +67,11 @@ const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
           }
         };
 
-        client.onStompError = (frame) => {
-          console.error("STOMP Protocol Error:", frame);
-        };
+        client.onStompError = (frame) => {};
 
-        client.onWebSocketError = (error) => {
-          console.error("WebSocket Error:", error);
-        };
+        client.onWebSocketError = (error) => {};
 
         client.onDisconnect = () => {
-          console.log("WebSocket Disconnected");
           if (isComponentMounted) {
             setTimeout(connect, 5000);
           }
@@ -88,7 +79,6 @@ const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
 
         client.activate();
       } catch (error) {
-        console.error("Error creating WebSocket connection:", error);
         if (isComponentMounted) {
           setTimeout(connect, 5000);
         }
@@ -112,17 +102,14 @@ const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
         const message = {
           userStream: streamData,
         };
-        console.log("Sending stream data:", message);
+
         stompClient.current.publish({
           destination: `/app/give-stream/${nickname}`,
           body: JSON.stringify(message),
           headers: { "content-type": "application/json" },
         });
-      } catch (error) {
-        console.error("Error sending stream data:", error);
-      }
+      } catch (error) {}
     } else {
-      console.warn("STOMP client not connected. Unable to send stream data.");
     }
   };
 
@@ -221,15 +208,6 @@ const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
   }, [gameStatePlayers, publisher, subscribers]);
 
   useEffect(() => {
-    console.log("Subscribers 상태 변경:", {
-      count: subscribers.length,
-      subscribers: subscribers.map((sub) => ({
-        connectionId: sub.stream.connection.connectionId,
-        streamId: sub.stream.streamId,
-        connectionData: JSON.parse(sub.stream.connection.data),
-      })),
-    });
-
     updatePlayers(publisher, subscribers);
   }, [subscribers, publisher, audioEnabled, videoEnabled]);
 
@@ -244,20 +222,14 @@ const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
     const connectToSession = async () => {
       try {
         setIsConnecting(true);
-        console.log("Initializing session with ID:", sessionId);
+
         currentSession = OV.initSession();
         setSession(currentSession);
 
         currentSession.on("streamCreated", (event) => {
-          console.log("New stream created", event.stream.connection.data);
           const connectionData = JSON.parse(event.stream.connection.data);
 
           if (connectionData.clientData !== nickname) {
-            console.log("구독 시도:", {
-              streamId: event.stream.streamId,
-              connectionData: connectionData,
-            });
-
             const subscriber = currentSession.subscribe(
               event.stream,
               undefined
@@ -275,11 +247,6 @@ const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
         });
 
         currentSession.on("streamDestroyed", (event) => {
-          console.log("Stream destroyed", {
-            connectionData: event.stream.connection.data,
-            streamId: event.stream.streamId,
-          });
-
           setSubscribers((prev) =>
             prev.filter(
               (sub) =>
@@ -290,19 +257,12 @@ const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
         });
 
         currentSession.on("sessionDisconnected", () => {
-          console.log("Session disconnected, clearing subscribers");
           setSubscribers([]);
           setIsConnecting(false);
           tokenRef.current = null;
         });
 
         currentSession.on("streamPropertyChanged", (event) => {
-          console.log("Stream property changed", {
-            propertyName: event.changedProperty,
-            newValue: event.newValue,
-            connectionId: event.stream.connection.connectionId,
-          });
-
           // audioActive나 videoActive가 변경되었을 때만 subscribers 업데이트
           if (
             event.changedProperty === "videoActive" ||
@@ -383,7 +343,6 @@ const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
         // nickname으로 스트림 데이터 전송
         sendStreamData(nickname, JSON.stringify(streamData));
       } catch (error) {
-        console.error("Error in video chat connection:", error);
         setConnectionError(
           error.response?.status === 500
             ? "서버 오류가 발생했습니다."
@@ -400,7 +359,6 @@ const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
     return () => {
       if (currentSession) {
         try {
-          console.log("Cleaning up video session...");
           if (publisher) {
             currentSession.unpublish(publisher);
           }
@@ -413,9 +371,7 @@ const VideoChat = ({ nickname, sessionId, isCurrentUser }) => {
           tokenRef.current = null;
           setSession(null);
           setPublisher(null);
-        } catch (error) {
-          console.error("Error during cleanup:", error);
-        }
+        } catch (error) {}
       }
     };
   }, [sessionId, nickname, isCurrentUser]);

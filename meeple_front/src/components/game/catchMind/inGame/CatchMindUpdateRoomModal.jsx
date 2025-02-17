@@ -49,9 +49,7 @@ const CatchMindUpdateRoomModal = ({ isOpen, onClose, roomInfo, client }) => {
       }
 
       onClose();
-    } catch (error) {
-      console.error("Room update error:", error);
-    }
+    } catch (error) {}
   };
 
   if (!isOpen) return null;
@@ -65,9 +63,9 @@ const CatchMindUpdateRoomModal = ({ isOpen, onClose, roomInfo, client }) => {
       />
 
       {/* Modal Content */}
-      <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-8 w-[448px] border-2 border-cyan-400 shadow-2xl">
+      <div className="relative bg-gradient-to-br from-slate-800 to-slate-800 rounded-xl p-8 w-[448px] border-2 border-cyan-400 shadow-2xl">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+          <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-400">
             방 설정 수정
           </h2>
           <button
@@ -177,7 +175,7 @@ const CatchMindUpdateRoomModal = ({ isOpen, onClose, roomInfo, client }) => {
           <button
             type="submit"
             className="w-full py-3 px-4 rounded-lg font-medium text-white
-                     bg-gradient-to-r from-cyan-500 to-blue-500 
+                     bg-gradient-to-r from-cyan-500 to-cyan-500 
                      hover:from-cyan-400 hover:to-blue-400 
                      transform transition-all duration-300 
                      active:scale-95

@@ -91,7 +91,6 @@ const CatchMindSlice = createSlice({
 
     // 게임 시작 상태 업데이트 리듀서 추가
     setGameStarted: (state, action) => {
-      console.log("게임 시작 상태 변경:", action.payload);
       state.isGameStart = action.payload;
 
       // 게임 시작 시에는 상태 초기화하지 않음
@@ -179,14 +178,7 @@ const CatchMindSlice = createSlice({
 
     // 라운드 증가
     incrementRound: (state) => {
-      console.group("Redux 라운드 증가");
-      console.log("현재 라운드:", state.currentRound);
-      console.log("현재 게임 상태:", state);
-
       state.currentRound += 1;
-
-      console.log("증가된 라운드:", state.currentRound);
-      console.groupEnd();
     },
 
     // 게임 상태 초기화 리듀서 추가

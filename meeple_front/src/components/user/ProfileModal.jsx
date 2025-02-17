@@ -65,9 +65,7 @@ const ProfileModal = ({
           const profileData = await profileResponse.json();
           setProfileData(profileData);
         }
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-      }
+      } catch (error) {}
     };
 
     if (userNickname) {
@@ -111,7 +109,6 @@ const ProfileModal = ({
           friend.friendStatus === "ACCEPTED"
       );
     } catch (error) {
-      console.error("친구 목록 조회 중 오류 발생:", error);
       return false;
     }
   };
@@ -147,7 +144,6 @@ const ProfileModal = ({
         showAlert("유저를 찾을 수 없습니다.", "error");
       }
     } catch (error) {
-      console.error("친구 요청 중 오류 발생:", error);
       if (error.response?.data?.message === "이미 요청을 보냈습니다.") {
         showAlert("이미 친구 요청을 보냈습니다.", "error");
       } else if (
@@ -185,19 +181,12 @@ const ProfileModal = ({
 
         // 파일 처리 로깅
         const file = formData.get("reportDocument");
-        console.log("File object:", file);
 
         if (file instanceof Blob) {
           submitFormData.append("reportDocument", file);
-          console.log("Adding file to FormData:", {
-            fileName: file.name,
-            fileType: file.type,
-            fileSize: file.size,
-          });
         } else {
           const emptyBlob = new Blob([], { type: "application/octet-stream" });
           submitFormData.append("reportDocument", emptyBlob, "empty.txt");
-          console.log("Adding empty blob to FormData");
         }
 
         // ID 값들을 숫자로 변환
@@ -211,20 +200,6 @@ const ProfileModal = ({
         submitFormData.append("userId", targetUserId);
         submitFormData.append("reporterId", reporterUserId);
 
-        // FormData 내용 확인
-        console.log("FormData contents:");
-        for (let [key, value] of submitFormData.entries()) {
-          if (value instanceof Blob) {
-            console.log(key, ":", {
-              type: value.type,
-              size: value.size,
-              name: value instanceof File ? value.name : "empty.txt",
-            });
-          } else {
-            console.log(key, ":", value);
-          }
-        }
-
         const response = await fetch(
           `${import.meta.env.VITE_API_BASE_URL}/report`,
           {
@@ -235,10 +210,8 @@ const ProfileModal = ({
 
         // 응답 로깅
         const responseText = await response.text();
-        console.log("Raw response:", responseText);
 
         if (!response.ok) {
-          console.error("Error response:", responseText);
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
@@ -257,7 +230,6 @@ const ProfileModal = ({
         showAlert("유저를 찾을 수 없습니다.", "error");
       }
     } catch (error) {
-      console.error("신고 처리 중 오류 발생:", error);
       showAlert("신고 처리 중 오류가 발생했습니다.", "error");
     }
   };

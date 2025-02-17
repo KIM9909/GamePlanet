@@ -27,7 +27,6 @@ API.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error("Request interceptor error:", error);
     return Promise.reject(error);
   }
 );
@@ -40,12 +39,7 @@ API.interceptors.response.use(
   (response) => response.data,
   (error) => {
     // 에러 정보 상세 로깅
-    console.error("API Error:", {
-      url: error.config?.url,
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message,
-    });
+
     return Promise.reject(error.response?.data || error);
   }
 );
