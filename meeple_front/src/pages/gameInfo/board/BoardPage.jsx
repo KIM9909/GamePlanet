@@ -1,9 +1,8 @@
-import ArticleItem from "../../../components/info/board/ArticleItem"
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { GameInfoAPI } from '../../../sources/api/GameInfoAPI';
 import Pagination from "../../../components/admin/Pagination";
-import { Search } from "lucide-react";
+import { Search, MessageCircle, Calendar, User } from "lucide-react";
 import Loading from "../../../components/Loading";
 import NewArticleModal from "../../../components/info/board/NewArticleModal";
 
@@ -23,7 +22,7 @@ const BoardPage = () => {
   const [activeSearchTerm, setActiveSearchTerm] = useState('');
   const [isNewArticleModalOpen, setIsNewArticleModalOpen] = useState(false);
   
-  const itemsPerPage = 10;
+  const itemsPerPage = 9; // 3x3 그리드
 
   const fetchArticles = async () => {
     try {
@@ -41,8 +40,6 @@ const BoardPage = () => {
   };
 
   useEffect(() => {
-    console.log("ㅎㅇ",gameInfo);
-    
     fetchArticles();
   }, [gameInfoId]);
 
@@ -86,96 +83,91 @@ const BoardPage = () => {
   };
 
   return (
-    <div>
-      <div className="min-h-screen p-8 bg-[#0a0a2a]/50">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-cyan-500/50 max-h-[650px] overflow-y-auto custom-scrollbar">
-            <div className="grid grid-rows-1 gap-8 mb-8">
-              <div className="flex gap-3 justify-between">
-                <div className="flex gap-3">
-                  <select
-                    value={searchType}
-                    onChange={(e) => setSearchType(e.target.value)}
-                    className="px-4 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500"
-                  >
-                    <option value="content">내용</option>
-                    <option value="nickname">닉네임</option>
-                  </select>
-                  <input
-                    type="text"
-                    value={searchTermInput}
-                    onChange={(e) => setSearchTermInput(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder={searchType === 'content' ? '내용 검색...' : '닉네임 검색...'}
-                    className="px-4 py-2 bg-slate-700 text-white placeholder-gray-400 border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500"
-                  />
-                  <button 
-                    onClick={handleSearch}
-                    className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors flex items-center gap-2"
-                  >
-                    <Search size={20} />
-                    검색
-                  </button>
-                </div>
-                <div className="">
-                  <button
-                    onClick={() => setIsNewArticleModalOpen(true)}
-                    className="px-6 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors flex flex-end items-center gap-2"
-                  >
-                    글쓰기
-                  </button>
-                </div>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="min-w-full bg-slate-700 rounded-lg overflow-hidden">
-                  <thead>
-                    <tr className="bg-slate-600">
-                      <th className="w-8/12 px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        내용
-                      </th>
-                      <th className="w-2/12 px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        작성자
-                      </th>
-                      <th className="w-2/12 px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        작성일
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-600">
-                    {getCurrentPageData().map((article) => (
-                      <tr 
-                        key={article.gameCommunityId} 
-                        className="hover:bg-slate-600 transition-colors cursor-pointer"
-                        onClick={() => handleArticleClick(article)}
-                      >
-                        <td className="w-8/12 px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                          {article.gameCommunityContent}
-                          {article.commentList?.length > 0 && (
-                            <span className="text-cyan-500 ml-2">[{article.commentList.length}]</span>
-                          )}
-                        </td>
-                        <td className="w-2/12 px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
-                          {article.user.nickname}
-                        </td>
-                        <td className="w-2/12 px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
-                          {new Date(article.createAt).toLocaleDateString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div>
-                <Pagination 
-                  totalItems={filteredArticles.length}
-                  itemsPerPage={itemsPerPage}
-                  currentPage={currentPage}
-                  onPageChange={setCurrentPage}
+<div className="h-[800px] p-8 bg-[#0a0a2a]/50">  {/* 전체 높이 지정 */}
+  <div className="max-w-7xl mx-auto h-full"> {/* 높이를 부모에 맞춤 */}
+    <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-cyan-500/50 h-full overflow-y-auto">
+          {/* 검색 및 글쓰기 섹션 */}
+          <div className="flex justify-between items-center mb-8">
+            <div className="flex gap-3">
+              <select
+                value={searchType}
+                onChange={(e) => setSearchType(e.target.value)}
+                className="px-4 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500"
+              >
+                <option value="content">내용</option>
+                <option value="nickname">닉네임</option>
+              </select>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchTermInput}
+                  onChange={(e) => setSearchTermInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder={searchType === 'content' ? '내용 검색...' : '닉네임 검색...'}
+                  className="px-4 py-2 w-64 bg-slate-700 text-white placeholder-gray-400 border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500"
                 />
+                <button 
+                  onClick={handleSearch}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                >
+                  <Search size={20} />
+                </button>
               </div>
             </div>
+            <button
+              onClick={() => setIsNewArticleModalOpen(true)}
+              className="px-6 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors"
+            >
+              글쓰기
+            </button>
+          </div>
+
+          {/* 게시글 그리드 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            {getCurrentPageData().map((article) => (
+              <div
+                key={article.gameCommunityId}
+                onClick={() => handleArticleClick(article)}
+                className="bg-slate-800 rounded-lg p-4 hover:transform hover:scale-105 transition-all duration-300 cursor-pointer group"
+              >
+                {/* 게시글 내용 */}
+                <div className="h-32 mb-4 overflow-hidden">
+                  <p className="text-gray-300 text-sm leading-relaxed line-clamp-4">
+                    {article.gameCommunityContent}
+                  </p>
+                </div>
+                
+                {/* 메타 정보 */}
+                <div className="border-t border-slate-700 pt-4">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2 text-cyan-400">
+                      <User size={16} />
+                      <span>{article.user.nickname}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1 text-gray-400">
+                        <MessageCircle size={16} />
+                        <span>{article.commentList?.length || 0}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-gray-400">
+                        <Calendar size={16} />
+                        <span>{new Date(article.createAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* 페이지네이션 */}
+          <div className="flex justify-center">
+            <Pagination 
+              totalItems={filteredArticles.length}
+              itemsPerPage={itemsPerPage}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+            />
           </div>
         </div>
       </div>

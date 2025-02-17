@@ -233,7 +233,7 @@ const CustomDetail = () => {
           
           {/* 중간 섹션 */}
           <div className="flex -mt-[1px] relative h-[712px]"> {/* 기존 justify-between 제거 */}
-            <div className="flex flex-col -space-y-[1px] absolute left-[85px]"> {/* absolute와 left 값 추가 */}
+            <div className="flex flex-col -space-y-[1px] absolute left-[54px]"> {/* absolute와 left 값 추가 */}
               {Array.from({ length: 9 }, (_, i) => renderTile(19 - i))}
             </div>
 
@@ -335,7 +335,7 @@ const CustomDetail = () => {
             </div>
 
             
-            <div className="flex flex-col -space-y-[1px] absolute right-[85px]">
+            <div className="flex flex-col -space-y-[1px] absolute right-[54px]">
               {Array.from({ length: 9 }, (_, i) => renderTile(31 + i))}
             </div>
           </div>

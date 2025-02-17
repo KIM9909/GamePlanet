@@ -1,5 +1,6 @@
 import React from 'react';
 import { FaStar } from 'react-icons/fa';
+import { Pencil, Trash } from 'lucide-react';
 
 const ReviewItem = ({
   gameReviewId,
@@ -11,53 +12,55 @@ const ReviewItem = ({
   onEditClick,
   onDeleteClick
 }) => {
-  console.log(isAuthor)
   return (
-    <div className="w-full p-4 border rounded-lg mb-4 shadow-sm">
-      <div className="flex justify-between items-center mb-3">
-        <div className="flex items-center">
-          
+    <div className="bg-slate-800 rounded-lg overflow-hidden hover:transform hover:scale-105 transition-all duration-300 group relative w-full">
+      {/* 상단부 - 별점과 작성자 정보 */}
+      <div className="py-3 px-4 bg-slate-700 flex justify-between items-center">
+        <div className="flex items-center gap-1">
           {[...Array(5)].map((star, index) => (
             <FaStar
               key={index}
-              className={`text-xl ${
+              className={`text-base ${
                 index < gameReviewStar 
                   ? 'text-yellow-400' 
-                  : 'text-gray-300'
+                  : 'text-gray-400'
               }`}
             />
           ))}
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-gray-600 text-sm">
-            작성자: {user.userNickname}
-          </span>
-          {isAuthor && (
-            <div className="flex gap-2">
-              <button
-                onClick={onEditClick}
-                className="px-3 py-1 text-sm text-blue-600 hover:text-blue-700
-                         focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
-              >
-                수정
-              </button>
-              <button
-                onClick={onDeleteClick}
-                className="px-3 py-1 text-sm text-red-600 hover:text-red-700
-                         focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
-              >
-                삭제
-              </button>
-            </div>
-          )}
+        <span className="text-cyan-400 font-medium text-sm">
+          {user.userNickname}
+        </span>
+      </div>
+
+      {/* 리뷰 내용 */}
+      <div className="p-4">
+        <p className="text-gray-200 text-sm leading-relaxed min-h-[60px] max-h-[80px] overflow-y-auto">
+          {gameReviewContent}
+        </p>
+      </div>
+
+      {/* 작성자인 경우 수정/삭제 버튼 */}
+      {isAuthor && (
+        <div className="absolute bottom-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <button
+            onClick={onEditClick}
+            className="p-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-full transition-colors"
+            title="리뷰 수정"
+          >
+            <Pencil size={14} />
+          </button>
+          <button
+            onClick={onDeleteClick}
+            className="p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors"
+            title="리뷰 삭제"
+          >
+            <Trash size={14} />
+          </button>
         </div>
-      </div>
-      <div className="text-gray-700 whitespace-pre-wrap">
-        {gameReviewContent}
-      </div>
+      )}
     </div>
   );
 };
-
 
 export default ReviewItem;

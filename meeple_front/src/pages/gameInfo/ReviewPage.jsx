@@ -1,28 +1,18 @@
-// ReviewList.jsx
-import ReviewForm from "../../components/info/gamereview/ReviewForm"
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { Star } from 'lucide-react';
 import ReviewItem from "../../components/info/gamereview/ReviewItem";
 import { GameInfoAPI } from '../../sources/api/GameInfoAPI';
-import { useSelector } from 'react-redux';
-import { h2, p } from "framer-motion/client";
-
 import Pagination from "../../components/admin/Pagination";
 
 const ReviewPage = () => {
   const { gameInfoId } = useParams();
-  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [editingReviewId, setEditingReviewId] = useState(null);
-  
-  const { token } = useSelector((state) => state.user);
-  const currentUserId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
-  
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
-
+  const itemsPerPage = 6; // 2행 3열 그리드
+  
   const fetchReviews = async () => {
     try {
       setLoading(true);
@@ -40,121 +30,81 @@ const ReviewPage = () => {
     fetchReviews();
   }, [gameInfoId]);
 
-  const handleEditClick = (reviewId) => {
-    setEditingReviewId(reviewId);
-  };
-
-  const handleEditSuccess = () => {
-    setEditingReviewId(null);
-    fetchReviews();
-  };
-
-  const handleDeleteClick = async (reviewId) => {
-    if (window.confirm('정말로 이 리뷰를 삭제하시겠습니까?')) {
-      try {
-        await GameInfoAPI.deleteReview(gameInfoId, reviewId);
-        alert('리뷰가 삭제되었습니다.');
-        fetchReviews();
-      } catch (error) {
-        console.error('리뷰 삭제 실패:', error);
-        alert('리뷰 삭제에 실패했습니다.');
-      }
-    }
-  };
-
-  if (loading) return <div>로딩 중...</div>;
-  if (error) return <div>에러가 발생했습니다.</div>;
-  if (!data) return null;
-
-  const getCurrentUserReview = () => {
-    return data.reviewList?.find(
-      review => String(review.user.userId) === String(currentUserId)
-    );
-  };
-
-  const getOtherReviews = () => {
-    return data.reviewList?.filter(
-      review => String(review.user.userId) !== String(currentUserId)
-    );
-  };
-
   const getCurrentPageData = () => {
+    if (!data?.reviewList) return [];
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     return data.reviewList.slice(startIndex, endIndex);
   };
 
+  if (loading) return (
+    <div className="min-h-screen p-8 bg-[#0a0a2a]/50 flex items-center justify-center">
+      <div className="text-cyan-400 text-xl animate-pulse">리뷰 로딩 중...</div>
+    </div>
+  );
+  
+  if (error) return (
+    <div className="min-h-screen p-8 bg-[#0a0a2a]/50 flex items-center justify-center">
+      <div className="text-red-400 text-xl">리뷰를 불러오는데 실패했습니다.</div>
+    </div>
+  );
+
+  if (!data) return null;
+
   return (
-    <div>
-      <div className="min-h-screen p-8 bg-[#0a0a2a]/50">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-cyan-500/50 max-h-[650px] overflow-y-auto custom-scrollbar">
-            
-            <h1 className="text-5xl font-bold text-cyan-400 mb-4 tracking-wide">
+    <div className="h-[800px] p-8 bg-[#0a0a2a]/50">  {/* 전체 높이 지정 */}
+      <div className="max-w-7xl mx-auto h-full"> {/* 높이를 부모에 맞춤 */}
+        <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-cyan-500/50 h-full overflow-y-auto">
+          {/* 상단 헤더 섹션 */}
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="text-4xl font-bold text-cyan-400 tracking-wide">
               게임 리뷰
             </h1>
-              <section className="text-white">
+            <div className="flex items-center gap-3 bg-gray-800 px-4 py-2 rounded-lg">
+              <Star className="text-yellow-400" size={24} />
+              <span className="text-white text-lg font-medium">
                 {data.starAvg 
-                  ? `별점 ${(Number(data.starAvg.toFixed(1)))}` 
-                  : "아직 별점을 등록한 사람이 없어요"
+                  ? `${Number(data.starAvg.toFixed(1))} / 5.0` 
+                  : "아직 별점이 없어요"
                 }
-              </section>
-              
-              {/* 현재 유저의 리뷰가 없다면 */}
-              {!editingReviewId && !getCurrentUserReview() && (
-                <p>
-                <h2 className="text-white">이 게임에 작성하신 리뷰가 없어요! 플레이 하시고 직접 리뷰를 작성해보세요</h2>
-                </p>
-              )}
+              </span>
+            </div>
+          </div>
 
-              {/* 현재 유저의 리뷰 */}
-              {getCurrentUserReview() && (
-                <div className="mt-8 mb-8">
-                  <h2 className="text-xl font-semibold text-white mb-4">내 리뷰</h2>
-                  
-                    {editingReviewId === getCurrentUserReview().gameReviewId ? (
-                      <ReviewForm 
-                        initialData={getCurrentUserReview()}
-                        onSuccess={handleEditSuccess}
-                      />
-                    ) : (
-                      <ReviewItem 
-                        {...getCurrentUserReview()}
-                        isAuthor={true}
-                        onEditClick={() => handleEditClick(getCurrentUserReview().gameReviewId)}
-                        onDeleteClick={() => handleDeleteClick(getCurrentUserReview().gameReviewId)}
-                      />
-                    )}
-                  
+          {/* 전체 리뷰 그리드 */}
+          {data.reviewList && data.reviewList.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {getCurrentPageData().map((item) => (
+                  <ReviewItem 
+                    key={item.gameReviewId}
+                    {...item}
+                    isAuthor={false} // 수정/삭제 기능 제거
+                  />
+                ))}
+              </div>
+              
+              {data.reviewList.length > itemsPerPage && (
+                <div className="mt-8">
+                  <Pagination
+                    totalItems={data.reviewList.length}
+                    itemsPerPage={itemsPerPage}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
+                  />
                 </div>
               )}
-
-              {/* 다른 사용자들의 리뷰 */}
-              <section className="mt-8">
-                <h2 className="text-xl font-semibold text-white mb-4">전체 리뷰</h2>
-                {getCurrentPageData()?.map((item) => (
-                    <ReviewItem 
-                      key={item.gameReviewId}
-                      {...item}
-                      isAuthor={String(currentUserId) === String(item.user.userId)}
-                      onEditClick={() => handleEditClick(item.gameReviewId)}
-                      onDeleteClick={() => handleDeleteClick(item.gameReviewId)}
-                    />
-                ))}
-                <Pagination
-                  totalItems={data.reviewList.length}
-                  itemsPerPage={itemsPerPage}
-                  currentPage={currentPage}
-                  onPageChange={setCurrentPage}
-                />
-              </section>
+            </>
+          ) : (
+            <div className="text-center py-12">
+              <Star className="mx-auto text-gray-500 mb-4" size={40} />
+              <p className="text-gray-300 text-lg">아직 작성된 리뷰가 없어요!</p>
             </div>
-          
+          )}
         </div>
       </div>
     </div>
   );
 };
-
 
 export default ReviewPage;
