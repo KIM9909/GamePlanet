@@ -144,8 +144,14 @@ public class BluemarbleRoomServiceImpl implements BluemarbleRoomService {
 	@Transactional
 	public Room joinWithPassword(int roomId, int userId,
 			RoomJoinWithPassword roomJoinWithPassword) {
+		User user = userService.findById(userId);
+
 		Room room = bluemarbleRoomRepository.findById(roomId)
 				.orElseThrow(() -> new ResourceNotFoundException("Room", roomId));
+		if (!redisTemplate.opsForHash().get(AI_KEY, user.getUserNickname()).equals("ON")
+		) {
+			throw new ResourceNotFoundException("AI 프로그램을 켰는지 확인해주세요", 0);
+		}
 		boolean isCorrectPassword = passwordEncoder.matches(roomJoinWithPassword.getPassword(),
 				room.getPassword());
 		if (!isCorrectPassword) {

@@ -44,11 +44,9 @@ public class BluemarbleSocketRoomController {
 	public void join(@DestinationVariable("roomId") int roomId,
 			@DestinationVariable("userId") long userId) {
 		RoomResponse roomResponse = RoomResponse.from(bluemarbleRoomService.join(roomId, userId));
-		SocketRoomResponse socketRoomResponse = SocketRoomResponse.of(roomResponse,
-				"Player ID " + userId + " 님이 참가했습니다.");
 		List<CustomElementResponse> customElements = customElementService.findCustomElementsOnlyCompleted();
-		socketRoomResponse.setCustomElementResponses(customElements);
-
+		SocketRoomResponse socketRoomResponse = new SocketRoomResponse("room", roomResponse,
+				"Player ID " + userId + " 님이 참가했습니다.", customElements);
 		messagingTemplate.convertAndSend("/topic/rooms/" + roomId,
 				socketRoomResponse);
 	}
@@ -60,11 +58,10 @@ public class BluemarbleSocketRoomController {
 			@Payload RoomJoinWithPassword roomJoinWithPassword) {
 		RoomResponse roomResponse = RoomResponse.from(
 				bluemarbleRoomService.joinWithPassword(roomId, userId, roomJoinWithPassword));
-		SocketRoomResponse socketRoomResponse = SocketRoomResponse.of(roomResponse,
-				"Player ID " + userId + " 님이 참가했습니다.");
 		List<CustomElementResponse> customElements = customElementService.findCustomElementsOnlyCompleted();
-		socketRoomResponse.setCustomElementResponses(customElements);
 
+		SocketRoomResponse socketRoomResponse = new SocketRoomResponse("room", roomResponse,
+				"Player ID " + userId + " 님이 참가했습니다.", customElements);
 		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, socketRoomResponse);
 	}
 
@@ -74,11 +71,9 @@ public class BluemarbleSocketRoomController {
 			@Payload RoomUpdate roomUpdate) {
 		RoomResponse roomResponse = RoomResponse.from(
 				bluemarbleRoomService.update(roomId, roomUpdate));
-		SocketRoomResponse socketRoomResponse = SocketRoomResponse.of(roomResponse,
-				"대기방 정보가 업데이트 되었습니다.");
 		List<CustomElementResponse> customElements = customElementService.findCustomElementsOnlyCompleted();
-		socketRoomResponse.setCustomElementResponses(customElements);
-
+		SocketRoomResponse socketRoomResponse = new SocketRoomResponse("room", roomResponse,
+				"대기방 정보를 업데이트합니다.", customElements);
 		messagingTemplate.convertAndSend("/topic/rooms/" + roomId, socketRoomResponse);
 	}
 
@@ -88,10 +83,9 @@ public class BluemarbleSocketRoomController {
 			@Payload RoomUpdatePassword newPassword) {
 		RoomResponse roomResponse = RoomResponse.from(
 				bluemarbleRoomService.changePassword(roomId, newPassword));
-		SocketRoomResponse socketRoomResponse = SocketRoomResponse.of(roomResponse,
-				"대기방 비밀번호가 변경되었습니다.");
 		List<CustomElementResponse> customElements = customElementService.findCustomElementsOnlyCompleted();
-		socketRoomResponse.setCustomElementResponses(customElements);
+		SocketRoomResponse socketRoomResponse = new SocketRoomResponse("room", roomResponse,
+				"대기방 비밀번호가 변경되었습니다", customElements);
 		messagingTemplate.convertAndSend("/topic/rooms/" + roomId,
 				socketRoomResponse);
 	}
