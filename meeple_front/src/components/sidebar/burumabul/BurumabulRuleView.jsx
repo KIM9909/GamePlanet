@@ -2,9 +2,9 @@ import React from "react";
 
 const BurumabulRuleView = () => {
   return (
-    <div className="p-4 bg-black text-white">
+    <div className="p-4 bg-gray-900 bg-opacity-80 rounded-lg text-white">
       <div className="space-y-4">
-        <div className="bg-gray-800 rounded p-3">
+        <div className="bg-gray-800 rounded p-3 border-2 border-cyan-400">
           <div className="text-sm mb-1">게임 구성</div>
           <p className="text-xs text-gray-400">
             주사위를 던지고 이동한 곳에서 증서구입, 우주 본부 / 기지 건설,
@@ -12,7 +12,7 @@ const BurumabulRuleView = () => {
           </p>
         </div>
 
-        <div className="bg-gray-800 rounded p-3">
+        <div className="bg-gray-800 rounded p-3 border-2 border-cyan-400">
           <div className="text-sm mb-1">게임 진행</div>
           <p className="text-xs text-gray-400">
             1. 주사위를 던져 도착한 행성 또는 별자리에 우주본부를 지을 수
@@ -31,7 +31,7 @@ const BurumabulRuleView = () => {
           </p>
         </div>
 
-        <div className="bg-gray-800 rounded p-3">
+        <div className="bg-gray-800 rounded p-3 border-2 border-cyan-400">
           <div className="text-sm mb-1">승리 조건</div>
           <p className="text-xs text-gray-400">
             4명이 게임을 할 경우, 우주기지 6개를 먼저 건설한 사람이 승리를
@@ -39,7 +39,7 @@ const BurumabulRuleView = () => {
           </p>
         </div>
 
-        <div className="bg-gray-800 rounded p-3">
+        <div className="bg-gray-800 rounded p-3 border-2 border-cyan-400">
           <div className="text-sm mb-1">특별 규칙</div>
           <p className="text-xs text-gray-400">
             같은 숫자의 카드가 연속해서 나오면, 해당 카드들은 즉시 제거됩니다.
