@@ -7,6 +7,7 @@ import { Menu, X, Trophy, CreditCard } from "lucide-react";
 import PlayerVideo from "../../../../components/game/burumabul/play/PlayerVideo";
 import { useDispatch, useSelector } from "react-redux";
 import { SocketContext } from "../../../layout/SocketLayout";
+import UserAPI from "../../../../sources/api/UserAPI";
 
 import SeedCard from "./burumabul_Modal/SeedCard";
 
@@ -45,7 +46,7 @@ const BurumabulPlay = ({
     buildBaseSocketData,
     roll,
   } = socketContext;
-
+  const { getProfile } = UserAPI;
   // 게임 데이터
   const [currentPlayData, setCurrentPlayData] = useState(playData);
 
@@ -117,6 +118,32 @@ const BurumabulPlay = ({
     setRollDice(() => rollDiceFn);
   }, []);
 
+  const [nicknames, setNicknames] = useState({});
+
+  const fetchNicknames = useCallback(async () => {
+    const newNicknames = {};
+    for (const player of players) {
+      if (!nicknames[player.playerId]) {
+        // 이미 조회된 닉네임이 있으면 건너뜀
+        try {
+          const response = await getProfile(player.playerId);
+          newNicknames[player.playerId] = response.userNickname;
+        } catch (error) {
+          console.error("플레이어 닉네임 조회 오류:", error);
+        }
+      }
+    }
+    if (Object.keys(newNicknames).length > 0) {
+      setNicknames((prev) => ({ ...prev, ...newNicknames }));
+    }
+  }, [players, nicknames]);
+
+  // players가 변경될 때마다 닉네임 가져오기
+  useEffect(() => {
+    if (players.length > 0) {
+      fetchNicknames();
+    }
+  }, [players, fetchNicknames]);
   // 주사위 결과
 
   const [firstDice, setFirstDice] = useState(null);
@@ -386,7 +413,7 @@ const BurumabulPlay = ({
                               {index + 1}
                             </span>
                             <span className="ml-3 font-medium text-gray-300">
-                              {player.playerName}
+                              {nicknames[player.playerId] || player.playerName}
                             </span>
                           </div>
                           <span className="text-cyan-300 font-medium">
