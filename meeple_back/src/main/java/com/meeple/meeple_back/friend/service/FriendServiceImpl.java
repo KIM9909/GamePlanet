@@ -208,8 +208,8 @@ public class FriendServiceImpl implements FriendService {
     }
 
     @Override
-    public ResponseProcessBlock processBlock(RequestProcessBlock request) {
-        Friend friend = friendRepository.findById(request.getFriendId())
+    public ResponseProcessBlock processBlock(int friendId) {
+        Friend friend = friendRepository.findById(friendId)
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 친구입니다."));
 
         long fromId = friend.getUser().getUserId();
