@@ -408,7 +408,7 @@ const SocketLayout = ({ children }) => {
         const formattedPlayInfo = {
           gamePlayId: playInfo.gamePlayId,
           players: playInfo.players,
-          // customId:
+          customId: playInfo.customId,
         };
         stompClientRef.current.publish({
           destination: `/app/game/blue-marble/game-plays/create`,

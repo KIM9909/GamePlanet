@@ -68,17 +68,22 @@ const WaitingRoom = ({
     userNickName: "Basic",
   };
   const [customList, setCustomList] = useState([DEFAULT_THEME]);
+  // 기본 커스텀
 
+  const customThemeList = useSelector((state) => state.burumabul.customList);
+
+  useEffect(() => {
+    if (customThemeList && customThemeList.length > 0) {
+      setCustomList([DEFAULT_THEME, ...customThemeList]);
+    }
+  }, [customThemeList]);
   // 커스텀 선택
-  const [selectedThemeId, setSelectedThemeId] = useState(null);
+  const [selectedThemeId, setSelectedThemeId] = useState(-1);
 
   useEffect(() => {
     if (socketCustomList && socketCustomList.length > 0) {
       setCustomList([DEFAULT_THEME, ...socketCustomList]);
-    } else {
-      setCustomList([DEFAULT_THEME]);
     }
-    console.log("소켓 커스텀 덱 리스트: ", socketCustomList);
   }, [socketCustomList]);
 
   // 준비 됐는지 안 됐는지
@@ -300,10 +305,10 @@ const WaitingRoom = ({
                 {/* 커스텀 테마 리스트 */}
                 <div className="flex-1 w-full px-4 overflow-y-auto thin-scrollbar">
                   <div className="space-y-3 pb-4">
-                    {customList?.map((customTheme) => (
+                    {customList?.map((customTheme, index) => (
                       <>
                         <label
-                          key={customTheme.customId}
+                          key={`${customTheme.customId}-${index}`}
                           className="p-3 bg-gray-800 rounded-lg border border-cyan-400 hover:border-cyan-300 transition-colors flex flex-col items-center gap-4 cursor-pointer"
                         >
                           <div className="flex flex-col min-w-0">
