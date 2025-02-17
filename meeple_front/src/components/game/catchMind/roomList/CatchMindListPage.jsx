@@ -89,7 +89,7 @@ const CatchMindListPage = () => {
         </button>
       </div>
 
-      <div className="bg-gray-900 bg-opacity-90 rounded-xl shadow-2xl p-8 border border-blue-900 h-[580px]">
+      <div className="bg-gray-900 bg-opacity-90 rounded-xl shadow-2xl p-8 border border-blue-900 h-[700px]">
         <div className="h-full overflow-y-auto custom-scrollbar">
           {filteredRooms.length === 0 ? (
             <div className="h-full flex items-center justify-center">

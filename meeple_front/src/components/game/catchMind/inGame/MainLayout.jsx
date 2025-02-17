@@ -26,6 +26,7 @@ import useCatchSocket from "../../../../hooks/useCatchSocket";
 import VideoChat from "./VideoChat";
 import ExitConfirmationModal from "./ExitConfirmationModal";
 import GameReviewModal from "./GameReivewModal";
+import Loading from "../../../Loading";
 
 // 비디오 컨테이너 컴포넌트 - React.memo로 최적화
 const VideoContainer = React.memo(
@@ -269,10 +270,20 @@ const MainLayout = () => {
   const sessionId = useSelector((state) => state.catchmind.sessionId);
 
   const isCreator = gameState.creator === profileData?.userNickname;
-  const { sendMessage, client, joinRoom } = useCatchSocket(roomId);
+  const { connected, connectionStatus, sendMessage, client, joinRoom } =
+    useCatchSocket(roomId);
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [hasPlayedGame, setHasPlayedGame] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (connectionStatus === "connected" && !isInitialJoin) {
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 1000);
+    }
+  }, [connectionStatus, isInitialJoin]);
 
   // 모달 닫기 핸들러
   const handleCloseExitModal = () => {
@@ -339,7 +350,8 @@ const MainLayout = () => {
       // 게임을 플레이했다면 리뷰 모달 표시
       if (hasPlayedGame) {
         setIsReviewModalOpen(true);
-        return; // 리뷰 모달에서 처리 후 나가기를 진행
+        setIsExiting(false);
+        return;
       }
 
       dispatch(resetGameState());
@@ -353,9 +365,11 @@ const MainLayout = () => {
       setTimeout(() => {
         setIsExiting(false);
         navigate("/catch-mind");
-      }, 500);
+      }, 2000);
     } catch (error) {
+      console.error("Exit room error:", error);
       setIsExiting(false);
+      navigate("/catch-mind");
     }
   }, [
     roomId,
@@ -491,7 +505,7 @@ const MainLayout = () => {
 
   // WebSocket을 통한 방 업데이트 구독
   useEffect(() => {
-    if (roomId) {
+    if (roomId && connected) {
       sendMessage({
         destination: `/topic/catch-mind/${roomId}`,
         subscribe: true,
@@ -551,6 +565,7 @@ const MainLayout = () => {
       if (!isInitialJoin || !profileData?.userNickname || !roomId) return;
 
       try {
+        setIsLoading(true);
         const joinData = await CatchMindAPI.joinRoom(
           roomId,
           profileData.userNickname,
@@ -558,10 +573,14 @@ const MainLayout = () => {
         );
 
         if (joinRoom && typeof joinRoom === "function") {
-          joinRoom(joinData);
+          await joinRoom(joinData);
           setIsInitialJoin(false);
         }
-      } catch (error) {}
+      } catch (error) {
+        console.error("Join room error:", error);
+        setIsLoading(false);
+        navigate("/catch-mind");
+      }
     };
 
     handleInitialJoin();
@@ -576,6 +595,7 @@ const MainLayout = () => {
     isInitialJoin,
     dispatch,
     joinRoom,
+    navigate,
   ]);
 
   // 프로필 정보 가져오기
@@ -584,6 +604,10 @@ const MainLayout = () => {
       dispatch(fetchProfile(userId));
     }
   }, [userId, dispatch]);
+
+  if (isLoading || isExiting) {
+    return <Loading />;
+  }
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-900 to-gray-800">
