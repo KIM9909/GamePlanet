@@ -30,35 +30,37 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
     try {
       console.log(roomData);
       const response = await createBurumabulRoom(userId, roomData);
+      console.log(response);
       const roomId = response.roomResponse.roomId;
+      console.log(roomId);
       const customThemeList = response.customElementResponses;
       dispatch(setRoomId(roomId));
       dispatch(setCustomList(customThemeList));
       navigate(`/game/burumabul/start/${roomId}`);
     } catch (error) {
       console.error("방 생성 중 오류 발생 : ", error);
-      if (error.response?.status === 500) {
-        toast(
-          ({ closeToast }) => <CustomToastContent closeToast={closeToast} />,
-          {
-            position: "top-center",
-            autoClose: false,
-            hideProgressBar: true,
-            closeOnClick: false,
-            pauseOnHover: true,
-            draggable: true,
-            className: "!bg-transparent !p-0 !shadow-none",
-            toastClassName: "!bg-transparent !p-0",
-            bodyClassName: "!p-0 !m-0",
-            closeButton: false, // 기본 닫기 버튼 비활성화
-            style: {
-              background: "transparent",
-              padding: 0,
-            },
-          }
-        );
-        handleCancel();
-      }
+      // if (error.response?.status === 500) {
+      //   toast(
+      //     ({ closeToast }) => <CustomToastContent closeToast={closeToast} />,
+      //     {
+      //       position: "top-center",
+      //       autoClose: false,
+      //       hideProgressBar: true,
+      //       closeOnClick: false,
+      //       pauseOnHover: true,
+      //       draggable: true,
+      //       className: "!bg-transparent !p-0 !shadow-none",
+      //       toastClassName: "!bg-transparent !p-0",
+      //       bodyClassName: "!p-0 !m-0",
+      //       closeButton: false, // 기본 닫기 버튼 비활성화
+      //       style: {
+      //         background: "transparent",
+      //         padding: 0,
+      //       },
+      //     }
+      //   );
+      //   handleCancel();
+      // }
     }
   };
 

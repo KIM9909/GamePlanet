@@ -40,9 +40,10 @@ const burumabulGameSlice = createSlice({
     setRoomId: (state, action) => {
       state.roomId = action.payload;
     },
+
     // 커스텀 목록
     setCustomList: (state, action) => {
-      state.roomId = action.payload;
+      state.customList = action.payload;
     },
 
     // 게임 설정

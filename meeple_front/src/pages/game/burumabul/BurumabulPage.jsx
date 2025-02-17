@@ -9,6 +9,7 @@ import { SocketContext } from "../../../components/layout/SocketLayout";
 
 const BurumabulPage = () => {
   const roomId = useSelector((state) => state.burumabul.roomId);
+  console.log(roomId);
 
   const navigate = useNavigate();
   const userId = Number(useSelector((state) => state.user.userId));
