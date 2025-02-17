@@ -54,16 +54,8 @@ public class GamePlay {
 		this.turnManager = turnManager;
 	}
 
-	public static GamePlay init(GamePlayCreate gamePlayCreate, List<Player> players) {
-		List<Tile> tiles;
-		List<Card> cards;
-		if (Objects.nonNull(gamePlayCreate.getCustomId())) {
-			tiles = createTiles(gamePlayCreate.getCustomId());
-			cards = createCards(gamePlayCreate.getCustomId());
-		} else {
-			tiles = createTiles();
-			cards = createCards();
-		}
+	public static GamePlay init(GamePlayCreate gamePlayCreate, List<Player> players,
+			List<Tile> tiles, List<Card> cards) {
 		return GamePlay.builder()
 				.gamePlayId(gamePlayCreate.getGamePlayId())
 				.gameStatus(GameStatus.IN_PROGRESS.getStatus())
@@ -74,36 +66,23 @@ public class GamePlay {
 				.build();
 	}
 
-	private static List<Tile> createTiles(Integer customId) {
-		ExcelReader<Tile> tileParser = new TileParser();
-		LoadGameElement<Tile> tileLoader = new TileLoader();
-		List<Tile> customTiles = tileLoader.load(customId);
-		List<Tile> tiles = tileParser.readExcelFile();
-		for (Tile customTile : customTiles) {
-			tiles.set(customTile.getId(), customTile);
-		}
-		return tiles;
+	public static GamePlay init(GamePlayCreate gamePlayCreate, List<Player> players) {
+		return GamePlay.builder()
+				.gamePlayId(gamePlayCreate.getGamePlayId())
+				.gameStatus(GameStatus.IN_PROGRESS.getStatus())
+				.round(1)
+				.board(createTiles())
+				.cards(createCards())
+				.turnManager(TurnManager.init(players))
+				.build();
 	}
+
 
 	private static List<Tile> createTiles() {
 		ExcelReader<Tile> tileParser = new TileParser();
 		return tileParser.readExcelFile();
 	}
 
-	private static List<Card> createCards(Integer customId) {
-		List<Card> cards = new ArrayList<>();
-
-		LoadGameElement<SeedCertificateCard> cardLoader = new SeedCardLoader();
-		List<SeedCertificateCard> seedCertificateCards = cardLoader.load(customId);
-		List<TelepathyCard> telepathyCards = new TelepathyCardParser().readExcelFile();
-		List<NeuronsValleyCard> neuronsValleyCards = new NeuronsValleyParser().readExcelFile();
-
-		cards.addAll(seedCertificateCards);
-		cards.addAll(telepathyCards);
-		cards.addAll(neuronsValleyCards);
-
-		return cards;
-	}
 
 	private static List<Card> createCards() {
 

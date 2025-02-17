@@ -8,12 +8,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class TileLoader implements LoadGameElement<Tile> {
 
-	private CustomTileService customTileService;
-
 	@Autowired
-	public void setCustomTileService(CustomTileService customTileService) {
-		this.customTileService = customTileService;
-	}
+	private CustomTileService customTileService;
 
 	@Override
 	public List<Tile> load(Integer customId) {

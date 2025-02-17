@@ -18,12 +18,25 @@ import com.meeple.meeple_back.game.bluemarble.controller.socket.response.ChooseP
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.PayFeeResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
 import com.meeple.meeple_back.game.bluemarble.domain.ActionType;
+import com.meeple.meeple_back.game.bluemarble.domain.Card;
 import com.meeple.meeple_back.game.bluemarble.domain.GamePlay;
 import com.meeple.meeple_back.game.bluemarble.domain.GamePlayCreate;
+import com.meeple.meeple_back.game.bluemarble.domain.NeuronsValleyCard;
 import com.meeple.meeple_back.game.bluemarble.domain.Player;
+import com.meeple.meeple_back.game.bluemarble.domain.SeedCardLoader;
+import com.meeple.meeple_back.game.bluemarble.domain.SeedCertificateCard;
+import com.meeple.meeple_back.game.bluemarble.domain.TelepathyCard;
+import com.meeple.meeple_back.game.bluemarble.domain.Tile;
+import com.meeple.meeple_back.game.bluemarble.domain.TileLoader;
 import com.meeple.meeple_back.game.bluemarble.service.port.BluemarbleGameRepository;
+import com.meeple.meeple_back.game.bluemarble.util.ExcelReader;
+import com.meeple.meeple_back.game.bluemarble.util.NeuronsValleyParser;
+import com.meeple.meeple_back.game.bluemarble.util.TelepathyCardParser;
+import com.meeple.meeple_back.game.bluemarble.util.TileParser;
 import com.meeple.meeple_back.user.service.UserService;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Logger;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -38,15 +51,53 @@ public class BluemarbleGameServiceImpl implements BluemarbleGameService {
 	private final BluemarbleGameRepository bluemarbleGameRepository;
 	private final UserService userService;
 
+	private final TileLoader tileLoader;
+	private final SeedCardLoader cardLoader;
+
+	private List<Card> createCards(Integer customId) {
+		List<Card> cards = new ArrayList<>();
+
+		List<SeedCertificateCard> seedCertificateCards = cardLoader.load(customId);
+		List<TelepathyCard> telepathyCards = new TelepathyCardParser().readExcelFile();
+		List<NeuronsValleyCard> neuronsValleyCards = new NeuronsValleyParser().readExcelFile();
+
+		cards.addAll(seedCertificateCards);
+		cards.addAll(telepathyCards);
+		cards.addAll(neuronsValleyCards);
+
+		return cards;
+	}
+
+
+	private List<Tile> createTiles(Integer customId) {
+		ExcelReader<Tile> tileParser = new TileParser();
+		List<Tile> customTiles = tileLoader.load(customId);
+		List<Tile> tiles = tileParser.readExcelFile();
+		for (Tile customTile : customTiles) {
+			tiles.set(customTile.getId(), customTile);
+		}
+		return tiles;
+	}
+
 	@Override
 	@Transactional
 	public GamePlayResponse create(GamePlayCreate gamePlayCreate) {
 		List<Player> players = gamePlayCreate.getPlayerIds().stream()
 				.map(id -> Player.init(userService.findById(id)))
 				.toList();
-		GamePlay gamePlay = bluemarbleGameRepository.save(GamePlay.init(gamePlayCreate, players));
-		// TODO : 이미지 40장 추가하기.
-		return GamePlayResponse.from(gamePlay, ActionType.START_TURN);
+		if (Objects.isNull(gamePlayCreate.getCustomId())) {
+			GamePlay gamePlay = bluemarbleGameRepository.save(
+					GamePlay.init(gamePlayCreate, players));
+			return GamePlayResponse.from(gamePlay, ActionType.START_TURN);
+
+
+		} else {
+			List<Tile> tiles = createTiles(gamePlayCreate.getCustomId());
+			List<Card> cards = createCards(gamePlayCreate.getCustomId());
+			GamePlay gamePlay = bluemarbleGameRepository.save(
+					GamePlay.init(gamePlayCreate, players, tiles, cards));
+			return GamePlayResponse.from(gamePlay, ActionType.START_TURN);
+		}
 	}
 
 	@Override
