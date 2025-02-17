@@ -6,7 +6,7 @@ import UserDeletePage from "./UserDeletePage";
 import Heejun from "../../assets/images/pixel_character/pixel-heejun.png";
 import Hongbeom from "../../assets/images/pixel_character/pixel-hongbeom.png";
 import ProfilePicture from "./ProfilePicture";
-import { Shield, Sword, Crown, Sparkles, Gem } from "lucide-react";
+import { Shield, Sword, Crown, Sparkles, Gem, Info } from "lucide-react";
 
 // Redux 액션들과 API 임포트
 import {
@@ -28,6 +28,7 @@ const ProfilePage = () => {
   const { userId } = useParams();
   const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState("info");
+  const [showTooltip, setShowTooltip] = useState(false);
 
   // Redux store에서 필요한 상태들을 가져오기
   const {
@@ -170,6 +171,56 @@ const ProfilePage = () => {
                               ? `Lv.MAX`
                               : `Lv.${profile.userLevel}`}
                           </span>
+                        </div>
+                        <div className="relative">
+                          <button
+                            onMouseEnter={() => setShowTooltip(true)}
+                            onMouseLeave={() => setShowTooltip(false)}
+                          >
+                            <Info className="text-gray-400/80 w-5 h-5 -ml-1.5 mt-2" />
+                          </button>
+
+                          {showTooltip && (
+                            <div className="absolute left-6 top-1/2 -translate-y-1/2 z-50 bg-zinc-800 border border-zinc-700 rounded-lg p-3 shadow-lg min-w-[180px]">
+                              <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent border-r-[8px] border-r-zinc-700" />
+                              <div className="absolute -left-[7px] top-1/2 -translate-y-1/2 w-0 h-0 border-t-[7px] border-t-transparent border-b-[7px] border-b-transparent border-r-[7px] border-r-zinc-800" />
+                              <h3 className="text-sm font-semibold text-white mb-2">
+                                레벨별 등급
+                              </h3>
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <Shield size={16} className="text-cyan-400" />
+                                  <span className="text-sm text-zinc-300">
+                                    Lv.0-9 뉴비
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Sword
+                                    size={16}
+                                    className="text-emerald-400"
+                                  />
+                                  <span className="text-sm text-zinc-300">
+                                    Lv.10-19 중수
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Crown
+                                    size={16}
+                                    className="text-yellow-400"
+                                  />
+                                  <span className="text-sm text-zinc-300">
+                                    Lv.20-29 고수
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Gem size={16} className="text-red-400" />
+                                  <span className="text-sm text-zinc-300">
+                                    Lv.30(Max) 마스터
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

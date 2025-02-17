@@ -44,7 +44,7 @@ const FriendModalLayout = ({ children }) => {
 
           {(isModalOpen || isClosing) && (
             <div
-              className="fixed right-3 bottom-3 h-2/3 w-80 bg-slate-600 bg-opacity-50 shadow-lg rounded-lg transition-transform duration-300 ease-out transform translate-x-0"
+              className="fixed right-3 bottom-3 h-3/5 w-80 bg-slate-600 bg-opacity-50 shadow-lg rounded-lg transition-transform duration-300 ease-out transform translate-x-0"
               style={{
                 animation: `${
                   isClosing ? "slideOut" : "slideIn"

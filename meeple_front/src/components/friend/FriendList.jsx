@@ -41,11 +41,11 @@ const FriendList = () => {
   return (
     <div className="h-full flex flex-col w-full">
       {friendList && friendList.length > 0 ? (
-        <ul className="overflow-y-auto h-full space-y-2 w-full flex justify-center items-start">
+        <ul className="overflow-y-auto h-full space-y-2 w-full flex flex-col items-start">
           {friendList.map((friend, index) => (
             <li
               key={index}
-              className=" w-[250px] bg-gray-800 rounded-lg flex items-center justify-between shadow-sm border border-cyan-500/30 hover:border-cyan-400/60 transition-all duration-300"
+              className=" w-[220px] bg-gray-800 rounded-lg flex items-center justify-between shadow-sm border border-cyan-500/30 hover:border-cyan-400/60 transition-all duration-300"
             >
               <div className="text-cyan-400 font-medium ml-3">
                 {friend.friend.nickname}
