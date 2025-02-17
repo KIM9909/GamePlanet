@@ -75,8 +75,14 @@ public class GamePlay {
 	}
 
 	private static List<Tile> createTiles(Integer customId) {
+		ExcelReader<Tile> tileParser = new TileParser();
 		LoadGameElement<Tile> tileLoader = new TileLoader();
-		return tileLoader.load(customId);
+		List<Tile> customTiles = tileLoader.load(customId);
+		List<Tile> tiles = tileParser.readExcelFile();
+		for (Tile customTile : customTiles) {
+			tiles.set(customTile.getId(), customTile);
+		}
+		return tiles;
 	}
 
 	private static List<Tile> createTiles() {
