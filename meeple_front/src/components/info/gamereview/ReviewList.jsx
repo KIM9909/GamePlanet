@@ -1,23 +1,21 @@
-// ReviewList.jsx
-import ReviewForm from "../info/ReviewForm"
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import ReviewItem from "./ReviewItem";
-import { GameInfoAPI } from '../../../sources/api/GameInfoAPI';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import ReviewForm from '../info/ReviewForm';
+import ReviewItem from './ReviewItem';
+import { GameInfoAPI } from '../../../sources/api/GameInfoAPI';
+import { FaStar } from 'react-icons/fa';
 
 const ReviewList = () => {
   const { gameInfoId } = useParams();
-  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editingReviewId, setEditingReviewId] = useState(null);
+  const [showReviewForm, setShowReviewForm] = useState(false);
   
   const { token } = useSelector((state) => state.user);
-  const currentUserId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
-  
-  console.log(currentUserId)
+  const currentUserId = token ? JSON.parse(atob(token.split('.')[1])).sub : null;
   
   const fetchReviews = async () => {
     try {
@@ -38,6 +36,7 @@ const ReviewList = () => {
 
   const handleEditClick = (reviewId) => {
     setEditingReviewId(reviewId);
+    setShowReviewForm(false);
   };
 
   const handleEditSuccess = () => {
@@ -58,48 +57,88 @@ const ReviewList = () => {
     }
   };
 
-  if (loading) return <div>로딩 중...</div>;
-  if (error) return <div>에러가 발생했습니다.</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-[200px]">
+      <div className="text-cyan-400 text-lg">리뷰 로딩 중...</div>
+    </div>
+  );
+  
+  if (error) return (
+    <div className="flex items-center justify-center min-h-[200px]">
+      <div className="text-red-400 text-lg">리뷰를 불러오는데 실패했습니다.</div>
+    </div>
+  );
+  
   if (!data) return null;
 
   return (
-    <div>
-      <section>
-        {data.starAvg 
-          ? `별점 ${data.starAvg}` 
-          : "아직 별점을 등록한 사람이 없어요"
-        }
-      </section>
+    <div className="w-full max-w-7xl mx-auto px-4 py-6">
+      {/* 전체 리뷰 제목과 별점 */}
+      <div className="text-2xl font-bold text-white mb-4">
+        전체 리뷰
+      </div>
       
-      {!editingReviewId && (
-        <ReviewForm 
-          gameInfoId={gameInfoId}
-          onSuccess={fetchReviews}
-        />
+      <div className="mb-6">
+        <div className="bg-slate-800 rounded-lg p-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <FaStar className="text-yellow-400 text-xl" />
+            <span className="text-lg font-bold text-white">
+              {data.starAvg 
+                ? `평균 ${data.starAvg}점` 
+                : "아직 별점이 없어요"
+              }
+            </span>
+          </div>
+          {!editingReviewId && !showReviewForm && (
+            <button
+              onClick={() => setShowReviewForm(true)}
+              className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors text-sm font-medium"
+            >
+              리뷰 작성하기
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* 리뷰 폼 */}
+      {(showReviewForm || editingReviewId) && (
+        <div className="mb-6">
+          <ReviewForm 
+            gameInfoId={gameInfoId}
+            initialData={editingReviewId ? data.reviewList.find(r => r.gameReviewId === editingReviewId) : null}
+            onSuccess={() => {
+              fetchReviews();
+              setShowReviewForm(false);
+              setEditingReviewId(null);
+            }}
+          />
+        </div>
       )}
 
-      <section>
+      {/* 리뷰 그리드 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
         {data.reviewList?.map((item) => (
-          editingReviewId === item.gameReviewId ? (
-            <ReviewForm 
-              key={item.gameReviewId}
-              initialData={item}
-              onSuccess={handleEditSuccess}
-            />
-          ) : (
+          <div key={item.gameReviewId} className="w-full">
             <ReviewItem 
-              key={item.gameReviewId}
               {...item}
               isAuthor={String(currentUserId) === String(item.userId)}
               onEditClick={() => handleEditClick(item.gameReviewId)}
               onDeleteClick={() => handleDeleteClick(item.gameReviewId)}
             />
-          )
+          </div>
         ))}
-      </section>
+      </div>
+
+      {/* 리뷰가 없을 때 */}
+      {(!data.reviewList || data.reviewList.length === 0) && (
+        <div className="text-center py-8 bg-slate-800 rounded-lg">
+          <FaStar className="text-gray-500 text-4xl mx-auto mb-3" />
+          <p className="text-gray-300 text-lg">아직 리뷰가 없어요!</p>
+          <p className="text-gray-400 text-sm mt-1">첫 번째 리뷰를 작성해보세요</p>
+        </div>
+      )}
     </div>
   );
 };
-
 
 export default ReviewList;
