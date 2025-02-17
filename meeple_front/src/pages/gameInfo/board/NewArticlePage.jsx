@@ -19,7 +19,6 @@ const NewArticlePage = () => {
         gameInfoId: gameInfoId
       });
       
-      alert('게시글이 등록되었습니다.');
       navigate(`/game-info/${gameInfoId}/board`);
     } catch (error) {
       console.error('게시글 저장 실패:', error);

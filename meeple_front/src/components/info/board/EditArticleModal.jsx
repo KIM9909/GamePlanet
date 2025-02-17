@@ -48,9 +48,11 @@ const EditArticleModal = ({ isOpen, onClose, gameInfoId, gameCommunityId, onArti
         <div className="fixed inset-0 bg-black bg-opacity-40 transition-opacity" onClick={onClose}></div>
 
         {/* 모달 컨텐츠 */}
-        <div className="relative bg-gray-900 rounded-lg w-full max-w-3xl p-6 overflow-hidden shadow-xl ">
+        <div className="relative bg-gray-900 rounded-lg w-full max-w-xl p-7 overflow-hidden shadow-xl 
+                transform transition-all duration-200 ease-in-out 
+                animate-in fade-in slide-in-from-bottom-4">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-white">게시글 수정</h2>
+            <h2 className="text-xl font-bold text-cyan-500">게시글 수정</h2>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-500"
