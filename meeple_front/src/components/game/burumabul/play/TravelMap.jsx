@@ -160,6 +160,31 @@ const TravelMap = ({
   onGameEnd,
   setGameStatus,
 }) => {
+  useEffect(() => {
+    const preventClose = (e) => {
+      e.preventDefault();
+      e.returnValue = ""; // Chrome에서 필요
+      return "게임을 나가시겠습니까? 진행 중인 게임이 종료됩니다.";
+    };
+
+    const preventGoBack = () => {
+      window.history.pushState(null, "", window.location.href);
+      alert("게임 중에는 뒤로가기를 사용할 수 없습니다.");
+    };
+
+    // 새로고침, 창 닫기 이벤트
+    window.addEventListener("beforeunload", preventClose);
+
+    // 뒤로가기 방지
+    window.history.pushState(null, "", window.location.href);
+    window.addEventListener("popstate", preventGoBack);
+
+    return () => {
+      window.removeEventListener("beforeunload", preventClose);
+      window.removeEventListener("popstate", preventGoBack);
+    };
+  }, []);
+
   // cities 배열
   const cities = [
     "지구 Start",
@@ -982,42 +1007,36 @@ const TravelMap = ({
 
   // 시간 여행 -> 가고싶은 곳 정하기
   const [showChoosePositionModal, setShowChoosePositionModal] = useState(false);
-  const [chooseNum, setChooseNum] = useState(null);
+
   useEffect(() => {
     if (!isMovementComplete) return;
     if (nextAction === "CHOOSE_POSITION" && myIndex === currentPlayerIndex) {
       setShowChoosePositionModal(true);
-      console.log(chooseNum);
     }
   }, [isMovementComplete, nextAction]);
 
   useEffect(() => {
     if (!isMovementComplete) return;
 
-    if (
-      nextAction === "CHOOSE_POSITION" &&
-      myIndex === currentPlayerIndex &&
-      chooseNum !== null
-    ) {
-      try {
-        const chooseNextPosition = async () => {
-          const chooseInfo = {
-            nextPosition: chooseNum,
-            playerId: currentPlayer.playerId,
-          };
-          console.log(chooseInfo);
-          await choosePosition(chooseInfo);
-        };
-        chooseNextPosition();
-        console.log("가고 싶은 곳 뽑기");
-      } catch (error) {
-        console.error("가고 싶은 곳 뽑는 중 에러:", error);
-      }
+    if (nextAction === "CHOOSE_POSITION" && myIndex === currentPlayerIndex) {
+      // try {
+      //   const chooseNextPosition = async () => {
+      //     const chooseInfo = {
+      //       nextPosition: chooseNum,
+      //       playerId: currentPlayer.playerId,
+      //     };
+      //     console.log(chooseInfo);
+      //     await choosePosition(chooseInfo);
+      //   };
+      //   chooseNextPosition();
+      //   console.log("가고 싶은 곳 뽑기");
+      // } catch (error) {
+      //   console.error("가고 싶은 곳 뽑는 중 에러:", error);
+      // }
     }
   }, [
     nextAction,
     isMovementComplete,
-    chooseNum,
     currentPlayer,
     myIndex,
     currentPlayerIndex,
@@ -1902,8 +1921,6 @@ const TravelMap = ({
         createPortal(
           <div className="fixed inset-0 z-50 w-2/3 text-center flex items-center justify-center">
             <ChoosePositionModal
-              setChooseNum={setChooseNum}
-              chooseNum={chooseNum}
               closeModal={() => setShowChoosePositionModal(false)}
             />
           </div>,

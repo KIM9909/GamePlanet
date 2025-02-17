@@ -166,12 +166,8 @@ export const blockingFriendList = async (userId) => {
 // 차단 해제
 export const liftBlocking = async (friendId) => {
   try {
-    const requestBody = {
-      friendId,
-    };
     const response = await axios.delete(
-      `${FRIEND_API_BASE_URL}/process-block`,
-      requestBody
+      `${FRIEND_API_BASE_URL}/process-block?friendId=${friendId}`
     );
     return response.data;
   } catch (error) {

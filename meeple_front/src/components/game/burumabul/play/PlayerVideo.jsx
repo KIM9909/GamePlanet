@@ -241,7 +241,7 @@ const PlayerVideo = ({ playerInfo, sessionId, onGameEnd }) => {
     return (
       <div className="bg-white rounded-md w-full flex flex-col h-32 border-2 border-violet-400">
         <div className="bg-black w-full rounded-t-sm h-28 sm:h-20 md:h-24 text-white flex flex-col items-center justify-center gap-2">
-          <p className="text-red-400 text-sm">{connectionError}</p>
+          <p className="text-red-400 text-sm">재연결을 시도하세요.</p>
           {reconnectRequired && (
             <button
               onClick={handleReconnect}
