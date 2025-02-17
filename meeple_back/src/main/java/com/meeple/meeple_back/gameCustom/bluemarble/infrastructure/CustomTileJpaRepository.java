@@ -37,4 +37,7 @@ public interface CustomTileJpaRepository extends JpaRepository<CustomTileEntity,
 
 	@Query("SELECT ct.tileEntity.tileId FROM CustomTileEntity ct WHERE ct.customElement.customId = :customId")
 	List<Integer> findByIdsByCustomIdAndTileNumber(@Param("customId") Integer customId);
+
+	@Query("SELECT ct FROM CustomTileEntity ct WHERE ct.customElement.customId = :customId")
+	List<TileEntity> findByCustomId(Integer customId);
 }

@@ -55,14 +55,48 @@ public class GamePlay {
 	}
 
 	public static GamePlay init(GamePlayCreate gamePlayCreate, List<Player> players) {
+		List<Tile> tiles;
+		List<Card> cards;
+		if (Objects.nonNull(gamePlayCreate.getCustomId())) {
+			tiles = createTiles(gamePlayCreate.getCustomId());
+			cards = createCards(gamePlayCreate.getCustomId());
+		} else {
+			tiles = createTiles();
+			cards = createCards();
+		}
 		return GamePlay.builder()
 				.gamePlayId(gamePlayCreate.getGamePlayId())
 				.gameStatus(GameStatus.IN_PROGRESS.getStatus())
 				.round(1)
-				.board(createTiles())
-				.cards(createCards())
+				.board(tiles)
+				.cards(cards)
 				.turnManager(TurnManager.init(players))
 				.build();
+	}
+
+	private static List<Tile> createTiles(Integer customId) {
+		LoadGameElement<Tile> tileLoader = new TileLoader();
+		return tileLoader.load(customId);
+	}
+
+	private static List<Tile> createTiles() {
+		ExcelReader<Tile> tileParser = new TileParser();
+		return tileParser.readExcelFile();
+	}
+
+	private static List<Card> createCards(Integer customId) {
+		List<Card> cards = new ArrayList<>();
+
+		LoadGameElement<SeedCertificateCard> cardLoader = new SeedCardLoader();
+		List<SeedCertificateCard> seedCertificateCards = cardLoader.load(customId);
+		List<TelepathyCard> telepathyCards = new TelepathyCardParser().readExcelFile();
+		List<NeuronsValleyCard> neuronsValleyCards = new NeuronsValleyParser().readExcelFile();
+
+		cards.addAll(seedCertificateCards);
+		cards.addAll(telepathyCards);
+		cards.addAll(neuronsValleyCards);
+
+		return cards;
 	}
 
 	private static List<Card> createCards() {
@@ -90,10 +124,6 @@ public class GamePlay {
 				.build();
 	}
 
-	private static List<Tile> createTiles() {
-		ExcelReader<Tile> tileParser = new TileParser();
-		return tileParser.readExcelFile();
-	}
 
 	/**
 	 * 특정 카드 번호, card Type으로 카드 찾아서 추가

@@ -1,5 +1,6 @@
 package com.meeple.meeple_back.gameCustom.bluemarble.infrastructure;
 
+import com.meeple.meeple_back.game.bluemarble.domain.SeedCertificateCard;
 import io.lettuce.core.dynamic.annotation.Param;
 import java.util.List;
 import java.util.Optional;
@@ -41,4 +42,9 @@ public interface CustomCardJpaRepository extends JpaRepository<CustomCardEntity,
 
 	@Query("SELECT c.card.cardId FROM CustomCardEntity c WHERE c.customElement.customId = :customId")
 	List<Integer> findIdsByCustomIdAndTileNumber(@Param("customId") Integer customId);
+
+
+	@Query("SELECT new com.meeple.meeple_back.game.bluemarble.domain.SeedCertificateCard(c.card.cardId, c.card.cardNumber, c.card.cardName,c.card.cardColor, c.card.cardSeedCount, c.card.cardDescription, c.card.cardBaseConstructionCost, c.card.cardHeadquartersUsageFee, c.card.cardBaseUsageFee) FROM CustomCardEntity c WHERE c.customElement.customId = :customId AND c.card.cardType = 'SEED_CERTIFICATE_CARD'")
+	List<SeedCertificateCard> findSeedCertificateCardByCustomId(
+			@Param("customId") Integer customId);
 }
