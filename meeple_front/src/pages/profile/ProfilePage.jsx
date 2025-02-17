@@ -138,11 +138,13 @@ const ProfilePage = () => {
             <div className="rounded-xl p-7 bg-zinc-900/60 shadow-lg backdrop-blur-sm border border-zinc-700/50">
               <div className="flex items-start gap-8">
                 {/* 프로필 이미지 */}
-                <ProfilePicture
-                  initialImageUrl={profile.userProfilePictureUrl}
-                  defaultImageUrl={Heejun}
-                  onSave={handleProfileUpdate}
-                />
+                <div className="mt-2">
+                  <ProfilePicture
+                    initialImageUrl={profile.userProfilePictureUrl}
+                    defaultImageUrl={Heejun}
+                    onSave={handleProfileUpdate}
+                  />
+                </div>
 
                 {/* 사용자 정보 */}
                 <div className="flex-1">

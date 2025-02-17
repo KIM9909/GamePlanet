@@ -350,8 +350,7 @@ const MainLayout = () => {
       // 게임을 플레이했다면 리뷰 모달 표시
       if (hasPlayedGame) {
         setIsReviewModalOpen(true);
-        setIsExiting(false);
-        return;
+        return; // 리뷰 모달에서 처리 후 나가기를 진행
       }
 
       dispatch(resetGameState());
@@ -365,11 +364,9 @@ const MainLayout = () => {
       setTimeout(() => {
         setIsExiting(false);
         navigate("/catch-mind");
-      }, 2000);
+      }, 500);
     } catch (error) {
-      console.error("Exit room error:", error);
       setIsExiting(false);
-      navigate("/catch-mind");
     }
   }, [
     roomId,
@@ -605,7 +602,7 @@ const MainLayout = () => {
     }
   }, [userId, dispatch]);
 
-  if (isLoading || isExiting) {
+  if (isLoading) {
     return <Loading />;
   }
 
