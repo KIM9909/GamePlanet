@@ -104,7 +104,7 @@ const SocketLayout = ({ children }) => {
   // 카드 뽑기 후 돈
   const [socketDrawNextBalance, setSocketDrawNextBalance] = useState(null);
 
-  // 시간 여행 ㅎ
+  // 시간 여행
   const [socketTravelData, setSocketTravelData] = useState(null);
   const [socketTravelPrevPosition, setSocketTravelPrevPosition] =
     useState(null);
@@ -113,6 +113,9 @@ const SocketLayout = ({ children }) => {
 
   // 게임 종료
   const [socketEnd, setSocketEnd] = useState(null);
+
+  // 커스텀 테마 리스트
+  const [socketCustomList, setSocketCustomList] = useState(null);
 
   const location = useLocation();
 
@@ -167,6 +170,7 @@ const SocketLayout = ({ children }) => {
             } else if (receivedData.type === "room") {
               setRoomSocketData(receivedData.roomResponse);
               setRoomNotifi(receivedData.message);
+              setSocketCustomList(receivedData.customElementResponses);
             } else if (receivedData.type === "create") {
               setGamePlaySocketData(receivedData.data);
               setSocketBurumabulOpenVidu(String(receivedData.message)); // 💡 강제 변환
@@ -404,6 +408,7 @@ const SocketLayout = ({ children }) => {
         const formattedPlayInfo = {
           gamePlayId: playInfo.gamePlayId,
           players: playInfo.players,
+          // customId:
         };
         stompClientRef.current.publish({
           destination: `/app/game/blue-marble/game-plays/create`,
@@ -688,6 +693,7 @@ const SocketLayout = ({ children }) => {
           socketTravelNextPosition,
           setSocketTravelNextPosition,
           socketEnd,
+          socketCustomList,
           enterWaitingRoom,
           chatWaitingRoom,
           changePassword,
