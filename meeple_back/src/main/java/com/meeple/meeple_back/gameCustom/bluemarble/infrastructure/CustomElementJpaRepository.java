@@ -1,5 +1,6 @@
 package com.meeple.meeple_back.gameCustom.bluemarble.infrastructure;
 
+import com.meeple.meeple_back.gameCustom.bluemarble.domain.CustomStatus;
 import io.lettuce.core.dynamic.annotation.Param;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,4 +25,6 @@ public interface CustomElementJpaRepository extends JpaRepository<CustomElementE
 	@Query("select ce from CustomElementEntity ce where ce.user.userId = :userId")
 	List<CustomElementEntity> findByUserId(Long userId);
 
+
+	List<CustomElementEntity> findByCustomStatus(CustomStatus customStatus);
 }

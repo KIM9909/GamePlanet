@@ -1,5 +1,7 @@
 package com.meeple.meeple_back.gameCustom.bluemarble.infrastructure;
 
+import com.meeple.meeple_back.game.bluemarble.domain.Tile;
+import com.meeple.meeple_back.game.bluemarble.domain.TileType;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.request.CustomTileCardRequest;
 import com.meeple.meeple_back.gameCustom.bluemarble.controller.response.TileResponse;
 import jakarta.persistence.Column;
@@ -54,6 +56,19 @@ public class TileEntity {
 				.tileImageUrl(tileEntity.getTileImageUrl())
 				.tilePrice(tileEntity.getTilePrice())
 				.tileNumber(tileEntity.getTileNumber())
+				.build();
+	}
+
+	public static Tile toTile(TileEntity tileEntity) {
+		return Tile.builder()
+				.id(tileEntity.getTileNumber())
+				.name(tileEntity.getTileName())
+				.type(TileType.valueOf(tileEntity.getTileType()))
+				.imageUrl(tileEntity.getTileImageUrl())
+				.price(tileEntity.getTilePrice())
+				.ownerId(0)
+				.tollPrice(0)
+				.hasBase(false)
 				.build();
 	}
 

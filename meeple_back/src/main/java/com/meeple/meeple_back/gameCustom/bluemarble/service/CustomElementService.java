@@ -225,4 +225,10 @@ public class CustomElementService {
 		customElementJpaRepository.save(entity);
 		return CustomElementResponse.from(entity);
 	}
+	@Transactional(readOnly = true)
+	public List<CustomElementResponse> findCustomElementsOnlyCompleted() {
+		return customElementJpaRepository.findByCustomStatus(CustomStatus.COMPLETED).stream()
+				.map(CustomElementResponse::from)
+				.toList();
+	}
 }

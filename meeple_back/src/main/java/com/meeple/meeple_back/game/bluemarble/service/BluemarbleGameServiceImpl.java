@@ -38,6 +38,7 @@ public class BluemarbleGameServiceImpl implements BluemarbleGameService {
 				.map(id -> Player.init(userService.findById(id)))
 				.toList();
 		GamePlay gamePlay = bluemarbleGameRepository.save(GamePlay.init(gamePlayCreate, players));
+		// TODO : 이미지 40장 추가하기.
 		return GamePlayResponse.from(gamePlay, ActionType.START_TURN);
 	}
 
