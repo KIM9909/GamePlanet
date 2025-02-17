@@ -36,7 +36,6 @@ import com.meeple.meeple_back.game.bluemarble.util.TileParser;
 import com.meeple.meeple_back.user.service.UserService;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.logging.Logger;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -82,15 +81,14 @@ public class BluemarbleGameServiceImpl implements BluemarbleGameService {
 	@Override
 	@Transactional
 	public GamePlayResponse create(GamePlayCreate gamePlayCreate) {
+		final int DEFAULT_DECK = -1;
 		List<Player> players = gamePlayCreate.getPlayerIds().stream()
 				.map(id -> Player.init(userService.findById(id)))
 				.toList();
-		if (Objects.isNull(gamePlayCreate.getCustomId())) {
+		if (gamePlayCreate.getCustomId() == DEFAULT_DECK) {
 			GamePlay gamePlay = bluemarbleGameRepository.save(
 					GamePlay.init(gamePlayCreate, players));
 			return GamePlayResponse.from(gamePlay, ActionType.START_TURN);
-
-
 		} else {
 			List<Tile> tiles = createTiles(gamePlayCreate.getCustomId());
 			List<Card> cards = createCards(gamePlayCreate.getCustomId());
