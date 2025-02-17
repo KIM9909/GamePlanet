@@ -1,41 +1,37 @@
-
 import ArticleItem from "../../../components/info/board/ArticleItem"
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { GameInfoAPI } from '../../../sources/api/GameInfoAPI';
 import Pagination from "../../../components/admin/Pagination";
 import { Search } from "lucide-react";
 import Loading from "../../../components/Loading";
-
 import NewArticleModal from "../../../components/info/board/NewArticleModal";
 
 const BoardPage = () => {
   const { gameInfoId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const gameInfo = location.state?.gameInfo;
+  
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchType, setSearchType] = useState('content'); //content와 nickname중 선택
+  const [searchType, setSearchType] = useState('content');
   const [searchTerm, setSearchTerm] = useState('');
-  const itemsPerPage = 10;
-
-  const [searchTermInput, setSearchTermInput] = useState(''); // 검색어 입력값을 위한 새로운 state
-  const [activeSearchTerm, setActiveSearchTerm] = useState(''); // 실제 검색에 사용될 검색어
-
+  const [searchTermInput, setSearchTermInput] = useState('');
+  const [activeSearchTerm, setActiveSearchTerm] = useState('');
   const [isNewArticleModalOpen, setIsNewArticleModalOpen] = useState(false);
-
+  
+  const itemsPerPage = 10;
 
   const fetchArticles = async () => {
     try {
       setLoading(true);
       const response = await GameInfoAPI.getCommunityPosts(gameInfoId);
-      //최신 글이 앞에 오도록 정렬
       const Articles = response.sort((a, b) => 
         b.gameCommunityId - a.gameCommunityId
       );
-
       setArticles(Articles);
     } catch (err) {
       setError(err.message);
@@ -44,25 +40,18 @@ const BoardPage = () => {
     }
   };
 
-
   useEffect(() => {
+    console.log("ㅎㅇ",gameInfo);
+    
     fetchArticles();
   }, [gameInfoId]);
-
 
   if (loading && articles.length === 0) 
     return <div className="text-white"><Loading /></div>;
   if (error) return navigate("/errorpage");
-    // <div className="text-white">에러가 발생했습니다.</div>;
-    
-  // if (!articles.length) return <div>데이터가 없습니다.</div>;
 
-
-
-  // 검색 필터링 
   const filteredArticles = articles.filter(article => {
     if (!activeSearchTerm) return true;
-    
     if (searchType === 'content') {
       return article.gameCommunityContent.toLowerCase().includes(activeSearchTerm.toLowerCase());
     } else {
@@ -70,7 +59,6 @@ const BoardPage = () => {
     }
   });
 
-  // 현재 페이지의 데이터
   const getCurrentPageData = () => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
@@ -78,19 +66,23 @@ const BoardPage = () => {
   };
 
   const handleSearch = () => {
-    setActiveSearchTerm(searchTermInput); // 입력된 검색어를 활성 검색어로 설정
-    setCurrentPage(1); // 페이지 리셋
+    setActiveSearchTerm(searchTermInput);
+    setCurrentPage(1);
   };
 
-  // Enter 키로도 검색버튼 눌리게
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
   };
 
-  const handleArticleClick = (articleId) => {
-    navigate(`/game-info/${gameInfoId}/board/detail/${articleId}`);
+  const handleArticleClick = (article) => {
+    navigate(`/game-info/${gameInfoId}/board/detail/${article.gameCommunityId}`, {
+      state: {
+        gameInfo,
+        article
+      }
+    });
   };
 
   return (
@@ -99,44 +91,42 @@ const BoardPage = () => {
         <div className="max-w-7xl mx-auto">
           <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-cyan-500/50 max-h-[650px] overflow-y-auto custom-scrollbar">
             <div className="grid grid-rows-1 gap-8 mb-8">
-              {/* 검색 영역 */}
               <div className="flex gap-3 justify-between">
                 <div className="flex gap-3">
-                <select
-                  value={searchType}
-                  onChange={(e) => setSearchType(e.target.value)}
-                  className="px-4 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500"
-                >
-                  <option value="content">내용</option>
-                  <option value="nickname">닉네임</option>
-                </select>
-                <input
-                  type="text"
-                  value={searchTermInput}
-                  onChange={(e) => setSearchTermInput(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder={searchType === 'content' ? '내용 검색...' : '닉네임 검색...'}
-                  className="px-4 py-2 bg-slate-700 text-white placeholder-gray-400 border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500"
-                />
-                <button 
-                  onClick={handleSearch}
-                  className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors flex items-center gap-2"
-                >
-                  <Search size={20} />
-                  검색
-                </button>
-              </div>
-              <div className="">
-                <button
-                  onClick={() => setIsNewArticleModalOpen(true)}
-                  className="px-6 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors flex flex-end items-center gap-2"
-                >
-                  글쓰기
-                </button>
-              </div>
+                  <select
+                    value={searchType}
+                    onChange={(e) => setSearchType(e.target.value)}
+                    className="px-4 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500"
+                  >
+                    <option value="content">내용</option>
+                    <option value="nickname">닉네임</option>
+                  </select>
+                  <input
+                    type="text"
+                    value={searchTermInput}
+                    onChange={(e) => setSearchTermInput(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder={searchType === 'content' ? '내용 검색...' : '닉네임 검색...'}
+                    className="px-4 py-2 bg-slate-700 text-white placeholder-gray-400 border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500"
+                  />
+                  <button 
+                    onClick={handleSearch}
+                    className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors flex items-center gap-2"
+                  >
+                    <Search size={20} />
+                    검색
+                  </button>
+                </div>
+                <div className="">
+                  <button
+                    onClick={() => setIsNewArticleModalOpen(true)}
+                    className="px-6 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors flex flex-end items-center gap-2"
+                  >
+                    글쓰기
+                  </button>
+                </div>
               </div>
 
-              {/* 테이블 영역 */}
               <div className="overflow-x-auto">
                 <table className="min-w-full bg-slate-700 rounded-lg overflow-hidden">
                   <thead>
@@ -157,7 +147,7 @@ const BoardPage = () => {
                       <tr 
                         key={article.gameCommunityId} 
                         className="hover:bg-slate-600 transition-colors cursor-pointer"
-                        onClick={() => handleArticleClick(article.gameCommunityId)}
+                        onClick={() => handleArticleClick(article)}
                       >
                         <td className="w-8/12 px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                           {article.gameCommunityContent}
@@ -178,29 +168,24 @@ const BoardPage = () => {
               </div>
 
               <div>
-                
                 <Pagination 
                   totalItems={filteredArticles.length}
                   itemsPerPage={itemsPerPage}
                   currentPage={currentPage}
                   onPageChange={setCurrentPage}
                 />
-                
               </div>
-              
             </div>
           </div>
         </div>
       </div>
-          <NewArticleModal 
+
+      <NewArticleModal 
         isOpen={isNewArticleModalOpen}
         onClose={() => setIsNewArticleModalOpen(false)}
         gameInfoId={gameInfoId}
-        onArticleCreated={fetchArticles} // 게시글 작성 후 목록 새로고침
-        />
-
-
-
+        onArticleCreated={fetchArticles}
+      />
     </div>
   );
 };
