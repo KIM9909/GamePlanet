@@ -23,28 +23,15 @@ const BurumabulPlay = ({
   // 소켓 사용
   const socketContext = useContext(SocketContext);
   const {
-    connected,
-    roomSocketData,
     socketBurumabulOpenVidu,
-    createBurumabulPlay,
     gamePlaySocketData,
-    currentPlayerSocketIndex,
     gameSocketNotifi,
     socketBoard,
     socketCards,
-    socketNext,
-    socketFirstDice,
-    socketSecondDice,
     socketCurrentRound,
-    socketDouble,
-    socketTileUpdate,
-    socketUserUpdate,
     rollDiceSocketData,
-    setBuyLandSocketData,
     buyLandSocketData,
-    setBuildBaseSocketData,
     buildBaseSocketData,
-    roll,
   } = socketContext;
   const { getProfile } = UserAPI;
   // 게임 데이터
@@ -325,7 +312,7 @@ const BurumabulPlay = ({
           {isSidebarOpen && (
             <button
               onClick={toggleSidebar}
-              className="absolute -right-12 top-1/2 -translate-y-1/2 w-12 h-12 bg-indigo-600 rounded-r text-white hover:bg-indigo-700 focus:outline-none flex items-center justify-center shadow-lg"
+              className="absolute -right-10 top-1/2 -translate-y-1/2 w-10 h-10 bg-cyan-400 rounded-r text-white hover:bg-cyan-600 focus:outline-none flex items-center justify-center shadow-lg"
             >
               <X className="w-6 h-6" />
             </button>

@@ -780,8 +780,8 @@ const TravelMap = ({
             playerId: currentPlayer.playerId,
             firstDice: firstDice,
             secondDice: secondDice,
-            // firstDice: 5,
-            // secondDice: 5,
+            // firstDice: 2,
+            // secondDice: 2,
           };
           console.log("주사위 정보 :", diceInfo);
           await rollDice(diceInfo);
