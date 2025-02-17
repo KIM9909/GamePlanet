@@ -1312,12 +1312,13 @@ const TravelMap = ({
   };
 
   const closeEndWinner = () => {
+    resetGameState();
+
     // 모달 닫고
     setShowEndWinner(false);
     // 서버로 게임 삭제 요청하고 난 뒤
     endGame();
     // 게임 초기화
-    resetGameState();
 
     if (setIsStart) {
       setIsStart(false);

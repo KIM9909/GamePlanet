@@ -262,11 +262,22 @@ const WaitingRoom = ({
         className="h-screen w-full bg-cover bg-center relative flex justify-center items-center"
         style={{ backgroundImage: `url(${background}` }}
       >
-        <div className="min-h-[600px] w-[880px] bg-gray-900 bg-opacity-90 rounded-xl border border-cyan-500 neon-border cyber-gradient backdrop-blur-sm flex flex-col justify-center items-center relative z-10">
+        <div className="min-h-[600px] w-[880px] bg-gray-900 bg-opacity-90 rounded-xl border border-cyan-500 neon-border cyber-gradient backdrop-blur-sm flex flex-row justify-center items-center relative z-10">
           {/* 친구 검색해서 친구 추가
           <div className="mt-5">
             <FriendSearch friendList={friendList} />
           </div> */}
+
+          {/* 커스텀 덱 영역 */}
+          <div className="min-h-[600px] rounded-lg border-2 border-cyan-400  w-[30%] bg-gray-900 bg-opacity-80 flex justify-center items-center">
+            <div className="min-h-[560px] w-[90%] border-2 border-cyan-400 rounded-lg flex flex-col justify-center items-center">
+              <h1 className="text-cyan-500 text-center mt-3">
+                원하는 커스텀 테마를 고르세요.
+              </h1>
+              <div className="min-h-[480px] w-[85%] rounded-lg border-2 border-cyan-300"></div>
+            </div>
+          </div>
+
           <div className="flex flex-col items-center my-5 w-full">
             <div className="flex items-center gap-4 mb-8">
               <Sparkles className="w-6 h-6 text-purple-500" />
