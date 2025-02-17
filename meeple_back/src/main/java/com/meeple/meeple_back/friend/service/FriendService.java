@@ -15,7 +15,7 @@ public interface FriendService {
 
     ResponseFriendProcess processRequest(RequestProcess request);
 
-    ResponseProcessBlock processBlock(RequestProcessBlock request);
+    ResponseProcessBlock processBlock(int friendId);
 
     ResponseDeleteFriend deleteFriend(int friendId);
 

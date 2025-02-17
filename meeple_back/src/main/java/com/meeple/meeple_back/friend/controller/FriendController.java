@@ -79,9 +79,9 @@ public class FriendController {
     @Operation(summary = "차단 해제", description = "차단을 해제합니다.")
     @DeleteMapping("/process-block")
     public ResponseEntity<ResponseProcessBlock> processBlock(
-            @RequestBody RequestProcessBlock request
+            @RequestParam int friendId
     ) {
-        ResponseProcessBlock response = friendService.processBlock(request);
+        ResponseProcessBlock response = friendService.processBlock(friendId);
 
         return ResponseEntity.ok(response);
     }
