@@ -22,44 +22,44 @@ import { TextureLoader } from "three";
 import spaceBackground from "../../../../assets/burumabul_images/space.jpg";
 
 // 셀 topTexture 이미지
-import earthTexture from "../../../../assets/burumabul_images/earth.png";
-import moonTexture from "../../../../assets/burumabul_images/moon.png";
-import telepathyTexture1 from "../../../../assets/burumabul_images/telepathy.png";
-import marsTexture from "../../../../assets/burumabul_images/mars.png";
-import jupiterTexture from "../../../../assets/burumabul_images/jupiter.png";
-import vegaTexture from "../../../../assets/burumabul_images/vega.png";
-import saturnTexture from "../../../../assets/burumabul_images/saturn.png";
-import uranusTexture from "../../../../assets/burumabul_images/uranus.png";
-import neptuneTexture from "../../../../assets/burumabul_images/neptune.png";
-import timetravelTexture from "../../../../assets/burumabul_images/timetravel.png";
-import ariesTexture from "../../../../assets/burumabul_images/aries.png";
-import taurusTexture from "../../../../assets/burumabul_images/taurus.png";
-import telepathyTexture2 from "../../../../assets/burumabul_images/telepathy2.png";
-import geminiTexture from "../../../../assets/burumabul_images/gemini.png";
-import neuronsTexture1 from "../../../../assets/burumabul_images/neurons1.png";
-import cancerTexture from "../../../../assets/burumabul_images/cancer.png";
-import timemachineTexture from "../../../../assets/burumabul_images/timemachine.png";
-import leoTexture from "../../../../assets/burumabul_images/leo.png";
-import virgoTexture from "../../../../assets/burumabul_images/virgo.png";
-import blackholeTexture from "../../../../assets/burumabul_images/blackhole.png";
-import libraTexture from "../../../../assets/burumabul_images/libra.png";
-import scorpioTexture from "../../../../assets/burumabul_images/scorpio.png";
-import telepathyTexture3 from "../../../../assets/burumabul_images/telepathy3.png";
-import sagittariusTexture from "../../../../assets/burumabul_images/sagittarius.png";
-import altairTexture from "../../../../assets/burumabul_images/altair.png";
-import capricornTexture from "../../../../assets/burumabul_images/capricorn.png";
-import aquariusTexture from "../../../../assets/burumabul_images/aquarius.png";
-import piscesTexture from "../../../../assets/burumabul_images/pisces.png";
-import resquebaseTexture from "../../../../assets/burumabul_images/resquebase.png";
-import ursamajorTexture from "../../../../assets/burumabul_images/ursamajor.png";
-import andromedaTexture from "../../../../assets/burumabul_images/andromeda.png";
-import telepathyTexture4 from "../../../../assets/burumabul_images/telepathy4.png";
-import orionTexture from "../../../../assets/burumabul_images/orion.png";
-import neuronsTexture2 from "../../../../assets/burumabul_images/neurons2.png";
-import cygnusTexture from "../../../../assets/burumabul_images/cygnus.png";
-import halleyTexture from "../../../../assets/burumabul_images/halley.png";
-import mercuryTexture from "../../../../assets/burumabul_images/mercury.png";
-import venusTexture from "../../../../assets/burumabul_images/venus.png";
+// import earthTexture from "../../../../assets/burumabul_images/earth.png";
+// import moonTexture from "../../../../assets/burumabul_images/moon.png";
+// import telepathyTexture1 from "../../../../assets/burumabul_images/telepathy.png";
+// import marsTexture from "../../../../assets/burumabul_images/mars.png";
+// import jupiterTexture from "../../../../assets/burumabul_images/jupiter.png";
+// import vegaTexture from "../../../../assets/burumabul_images/vega.png";
+// import saturnTexture from "../../../../assets/burumabul_images/saturn.png";
+// import uranusTexture from "../../../../assets/burumabul_images/uranus.png";
+// import neptuneTexture from "../../../../assets/burumabul_images/neptune.png";
+// import timetravelTexture from "../../../../assets/burumabul_images/timetravel.png";
+// import ariesTexture from "../../../../assets/burumabul_images/aries.png";
+// import taurusTexture from "../../../../assets/burumabul_images/taurus.png";
+// import telepathyTexture2 from "../../../../assets/burumabul_images/telepathy2.png";
+// import geminiTexture from "../../../../assets/burumabul_images/gemini.png";
+// import neuronsTexture1 from "../../../../assets/burumabul_images/neurons1.png";
+// import cancerTexture from "../../../../assets/burumabul_images/cancer.png";
+// import timemachineTexture from "../../../../assets/burumabul_images/timemachine.png";
+// import leoTexture from "../../../../assets/burumabul_images/leo.png";
+// import virgoTexture from "../../../../assets/burumabul_images/virgo.png";
+// import blackholeTexture from "../../../../assets/burumabul_images/blackhole.png";
+// import libraTexture from "../../../../assets/burumabul_images/libra.png";
+// import scorpioTexture from "../../../../assets/burumabul_images/scorpio.png";
+// import telepathyTexture3 from "../../../../assets/burumabul_images/telepathy3.png";
+// import sagittariusTexture from "../../../../assets/burumabul_images/sagittarius.png";
+// import altairTexture from "../../../../assets/burumabul_images/altair.png";
+// import capricornTexture from "../../../../assets/burumabul_images/capricorn.png";
+// import aquariusTexture from "../../../../assets/burumabul_images/aquarius.png";
+// import piscesTexture from "../../../../assets/burumabul_images/pisces.png";
+// import resquebaseTexture from "../../../../assets/burumabul_images/resquebase.png";
+// import ursamajorTexture from "../../../../assets/burumabul_images/ursamajor.png";
+// import andromedaTexture from "../../../../assets/burumabul_images/andromeda.png";
+// import telepathyTexture4 from "../../../../assets/burumabul_images/telepathy4.png";
+// import orionTexture from "../../../../assets/burumabul_images/orion.png";
+// import neuronsTexture2 from "../../../../assets/burumabul_images/neurons2.png";
+// import cygnusTexture from "../../../../assets/burumabul_images/cygnus.png";
+// import halleyTexture from "../../../../assets/burumabul_images/halley.png";
+// import mercuryTexture from "../../../../assets/burumabul_images/mercury.png";
+// import venusTexture from "../../../../assets/burumabul_images/venus.png";
 import floorTexture from "../../../../assets/burumabul_images/floor.png";
 import timemachineStop from "../../../../assets/burumabul_images/timemachinestop.png";
 import telepathyCard from "../../../../assets/burumabul_images/telepathycard.png";
@@ -250,7 +250,7 @@ const TravelMap = ({
   ];
   const userId = Number(useSelector((state) => state.user.userId));
   const colors = ["#FF3EA5", "#7695FF", "#00FF9C", "#EBF400"];
-
+  const [textureUrls, setTextureUrls] = useState([]);
   const dispatch = useDispatch();
   // 소켓에서 받아오는 정보들
   const {
@@ -310,7 +310,13 @@ const TravelMap = ({
   const [playData, setPlayData] = useState(gamePlaySocketData);
 
   useEffect(() => {
-    setPlayData(gamePlaySocketData);
+    if (gamePlaySocketData) {
+      setPlayData(gamePlaySocketData);
+    }
+    if (gamePlaySocketData?.board) {
+      const urls = gamePlaySocketData.board.map((tile) => tile.imageUrl);
+      setTextureUrls(urls);
+    }
   }, [gamePlaySocketData]);
 
   useEffect(() => {
@@ -774,8 +780,8 @@ const TravelMap = ({
             playerId: currentPlayer.playerId,
             firstDice: firstDice,
             secondDice: secondDice,
-            // firstDice: 5,
-            // secondDice: 5,
+            // firstDice: 2,
+            // secondDice: 2,
           };
           console.log("주사위 정보 :", diceInfo);
           await rollDice(diceInfo);
@@ -1501,48 +1507,48 @@ const TravelMap = ({
 
   // 칸별 내용 생성
   const renderCells = () => {
-    const topTextures = [
-      earthTexture,
-      moonTexture,
-      telepathyTexture1,
-      marsTexture,
-      jupiterTexture,
-      vegaTexture,
-      saturnTexture,
-      telepathyTexture1,
-      uranusTexture,
-      neptuneTexture,
-      timetravelTexture,
-      ariesTexture,
-      taurusTexture,
-      telepathyTexture2,
-      geminiTexture,
-      neuronsTexture1,
-      cancerTexture,
-      timemachineTexture,
-      leoTexture,
-      virgoTexture,
-      blackholeTexture,
-      libraTexture,
-      scorpioTexture,
-      telepathyTexture3,
-      sagittariusTexture,
-      altairTexture,
-      capricornTexture,
-      aquariusTexture,
-      piscesTexture,
-      telepathyTexture3,
-      resquebaseTexture,
-      ursamajorTexture,
-      andromedaTexture,
-      telepathyTexture4,
-      orionTexture,
-      neuronsTexture2,
-      cygnusTexture,
-      halleyTexture,
-      mercuryTexture,
-      venusTexture,
-    ];
+    // const topTextures = [
+    //   earthTexture,
+    //   moonTexture,
+    //   telepathyTexture1,
+    //   marsTexture,
+    //   jupiterTexture,
+    //   vegaTexture,
+    //   saturnTexture,
+    //   telepathyTexture1,
+    //   uranusTexture,
+    //   neptuneTexture,
+    //   timetravelTexture,
+    //   ariesTexture,
+    //   taurusTexture,
+    //   telepathyTexture2,
+    //   geminiTexture,
+    //   neuronsTexture1,
+    //   cancerTexture,
+    //   timemachineTexture,
+    //   leoTexture,
+    //   virgoTexture,
+    //   blackholeTexture,
+    //   libraTexture,
+    //   scorpioTexture,
+    //   telepathyTexture3,
+    //   sagittariusTexture,
+    //   altairTexture,
+    //   capricornTexture,
+    //   aquariusTexture,
+    //   piscesTexture,
+    //   telepathyTexture3,
+    //   resquebaseTexture,
+    //   ursamajorTexture,
+    //   andromedaTexture,
+    //   telepathyTexture4,
+    //   orionTexture,
+    //   neuronsTexture2,
+    //   cygnusTexture,
+    //   halleyTexture,
+    //   mercuryTexture,
+    //   venusTexture,
+    // ];
 
     return positions.map((pos, index) => {
       const tile = board?.[index];
@@ -1555,7 +1561,7 @@ const TravelMap = ({
           key={index}
           position={pos}
           name={cities[index]}
-          topTextureUrl={index < topTextures.length ? topTextures[index] : null}
+          topTextureUrl={index < textureUrls.length ? textureUrls[index] : null}
           size={cellSizes[index]}
           ownerIndex={ownerId}
           players={players}

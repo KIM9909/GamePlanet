@@ -49,7 +49,7 @@ const PutBurumabulRoom = ({ onClose, originRoomData }) => {
                 className="text-xl block mt-2 text-cyan-400"
                 htmlFor="roomTitle"
               >
-                방 제목
+                🎯 방 제목
               </label>
               <hr className="w-80 border-t-2 border-gray-400 my-2" />
               <input
@@ -65,7 +65,7 @@ const PutBurumabulRoom = ({ onClose, originRoomData }) => {
 
             {/* 플레이어 수 선택 */}
             <div className="flex flex-col items-center my-5">
-              <h2 className="text-lg text-cyan-400 ">플레이어 수 선택</h2>
+              <h2 className="text-lg text-cyan-400 ">👥 플레이어 수 선택</h2>
               <hr className="w-80 border-t-2 border-gray-400 my-2" />
               <div className="my-1">
                 {currentPlayers <= 2 && (

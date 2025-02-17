@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useContext } from "react";
 import { Send, MessageSquare } from "lucide-react";
 import { useSelector } from "react-redux";
 import { SocketContext } from "../../../../layout/SocketLayout";
+import UserAPI from "../../../../../sources/api/UserAPI";
 
 const WaitingChat = ({ roomId, players }) => {
   const [newMessage, setNewMessage] = useState("");
@@ -10,6 +11,20 @@ const WaitingChat = ({ roomId, players }) => {
 
   const { connected, chatMessage, chatWaitingRoom, roomNotifi, setRoomNotifi } =
     useContext(SocketContext);
+  const { getProfile } = UserAPI;
+
+  // 닉네임 조회
+  const getNickname = async (playerId) => {
+    if (playerId) {
+      try {
+        const response = await getProfile(playerId);
+        console.log("닉네임정보찾기: ", response);
+        return response.userNickname;
+      } catch (error) {
+        console.error("닉네임 정보 찾기 중 오류:", error);
+      }
+    }
+  };
 
   const [messages, setMessages] = useState([
     {
@@ -38,21 +53,33 @@ const WaitingChat = ({ roomId, players }) => {
       const senderInfo = players.find(
         (player) => Number(player.playerId) === Number(sender)
       );
-      const senderName = senderInfo ? senderInfo.playerName : "알 수 없음";
+      console.log("senderInfo: ", senderInfo);
+      // senderInfo의 playerId로 닉네임 조회
+      const fetchNickname = async () => {
+        let senderName = "알 수 없음";
+        if (senderInfo) {
+          try {
+            senderName = await getNickname(senderInfo.playerId);
+          } catch (error) {
+            console.error("닉네임 가져오기 실패:", error);
+          }
+        }
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          type: "chat",
-          sender: sender,
-          senderName: senderName,
-          content: content,
-          isMe: sender === userId,
-        },
-      ]);
+        setMessages((prev) => [
+          ...prev,
+          {
+            type: "chat",
+            sender: sender,
+            senderName: senderName,
+            content: content,
+            isMe: sender === userId,
+          },
+        ]);
 
-      console.log("현재 유저 목록:", players);
-      console.log("닉네임 찾기 결과:", senderName);
+        console.log("현재 유저 목록:", players);
+        console.log("닉네임 찾기 결과:", senderName);
+      };
+      fetchNickname();
     }
   }, [chatMessage, players]);
 

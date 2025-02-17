@@ -31,7 +31,7 @@ const QuestBuyLand = ({ setIsBuyLand, onClose, cardId, cardInfo }) => {
         <>
           <motion.div
             key={cardInfo.id}
-            className="relative bg-gray-900 border-2 border-cyan-500 w-[450px] h-96 p-4 rounded-xl shadow-lg"
+            className="relative bg-gray-900 border-2 border-cyan-500 w-[550px] h-[450px] p-4 rounded-xl shadow-lg"
           >
             <motion.div
               className="relative w-full h-full cursor-pointer"
@@ -65,7 +65,7 @@ const QuestBuyLand = ({ setIsBuyLand, onClose, cardId, cardInfo }) => {
                 }}
               >
                 <div className="bg-white bg-opacity-90 p-6 rounded-lg w-full">
-                  <div className="space-y-3">
+                  <div className="space-y-3 flex flex-col justify-center items-center">
                     <p className="text-cyan-800 font-medium">
                       땅 매입 비용:{" "}
                       <span className="text-gray-700">

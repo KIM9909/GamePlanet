@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { EyeOff, Eye } from "lucide-react";
+import { EyeOff, Eye, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createBurumabulRoom } from "../../../sources/api/BurumabulRoomAPI";
 import { useDispatch, useSelector } from "react-redux";
@@ -13,6 +13,7 @@ import CustomToastContent from "../../CustomToastContent";
 const BurumabulRoomCreateModal = ({ onClose }) => {
   const userId = useSelector((state) => state.user.userId);
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const initialRoomData = {
     roomName: "",
@@ -26,9 +27,11 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
     try {
       console.log(roomData);
+      setIsSubmitting(true);
       const response = await createBurumabulRoom(userId, roomData);
       console.log(response);
       const roomId = response.roomResponse.roomId;
@@ -61,6 +64,8 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
         );
         handleCancel();
       }
+    } finally {
+      setIsSubmitting(false); // 제출 완료 또는 에러 발생 시
     }
   };
 
@@ -74,13 +79,14 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
   };
 
   const handleCancel = () => {
+    if (isSubmitting) return;
     setRoomData(initialRoomData); // roomData 초기화
     onClose();
   };
 
   return (
     <div className="fixed inset-0 bg-blue-200 bg-opacity-50 flex justify-center items-center z-50">
-      <div className="w-96 p-6 bg-gray-900 bg-opacity-80 border-2 border-cyan-500 rounded-lg flex flex-col justify-center items-center">
+      <div className="w-96 p-6 bg-gray-900 bg-opacity-90 border-2 border-cyan-500 rounded-lg flex flex-col justify-center items-center">
         <h1 className="text-3xl text-cyan-400 ">부루마불 방 만들기</h1>
         <hr className="w-80 border-t-2 border-white my-2" />
         <div className="bg-gray-900 bg-opacity-80 w-full py-3 my-3 rounded-lg">
@@ -91,7 +97,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
                 className="text-xl block mt-2 text-cyan-400 "
                 htmlFor="roomTitle"
               >
-                방 제목
+                🎯 방 제목
               </label>
               <hr className="w-80 border-t-2 border-gray-400 my-2" />
               <input
@@ -111,7 +117,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
                 className="text-xl block my-2 text-cyan-400 "
                 htmlFor="privateCheck"
               >
-                비밀방
+                🔒 비밀방
               </label>
               <div>
                 <button
@@ -179,7 +185,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
             </div>
             {/* 플레이어 수 선택 */}
             <div className="flex flex-col items-center">
-              <h2 className="text-lg text-cyan-400 ">플레이어 수 선택</h2>
+              <h2 className="text-lg text-cyan-400 ">👥 플레이어 수 선택</h2>
               <hr className="w-80 border-t-2 border-gray-400 my-2" />
               <div className="my-1">
                 <button
@@ -232,18 +238,27 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
             {/* 방 생성 or 취소 */}
             <div className="flex flex-row justify-evenly my-3">
               <button
-                className="bg-gray-500 rounded-lg text-white w-24"
+                className="bg-gray-500 rounded-lg text-white w-24 p-1 hover:bg-gray-700 "
                 onClick={handleCancel}
+                disabled={isSubmitting}
               >
                 취소
               </button>
               {/* 일단 생성 누르면 부루마불 대기방으로 */}
               <button
-                className="bg-cyan-500 rounded-lg text-white w-24"
+                className="bg-cyan-500 rounded-lg text-white w-24 p-1 hover:bg-cyan-600"
                 onClick={handleSubmit}
+                disabled={isSubmitting}
                 type="submit"
               >
-                생성
+                {isSubmitting ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    처리중...
+                  </>
+                ) : (
+                  "생성"
+                )}
               </button>
             </div>
           </form>

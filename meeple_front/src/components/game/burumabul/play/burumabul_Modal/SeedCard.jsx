@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import ReactDOM from "react-dom";
 import { motion } from "framer-motion";
-import { X } from "lucide-react";
+import { X, Building2, Coins, Hotel, Home } from "lucide-react";
 import seedCardBg from "../../../../../assets/burumabul_images/seedCardBg.jpg";
 
 const SeedCard = ({ cardList, onClose }) => {
@@ -32,6 +32,19 @@ const SeedCard = ({ cardList, onClose }) => {
       onClose();
     }
   };
+
+  const InfoItem = ({ icon: Icon, label, value }) => (
+    <div className="bg-gray-900/50 rounded-lg p-3 backdrop-blur-sm border border-cyan-500/20 hover:border-cyan-400/40 transition-all duration-300">
+      <div className="flex items-center justify-center gap-2 mb-1">
+        <Icon className="text-cyan-400" size={16} />
+        <h3 className="font-medium text-cyan-400 text-sm">{label}</h3>
+      </div>
+      <p className=" flex items-center justify-center text-lg font-bold text-white">
+        {value.toLocaleString()}
+        <span className="text-xs ml-1 font-normal text-cyan-300/70">마불</span>
+      </p>
+    </div>
+  );
 
   const modalContent = (
     <div
@@ -66,6 +79,7 @@ const SeedCard = ({ cardList, onClose }) => {
               style={{ transformStyle: "preserve-3d" }}
               onClick={() => handleFlip(card.id)}
             >
+              {/* 앞면 */}
               <motion.div
                 className="absolute w-full h-full bg-gray-900 rounded-2xl p-8 flex flex-col items-center justify-center shadow-xl border border-cyan-500/50"
                 style={{
@@ -83,24 +97,40 @@ const SeedCard = ({ cardList, onClose }) => {
                 </p>
               </motion.div>
 
+              {/* 뒷면 */}
               <motion.div
-                className="absolute w-full h-full bg-gray-800 rounded-2xl p-8 flex flex-col gap-6 items-center justify-center shadow-xl border border-cyan-500/50"
+                className="absolute w-full h-full bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-xl border border-cyan-500/50 overflow-hidden"
                 style={{
                   backfaceVisibility: "hidden",
                   transform: "rotateY(180deg)",
                 }}
               >
-                <div className="text-white text-center space-y-4">
-                  <h3 className="font-semibold text-lg text-cyan-400">
-                    건설 비용
-                  </h3>
-                  <div className="bg-white/10 rounded-xl p-4">
-                    <p className="text-3xl font-bold text-cyan-300">
-                      {card.baseConstructionCost}
-                      <span className="text-xl ml-2 font-normal text-gray-400">
-                        마불
-                      </span>
-                    </p>
+                <div className="h-full p-3 overflow-y-auto thin-scrollbar">
+                  <div className="space-y-2">
+                    <h2 className="text-base font-bold text-cyan-400 text-center text-lg mb-3 bg-gradient-to-r from-cyan-400 to-cyan-500 bg-clip-text text-transparent">
+                      {card.name}
+                    </h2>
+
+                    <InfoItem
+                      icon={Building2}
+                      label="땅 매입비"
+                      value={card.seedCount}
+                    />
+                    <InfoItem
+                      icon={Coins}
+                      label="건설 비용"
+                      value={card.baseConstructionCost}
+                    />
+                    <InfoItem
+                      icon={Hotel}
+                      label="본부 사용료"
+                      value={card.headquartersUsageFee}
+                    />
+                    <InfoItem
+                      icon={Home}
+                      label="기지 사용료"
+                      value={card.baseUsageFee}
+                    />
                   </div>
                 </div>
               </motion.div>
@@ -110,6 +140,7 @@ const SeedCard = ({ cardList, onClose }) => {
       </motion.div>
     </div>
   );
+
   return isMounted && document.getElementById("modal-root")
     ? ReactDOM.createPortal(modalContent, document.getElementById("modal-root"))
     : null;

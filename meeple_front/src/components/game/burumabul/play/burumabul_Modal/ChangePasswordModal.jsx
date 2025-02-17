@@ -25,7 +25,7 @@ const ChangePasswordModal = ({ onClose }) => {
     <>
       <div className="w-96 p-6 bg-gray-900 bg-opacity-90 border-2 border-cyan-400 rounded-lg flex flex-col justify-center items-center">
         <h2 className="text-lg text-cyan-500 font-semibold mb-4">
-          변경할 비밀 번호를 입력하세요
+          🔒 변경할 비밀 번호를 입력하세요
         </h2>
 
         <form onSubmit={handleSubmit} className="w-full">

@@ -399,44 +399,44 @@ const WaitingRoom = ({
             </div>
 
             {/* 하단 버튼 */}
-            <div className="w-full px-8 mt-auto mb-6">
-              <div className="flex justify-center gap-4">
+            <div className="w-full mt-auto mb-6">
+              <div className="flex justify-center gap-6">
                 {userId && creatorId && Number(userId) === Number(creatorId) ? (
                   // 방장인 경우
                   <div className="flex justify-center gap-4">
                     {Number(maxPlayers) === Number(playerLen) ? (
-                      <div className="flex flex-row">
+                      <div className="flex flex-row gap-3">
                         <button
-                          className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
+                          className="text-sm font-medium text-cyan-500 px-4 py-2 bg-gray-900 bg-opacity-70 border border-cyan-500 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
                           onClick={leaveTheRoom}
                         >
                           방 나가기
                         </button>
                         {isPrivate && (
                           <button
-                            className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
+                            className="text-sm font-medium text-cyan-500 px-4 py-2 bg-gray-900 bg-opacity-70 border border-cyan-500 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
                             onClick={showChangePassword}
                           >
                             비밀번호 변경
                           </button>
                         )}
                         <button
-                          className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
+                          className="text-sm font-medium text-cyan-500 px-4 py-2 bg-gray-900 bg-opacity-70 border border-cyan-500 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
                           onClick={handlePutRoom}
                         >
                           게임방 수정
                         </button>
                         <button
-                          className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
+                          className="text-sm font-medium text-cyan-500 px-4 py-2 bg-gray-900 bg-opacity-70 border border-cyan-500 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
                           onClick={goToGame}
                         >
                           게임 시작
                         </button>
                       </div>
                     ) : (
-                      <div className="flex flex-row">
+                      <div className="flex flex-row gap-3">
                         <button
-                          className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
+                          className="text-sm font-medium text-cyan-500 px-4 py-2 bg-gray-900 bg-opacity-70 border border-cyan-500 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
                           onClick={leaveTheRoom}
                         >
                           방 나가기
@@ -444,19 +444,19 @@ const WaitingRoom = ({
                         {isPrivate && (
                           <button
                             onClick={showChangePassword}
-                            className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
+                            className="text-sm font-medium text-cyan-500 px-4 py-2 bg-gray-900 bg-opacity-70 border border-cyan-500 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
                           >
                             비밀번호 변경
                           </button>
                         )}
                         <button
-                          className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
+                          className="text-sm font-medium text-cyan-500 px-4 py-2 bg-gray-900 bg-opacity-70 border border-cyan-500 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
                           onClick={handlePutRoom}
                         >
                           게임방 수정
                         </button>
                         <button
-                          className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
+                          className="text-sm font-medium text-cyan-500 px-4 py-2 bg-gray-900 bg-opacity-70 border border-cyan-500 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
                           onClick={handleAlertModal}
                         >
                           게임 시작
@@ -468,7 +468,7 @@ const WaitingRoom = ({
                   // 방장이 아닌 경우
                   <div className="flex justify-center w-full">
                     <button
-                      className="relative overflow-hidden text-lg font-semibold text-cyan-500 mx-10 bg-gray-900 bg-opacity-70 border border-cyan-500 p-3 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
+                      className="text-sm font-medium text-cyan-500 px-4 py-2 bg-gray-900 bg-opacity-70 border border-cyan-500 rounded-lg transition-colors duration-200 hover:bg-cyan-500 hover:text-white"
                       onClick={leaveTheRoom}
                     >
                       방 나가기
