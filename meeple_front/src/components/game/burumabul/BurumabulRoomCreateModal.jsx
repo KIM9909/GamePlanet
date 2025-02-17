@@ -3,7 +3,10 @@ import { EyeOff, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createBurumabulRoom } from "../../../sources/api/BurumabulRoomAPI";
 import { useDispatch, useSelector } from "react-redux";
-import { setRoomId } from "../../../sources/store/slices/BurumabulGameSlice";
+import {
+  setCustomList,
+  setRoomId,
+} from "../../../sources/store/slices/BurumabulGameSlice";
 import { toast } from "react-toastify";
 import CustomToastContent from "../../CustomToastContent";
 
@@ -27,8 +30,10 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
     try {
       console.log(roomData);
       const response = await createBurumabulRoom(userId, roomData);
-      const roomId = response.roomId;
+      const roomId = response.roomResponse.roomId;
+      const customThemeList = response.customElementResponses;
       dispatch(setRoomId(roomId));
+      dispatch(setCustomList(customThemeList));
       navigate(`/game/burumabul/start/${roomId}`);
     } catch (error) {
       console.error("방 생성 중 오류 발생 : ", error);
