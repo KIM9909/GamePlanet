@@ -772,10 +772,10 @@ const TravelMap = ({
         try {
           const diceInfo = {
             playerId: currentPlayer.playerId,
-            // firstDice: firstDice,
-            // secondDice: secondDice,
-            firstDice: 5,
-            secondDice: 5,
+            firstDice: firstDice,
+            secondDice: secondDice,
+            // firstDice: 5,
+            // secondDice: 5,
           };
           console.log("주사위 정보 :", diceInfo);
           await rollDice(diceInfo);
