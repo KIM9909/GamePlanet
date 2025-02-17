@@ -41,6 +41,7 @@ const WaitingRoom = ({
     leaveGame,
     createBurumabulPlay,
     gamePlaySocketData,
+    socketCustomList,
   } = useContext(SocketContext);
 
   const [showPutRoomModal, setShowPutRoomModal] = useState(false);
@@ -60,6 +61,25 @@ const WaitingRoom = ({
   const isPrivate = currentRoomInfo.private;
 
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  // 기본 테마
+  const DEFAULT_THEME = {
+    customId: -1,
+    customName: "기본테마",
+    userNickName: "Basic",
+  };
+  const [customList, setCustomList] = useState([DEFAULT_THEME]);
+
+  // 커스텀 선택
+  const [selectedThemeId, setSelectedThemeId] = useState(null);
+
+  useEffect(() => {
+    if (socketCustomList && socketCustomList.length > 0) {
+      setCustomList([DEFAULT_THEME, ...socketCustomList]);
+    } else {
+      setCustomList([DEFAULT_THEME]);
+    }
+    console.log("소켓 커스텀 덱 리스트: ", socketCustomList);
+  }, [socketCustomList]);
 
   // 준비 됐는지 안 됐는지
   const [isReady, setIsReady] = useState(false);
@@ -168,6 +188,7 @@ const WaitingRoom = ({
         const playInfo = {
           gamePlayId: roomId,
           players: playerList,
+          customId: selectedThemeId,
         };
         console.log("게임 생성 시도", playInfo);
         createBurumabulPlay(playInfo);
@@ -267,16 +288,68 @@ const WaitingRoom = ({
           <div className="mt-5">
             <FriendSearch friendList={friendList} />
           </div> */}
-
           {/* 커스텀 덱 영역 */}
-          <div className="min-h-[600px] rounded-lg border-2 border-cyan-400  w-[30%] bg-gray-900 bg-opacity-80 flex justify-center items-center">
-            <div className="min-h-[560px] w-[90%] border-2 border-cyan-400 rounded-lg flex flex-col justify-center items-center">
-              <h1 className="text-cyan-500 text-center mt-3">
-                원하는 커스텀 테마를 고르세요.
-              </h1>
-              <div className="min-h-[480px] w-[85%] rounded-lg border-2 border-cyan-300"></div>
+          {creatorId === userId && (
+            <div className="min-h-[600px] w-[30%] rounded-lg border-2 border-cyan-400 bg-gray-900 bg-opacity-80 flex justify-center items-center">
+              <div className="min-h-[560px] w-[90%] border-2 border-cyan-400 rounded-lg flex flex-col">
+                {/* 제목 */}
+                <h1 className="text-cyan-500 text-center mt-4 mb-4 text-lg font-semibold">
+                  원하는 커스텀 테마를 고르세요.
+                </h1>
+
+                {/* 커스텀 테마 리스트 */}
+                <div className="flex-1 w-full px-4 overflow-y-auto thin-scrollbar">
+                  <div className="space-y-3 pb-4">
+                    {customList?.map((customTheme) => (
+                      <>
+                        <label
+                          key={customTheme.customId}
+                          className="p-3 bg-gray-800 rounded-lg border border-cyan-400 hover:border-cyan-300 transition-colors flex flex-col items-center gap-4 cursor-pointer"
+                        >
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-cyan-300 font-medium text-sm truncate">
+                              {customTheme.customName}
+                            </span>
+                            <span className="text-gray-400 text-xs">
+                              크리에이터: {customTheme.userNickName}
+                            </span>
+                          </div>
+                          {/* 라디오 버튼 */}
+                          <div className="flex justify-between gap-3 items-center">
+                            <input
+                              type="radio"
+                              id={`theme-${customTheme.customId}`}
+                              checked={selectedThemeId === customTheme.customId}
+                              onChange={() =>
+                                setSelectedThemeId(customTheme.customId)
+                              }
+                              className="w-5 h-5 text-cyan-500 border-cyan-400 focus:ring-cyan-500 accent-cyan-500"
+                              name="customTheme"
+                            />
+
+                            {/* 이미지 및 텍스트 */}
+                            <div className="flex items-center gap-3 w-full">
+                              {customTheme.customId !== -1 ? (
+                                <img
+                                  src={customTheme.imageUrl}
+                                  alt={customTheme.customName}
+                                  className="w-16 h-16 object-cover rounded-md border border-gray-700"
+                                />
+                              ) : (
+                                <div className="text-sm text-white">
+                                  신나는 우주 여행
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </label>
+                      </>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="flex flex-col items-center my-5 w-full">
             <div className="flex items-center gap-4 mb-8">
