@@ -624,11 +624,12 @@ public class GamePlay {
 
 
 	public ChoosePositionResponse choosePosition(ChoosePositionRequest request) {
+		final int EARTH_NUMBER = 0;
 		Player player = getValidatedPlayer(request.getPlayerId());
 		int prevPosition = player.getPosition();
 		turnManager.resetDoubleCount();
 		player.setTimeTravel(false);
-		player.setPosition(request.getNextPosition());
+		player.setPosition(EARTH_NUMBER);
 		ActionType actionType = processTileEvent(player, player.getPosition());
 		return new ChoosePositionResponse(player.getPlayerId(), prevPosition, player.getPosition(),
 				actionType.getAction());
