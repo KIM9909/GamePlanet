@@ -41,7 +41,6 @@ const BoardPage = () => {
   };
 
   useEffect(() => {
-    console.log("ㅎㅇ",gameInfo);
     
     fetchArticles();
   }, [gameInfoId]);
