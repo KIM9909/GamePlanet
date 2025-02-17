@@ -54,7 +54,6 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
     try {
       const localToken = localStorage.getItem("token");
       if (!localToken || !token || localToken !== token) {
-        console.error("토큰이 유효하지 않습니다.");
         setIsSubmitting(false);
         return;
       }
@@ -76,12 +75,6 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
         navigate(`/catch-mind/${response.roomId}`);
       }
     } catch (error) {
-      console.error("Room creation error details:", {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-      });
-
       if (error.response?.status === 500) {
         toast(
           ({ closeToast }) => <CustomToastContent closeToast={closeToast} />,

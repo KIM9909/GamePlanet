@@ -54,12 +54,8 @@ const useCatchSocket = (roomId) => {
         try {
           clientRef.current.deactivate();
           clientRef.current = null;
-        } catch (error) {
-          console.error("Error cleaning up previous connection:", error);
-        }
+        } catch (error) {}
       }
-
-      console.log("Connecting to WebSocket...");
 
       // SockJS를 사용하여 WebSocket 연결 생성
       const socket = new SockJS(
@@ -74,9 +70,6 @@ const useCatchSocket = (roomId) => {
       // STOMP 클라이언트 생성
       const client = new Client({
         webSocketFactory: () => socket,
-        debug: function (str) {
-          console.log("STOMP: " + str);
-        },
       });
 
       /**
@@ -87,11 +80,9 @@ const useCatchSocket = (roomId) => {
         heartbeatIncoming: 4000,
         heartbeatOutgoing: 4000,
         onConnect: () => {
-          console.log("새로운 연결 설정");
           setConnectionStatus("connected");
 
           if (!roomId) {
-            console.error("Invalid roomId for subscription:", roomId);
             return;
           }
           /**
@@ -104,12 +95,8 @@ const useCatchSocket = (roomId) => {
             (message) => {
               try {
                 const data = JSON.parse(message.body);
-                // console.log(`[${debugId}] Received message:`, data);
-                console.log("전체 게임 상태 데이터:", data);
 
                 if (data.type === "updateRoom" && data.roomInfo) {
-                  console.log("방 정보 업데이트:", data.roomInfo);
-
                   // 방 정보 업데이트
                   dispatch(
                     updateGameState({
@@ -125,11 +112,6 @@ const useCatchSocket = (roomId) => {
 
                 // 타임아웃 처리
                 if (data.type === "timeOut" && data.gameData) {
-                  console.log(
-                    "타임아웃 발생. 다음 턴으로 넘어갑니다.",
-                    data.gameData
-                  );
-
                   // 메시지 추가
                   setMessages((prev) => [
                     ...prev,
@@ -159,11 +141,6 @@ const useCatchSocket = (roomId) => {
                     isTurn: player.nickname === data.gameData.nextTurn,
                   }));
 
-                  console.log("턴 변경:", {
-                    nextTurn: data.gameData.nextTurn,
-                    updatedPlayers: updatedPlayers,
-                  });
-
                   // 플레이어 정보 업데이트
                   dispatch(
                     updatePlayers({
@@ -177,8 +154,6 @@ const useCatchSocket = (roomId) => {
                 //useCatchSocket.js 의 result 핸들러 부분
 
                 if (data.type === "result" && Array.isArray(data.result)) {
-                  console.log("게임 결과 수신:", data.result);
-
                   // 게임 상태를 종료 상태로 변경
                   dispatch(setGameStarted(false));
 
@@ -251,7 +226,6 @@ const useCatchSocket = (roomId) => {
                         },
                       ]);
                     } catch (error) {
-                      console.error("Game cleanup error:", error);
                       setMessages((prev) => [
                         ...prev,
                         {
@@ -272,27 +246,16 @@ const useCatchSocket = (roomId) => {
 
                 // gameInfo 타입 처리 추가
                 if (data.type === "gameInfo" && data.gameInfo) {
-                  console.log("[GameInfo] 수신된 데이터:", data.gameInfo);
-
                   // 게임 시작 상태 설정
                   dispatch(setGameStarted(true));
 
                   // 현재 Redux store의 players 상태 확인
                   const currentPlayers = store.getState().catchmind.players;
-                  console.log("[GameInfo] 현재 플레이어 상태:", currentPlayers);
-                  console.log(
-                    "[GameInfo] 새로운 턴 플레이어:",
-                    data.gameInfo.currentTurn
-                  );
 
                   let updatedPlayers = currentPlayers;
 
                   // players 배열이 비어있다면 roomInfo에서 플레이어 목록을 다시 가져옴
                   if (currentPlayers.length === 0 && data.roomInfo?.players) {
-                    console.log(
-                      "[GameInfo] 플레이어 목록 재구성:",
-                      data.roomInfo.players
-                    );
                     updatedPlayers = data.roomInfo.players.map(
                       (playerName, index) => ({
                         id: index + 1,
@@ -334,12 +297,6 @@ const useCatchSocket = (roomId) => {
                     },
                   ]);
 
-                  console.log("[GameInfo] 상태 업데이트 완료:", {
-                    currentTurn: data.gameInfo.currentTurn,
-                    updatedPlayers: updatedPlayers,
-                    quiz: data.gameInfo.quiz,
-                  });
-
                   return;
                 }
 
@@ -358,7 +315,6 @@ const useCatchSocket = (roomId) => {
                     ]);
                     return;
                   }
-                  console.log("채팅 메시지 수신:", data.message);
 
                   setMessages((prev) => [
                     ...prev,
@@ -413,15 +369,11 @@ const useCatchSocket = (roomId) => {
 
                   // 방이 비어있을 때 처리
                   if (data.players.length === 0) {
-                    console.log("Room is empty, cleaning up...");
-
                     if (clientRef.current) {
                       try {
                         clientRef.current.deactivate();
                         clientRef.current = null;
-                      } catch (error) {
-                        console.error("Error during cleanup:", error);
-                      }
+                      } catch (error) {}
                     }
 
                     setConnectionStatus("disconnected");
@@ -436,8 +388,6 @@ const useCatchSocket = (roomId) => {
                 }
 
                 if (data.type === "roomInfo" && data.roomInfo) {
-                  console.log("[RoomInfo] 수신된 데이터:", data.roomInfo);
-
                   // 게임이 시작되지 않은 상태라면 점수를 0으로 초기화
                   if (!data.roomInfo.isGameStart) {
                     if (
@@ -455,10 +405,6 @@ const useCatchSocket = (roomId) => {
                       );
 
                       dispatch(updatePlayers({ players: updatedPlayers }));
-                      console.log(
-                        "[RoomInfo] 플레이어 정보 초기화됨:",
-                        updatedPlayers
-                      );
                     }
                   }
 
@@ -490,13 +436,11 @@ const useCatchSocket = (roomId) => {
                 }
 
                 if (data.gameInfo && data.gameInfo.currentWord) {
-                  console.log("새로운 제시어 수신:", data.gameInfo.currentWord);
                   dispatch(setCurrentWord(data.gameInfo.currentWord));
                 }
 
                 // 게임 시작 응답 처리
                 if (data.quizList && data.sequence) {
-                  console.log("게임 시작! 라운드 초기화");
                   dispatch(resetGameState());
                   dispatch(setGameStarted(true));
 
@@ -537,12 +481,6 @@ const useCatchSocket = (roomId) => {
                     },
                   ]);
 
-                  console.log("게임 시작 설정 완료:", {
-                    firstPlayer,
-                    firstQuiz: firstQuiz.quiz,
-                    players: updatedPlayers,
-                  });
-
                   return;
                 }
 
@@ -554,8 +492,6 @@ const useCatchSocket = (roomId) => {
 
                   // 턴 변경 시에는 게임 상태 업데이트를 하지 않음
                   if (previousTurn !== newTurn && previousTurn !== null) {
-                    console.log("턴 변경 감지:", previousTurn, "->", newTurn);
-
                     // 플레이어 정보만 업데이트
                     const updatedPlayers = data.players.map((playerName) => ({
                       ...currentGameState.players.find(
@@ -569,8 +505,6 @@ const useCatchSocket = (roomId) => {
 
                   // 방이 비어있을 때 처리
                   if (data.players.length === 0) {
-                    console.log("Room is empty, cleaning up...");
-
                     if (clientRef.current) {
                       try {
                         fetch(
@@ -581,17 +515,11 @@ const useCatchSocket = (roomId) => {
                           //   import.meta.env.VITE_LOCAL_API_BASE_URL
                           // }/catch-mind/delete-room?roomId=${roomId}`,
                           { method: "DELETE" }
-                        )
-                          .then(() => console.log("Room deletion request sent"))
-                          .catch((error) =>
-                            console.error("Error deleting room:", error)
-                          );
+                        );
 
                         clientRef.current.deactivate();
                         clientRef.current = null;
-                      } catch (error) {
-                        console.error("Error during cleanup:", error);
-                      }
+                      } catch (error) {}
                     }
 
                     setConnectionStatus("disconnected");
@@ -603,17 +531,13 @@ const useCatchSocket = (roomId) => {
                     }, 500);
                   }
                 }
-              } catch (error) {
-                console.error("게임 상태 파싱 에러:", error);
-              }
+              } catch (error) {}
             }
           ));
           client.onDisconnect = () => {
             try {
               subscription.unsubscribe();
-            } catch (error) {
-              console.error("구독 해제 중 에러:", error);
-            }
+            } catch (error) {}
             setConnectionStatus("disconnected");
           };
         },
@@ -621,13 +545,11 @@ const useCatchSocket = (roomId) => {
 
       // 에러 핸들러들 설정
       client.onStompError = (frame) => {
-        console.error("STOMP error:", frame);
         setConnectionStatus("error");
         handleReconnect();
       };
 
       client.onWebSocketError = (event) => {
-        console.error("WebSocket error:", event);
         setConnectionStatus("error");
         handleReconnect();
       };
@@ -641,7 +563,6 @@ const useCatchSocket = (roomId) => {
       clientRef.current = client;
       client.activate();
     } catch (error) {
-      console.error("Error creating WebSocket connection:", error);
       setConnectionStatus("error");
       handleReconnect();
     }
@@ -671,12 +592,9 @@ const useCatchSocket = (roomId) => {
     // 구독 해제
     if (subscriptionRef.current) {
       try {
-        console.log("Unsubscribing from previous subscription");
         subscriptionRef.current.unsubscribe();
         subscriptionRef.current = null;
-      } catch (error) {
-        console.error("Error unsubscribing:", error);
-      }
+      } catch (error) {}
     }
 
     if (clientRef.current) {
@@ -685,9 +603,7 @@ const useCatchSocket = (roomId) => {
         clientRef.current = null;
         setConnectionStatus("disconnected");
         setMessages([]);
-      } catch (error) {
-        console.error("Error disconnecting:", error);
-      }
+      } catch (error) {}
     }
   }, []);
 
@@ -698,12 +614,10 @@ const useCatchSocket = (roomId) => {
   const sendMessage = useCallback(
     (messageData) => {
       if (!roomId) {
-        console.error("Invalid roomId for message sending:", roomId);
         return;
       }
 
       if (!clientRef.current?.connected) {
-        console.warn("Cannot send message: WebSocket not connected");
         connect();
         return;
       }
@@ -715,7 +629,6 @@ const useCatchSocket = (roomId) => {
           headers: { "content-type": "application/json" },
         });
       } catch (error) {
-        console.error("Error sending message:", error);
         handleReconnect();
       }
     },
@@ -725,27 +638,21 @@ const useCatchSocket = (roomId) => {
   // roomId가 있을 때 WebSocket 연결 설정
   useEffect(() => {
     if (roomId) {
-      console.log("Setting up connection for room", roomId);
       connect();
 
       return () => {
-        console.log("Cleaning up connection for room", roomId);
         if (subscriptionRef.current) {
           try {
             subscriptionRef.current.unsubscribe();
             subscriptionRef.current = null;
-          } catch (error) {
-            console.error("Cleanup subscription error:", error);
-          }
+          } catch (error) {}
         }
 
         if (clientRef.current) {
           try {
             clientRef.current.deactivate();
             clientRef.current = null;
-          } catch (error) {
-            console.error("Cleanup connection error:", error);
-          }
+          } catch (error) {}
         }
         setConnectionStatus("disconnected");
       };
@@ -756,7 +663,6 @@ const useCatchSocket = (roomId) => {
   const joinRoom = useCallback(
     (joinData) => {
       if (!clientRef.current?.connected) {
-        console.log("소켓 연결이 없습니다. 연결을 시도합니다.");
         connect();
         // 연결 후 입장 시도
         setTimeout(() => {
@@ -778,7 +684,6 @@ const useCatchSocket = (roomId) => {
           headers: { "content-type": "application/json" },
         });
       } catch (error) {
-        console.error("방 입장 중 에러 발생:", error);
         handleReconnect();
       }
     },

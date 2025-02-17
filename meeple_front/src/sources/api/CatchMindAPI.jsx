@@ -25,7 +25,6 @@ API.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error("Request interceptor error:", error);
     return Promise.reject(error);
   }
 );
@@ -46,11 +45,6 @@ API.interceptors.response.use(
     return response.data;
   },
   (error) => {
-    console.error("Response interceptor error:", {
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message,
-    });
     throw error;
   }
 );
@@ -64,7 +58,6 @@ export const VideoAPI = {
       }
       return response;
     } catch (error) {
-      console.error("Failed to create session:", error);
       throw error;
     }
   },
@@ -80,7 +73,6 @@ export const VideoAPI = {
       }
       return response;
     } catch (error) {
-      console.error("Failed to generate token:", error);
       throw error;
     }
   },
@@ -127,11 +119,6 @@ export const CatchMindAPI = {
 
       return response.data;
     } catch (error) {
-      console.error("Create room error:", {
-        requestData: roomData,
-        errorMessage: error.message,
-        serverResponse: error.response?.data,
-      });
       throw error;
     }
   },
@@ -143,7 +130,6 @@ export const CatchMindAPI = {
       // response 자체가 방 목록 전체 정보를 포함하고 있을 것이므로 바로 반환
       return response;
     } catch (error) {
-      console.error("방 목록 조회 실패:", error);
       throw error;
     }
   },
@@ -159,29 +145,9 @@ export const CatchMindAPI = {
 
       return roomInfo;
     } catch (error) {
-      console.error(`방 정보 조회 실패 (${roomId}):`, error);
       throw error;
     }
   },
-
-  // 방 비밀번호 확인
-  // checkRoomPassword: async (roomId, password) => {
-  //   try {
-  //     // joinRoom API를 사용해 비밀번호 검증
-  //     const joinRequest = {
-  //       roomId: parseInt(roomId),
-  //       password: password,
-  //       playerName: localStorage.getItem("userNickname"), // 로그인한 사용자의 닉네임
-  //     };
-
-  //     const response = await API.post("/catch-mind/join-room", joinRequest);
-
-  //     // response.code가 200이면 비밀번호 일치, 400이면 불일치
-  //     return { isCorrect: response.code === 200 };
-  //   } catch (error) {
-  //     return { isCorrect: false };
-  //   }
-  // },
 
   // 방 입장 API
   joinRoom: async (roomId, playerName, password = "") => {
@@ -217,10 +183,6 @@ export const CatchMindAPI = {
       );
       return response.data;
     } catch (error) {
-      console.log("퀴즈 요청 실패:", {
-        errorMessage: error.message,
-        serverResponse: error.response?.data,
-      });
       throw error;
     }
   },
@@ -251,10 +213,6 @@ export const CatchMindAPI = {
       );
       return response.data;
     } catch (error) {
-      console.error("게임 시작 요청 실패:", {
-        errorMessage: error.message,
-        serverResponse: error.response?.data,
-      });
       throw error;
     }
   },

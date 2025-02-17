@@ -10,7 +10,6 @@ export const fetchProfile = createAsyncThunk(
       const response = await UserAPI.getProfile(userId);
       return response;
     } catch (error) {
-      console.error("ProfileSlice: Error fetching profile:", error);
       return rejectWithValue(error.message || "프로필 조회에 실패했습니다.");
     }
   }

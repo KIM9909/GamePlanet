@@ -27,7 +27,6 @@ const CatchMindListPage = () => {
       }));
       setRooms(cleanedRooms);
     } catch (error) {
-      console.error("방 목록 가져오기 실패:", error);
       setRooms([]);
     }
   };
@@ -47,9 +46,7 @@ const CatchMindListPage = () => {
         await CatchMindAPI.joinRoom(room.roomId, userNickname);
         navigate(`/catch-mind/${room.roomId}`);
       }
-    } catch (error) {
-      console.error("방 입장 실패:", error);
-    }
+    } catch (error) {}
   };
 
   const handleSuccessfulEntry = (roomId) => {
@@ -59,8 +56,6 @@ const CatchMindListPage = () => {
   const filteredRooms = rooms.filter((room) =>
     room.roomTitle.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  console.log("필터된 방 : ", filteredRooms);
 
   return (
     <div className="container mx-auto p-3">

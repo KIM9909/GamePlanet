@@ -32,7 +32,6 @@ const HomePage = () => {
         const response = await GameInfoAPI.getGameInfoList();
         setGameList(response.gameInfoList || []);
       } catch (error) {
-        console.error("게임 목록 조회 실패:", error);
         setGameList([]);
       } finally {
         setIsLoading(false);

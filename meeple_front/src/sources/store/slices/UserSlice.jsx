@@ -13,7 +13,6 @@ const extractUserIdFromToken = (token) => {
     // JWT 토큰의 페이로드(두 번째 부분)를 디코딩하여 sub 필드 추출
     return JSON.parse(atob(token.split(".")[1])).sub;
   } catch (error) {
-    console.error("Token decode error:", error);
     return null;
   }
 };

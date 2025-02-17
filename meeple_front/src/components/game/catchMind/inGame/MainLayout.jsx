@@ -355,7 +355,6 @@ const MainLayout = () => {
         navigate("/catch-mind");
       }, 500);
     } catch (error) {
-      console.error("[ExitRoom] Error during exit:", error);
       setIsExiting(false);
     }
   }, [
@@ -465,9 +464,7 @@ const MainLayout = () => {
           headers: { "content-type": "application/json" },
         });
       }, 3000);
-    } catch (error) {
-      console.error("[StartGame] Error:", error);
-    }
+    } catch (error) {}
   }, [roomId, client, dispatch]);
 
   // gameState 변경 감지를 위한 useEffect 추가
@@ -501,7 +498,6 @@ const MainLayout = () => {
         callback: (message) => {
           try {
             const data = JSON.parse(message.body);
-            console.log("Received WebSocket data:", data); // 디버깅을 위한 로그 추가
 
             if (data.type === "roomInfo" && data.roomInfo) {
               const updatedRoomInfo = {
@@ -543,9 +539,7 @@ const MainLayout = () => {
                 ...data.roomInfo,
               }));
             }
-          } catch (error) {
-            console.error("Error parsing message:", error);
-          }
+          } catch (error) {}
         },
       });
     }
@@ -567,9 +561,7 @@ const MainLayout = () => {
           joinRoom(joinData);
           setIsInitialJoin(false);
         }
-      } catch (error) {
-        console.error("Error joining room:", error);
-      }
+      } catch (error) {}
     };
 
     handleInitialJoin();

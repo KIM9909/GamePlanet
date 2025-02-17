@@ -15,7 +15,6 @@ const loadBurumabulState = () => {
     const serializedState = localStorage.getItem("burumabulState");
     return serializedState ? JSON.parse(serializedState) : undefined;
   } catch (error) {
-    console.error("부루마불 상태 불러오기 실패", error);
     return undefined;
   }
 };
@@ -47,9 +46,7 @@ Store.subscribe(() => {
     const state = Store.getState();
     const burumabulState = state.burumabul; // 부루마불 슬라이스만 선택
     localStorage.setItem("burumabulState", JSON.stringify(burumabulState));
-  } catch (error) {
-    console.error("부루마불 상태 저장 실패 : ", error);
-  }
+  } catch (error) {}
 });
 
 export default Store;

@@ -20,7 +20,6 @@ const CatchMindPasswordModal = ({
 
     try {
       const response = await CatchMindAPI.checkRoomPassword(roomId, password);
-      console.log("Password check response:", response);
 
       // response.data가 boolean이거나 {isCorrect: boolean} 형태 모두 처리
       const isCorrect =
@@ -33,7 +32,6 @@ const CatchMindPasswordModal = ({
         setError("비밀번호가 일치하지 않습니다.");
       }
     } catch (err) {
-      console.error("비밀번호 확인 중 오류:", err);
       setError("비밀번호 확인 중 오류가 발생했습니다.");
     } finally {
       setIsLoading(false);
