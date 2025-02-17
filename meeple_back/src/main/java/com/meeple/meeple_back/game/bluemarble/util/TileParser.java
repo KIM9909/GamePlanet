@@ -2,15 +2,14 @@ package com.meeple.meeple_back.game.bluemarble.util;
 
 import com.meeple.meeple_back.game.bluemarble.domain.Tile;
 import com.meeple.meeple_back.game.bluemarble.domain.TileType;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class TileParser implements ExcelReader<Tile> {
 
@@ -20,7 +19,7 @@ public class TileParser implements ExcelReader<Tile> {
 		List<Tile> tiles = new ArrayList<>();
 
 		try (InputStream fis = getClass().getResourceAsStream("/game-element/bluemarble-tile.xlsx");
-		     Workbook workbook = new XSSFWorkbook(fis)) {
+				Workbook workbook = new XSSFWorkbook(fis)) {
 
 			Sheet sheet = workbook.getSheetAt(0);
 			Iterator<Row> rowIterator = sheet.iterator();
@@ -32,10 +31,14 @@ public class TileParser implements ExcelReader<Tile> {
 				Row row = rowIterator.next();
 				int id = row.getCell(0) != null ? (int) row.getCell(0).getNumericCellValue() : 0;
 				String name = row.getCell(1) != null ? row.getCell(1).getStringCellValue() : "";
-				String color = row.getCell(2) != null && !row.getCell(2).equals("null") ? row.getCell(2).getStringCellValue() : "";
+				String color =
+						row.getCell(2) != null && !row.getCell(2).equals("null") ? row.getCell(2)
+								.getStringCellValue() : "";
 				String type = row.getCell(3) != null ? row.getCell(3).getStringCellValue() : "";
-				int price = row.getCell(4) != null && !row.getCell(4).equals("null") ? (int) row.getCell(4).getNumericCellValue() : 0;
-				Tile tile = new Tile(id, name, 0, 0, false, getTileType(type), null, price);
+				int price = row.getCell(4) != null && !row.getCell(4).equals("null")
+						? (int) row.getCell(4).getNumericCellValue() : 0;
+				String imageUrl = row.getCell(5).getStringCellValue();
+				Tile tile = new Tile(id, name, 0, 0, false, getTileType(type), imageUrl, price);
 				tiles.add(tile);
 			}
 		} catch (Exception e) {
