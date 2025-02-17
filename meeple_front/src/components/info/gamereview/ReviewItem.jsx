@@ -45,14 +45,14 @@ const ReviewItem = ({
         <div className="absolute bottom-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <button
             onClick={onEditClick}
-            className="p-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-full transition-colors"
+            className="p-1.5 bg-slate-500 hover:bg-blue-600 text-white rounded-full transition-colors"
             title="리뷰 수정"
           >
             <Pencil size={14} />
           </button>
           <button
             onClick={onDeleteClick}
-            className="p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors"
+            className="p-1.5 bg-slate-500 hover:bg-red-600 text-white rounded-full transition-colors"
             title="리뷰 삭제"
           >
             <Trash size={14} />
