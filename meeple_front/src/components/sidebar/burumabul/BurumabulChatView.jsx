@@ -81,7 +81,9 @@ const BurumabulChatView = ({ playerInfoList }) => {
             >
               <div
                 className={`rounded-lg p-2 max-w-[75%] ${
-                  msg.isMe ? "bg-gray-600 text-white" : "bg-gray-700 text-white"
+                  msg.isMe
+                    ? "bg-gray-600  text-white"
+                    : "bg-gray-700 text-white border-2 border-cyan-400"
                 }`}
               >
                 {/* ✅ 여기 적용 (보낸 사람 닉네임 표시) */}

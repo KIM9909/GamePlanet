@@ -172,6 +172,19 @@ const TravelMap = ({
       alert("게임 중에는 뒤로가기를 사용할 수 없습니다.");
     };
 
+    const preventKeyboardRefresh = (e) => {
+      if ((e.key === "r" && (e.ctrlKey || e.metaKey)) || e.key === "F5") {
+        e.preventDefault();
+        alert("게임 중에는 새로고침을 할 수 없습니다.");
+        return false;
+      }
+    };
+
+    const preventContextMenu = (e) => {
+      e.preventDefault();
+      return false;
+    };
+
     // 새로고침, 창 닫기 이벤트
     window.addEventListener("beforeunload", preventClose);
 
@@ -179,12 +192,19 @@ const TravelMap = ({
     window.history.pushState(null, "", window.location.href);
     window.addEventListener("popstate", preventGoBack);
 
+    // 키보드 새로고침 방지
+    document.addEventListener("keydown", preventKeyboardRefresh);
+
+    // 우클릭 메뉴 방지
+    document.addEventListener("contextmenu", preventContextMenu);
+
     return () => {
       window.removeEventListener("beforeunload", preventClose);
       window.removeEventListener("popstate", preventGoBack);
+      document.removeEventListener("keydown", preventKeyboardRefresh);
+      document.removeEventListener("contextmenu", preventContextMenu);
     };
   }, []);
-
   // cities 배열
   const cities = [
     "지구 Start",
