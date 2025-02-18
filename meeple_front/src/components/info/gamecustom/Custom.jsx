@@ -37,7 +37,7 @@ const Custom = () => {
           id: element.customId,
           title: element.customName,
           createdAt: element.createdAt ? new Date(element.createdAt).toLocaleDateString() : '',
-          thumbnail: element.imageUrl || buruMabulImage,
+          thumbnail: element.imageUrl,
           status : element.customStatus
         }));
         
