@@ -77,6 +77,11 @@ import PickedCardModal from "./burumabul_Modal/PickedCardModal";
 import EndWinner from "./burumabul_Modal/EndWinner";
 import ChoosePositionModal from "./burumabul_Modal/ChoosePositionModal";
 
+// 토스트
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { showGameToast } from "../BurumabulToast";
+
 const Cell = ({
   position,
   name,
@@ -164,18 +169,22 @@ const TravelMap = ({
     const preventClose = (e) => {
       e.preventDefault();
       e.returnValue = ""; // Chrome에서 필요
-      return "게임을 나가시겠습니까? 진행 중인 게임이 종료됩니다.";
+      showGameToast("게임을 나가시겠습니까?", "진행 중인 게임이 종료됩니다.");
+      return (e.returnValue = "");
     };
 
     const preventGoBack = () => {
       window.history.pushState(null, "", window.location.href);
-      alert("게임 중에는 뒤로가기를 사용할 수 없습니다.");
+      showGameToast(
+        "게임 진행 중",
+        "게임 중에는 뒤로가기를 사용할 수 없습니다."
+      );
     };
 
     const preventKeyboardRefresh = (e) => {
       if ((e.key === "r" && (e.ctrlKey || e.metaKey)) || e.key === "F5") {
         e.preventDefault();
-        alert("게임 중에는 새로고침을 할 수 없습니다.");
+        showGameToast("게임 진행 중", "게임 중에는 새로고침을 할 수 없습니다.");
         return false;
       }
     };
@@ -1327,16 +1336,28 @@ const TravelMap = ({
   });
 
   const closeBuyLand = () => {
-    setShowBuyLand(false);
-    setShowCardId(null);
+    if (nextAction === "DO_YOU_WANT_TO_BUY_THE_LAND") {
+      setShowBuyLand(false);
+      setShowCardId(null);
+      setNextAction("CHECK_END");
+    } else {
+      setShowBuyLand(false);
+      setShowCardId(null);
+    }
     // setTimeout(() => {
     //   setSocketNext("CHECK_END");
     // }, 100);
   };
 
   const closeBuildBase = () => {
-    setShowBuildBase(false);
-    setShowCardId(null);
+    if (nextAction === "DO_YOU_WANT_TO_BUILD_THE_BASE") {
+      setShowBuildBase(false);
+      setShowCardId(null);
+      setNextAction("CHECK_END");
+    } else {
+      setShowBuildBase(false);
+      setShowCardId(null);
+    }
   };
 
   const closePayToll = () => {
@@ -1364,11 +1385,10 @@ const TravelMap = ({
   };
 
   const closeEndWinner = () => {
-    resetGameState();
-
     // 모달 닫고
     setShowEndWinner(false);
     // 서버로 게임 삭제 요청하고 난 뒤
+    resetGameState();
     endGame();
     // 게임 초기화
 
@@ -1758,6 +1778,7 @@ const TravelMap = ({
 
   return (
     <div className="h-full w-full flex flex-col bg-gray 900">
+      <ToastContainer />
       {/* Controls Bar */}
       <div className="bg-gray-900/90 border-b border-cyan-500/30 p-4 flex justify-center items-center gap-4">
         <button
