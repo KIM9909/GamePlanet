@@ -271,7 +271,7 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
                        text-white appearance-none cursor-pointer
                        focus:outline-none focus:border-cyan-400 transition-colors"
             >
-              <option value="5">5개</option>
+              <option value="3">3개</option>
               <option value="7">7개</option>
               <option value="10">10개</option>
             </select>
