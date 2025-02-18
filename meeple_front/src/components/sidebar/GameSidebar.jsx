@@ -47,7 +47,7 @@ const GameSidebar = () => {
         }
       };
     } catch (error) {
-      console.error("[WebSocket] Subscription error:", error);
+      return error
     }
   }, [connected, stompClient, roomId, navigate, userNickname]);
 
@@ -63,7 +63,6 @@ const GameSidebar = () => {
         }),
       });
     } catch (error) {
-      console.error("[WebSocket] Exit error:", error);
       if (subscriptionRef.current) {
         subscriptionRef.current.unsubscribe();
       }

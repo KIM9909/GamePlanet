@@ -31,10 +31,8 @@ export const FriendSocketLayout = ({ children }) => {
   useEffect(() => {
     if (!userId) return;
 
-    console.log("🌐 STOMP Client 생성 중...");
     const stompClient = new Client({
       webSocketFactory: () => {
-        console.log("🌍 SockJS WebSocket 팩토리 실행됨!");
         return new SockJS(`${import.meta.env.VITE_SOCKET_API_BASE_URL}`);
       },
       reconnectDelay: 5000,
@@ -44,37 +42,29 @@ export const FriendSocketLayout = ({ children }) => {
         Authorization: `Bearer ${token}`,
       },
       debug: (str) => {
-        console.log("🛠 STOMP Debug:", str);
       },
     });
 
     stompClient.onConnect = () => {
       setConnected(true);
-      console.log("✅ WebSocket 연결 성공");
 
       // 친구 요청 및 쪽지 알림 구독
       stompClient.subscribe(`/topic/user/${userId}`, (message) => {
         const receivedData = message.body;
-        console.log("📩 받은 메시지:", receivedData);
         setResponseSocket(receivedData);
-        console.log(receivedData);
       });
     };
 
     stompClient.onDisconnect = () => {
-      console.warn("❌ WebSocket 연결이 끊어졌습니다!");
       setConnected(false);
     };
 
     stompClient.onWebSocketError = (error) => {
-      console.error("WebSocket Error:", error);
     };
     stompClient.onUnhandledMessage = (message) => {
-      console.log("Unhandled Message:", message);
     };
 
     stompClient.onStompError = (frame) => {
-      console.error("WebSocket Error", frame.headers["message"]);
 
       setConnected(false);
     };

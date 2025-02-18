@@ -26,7 +26,7 @@ const useCockState = (roomId) => {
 
 
       } catch (error) {
-        console.error("상태 복구 중 오류:", error);
+        return error
       }
     }, [roomId]);
   

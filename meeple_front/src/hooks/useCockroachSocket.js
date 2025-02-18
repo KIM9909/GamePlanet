@@ -33,7 +33,6 @@ const useCockroachSocket = (roomId) => {
   const isGameStartedRef = useRef(false);
 
   const handleGameMessage = useCallback((response) => {
-    console.log("게임 메시지 처리 시작:", response);
   },[]);
 
   const connect = useCallback(() => {
@@ -48,7 +47,6 @@ const useCockroachSocket = (roomId) => {
         );
 
         socket.onclose = () => {
-          console.log("웹소켓 연결이 끊겼습니다.");
           setTimeout(() => {
             connect();
           }, 1000);
@@ -90,7 +88,6 @@ const useCockroachSocket = (roomId) => {
 
     // Connect 이벤트 핸들러
     client.onConnect = () => {
-      console.log("웹소켓 연결 완료");
       setConnected(true);
       setStompClient(client);
       isConnecting.current = false;
@@ -99,7 +96,6 @@ const useCockroachSocket = (roomId) => {
 
     // Disconnect 이벤트 핸들러
     client.onDisconnect = () => {
-      console.log("웹소켓 연결이 끊겼습니다.");
       setConnected(false);
       setStompClient(null);
       isConnecting.current = false;
@@ -107,7 +103,6 @@ const useCockroachSocket = (roomId) => {
     };
 
     client.onWebSocketError = (error) => {
-      console.error("웹소켓 에러:", error);
     };
 
     clientRef.current = client;
@@ -117,18 +112,11 @@ const useCockroachSocket = (roomId) => {
   const sendMessage = useCallback(
     (type, data) => {
       if (!clientRef.current?.connected) {
-        console.error("웹소켓이 연결 되었습니다.");
         return Promise.reject(new Error("웹소켓 연결 끊김"));
       }
 
       const endpoint =
         WS_ENDPOINTS[type]?.(roomId) || WS_ENDPOINTS.CHAT(roomId);
-
-      console.log("보낸 웹소켓 메시지:", {
-        destination: `/app${endpoint}`,
-        type,
-        data,
-      });
 
       return new Promise((resolve, reject) => {
         try {
@@ -136,10 +124,8 @@ const useCockroachSocket = (roomId) => {
             destination: `/app${endpoint}`,
             body: JSON.stringify(data),
           });
-          console.log("메시지를 성공적으로 보냈습니다.");
           resolve();
         } catch (error) {
-          console.error("메시지 전송 실패", error);
           reject(error);
         }
       });

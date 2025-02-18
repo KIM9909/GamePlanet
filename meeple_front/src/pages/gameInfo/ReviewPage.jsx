@@ -81,7 +81,6 @@ const ReviewPage = () => {
         toast.success('리뷰가 삭제되었습니다.');
         fetchReviews();
       } catch (error) {
-        console.error('리뷰 삭제 실패:', error);
         toast.error('리뷰 삭제에 실패했습니다.');
       }
     }

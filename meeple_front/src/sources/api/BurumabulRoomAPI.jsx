@@ -21,20 +21,13 @@ const getAuthHeaders = () => {
 // 게임방 생성
 export const createBurumabulRoom = async (userId, roomData) => {
   try {
-    console.log("Request payload:", roomData);
     const response = await axios.post(
       `${BURUMABUL_API_BASE_URL}/${userId}/create`,
       roomData
     );
     return response.data;
   } catch (error) {
-    console.error("방 생성 실패: ", error);
-    console.error("방 생성 실패: ", {
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message,
-    });
-    throw error;
+    return error
   }
 };
 
@@ -44,8 +37,7 @@ export const listBurumabulRoom = async () => {
     const response = await axios.get(`${BURUMABUL_API_BASE_URL}`);
     return response.data;
   } catch (error) {
-    console.error("방 목록 조회 실패 : ", error);
-    throw error;
+    return error
   }
 };
 

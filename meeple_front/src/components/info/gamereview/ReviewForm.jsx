@@ -66,7 +66,6 @@ const ReviewForm = ({ initialData, onSuccess }) => {
         onSuccess();
       }
     } catch (error) {
-      console.error('리뷰 저장 중 오류 발생:', error);
       toast.error('리뷰 저장에 실패했습니다.');
     } finally {
       setIsSubmitting(false);

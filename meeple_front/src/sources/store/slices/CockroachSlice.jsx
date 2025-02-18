@@ -22,7 +22,6 @@ const initialState = {
 };
 
 export const setRoomData = createAction("cockroach/setRoomData", (roomData) => {
-  console.log("방 데이터 설정:", roomData);
   return {
     payload: {
       ...roomData,
@@ -37,7 +36,6 @@ const cockroachSlice = createSlice({
   initialState,
   reducers: {
     setGameData: (state, action) => {
-      console.log("Setting gameData:", action.payload);
 
       if (!action.payload) return;
 
@@ -86,21 +84,13 @@ const cockroachSlice = createSlice({
           }
         }
       }
-
-      console.log("State after update:", {
-        players: state.players,
-        gameData: state.gameData,
-        isGameStarted: state.isGameStarted,
-      });
     },
 
     startGame: (state) => {
-      console.log("게임 시작...");
       state.isGameStarted = true;
     },
 
 updateGameState: (state, action) => {
-  console.log("게임 진행 상황 :", action.payload);
   if (!action.payload) return;
 
   // currentCard 업데이트 시 특별 처리
@@ -125,29 +115,24 @@ updateGameState: (state, action) => {
     updatePlayerCards: (state, action) => {
       const { player, cards } = action.payload;
       if (!player || !cards) return;
-      console.log("Updating playerCards for:", player);
       state.playerCards[player] = cards;
     },
 
     updateTableCards: (state, action) => {
       const { player, cards } = action.payload;
       if (!player || !cards) return;
-      console.log("Updating tableCards for:", player);
       state.userTableCards[player] = cards;
     },
 
     setCurrentUser: (state, action) => {
-      console.log("Setting currentUser:", action.payload);
       state.currentUser = action.payload;
     },
 
     updatePublicDeck: (state, action) => {
-      console.log("Updating publicDeck");
       state.publicDeck = action.payload;
     },
 
     resetGame: (state) => {
-      console.log("Resetting game state");
       const savedRoomData = state.roomData;
       const savedPlayers = state.players;
       
@@ -160,7 +145,6 @@ updateGameState: (state, action) => {
     },
 
     leaveGame: (state) => {
-      console.log("게임 나가기");
       // 모든 상태를 완전히 초기화
       return initialState;
     },
@@ -171,7 +155,6 @@ updateGameState: (state, action) => {
   },
   extraReducers: (builder) => {
     builder.addCase(setRoomData, (state, action) => {
-      console.log("Reducer received room data:", action.payload);
       state.roomData = action.payload;
       if (action.payload && action.payload.players) {
         state.players = [...new Set(action.payload.players)];

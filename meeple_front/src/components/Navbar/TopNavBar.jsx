@@ -30,11 +30,6 @@ const TopNavbar = () => {
   const userId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
   const friendSocket = useContext(FriendSocketContext);
 
-  console.log("🔍 FriendSocketContext 값 확인:", friendSocket);
-
-  if (!friendSocket) {
-    console.error("🚨 FriendSocketContext is undefined! 확인 필요");
-  }
   const { connected, responseSocket, stompClientRef } = friendSocket;
 
   const [notificationList, setNotificationList] = useState([]);
@@ -112,16 +107,14 @@ const TopNavbar = () => {
   // 소켓 연결 관리
   useEffect(() => {
     if (connected) {
-      console.log("소켓연결 성공");
+      return
     } else {
-      console.log("소켓 연결 대기 중");
       if (stompClientRef?.current) {
         const reconnectSocket = async () => {
           try {
             await stompClientRef.current.activate();
-            console.log("소켓 재연결 시도");
           } catch (error) {
-            console.error("소켓 재연결 실패:", error);
+            return error
           }
         };
         reconnectSocket();
@@ -139,7 +132,7 @@ const TopNavbar = () => {
           return updatedList;
         });
       } catch (error) {
-        console.error("알림 처리 중 오류 발생: ", error);
+        return error
       }
     }
   }, [responseSocket]);
