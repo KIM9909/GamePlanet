@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FaStar } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import GameInfoAPI from "../../../../sources/api/GameInfoAPI";
+import { toast } from "react-toastify";
 
 const GameReviewModal = ({ isOpen, onClose, gameInfoId }) => {
   const [rating, setRating] = useState(0);
@@ -28,12 +29,12 @@ const GameReviewModal = ({ isOpen, onClose, gameInfoId }) => {
     e.preventDefault();
 
     if (!rating) {
-      alert("별점을 선택해주세요.");
+      toast.error("별점을 선택해주세요.");
       return;
     }
 
     if (!content.trim()) {
-      alert("리뷰 내용을 입력해주세요.");
+      toast.error("리뷰 내용을 입력해주세요.");
       return;
     }
 
@@ -47,10 +48,10 @@ const GameReviewModal = ({ isOpen, onClose, gameInfoId }) => {
     try {
       setIsSubmitting(true);
       await GameInfoAPI.createReview(reviewData);
-      alert("리뷰가 성공적으로 등록되었습니다.");
+      toast.success("리뷰가 성공적으로 등록되었습니다.");
       onClose();
     } catch (error) {
-      alert("리뷰 저장에 실패했습니다.");
+      toast.error("리뷰 저장에 실패했습니다.");
     } finally {
       setIsSubmitting(false);
     }

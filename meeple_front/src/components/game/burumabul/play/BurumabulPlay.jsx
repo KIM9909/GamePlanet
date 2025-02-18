@@ -171,7 +171,6 @@ const BurumabulPlay = ({
   const [secondDice, setSecondDice] = useState(null);
   const totalDice = Number(firstDice) + Number(secondDice);
   const [isDouble, setIsDouble] = useState(null);
-  const [nextAction, setNextAction] = useState(null);
 
   useEffect(() => {
     if (rollDiceSocketData) {
@@ -279,16 +278,6 @@ const BurumabulPlay = ({
     }
   }, [buildBaseSocketData]);
 
-  // 상태 변화를 모니터링하기 위한 별도의 useEffect
-  useEffect(() => {
-    if (buyLandSocketData) {
-      // console.log("상태 업데이트 확인:");
-      // console.log("Updated Players:", players);
-      // console.log("Updated Cards:", cards);
-      // console.log("Updated Board:", board);
-    }
-  }, [players, board, cards, buyLandSocketData]);
-
   const [showCard, setShowCard] = useState(null);
 
   const handleShowCard = () => {
@@ -314,16 +303,6 @@ const BurumabulPlay = ({
   if (loadingMessage) {
     return <>{loadingMessage}</>;
   }
-
-  // console.log("currentPlayerIndex:", currentPlayerIndex);
-  // console.log("myColorIndex:", myColorIndex);
-  // console.log("rollDice 존재 여부:", !!rollDice);
-  // console.log("현재 게임 데이터", currentPlayData);
-  // console.log("현재 타일(보드 정보)", board);
-  // console.log("현재 카드 정보", cards);
-
-  // console.log("currentPlayerIndex:", currentPlayerIndex);
-  // console.log("myColorIndex:", myColorIndex);
 
   return (
     <div className="fixed inset-0 w-full h-full bg-gray-900 overflow-hidden">

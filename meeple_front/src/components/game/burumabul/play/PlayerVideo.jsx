@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Camera, CameraOff, Mic, MicOff } from "lucide-react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Camera, CameraOff, Mic, MicOff, UserSearch } from "lucide-react";
 import { OpenVidu } from "openvidu-browser";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import UserAPI from "../../../../sources/api/UserAPI";
+import ProfileModal from "../../../user/ProfileModal";
+import ReportFormModal from "../../../user/ReportFormModal";
 
 const PlayerVideo = ({ playerInfo, sessionId, onGameEnd }) => {
   const [session, setSession] = useState(null);
@@ -19,9 +21,29 @@ const PlayerVideo = ({ playerInfo, sessionId, onGameEnd }) => {
   const videoRef = useRef(null);
   const { getProfile } = UserAPI;
 
+  // 미니프로필
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showReportForm, setShowReportForm] = useState(false);
+  const buttonRef = useRef();
+
+  const getAnchorRect = useCallback(() => {
+    return buttonRef.current?.getBoundingClientRect();
+  }, []);
+
+  const handleReport = () => {
+    setIsModalOpen(false);
+    setShowReportForm(true);
+  };
+
+  const handleReportSubmit = async (formData) => {
+    // 기존 submit 로직
+    setShowReportForm(false);
+  };
+
   const userId = Number(useSelector((state) => state.user.userId));
   const isMyStream = playerInfo.playerId === Number(userId);
   const [userNickName, setUserNickName] = useState(null);
+  const [userLevel, setUserLevel] = useState(null);
 
   useEffect(() => {
     const getPlayerNickname = async (playerId) => {
@@ -29,6 +51,7 @@ const PlayerVideo = ({ playerInfo, sessionId, onGameEnd }) => {
         try {
           const response = await getProfile(playerId);
           setUserNickName(response.userNickname);
+          setUserLevel(response.userLevel);
         } catch (error) {
           console.error("닉네임 조회 중 오류:", error);
         }
@@ -285,7 +308,10 @@ const PlayerVideo = ({ playerInfo, sessionId, onGameEnd }) => {
         )}
       </div>
       <div className="flex justify-between items-center px-3 py-1 flex-shrink-0">
-        <p className="text-sm truncate">
+        <p
+          className="text-sm truncate "
+          title={`${userNickName}${isMyStream ? " (나)" : ""}`}
+        >
           {userNickName} {isMyStream ? "(나)" : ""}
         </p>
         {isMyStream && (
@@ -310,9 +336,34 @@ const PlayerVideo = ({ playerInfo, sessionId, onGameEnd }) => {
                 <CameraOff className="w-4 h-4 text-red-500" />
               )}
             </button>
+            {playerInfo.playerId === Number(userId) && (
+              <button
+                ref={buttonRef}
+                onClick={() => setIsModalOpen((prev) => !prev)}
+                className="p-1 rounded-full hover:bg-gray-600 transition-colors"
+              >
+                <UserSearch className="w-4 h-4 text-gray-400 hover:text-gray-200" />
+              </button>
+            )}
           </div>
         )}
       </div>
+      {isModalOpen && (
+        <ProfileModal
+          onClose={() => setIsModalOpen(false)}
+          userNickname={userNickName}
+          userLevel={userLevel}
+          getAnchorRect={getAnchorRect}
+          onReport={handleReport}
+        />
+      )}
+
+      {showReportForm && (
+        <ReportFormModal
+          onClose={() => setShowReportForm(false)}
+          onSubmit={handleReportSubmit}
+        />
+      )}
     </div>
   );
 };

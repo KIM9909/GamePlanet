@@ -32,7 +32,6 @@ const RequestingFriend = ({ requestingList }) => {
       console.log(friendId);
       try {
         const response = await deleteFriendRequest(friendId);
-        console.log(response);
         fetchRequestFriendList(userId);
         return response;
       } catch (error) {
@@ -55,7 +54,7 @@ const RequestingFriend = ({ requestingList }) => {
               </p>
               <div className="flex gap-2">
                 <button
-                  className="px-2 py-1 bg-red-500/80 text-white rounded-lg hover:bg-red-600 hover:scale-105 transition-all duration-300"
+                  className="px-2 py-1 bg-gray-500/80 text-white rounded-lg hover:bg-gray-700 hover:scale-105 transition-all duration-300"
                   onClick={() => handleCancel(list.friendId)}
                 >
                   요청 취소
