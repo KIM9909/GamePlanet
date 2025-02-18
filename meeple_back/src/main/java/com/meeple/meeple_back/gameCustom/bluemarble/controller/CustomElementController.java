@@ -85,9 +85,13 @@ public class CustomElementController {
 	@PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<?> create(@RequestParam("customName") String customName,
 			@RequestParam("userId") Long userId, @RequestParam("imgFile") MultipartFile imgFile) {
+		final String DEFAULT_THUMBNAIL_IMAGE_URL = "https://meeple-file-server-2.s3.ap-northeast-2.amazonaws.com/static-files/BuruMabul.png";
 		if (imgFile.isEmpty()) {
-			return ResponseEntity.badRequest().body("파일이 전송되지 않았습니다.");
+			CustomElementResponse response = customElementService.create(customName, userId,
+					DEFAULT_THUMBNAIL_IMAGE_URL);
+			return ResponseEntity.status(HttpStatus.CREATED).body(response);
 		}
+		
 		if (!"image/png".equals(imgFile.getContentType())) {
 			return ResponseEntity.badRequest().body("PNG 이미지 형식만 지원합니다.");
 		}
