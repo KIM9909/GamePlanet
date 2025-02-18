@@ -31,6 +31,7 @@ import com.meeple.meeple_back.game.bluemarble.domain.TileLoader;
 import com.meeple.meeple_back.game.bluemarble.service.port.BluemarbleGameRepository;
 import com.meeple.meeple_back.game.bluemarble.util.ExcelReader;
 import com.meeple.meeple_back.game.bluemarble.util.NeuronsValleyParser;
+import com.meeple.meeple_back.game.bluemarble.util.SeedCertificateCardParser;
 import com.meeple.meeple_back.game.bluemarble.util.TelepathyCardParser;
 import com.meeple.meeple_back.game.bluemarble.util.TileParser;
 import com.meeple.meeple_back.user.service.UserService;
@@ -55,12 +56,22 @@ public class BluemarbleGameServiceImpl implements BluemarbleGameService {
 
 	private List<Card> createCards(Integer customId) {
 		List<Card> cards = new ArrayList<>();
+		SeedCertificateCardParser seedParser = new SeedCertificateCardParser();
+		List<SeedCertificateCard> originalSeedCertificateCards = seedParser.readExcelFile();
+		List<SeedCertificateCard> newCards = cardLoader.load(customId);
+		for (SeedCertificateCard nc : newCards) {
+			for (int i = 0; i < originalSeedCertificateCards.size(); i++) {
+				if (originalSeedCertificateCards.get(i).getNumber() == nc.getNumber()) {
+					originalSeedCertificateCards.set(i, nc);
+					break;
+				}
+			}
+		}
 
-		List<SeedCertificateCard> seedCertificateCards = cardLoader.load(customId);
 		List<TelepathyCard> telepathyCards = new TelepathyCardParser().readExcelFile();
 		List<NeuronsValleyCard> neuronsValleyCards = new NeuronsValleyParser().readExcelFile();
 
-		cards.addAll(seedCertificateCards);
+		cards.addAll(originalSeedCertificateCards);
 		cards.addAll(telepathyCards);
 		cards.addAll(neuronsValleyCards);
 
