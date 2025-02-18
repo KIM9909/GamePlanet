@@ -25,9 +25,11 @@ export const createBurumabulRoom = async (userId, roomData) => {
       `${BURUMABUL_API_BASE_URL}/${userId}/create`,
       roomData
     );
+    console.log(response.data);
     return response.data;
   } catch (error) {
-    return error
+    console.error(error);
+    return error;
   }
 };
 
@@ -37,7 +39,7 @@ export const listBurumabulRoom = async () => {
     const response = await axios.get(`${BURUMABUL_API_BASE_URL}`);
     return response.data;
   } catch (error) {
-    return error
+    return error;
   }
 };
 

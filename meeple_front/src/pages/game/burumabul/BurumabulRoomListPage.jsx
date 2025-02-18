@@ -121,9 +121,9 @@ const BurumabulRoomList = () => {
         부루마불 게임 대기방 목록
       </h1>
       {/* 검색바 추가 */}
-      <div className="w-[80%] mb-6 flex justify-between items-center">
-        <div className="flex-1 flex justify-center">
-          <form onSubmit={handleSearch} className="flex gap-2 w-[50%]">
+      <div className="w-[80%] mb-6 flex items-center relative">
+        <div className="w-full flex justify-center">
+          <form onSubmit={handleSearch} className="flex gap-2 w-[50%] ml-40">
             <input
               type="text"
               value={searchName}
