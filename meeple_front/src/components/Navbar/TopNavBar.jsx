@@ -39,9 +39,7 @@ const TopNavbar = () => {
 
   const [notificationList, setNotificationList] = useState([]);
   const [isShowNotifi, setIsShowNotifi] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(
-    notificationList.length
-  );
+  const [notificationCount, setNotificationCount] = useState(0);
 
   const notificationRef = useRef(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -135,21 +133,16 @@ const TopNavbar = () => {
   useEffect(() => {
     if (responseSocket) {
       try {
-        console.log(responseSocket);
         setNotificationList((prevList) => {
           const updatedList = [...prevList, responseSocket];
+          setNotificationCount(updatedList.length);
           return updatedList;
         });
-        setNotificationCount((prev) => prev + 1);
       } catch (error) {
         console.error("알림 처리 중 오류 발생: ", error);
       }
     }
   }, [responseSocket]);
-
-  useEffect(() => {
-    setNotificationCount(notificationList.length);
-  }, [responseSocket, notificationList]);
 
   const showNotifi = () => {
     setIsShowNotifi(true);
@@ -372,7 +365,8 @@ const TopNavbar = () => {
       {isShowNotifi && (
         <NotificationList
           notiList={notificationList}
-          setNotiList={setNotificationList}
+          setNotificationList={setNotificationList}
+          setNotificationCount={setNotificationCount}
         />
       )}
     </nav>
