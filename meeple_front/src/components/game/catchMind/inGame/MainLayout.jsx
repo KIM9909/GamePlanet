@@ -28,7 +28,7 @@ import ExitConfirmationModal from "./ExitConfirmationModal";
 import GameReviewModal from "./GameReivewModal";
 import Loading from "../../../Loading";
 import useSound from "./useSound";
-import CountdownModal from "./CountDownModal";
+import CountdownModal from "./CountdownModal";
 import GameResultModal from "./GameResultModal";
 
 // 비디오 컨테이너 컴포넌트 - React.memo로 최적화
