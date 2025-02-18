@@ -308,7 +308,10 @@ const PlayerVideo = ({ playerInfo, sessionId, onGameEnd }) => {
         )}
       </div>
       <div className="flex justify-between items-center px-3 py-1 flex-shrink-0">
-        <p className="text-sm truncate">
+        <p
+          className="text-sm truncate "
+          title={`${userNickName}${isMyStream ? " (나)" : ""}`}
+        >
           {userNickName} {isMyStream ? "(나)" : ""}
         </p>
         {isMyStream && (

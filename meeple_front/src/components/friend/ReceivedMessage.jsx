@@ -36,25 +36,28 @@ const ReceivedMessage = ({ messages, onReply }) => {
         <div className="h-full w-full">
           {messageList.length > 0 ? (
             <div className="h-full overflow-y-auto">
-              <ul className="space-y-3 p-2">
+              <ul className="space-y-3 p-1">
                 {messageList.map((msg) => (
                   <li
                     key={msg.friendMessageId}
                     className="p-2 bg-gray-800 rounded-lg flex items-center justify-between border border-cyan-500/30 hover:border-cyan-400/60 transition-all duration-300 shadow-lg hover:shadow-cyan-500/20"
                   >
-                    <p className="text-cyan-400 font-medium">
+                    <p
+                      className="text-cyan-400 font-medium truncate"
+                      title={msg.sender.userNickname}
+                    >
                       {msg.sender.userNickname}
                     </p>
                     <div className="flex gap-2">
                       <button
                         onClick={() => goToDetailMessage(msg)}
-                        className="px-3 py-2 bg-cyan-500/80 text-white rounded-lg hover:bg-cyan-600 hover:scale-105 transition-all duration-300"
+                        className="px-1 text-sm bg-cyan-500/80 text-white rounded-lg hover:bg-cyan-600 hover:scale-105 transition-all duration-300"
                       >
                         상세 보기
                       </button>
                       <button
                         onClick={() => handleDelete(msg.friendMessageId)}
-                        className="px-3 py-2 bg-red-500/80 text-white rounded-lg hover:bg-red-600 hover:scale-105 transition-all duration-300"
+                        className="px-1 text-sm bg-gray-500/80 text-white rounded-lg hover:bg-gray-800 hover:scale-105 transition-all duration-300"
                       >
                         삭제
                       </button>
@@ -78,25 +81,25 @@ const ReceivedMessage = ({ messages, onReply }) => {
               <span className="font-semibold">작성자:</span>{" "}
               {message.sender.userName}
             </p>
-            <div className="mt-4 p-4 bg-gray-900 rounded-lg border border-cyan-500/20 shadow-inner">
+            <div className="mt-4 p-3 bg-gray-900 rounded-lg border border-cyan-500/20 shadow-inner">
               <p className="text-gray-300">{message.content}</p>
             </div>
             <div className="mt-6 flex justify-end gap-2">
               <button
                 onClick={() => setShowDetail(false)}
-                className="px-4 py-2 bg-gray-600/80 text-white rounded-lg hover:bg-gray-700 hover:scale-105 transition-all duration-300"
+                className="px-2 py-1.5 text-[15px] bg-gray-600/80 text-white rounded-lg hover:bg-gray-700  transition-all duration-300"
               >
                 닫기
               </button>
               <button
                 onClick={() => handleDelete(message.friendMessageId)}
-                className="px-4 py-2 bg-red-500/80 text-white rounded-lg hover:bg-red-600 hover:scale-105 transition-all duration-300"
+                className="px-2 py-1.5 text-[15px] bg-gray-600/80 hover:bg-gray-700 text-white rounded-lg transition-all duration-300"
               >
                 삭제
               </button>
               <button
                 onClick={() => onReply(message.sender.userId)}
-                className="px-4 py-2 bg-cyan-500/80 text-white rounded-lg hover:bg-cyan-600 hover:scale-105 transition-all duration-300"
+                className="px-2 py-1.5 text-[15px] bg-cyan-500/80 text-white rounded-lg hover:bg-cyan-600 transition-all duration-300"
               >
                 답장하기
               </button>

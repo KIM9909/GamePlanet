@@ -673,10 +673,6 @@ const TravelMap = ({
 
   // 나는 몇 번째 순서인지
   const myIndex = players.findIndex((player) => player.playerId === userId);
-  // useEffect(() => {
-  //   console.log("players:", players);
-  //   console.log("myIndex:", myIndex);
-  // }, [myIndex, players]);
 
   const [nextxTurn, setNextTurn] = useState(Number(currentPlayerIndex) + 1);
   useEffect(() => {
@@ -789,8 +785,6 @@ const TravelMap = ({
             playerId: currentPlayer.playerId,
             firstDice: firstDice,
             secondDice: secondDice,
-            // firstDice: 2,
-            // secondDice: 2,
           };
           console.log("주사위 정보 :", diceInfo);
           await rollDice(diceInfo);
@@ -1336,28 +1330,13 @@ const TravelMap = ({
   });
 
   const closeBuyLand = () => {
-    if (nextAction === "DO_YOU_WANT_TO_BUY_THE_LAND") {
-      setShowBuyLand(false);
-      setShowCardId(null);
-      setNextAction("CHECK_END");
-    } else {
-      setShowBuyLand(false);
-      setShowCardId(null);
-    }
-    // setTimeout(() => {
-    //   setSocketNext("CHECK_END");
-    // }, 100);
+    setShowBuyLand(false);
+    setShowCardId(null);
   };
 
   const closeBuildBase = () => {
-    if (nextAction === "DO_YOU_WANT_TO_BUILD_THE_BASE") {
-      setShowBuildBase(false);
-      setShowCardId(null);
-      setNextAction("CHECK_END");
-    } else {
-      setShowBuildBase(false);
-      setShowCardId(null);
-    }
+    setShowBuildBase(false);
+    setShowCardId(null);
   };
 
   const closePayToll = () => {
@@ -1388,19 +1367,19 @@ const TravelMap = ({
     // 모달 닫고
     setShowEndWinner(false);
     // 서버로 게임 삭제 요청하고 난 뒤
+    // 게임 초기화
     resetGameState();
     endGame();
-    // 게임 초기화
 
-    if (setIsStart) {
-      setIsStart(false);
-    }
-    // 상태 변경
-    setGameStatus("GAME_END");
-
-    if (onGameEnd) {
-      onGameEnd();
-    }
+    setTimeout(() => {
+      if (setIsStart) {
+        setIsStart(false);
+      }
+      setGameStatus("GAME_END");
+      if (onGameEnd) {
+        onGameEnd();
+      }
+    }, 100);
   };
 
   useEffect(() => {
@@ -1694,20 +1673,6 @@ const TravelMap = ({
         ];
     }
   };
-
-  // // Canvas 내부에 우주선 렌더링 추가
-  // const renderSpaceships = () => {
-  //   return players
-  //     .slice(0, numPlayers)
-  //     .map((player, index) => (
-  //       <BlueRobot
-  //         key={player.id}
-  //         position={getPlayerPosition(player.position, index)
-  //           scale={0.2}
-  //         }
-  //       />
-  //     ));
-  // };
 
   // 우주 기지 렌더링 추가
   const renderSpaceBases = useMemo(() => {

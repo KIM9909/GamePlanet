@@ -96,12 +96,12 @@ const QuestBuildBase = ({ setIsBuildBase, onClose, cardId, cardInfo }) => {
                     기지를 건설하시겠습니까?
                   </p>
                   <div className="flex justify-around gap-4">
-                    <button
+                    {/* <button
                       className="w-1/2 bg-gray-500 text-white px-6 py-2 rounded-lg transition-all duration-300 hover:bg-gray-600 hover:shadow-lg transform hover:-translate-y-1"
                       onClick={handleNo}
                     >
                       안 할래요
-                    </button>
+                    </button> */}
                     <button
                       className="w-1/2 bg-cyan-400 border-2 border-white text-white px-6 py-2 rounded-lg transition-all duration-300 hover:bg-cyan-700 hover:shadow-lg transform hover:-translate-y-1"
                       onClick={handleYes}

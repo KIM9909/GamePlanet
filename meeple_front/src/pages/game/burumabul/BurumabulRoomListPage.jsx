@@ -23,7 +23,7 @@ const BurumabulRoomList = () => {
     try {
       const response = await listBurumabulRoom();
       setRoomList(response);
-      console.log(response);
+
       setVisibleRooms(response.slice(0, ITEMS_PER_LOAD));
     } catch (error) {
       console.error("부루마불 방 목록 조회 중 에러 발생 :", error);

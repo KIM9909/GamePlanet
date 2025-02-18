@@ -11,7 +11,7 @@ const NotificationList = ({
       setTimeout(() => {
         setNotificationList([]); // 알림 목록 비우기
         setNotificationCount(0); // 카운트 초기화
-      }, 5000); // 3초 후 초기화 (사용자가 확인할 시간 주기)
+      }, 3500); // 3.5초 후 초기화 (사용자가 확인할 시간 주기)
     }
   }, [notiList, setNotificationList, setNotificationCount]);
   return (
@@ -30,7 +30,7 @@ const NotificationList = ({
             </div>
           ))
         ) : (
-          <div className="p-4 text-gray-500 text-sm text-center">
+          <div className="p-8 text-gray-500 text-sm text-center">
             새로운 알람이 없습니다.
           </div>
         )}

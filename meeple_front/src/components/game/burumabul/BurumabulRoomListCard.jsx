@@ -130,7 +130,7 @@ const BurumabulRoomListCard = ({ roomInfo }) => {
                   </div>
                 </div>
                 <div className="text-gray-300 mt-1">
-                  방장 : {roomInfo.creator.playerName}
+                  방장 : {roomInfo.creator.playerNickname}
                 </div>
               </div>
 

@@ -51,7 +51,7 @@ const FriendList = () => {
                 {friend.friend.nickname}
               </div>
               <button
-                className="px-4 py-2 bg-gray-500/80 text-white rounded-lg hover:bg-red-600 transition-all duration-300"
+                className="px-4 py-2 bg-gray-500/80 text-white rounded-lg hover:bg-gray-700 transition-all duration-300"
                 onClick={() => handleDeleteFriend(friend.friendId)}
               >
                 삭제
