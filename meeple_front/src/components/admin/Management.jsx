@@ -46,8 +46,8 @@ const Management = () => {
           <div className="flex gap-3 mb-6">
             <TabButton id="users" title="회원 관리" />
             <TabButton id="customs" title="커스텀 게임 관리" />
-            <TabButton id="reports" title="신고 관리" />
-            <TabButton id="records" title="욕설 기록" />
+            <TabButton id="reports" title="유저 신고" />
+            <TabButton id="records" title="AI 욕설 감지" />
           </div>
 
           <div className="bg-slate-800 rounded-lg p-6">
