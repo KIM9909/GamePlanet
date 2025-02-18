@@ -130,7 +130,7 @@ export const searchFriend = async (userNickname) => {
   }
 };
 
-// // 친구 요청 목록
+// 친구 요청 목록
 export const requestFriendList = async (userId) => {
   if (!userId) throw new Error("유저 아이디가 없습니다.");
   if (userId) {

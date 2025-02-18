@@ -82,11 +82,15 @@ const ReceivedFriendRequest = ({ requestedList }) => {
           {requestList.map((list, index) => (
             <li
               key={index}
-              className="p-4 bg-gray-800 rounded-lg flex items-center justify-between border border-cyan-500/30 hover:border-cyan-400/60 transition-all duration-300"
+              className="p-2 bg-gray-800 rounded-lg flex items-center justify-between border border-cyan-500/30 hover:border-cyan-400/60 transition-all duration-300"
             >
-              <p className="font-medium text-cyan-400 truncate mr-4">
+              <p
+                className="font-medium text-cyan-400 truncate mr-4 overflow-hidden whitespace-nowrap"
+                title={list.user.userNickname} // 툴팁으로 전체 이름 표시
+              >
                 {list.user.userNickname}
               </p>
+
               <div className="flex gap-1 shrink-0">
                 <button
                   className="px-2 py-1 text-sm bg-cyan-500/90 text-white rounded hover:bg-cyan-600 transition-all duration-300"
