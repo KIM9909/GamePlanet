@@ -30,11 +30,37 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
     if (isSubmitting) return;
 
     try {
-      console.log(roomData);
       setIsSubmitting(true);
       const response = await createBurumabulRoom(userId, roomData);
-      console.log(response);
+      if (response.status === 500) {
+        {
+          console.log("Showing toast...");
+          toast(
+            ({ closeToast }) => <CustomToastContent closeToast={closeToast} />,
+            {
+              position: "top-center",
+              autoClose: false,
+              hideProgressBar: true,
+              closeOnClick: false,
+              pauseOnHover: true,
+              draggable: true,
+              className: "!bg-transparent !p-0 !shadow-none",
+              toastClassName: "!bg-transparent !p-0",
+              bodyClassName: "!p-0 !m-0",
+              closeButton: false, // 기본 닫기 버튼 비활성화
+              style: {
+                background: "transparent",
+                padding: 0,
+              },
+            }
+          );
+          handleCancel();
+        }
+      } else if (response.status === 400) {
+        toast.error("모든 칸을 채워주세요.");
+      }
       const roomId = response.roomResponse.roomId;
+      console.log(response);
       console.log(roomId);
       const customThemeList = response.customElementResponses;
       dispatch(setRoomId(roomId));
@@ -42,28 +68,13 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
       navigate(`/game/burumabul/start/${roomId}`);
     } catch (error) {
       console.error("방 생성 중 오류 발생 : ", error);
-      if (error.response?.status === 500) {
-        toast(
-          ({ closeToast }) => <CustomToastContent closeToast={closeToast} />,
-          {
-            position: "top-center",
-            autoClose: false,
-            hideProgressBar: true,
-            closeOnClick: false,
-            pauseOnHover: true,
-            draggable: true,
-            className: "!bg-transparent !p-0 !shadow-none",
-            toastClassName: "!bg-transparent !p-0",
-            bodyClassName: "!p-0 !m-0",
-            closeButton: false, // 기본 닫기 버튼 비활성화
-            style: {
-              background: "transparent",
-              padding: 0,
-            },
-          }
-        );
-        handleCancel();
-      }
+      console.error("방 생성 중 오류 발생 : ", error);
+      console.log("Error structure:", {
+        status: error.status,
+        responseStatus: error?.response?.status,
+        responseData: error?.response?.data,
+        message: error.message,
+      });
     } finally {
       setIsSubmitting(false); // 제출 완료 또는 에러 발생 시
     }
