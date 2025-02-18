@@ -67,7 +67,6 @@ const CockroachPokerPage = () => {
         throw new Error("WebSocket 연결이 되지 않았습니다.");
       }
     } catch (error) {
-      console.error("Error:", error);
       setRetryCount((prev) => prev + 1);
       
       if (retryCount >= 3) {
@@ -82,7 +81,6 @@ const CockroachPokerPage = () => {
   // 로그인 체크 Effect
 useEffect(() => {
   if (!userId) {
-    console.log("로그인 해야겠어 안해야겠어 !! ");
     navigate("/home");
   }
 }, [userId, navigate]);
@@ -98,7 +96,6 @@ useEffect(() => {
   const handleGameMessage = (message) => {
     try {
       const response = JSON.parse(message.body);
-      console.log("웹소켓 메시지 수신:", response);
 
       // 방 정보 업데이트
       if (response.type === "UPDATE_ROOM" || response.roomInfo) {
@@ -141,7 +138,7 @@ useEffect(() => {
         }));
       }
     } catch (error) {
-      console.error("웹소켓 메시지 처리 중 오류:", error);
+      return error
     }
   };
 
@@ -168,9 +165,7 @@ useEffect(() => {
       await startGame();
       setIsGameStarted(true);
       sessionStorage.setItem(`game_${roomId}_status`, "started");
-      console.log("게임 시작 요청 전송!!");
     } catch (error) {
-      console.error("게임 시작 실패:", error);
       toast.error("게임 시작에 실패했습니다.");
       setIsStarting(false);
     }
