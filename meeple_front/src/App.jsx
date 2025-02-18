@@ -147,7 +147,8 @@ function App() {
                 />
 
                 {/* Cockroach Room List */}
-                <Route path="/test/cockroach" element={<CockroachRoom />} />
+                <Route path="/cockroach/room-list" element={<CockroachRoom />} />
+                <Route path="/cockroach/:roomId" element={<CockroachPokerPage />} />
 
                 {/* INTRODUCE */}
                 <Route path="/introduce" element={<Introduce />} />
