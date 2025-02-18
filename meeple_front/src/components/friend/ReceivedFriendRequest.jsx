@@ -5,7 +5,6 @@ import {
   processFriendRequest,
   requestFriendList,
 } from "../../sources/api/FriendApi";
-import useFriendSocket from "../../hooks/useFriendSocket";
 import { FriendSocketContext } from "../layout/FriendSocketLayout";
 
 const ReceivedFriendRequest = ({ requestedList }) => {

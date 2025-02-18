@@ -12,7 +12,6 @@ import HongBeom from "../../assets/images/pixel_character/pixel-hongbeom.png";
 import JaeEun from "../../assets/images/pixel_character/pixel-jaeeun.png";
 import JinHyuk from "../../assets/images/pixel_character/pixel-jinhyuk.png";
 import SungHyun from "../../assets/images/pixel_character/pixel-sunghyun.png";
-import useFriendSocket from "../../hooks/useFriendSocket";
 import NotificationList from "../notification/NotificationList";
 import SettingsPopup from "./SettingsPopup";
 import { FriendSocketContext } from "../layout/FriendSocketLayout";

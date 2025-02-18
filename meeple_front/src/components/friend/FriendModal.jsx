@@ -4,7 +4,6 @@ import FriendList from "./FriendList";
 import RequestFriend from "./RequestFriend";
 import { UsersRound, MessageSquareMore, Handshake } from "lucide-react";
 import Message from "./Message";
-import useFriendSocket from "../../hooks/useFriendSocket";
 import { FriendSocketContext } from "../layout/FriendSocketLayout";
 import AllFriend from "./AllFriend";
 const FriendModal = () => {
