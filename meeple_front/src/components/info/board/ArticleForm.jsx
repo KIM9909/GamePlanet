@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 
 const ArticleForm = ({ gameInfoId, initialData, onSubmit, isEditing, isSubmitting: externalIsSubmitting }) => {
   const { token } = useSelector((state) => state.user);
@@ -39,12 +40,12 @@ const ArticleForm = ({ gameInfoId, initialData, onSubmit, isEditing, isSubmittin
     e.preventDefault();
     
     if (!formData.gameCommunityContent.trim()) {
-      alert('내용을 입력해주세요.');
+      toast.error('내용을 입력해주세요.');
       return;
     }
 
     if (!currentUserId) {
-      alert('로그인이 필요합니다.');
+      toast.error('로그인이 필요합니다.');
       return;
     }
 
@@ -59,7 +60,7 @@ const ArticleForm = ({ gameInfoId, initialData, onSubmit, isEditing, isSubmittin
       }
     } catch (error) {
       console.error('저장 중 오류 발생:', error);
-      alert('저장에 실패했습니다.');
+      toast.error('저장에 실패했습니다.');
     } finally {
       if (externalIsSubmitting === undefined) {
         setIsSubmitting(false);

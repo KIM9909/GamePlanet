@@ -3,6 +3,7 @@ import { Search, Play, Pause, Eye } from 'lucide-react';
 import { AdminAPI } from "../../../sources/api/AdminAPI";
 import { useNavigate } from 'react-router-dom';
 import Pagination from '../Pagination';
+import { toast } from 'react-toastify';
 
 const RecordList = () => {
   const navigate = useNavigate();
@@ -116,7 +117,7 @@ const RecordList = () => {
       }
     } catch (err) {
       console.error('Error playing audio:', err);
-      alert('음성 파일 재생에 실패했습니다.');
+      toast.error('음성 파일 재생에 실패했습니다.');
     }
   };
 

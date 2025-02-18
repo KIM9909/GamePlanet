@@ -8,7 +8,7 @@ import {
 } from "../../sources/store/slices/ProfileSlice";
 import { logout } from "../../sources/store/slices/UserSlice";
 import { Eye, EyeOff } from "lucide-react";
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 
 const UserDeletePage = ({ userId, onClose }) => {
   const dispatch = useDispatch();

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CustomAPI } from '../../../sources/api/CustomAPI';
 import { X } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 const AdminCustomModal = ({ isOpen, onClose, customId, onStatusUpdate,getStatusColor  }) => {
   const [tileImages, setTileImages] = useState({});
@@ -60,7 +61,7 @@ const AdminCustomModal = ({ isOpen, onClose, customId, onStatusUpdate,getStatusC
       }
     } catch (error) {
       console.error('Status update error:', error);
-      alert('상태 업데이트에 실패했습니다.');
+      toast.error('상태 업데이트에 실패했습니다.');
     } finally {
       setIsUpdating(false);
     }
