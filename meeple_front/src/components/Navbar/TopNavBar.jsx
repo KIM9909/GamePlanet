@@ -24,7 +24,7 @@ const TopNavbar = () => {
   const characterRefs = useRef([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navbarRef = useRef(null);
-  const { token } = useSelector((state) => state.user);
+  const { token, userRole } = useSelector((state) => state.user);
 
   const userId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
   const friendSocket = useContext(FriendSocketContext);
@@ -347,6 +347,15 @@ const TopNavbar = () => {
                 >
                   Meeple Download
                 </a>
+              )}
+              {selectedCharacter === 1 && userRole === "ROLE_ADMIN" && (
+                <Link
+                  to="/admin"
+                  className="mt-3 block text-center bg-cyan-500 hover:bg-cyan-600 text-white py-2 px-4 rounded-md transition-colors duration-300"
+                  onClick={() => setSelectedCharacter(null)}
+                >
+                  관리자 페이지
+                </Link>
               )}
             </div>
           </div>

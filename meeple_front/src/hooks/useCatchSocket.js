@@ -39,7 +39,60 @@ const useCatchSocket = (roomId) => {
   const currentUserNickname = useSelector(
     (state) => state.profile.profileData?.userNickname
   );
+  const [countdown, setCountdown] = useState(null);
+  const [gameResults, setGameResults] = useState(null);
+  const [showResults, setShowResults] = useState(false);
 
+  const handleCloseResults = useCallback(() => {
+    setShowResults(false);
+    setGameResults(null);
+  }, []);
+
+  const countdownSoundRef = useRef(null);
+  useEffect(() => {
+    countdownSoundRef.current = new Audio(
+      "https://meeple-file-server-2.s3.ap-northeast-2.amazonaws.com/static-files/gameCountDown.mp3"
+    );
+    countdownSoundRef.current.volume = 0.3;
+    return () => {
+      if (countdownSoundRef.current) {
+        countdownSoundRef.current.pause();
+        countdownSoundRef.current = null;
+      }
+    };
+  }, []);
+
+  const playCountdownSound = useCallback(() => {
+    if (countdownSoundRef.current) {
+      countdownSoundRef.current.currentTime = 0;
+      countdownSoundRef.current.play().catch((error) => {
+        console.error("Error playing countdown sound:", error);
+      });
+    }
+  }, []);
+
+  const correctSoundRef = useRef(null);
+  useEffect(() => {
+    correctSoundRef.current = new Audio(
+      "https://meeple-file-server-2.s3.ap-northeast-2.amazonaws.com/static-files/coin.mp3"
+    );
+    correctSoundRef.current.volume = 0.3;
+    return () => {
+      if (correctSoundRef.current) {
+        correctSoundRef.current.pause();
+        correctSoundRef.current = null;
+      }
+    };
+  }, []);
+
+  const playCorrectSound = useCallback(() => {
+    if (correctSoundRef.current) {
+      correctSoundRef.current.currentTime = 0;
+      correctSoundRef.current.play().catch((error) => {
+        console.error("Error playing sound:", error);
+      });
+    }
+  }, []);
   /**
    * WebSocket 연결을 설정하는 함수
    */
@@ -95,6 +148,29 @@ const useCatchSocket = (roomId) => {
             (message) => {
               try {
                 const data = JSON.parse(message.body);
+
+                if (data.type === "countdown") {
+                  setCountdown(data.count);
+                  if (data.count === 3) {
+                    // 카운트다운 시작할 때만 사운드 재생
+                    playCountdownSound();
+                  }
+                  if (data.count === 0) {
+                    // START! 메시지를 0.5초 후에 제거
+                    setTimeout(() => {
+                      setCountdown(null);
+                    }, 500);
+                  }
+                  return;
+                }
+
+                if (
+                  data.type === "message" &&
+                  data.message.content === "🎮 게임이 곧 시작됩니다!"
+                ) {
+                  // 카운트다운 사운드 재생
+                  playCountdownSound();
+                }
 
                 if (data.type === "updateRoom" && data.roomInfo) {
                   // 방 정보 업데이트
@@ -157,8 +233,9 @@ const useCatchSocket = (roomId) => {
                   // 게임 상태를 종료 상태로 변경
                   dispatch(setGameStarted(false));
 
-                  // 현재 store의 상태 가져오기
-                  const currentGameState = store.getState().catchmind;
+                  // 게임 결과 저장 및 모달 표시
+                  setGameResults(data.result);
+                  setShowResults(true);
 
                   // 게임 종료 메시지 추가
                   setMessages((prev) => [
@@ -169,12 +246,6 @@ const useCatchSocket = (roomId) => {
                       timestamp: new Date(),
                       isNotice: true,
                     },
-                    ...data.result.map((result) => ({
-                      sender: "SYSTEM",
-                      content: `${result.rank}등 - ${result.player} (${result.point}점)`,
-                      timestamp: new Date(),
-                      isNotice: true,
-                    })),
                   ]);
 
                   // 게임 종료 후 처리
@@ -331,6 +402,8 @@ const useCatchSocket = (roomId) => {
 
                   // 정답을 맞췄을 때의 처리
                   if (data.message.correct) {
+                    playCorrectSound();
+
                     // 점수 업데이트
                     dispatch(
                       updatePlayerScore({
@@ -566,7 +639,7 @@ const useCatchSocket = (roomId) => {
       setConnectionStatus("error");
       handleReconnect();
     }
-  }, [roomId, dispatch]);
+  }, [roomId, dispatch, playCorrectSound]);
 
   /**
    * 연결 재시도 핸들러
@@ -698,6 +771,10 @@ const useCatchSocket = (roomId) => {
     messages,
     joinRoom,
     client: clientRef.current,
+    countdown,
+    gameResults,
+    showResults,
+    handleCloseResults,
   };
 };
 
