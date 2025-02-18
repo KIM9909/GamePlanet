@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updatePassword } from "../../sources/store/slices/ProfileSlice";
 import { Eye, EyeOff } from "lucide-react";
+import { toast } from 'react-toastify';
 
 const PasswordChangePage = ({ userId, onClose }) => {
   const dispatch = useDispatch();
@@ -79,7 +80,7 @@ const PasswordChangePage = ({ userId, onClose }) => {
       ).unwrap();
 
       onClose();
-      alert("비밀번호가 성공적으로 변경되었습니다.");
+      toast.success("비밀번호가 성공적으로 변경되었습니다.");
     } catch (error) {
       setFormError(error.message || "비밀번호 변경에 실패했습니다.");
     }

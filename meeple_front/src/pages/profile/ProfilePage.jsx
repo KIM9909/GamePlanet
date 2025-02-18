@@ -7,6 +7,7 @@ import Heejun from "../../assets/images/pixel_character/pixel-heejun.png";
 import Hongbeom from "../../assets/images/pixel_character/pixel-hongbeom.png";
 import ProfilePicture from "./ProfilePicture";
 import { Shield, Sword, Crown, Sparkles, Gem, Info } from "lucide-react";
+import { toast } from 'react-toastify';
 
 // Redux 액션들과 API 임포트
 import {
@@ -111,14 +112,14 @@ const ProfilePage = () => {
       await dispatch(fetchProfile(userId));
     } catch (error) {
       console.error("프로필 업데이트 실패:", error);
-      alert("프로필 업데이트에 실패했습니다.");
+      toast.error("프로필 업데이트에 실패했습니다.");
     }
   };
 
   // 에러 발생 시 처리
   useEffect(() => {
     if (error) {
-      alert(error);
+      toast.error(error);
       dispatch(clearError());
     }
   }, [error, dispatch]);

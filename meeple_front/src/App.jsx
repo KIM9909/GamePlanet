@@ -39,7 +39,24 @@ function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
-      <ToastContainer />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        closeOnClick
+        pauseOnHover
+        draggable
+        theme="dark"
+        toastClassName={() =>
+          'relative flex p-4 min-h-10 rounded-lg justify-between overflow-hidden cursor-pointer bg-zinc-900 border border-zinc-700/50 backdrop-blur-sm'
+        }
+        bodyClassName={() =>
+          'text-sm font-noto text-white'
+        }
+        progressClassName={() =>
+          'Toastify__progress-bar--animated Toastify__progress-bar--dark bg-cyan-500'
+        }
+      />
       <BackGroundMusic />
       <FriendSocketLayout>
         <TopLayout>

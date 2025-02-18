@@ -25,6 +25,9 @@ const SideLayout = ({ children }) => {
   const handleGamePlay = () => {
     if (gameInfo) {
       switch (Number(gameInfo.gameInfoId)) {
+        case 1:
+          navigate("/cockroach/room-list");
+          break;
         case 2:
           navigate("/burumabul/room-list");
           break;
