@@ -80,7 +80,6 @@ const ArticleDetailPage = () => {
       setComments(prevComments => [ ...prevComments,newComment]);
       setCommentContent('');
     } catch (error) {
-      console.error('댓글 작성 실패:', error);
       toast.error('댓글 작성에 실패했습니다.');
     }
   };
@@ -105,7 +104,6 @@ const ArticleDetailPage = () => {
       setEditingCommentId(null);
       setEditContent('');
     } catch (error) {
-      console.error('댓글 수정 실패:', error);
       toast.error('댓글 수정에 실패했습니다.');
     }
   };
@@ -120,7 +118,6 @@ const ArticleDetailPage = () => {
         prevComments.filter(comment => comment.gameCommunityCommentId !== commentId)
       );
     } catch (error) {
-      console.error('댓글 삭제 실패:', error);
       toast.error('댓글 삭제에 실패했습니다.');
     }
   };
@@ -143,7 +140,6 @@ const ArticleDetailPage = () => {
         toast.success('게시글이 삭제되었습니다.');
         navigate(`/game-info/${gameInfoId}/board`);
       } catch (err) {
-        console.error('게시글 삭제 실패:', err);
         toast.error('게시글 삭제에 실패했습니다.');
       }
     }

@@ -18,8 +18,7 @@ const NewArticleModal = ({ isOpen, onClose, gameInfoId, onArticleCreated }) => {
       onArticleCreated(); // 게시글 목록 새로고침
       onClose(); // 모달 닫기
     } catch (error) {
-      console.error('게시글 저장 실패:', error);
-      throw error;
+      return error
     } finally {
       setIsSubmitting(false);
     }

@@ -145,7 +145,7 @@ const CustomModal = ({ onClose, cardId, customId, onSuccess, isEdit }) => {
       onSuccess();
       onClose();
     } catch (error) {
-      console.log(error);
+      return error
     }
   };
 
@@ -184,7 +184,6 @@ const CustomModal = ({ onClose, cardId, customId, onSuccess, isEdit }) => {
       
       onSuccess(response);
     } catch (error) {
-      console.error('타일/카드 처리 에러:', error);
       toast.error(error.message || '타일과 카드 처리에 실패했습니다.');
     }
   };
@@ -210,7 +209,6 @@ const CustomModal = ({ onClose, cardId, customId, onSuccess, isEdit }) => {
             }
           }
         } catch (error) {
-          console.error('기존 데이터 로딩 실패:', error);
           toast.error('데이터 로딩에 실패했습니다.');
         } finally {
           setIsLoading(false);

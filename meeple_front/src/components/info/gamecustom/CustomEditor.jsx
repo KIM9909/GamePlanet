@@ -54,7 +54,6 @@ const CustomEditor = () => {
     try {
       // 서버에서 완료된 타일 목록 가져오기
       const response = await CustomAPI.getCompleteTiles(customId);
-      console.log('완료된 타일 응답:', response); // 디버깅용
       
       // customCompleteList 배열을 사용하도록 수정
       const completedSet = new Set(response.customCompleteList.map(tileNumber => {
@@ -64,7 +63,7 @@ const CustomEditor = () => {
   
       setCompletedItems(completedSet);
     } catch (error) {
-      console.error('완료된 타일 정보를 불러오는데 실패했습니다:', error);
+      return error 
     }
   };
   useEffect(() => {
@@ -78,7 +77,6 @@ const CustomEditor = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        console.log("커스텀아이디",customId)
         setIsLoading(true);
         if (!isNew && customId) {
           const response = await CustomAPI.getElementById(customId);
@@ -123,20 +121,18 @@ const CustomEditor = () => {
 
   const handleSave = async (isTemp = false) => {
     try {
-      console.log("이름 : ", customName);
       
       const updateData = { customName }; // customId는 제외하고 customName만 전송
       
       await CustomAPI.updateElement(customId, updateData);
   
       if (isTemp) {
-        console.log("임시저장 되었습니다.");
-        
+      return        
       } else {
         setShowConfirm(true);
       }
     } catch (error) {
-      console.error('저장 실패:', error?.response?.data);
+      return error
     }
   };
 
@@ -146,7 +142,7 @@ const handleSaveComplete = async (response) => {
     await loadCompletedItems();  // 완료된 타일 목록 새로고침
     setShowModal(false);
   } catch (error) {
-    console.error('완료 상태 업데이트 실패:', error);
+    return error
   }
 };
 

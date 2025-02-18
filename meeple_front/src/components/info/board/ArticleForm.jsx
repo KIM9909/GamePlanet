@@ -59,7 +59,6 @@ const ArticleForm = ({ gameInfoId, initialData, onSubmit, isEditing, isSubmittin
         });
       }
     } catch (error) {
-      console.error('저장 중 오류 발생:', error);
       toast.error('저장에 실패했습니다.');
     } finally {
       if (externalIsSubmitting === undefined) {

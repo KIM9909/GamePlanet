@@ -77,7 +77,6 @@ const GameInfoPage = () => {
       try {
         setLoading(true);
         const gameData = await GameInfoAPI.getGameInfo(gameInfoId);
-        console.log("게임 데이터 : ", gameData);
         setData(gameData);
         setError(null);
       } catch (err) {

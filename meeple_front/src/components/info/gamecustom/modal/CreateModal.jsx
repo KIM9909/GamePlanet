@@ -67,7 +67,6 @@ const CreateModal = ({ onClose, onSuccess, userId }) => {
       toast.success('게임이 생성되었습니다.');
       onSuccess(response);
     } catch (error) {
-      console.error('게임 생성 실패:', error);
       toast.error(error.message || '게임 생성에 실패했습니다.');
     } finally {
       setIsLoading(false);

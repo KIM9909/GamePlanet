@@ -6,14 +6,9 @@ import { fetchFriendList, deleteFriend } from "../../api/FriendApi";
 export const fetchFriends = createAsyncThunk(
   "friend/fetchFriends",
   async (userId, { rejectWithValue }) => {
-    console.log(
-      "📡 [프론트] API 요청: 친구 목록 가져오기 (userId:",
-      userId,
-      ")"
-    );
+
     try {
       const response = await fetchFriendList(userId);
-      console.log("✅ [프론트] API 응답 데이터:", response);
       return response;
     } catch (error) {
       return rejectWithValue(
@@ -52,7 +47,6 @@ const friendSlice = createSlice({
       })
       .addCase(fetchFriends.fulfilled, (state, action) => {
         state.status = "succeeded";
-        console.log("✅ 친구 목록 업데이트 완료:", action.payload);
         state.friends = action.payload;
       })
       .addCase(fetchFriends.rejected, (state, action) => {

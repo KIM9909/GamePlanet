@@ -20,7 +20,6 @@ const loadStateBurumabul = () => {
     const serializedState = localStorage.getItem("burumabulState");
     return serializedState ? JSON.parse(serializedState) : initialState;
   } catch (error) {
-    console.error("부루마불 정보 업데이트 중 에러 : ", error);
     return initialState;
   }
 };
@@ -28,7 +27,7 @@ const saveStateBurumabul = (state) => {
   try {
     localStorage.setItem("burumabulState", JSON.stringify(state));
   } catch (error) {
-    console.error("부루마불 데이터 저장 중 에러 : ", error);
+    return
   }
 };
 

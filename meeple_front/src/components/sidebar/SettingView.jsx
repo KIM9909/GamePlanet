@@ -31,7 +31,6 @@ const SettingView = () => {
         }
       })
       .catch((error) => {
-        console.error("장치 목록 가져오기 실패:", error);
       });
   }, []);
 
@@ -41,7 +40,7 @@ const SettingView = () => {
         stream.getAudioTracks()[0].enabled = isOn;
       });
     } catch (error) {
-      console.error("마이크 토글 실패:", error);
+      return error
     }
   };
 
@@ -53,9 +52,8 @@ const SettingView = () => {
           deviceId: { exact: deviceId },
         },
       });
-      console.log("마이크 변경됨:", deviceId);
     } catch (error) {
-      console.error("마이크 변경 실패:", error);
+      return error
     }
   };
 
@@ -67,9 +65,8 @@ const SettingView = () => {
           deviceId: { exact: deviceId },
         },
       });
-      console.log("카메라 변경됨:", deviceId);
     } catch (error) {
-      console.error("카메라 변경 실패:", error);
+      return error
     }
   };
 
@@ -93,7 +90,7 @@ const SettingView = () => {
       source.connect(gainNode);
       gainNode.connect(audioContext.destination);
     } catch (error) {
-      console.error("마이크 볼륨 조절 실패:", error);
+      return error 
     }
   };
 

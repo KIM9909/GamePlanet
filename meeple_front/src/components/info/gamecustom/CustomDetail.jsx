@@ -30,10 +30,7 @@ const CustomDetail = () => {
   };
 
   const status = customData?.customStatus ?? '신청전';
-  console.log(customData)
   
-
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -68,7 +65,6 @@ const CustomDetail = () => {
   // 완성된 커스터마이징 가능한 타일 수 계산
   const getCompletedCustomTilesCount = () => {
     if (!Array.isArray(completeTiles)) {
-      console.error('completeTiles is not an array:', completeTiles);
       return 0;
     }
     

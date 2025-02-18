@@ -24,7 +24,6 @@ const Custom = () => {
   const gameInfo = location.state?.gameInfo;
 
   const userId = useSelector(state => state.user.userId);
-  console.log(userId)
 
   useEffect(() => {
     const fetchCustomElements = async () => {
@@ -43,7 +42,6 @@ const Custom = () => {
         
         setCustomGames(formattedGames);
       } catch (err) {
-        console.error('커스텀 게임 로딩 실패:', err);
         setError('커스텀 게임을 불러오는데 실패했습니다.');
       } finally {
         setIsLoading(false);
@@ -73,7 +71,6 @@ const Custom = () => {
       setCustomGames(prev => prev.filter(game => game.id !== deleteGame.id));
       setDeleteGame(null);
     } catch (err) {
-      console.error('커스텀 게임 삭제 실패:', err);
       setError('게임 삭제에 실패했습니다.');
     }
   };
