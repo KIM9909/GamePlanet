@@ -163,6 +163,7 @@ const ProfileModal = ({
     e.stopPropagation();
     // onReport() 호출 대신 직접 ReportForm을 보여주도록 수정
     setShowReportForm(true);
+    onReport();
   };
 
   // ProfileModal.jsx의 handleReportSubmit 함수
@@ -259,7 +260,7 @@ const ProfileModal = ({
       {ReactDOM.createPortal(
         <div
           ref={modalRef}
-          className="fixed bg-zinc-900/95 backdrop-blur-sm rounded-xl shadow-2xl z-[9999] border border-cyan-500/20"
+          className="fixed bg-zinc-900/95 backdrop-blur-sm rounded-xl shadow-2xl z-[50] border border-cyan-500/20"
           style={{
             top: position.top,
             left: position.left,

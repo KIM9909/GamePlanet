@@ -351,7 +351,7 @@ const BurumabulPlay = ({
           <div className="text-white">
             현재 플레이어 :{" "}
             <span className="text-cyan-400 text-lg">
-              {currentPlayer.playerName}
+              {currentPlayer.playerNickname}
             </span>
           </div>
 
