@@ -72,7 +72,7 @@ const PlayerCard = ({ playerInfo, onClick }) => {
         </p>
       </div>
 
-      {isModalOpen && (
+      {isModalOpen && !showReportForm && (
         <ProfileModal
           onClose={() => setIsModalOpen(false)}
           userNickname={userNickName}

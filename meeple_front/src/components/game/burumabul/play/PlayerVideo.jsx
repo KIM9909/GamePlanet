@@ -32,7 +32,9 @@ const PlayerVideo = ({ playerInfo, sessionId, onGameEnd }) => {
 
   const handleReport = () => {
     setIsModalOpen(false);
-    setShowReportForm(true);
+    setTimeout(() => {
+      setShowReportForm(true);
+    }, 0);
   };
 
   const handleReportSubmit = async (formData) => {
@@ -308,47 +310,49 @@ const PlayerVideo = ({ playerInfo, sessionId, onGameEnd }) => {
         )}
       </div>
       <div className="flex justify-between items-center px-3 py-1 flex-shrink-0">
+        <div className="flex flex-row items-center space-x-1">
+          {!isMyStream && (
+            <button
+              ref={buttonRef}
+              onClick={() => setIsModalOpen((prev) => !prev)}
+              className="p-1 rounded-full hover:bg-gray-600 transition-colors"
+            >
+              <UserSearch className="w-4 h-4 text-gray-400 hover:text-gray-200" />
+            </button>
+          )}
+          {isMyStream && (
+            <>
+              <button
+                onClick={toggleAudio}
+                className="hover:bg-gray-100 p-1 rounded-full transition-colors"
+              >
+                {audioEnabled ? (
+                  <Mic className="w-4 h-4 text-gray-600" />
+                ) : (
+                  <MicOff className="w-4 h-4 text-red-500" />
+                )}
+              </button>
+              <button
+                onClick={toggleVideo}
+                className="hover:bg-gray-100 p-1 rounded-full transition-colors"
+              >
+                {videoEnabled ? (
+                  <Camera className="w-4 h-4 text-gray-600" />
+                ) : (
+                  <CameraOff className="w-4 h-4 text-red-500" />
+                )}
+              </button>
+            </>
+          )}
+        </div>
         <p
           className="text-sm truncate "
           title={`${userNickName}${isMyStream ? " (나)" : ""}`}
         >
           {userNickName} {isMyStream ? "(나)" : ""}
         </p>
-        {isMyStream && (
-          <div className="flex flex-row items-center space-x-1">
-            <button
-              onClick={toggleAudio}
-              className="hover:bg-gray-100 p-1 rounded-full transition-colors"
-            >
-              {audioEnabled ? (
-                <Mic className="w-4 h-4 text-gray-600" />
-              ) : (
-                <MicOff className="w-4 h-4 text-red-500" />
-              )}
-            </button>
-            <button
-              onClick={toggleVideo}
-              className="hover:bg-gray-100 p-1 rounded-full transition-colors"
-            >
-              {videoEnabled ? (
-                <Camera className="w-4 h-4 text-gray-600" />
-              ) : (
-                <CameraOff className="w-4 h-4 text-red-500" />
-              )}
-            </button>
-            {playerInfo.playerId === Number(userId) && (
-              <button
-                ref={buttonRef}
-                onClick={() => setIsModalOpen((prev) => !prev)}
-                className="p-1 rounded-full hover:bg-gray-600 transition-colors"
-              >
-                <UserSearch className="w-4 h-4 text-gray-400 hover:text-gray-200" />
-              </button>
-            )}
-          </div>
-        )}
       </div>
-      {isModalOpen && (
+      {isModalOpen && !showReportForm && (
         <ProfileModal
           onClose={() => setIsModalOpen(false)}
           userNickname={userNickName}
