@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Clock, User, UserX, Image as ImageIcon, X, Info } from "lucide-react";
 import { AdminAPI } from "../../../sources/api/AdminAPI";
+import toast from "react-hot-toast";
 
 const ReportDetail = () => {
   const navigate = useNavigate();
@@ -70,7 +71,7 @@ const ReportDetail = () => {
 
   const handleSubmit = async () => {
     if (!processStatus && report.processStatus === 'WAIT') {
-      alert("처리 방식을 선택해주세요.");
+      toast.error("처리 방식을 선택해주세요.");
       return;
     }
 
@@ -94,10 +95,10 @@ const ReportDetail = () => {
         await AdminAPI.updateReportProcess(updateData);
       }
       
-      alert(isEditing ? "처리 내역이 수정되었습니다." : "신고가 처리되었습니다.");
+      toast.success(isEditing ? "처리 내역이 수정되었습니다." : "신고가 처리되었습니다.");
       window.location.reload(); // 페이지 새로고침
     } catch (err) {
-      alert(isEditing ? "처리 내역 수정에 실패했습니다." : "신고 처리에 실패했습니다.");
+      toast.error(isEditing ? "처리 내역 수정에 실패했습니다." : "신고 처리에 실패했습니다.");
       console.error("Error processing report:", err);
     } finally {
       setSubmitting(false);

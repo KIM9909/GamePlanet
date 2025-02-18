@@ -161,13 +161,14 @@ const CustomModal = ({ onClose, cardId, customId, onSuccess, isEdit }) => {
         name: name,
         cardColor: backgroundColor,
         description: description,
-        baseConstructionCost: parseInt(baseBuildPrice),
-        headquartersUsageFee: parseInt(hqPrice),
-        baseUsageFee: parseInt(basePrice),
+        baseConstructionCost: parseInt(baseBuildPrice)*10000 ,
+        headquartersUsageFee: parseInt(hqPrice)*10000,
+        baseUsageFee: parseInt(basePrice)*10000,
         imgFile: imageToSend,
         number: actualTileNumber,
-        seedCount: parseInt(price),
+        seedCount: parseInt(price)*10000,
       };
+      
 
       let response;
       if (isEdit) {
@@ -197,12 +198,12 @@ const CustomModal = ({ onClose, cardId, customId, onSuccess, isEdit }) => {
           
           if (response) {
             setName(response.card.cardName);
-            setPrice(response.card.cardSeedCount.toString());
+            setPrice((response.card.cardSeedCount/10000).toString());
             setBackgroundColor(response.card.cardColor);
             setDescription(response.card.cardDescription);
-            setBaseBuildPrice(response.card.cardBaseConstructionCost.toString());
-            setHqPrice(response.card.cardHeadquartersUsageFee.toString());
-            setBasePrice(response.card.cardBaseUsageFee.toString());
+            setBaseBuildPrice((response.card.cardBaseConstructionCost/10000).toString());
+            setHqPrice((response.card.cardHeadquartersUsageFee/10000).toString());
+            setBasePrice((response.card.cardBaseUsageFee/10000).toString());
             
             if (response.tile.tileImageUrl) {
               setExistingImage(response.tile.tileImageUrl);

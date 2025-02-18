@@ -206,7 +206,7 @@ const RecordList = () => {
                   {new Date(record.voiceTime).toLocaleString()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                  {record.user?.userName}
+                  {record.user?.userNickname}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-300">
                   {record.voiceLog}

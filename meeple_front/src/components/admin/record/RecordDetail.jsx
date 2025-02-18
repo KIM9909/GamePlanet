@@ -16,21 +16,17 @@ const RecordDetail = () => {
   const { recordId } = useParams();
 
   const getStatusText = (record) => {
-    if (!record.voiceProcessStatus) return(console.log(record, '미처리'), '미처리');
-    // 처리가 완료되었고 (Y), userDeletedAt이 있다면 제재된 것
-    if (record.voiceProcessStatus === 'Y' && record.user?.userDeletedAt) {
-      return '영구제재';
-    }
-    // 그 외의 Y는 무혐의
-    return '무혐의';
+    if (record.voiceProcessStatus === 'N') return '미처리';
+    if (record.voiceProcessStatus === 'Y' && record.user?.userDeletedAt) return '영구제재';
+    if (record.voiceProcessStatus === 'Y') return '무혐의';
+    return '미처리';
   };
   
   const getStatusColor = (record) => {
-    if (!record.voiceProcessStatus) return 'bg-yellow-500';
-    if (record.voiceProcessStatus === 'Y' && record.user?.userDeletedAt) {
-      return 'bg-red-500';
-    }
-    return 'bg-blue-500';
+    if (record.voiceProcessStatus === 'N') return 'bg-yellow-500';
+    if (record.voiceProcessStatus === 'Y' && record.user?.userDeletedAt) return 'bg-red-500';
+    if (record.voiceProcessStatus === 'Y') return 'bg-blue-500';
+    return 'bg-yellow-500';
   };
 
   useEffect(() => {
@@ -38,9 +34,10 @@ const RecordDetail = () => {
       try {
         setLoading(true);
         const response = await AdminAPI.getVoiceLog(recordId);
-        console.log('API 응답:', response); // 응답 데이터 확인
-        setRecord(response.voiceLog); // 응답 구조에 맞게 수정
-        setProcessStatus(response.voiceLog?.voiceProcessStatus || '');
+        setRecord(response.voiceLog);
+        if (response.voiceLog?.voiceProcessStatus === 'N') {
+          setProcessStatus('');
+        }
       } catch (err) {
         setError('음성 로그를 불러오는데 실패했습니다.');
         console.error('Error fetching voice log:', err);
@@ -114,17 +111,9 @@ const RecordDetail = () => {
     }
   };
 
-  if (loading) {
-    return <div className="text-center py-8 text-gray-300">음성 로그를 불러오는 중...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center py-8 text-red-400">{error}</div>;
-  }
-
-  if (!record) {
-    return <div className="text-center py-8 text-gray-300">음성 로그를 찾을 수 없습니다.</div>;
-  }
+  if (loading) return <div className="text-center py-8 text-gray-300">음성 로그를 불러오는 중...</div>;
+  if (error) return <div className="text-center py-8 text-red-400">{error}</div>;
+  if (!record) return <div className="text-center py-8 text-gray-300">음성 로그를 찾을 수 없습니다.</div>;
 
   return (
     <div className="bg-slate-800 rounded-lg p-6 max-w-4xl w-full mx-auto">
@@ -144,11 +133,9 @@ const RecordDetail = () => {
               {record.voiceTime ? new Date(record.voiceTime).toLocaleString() : '시간 정보 없음'}
             </span>
           </div>
-          {record.voiceProcessStatus && (
-            <span className={`px-3 py-1 text-white text-sm rounded-full ${getStatusColor(record)}`}>
-              {getStatusText(record)}
-            </span>
-          )}
+          <span className={`px-3 py-1 text-white text-sm rounded-full ${getStatusColor(record)}`}>
+            {getStatusText(record)}
+          </span>
         </div>
       </div>
 
@@ -201,8 +188,8 @@ const RecordDetail = () => {
         </div>
       </div>
 
-      {/* 처리 양식 (미처리 상태일 때만 표시) */}
-      {!record.voiceProcessStatus && (
+      {/* 처리 양식 */}
+      {record.voiceProcessStatus === 'N' && (
         <div className="bg-slate-700 rounded-lg p-4">
           <h3 className="text-lg font-semibold text-white mb-4">처리</h3>
           <div className="space-y-4">
@@ -214,8 +201,8 @@ const RecordDetail = () => {
                 className="w-full px-4 py-2 bg-slate-800 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500"
               >
                 <option value="">선택해주세요</option>
-                <option value="NORMAL">무혐의</option> 
-                <option value="BAN">영구제재</option> 
+                <option value="NORMAL">무혐의</option>
+                <option value="BAN">영구제재</option>
               </select>
             </div>
 
