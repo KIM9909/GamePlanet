@@ -16,17 +16,14 @@ import ScrollToTop from "./components/layout/ScrollToTop";
 import CatchMindPage from "./pages/game/CatchMindPage";
 import FriendModalLayout from "./components/layout/FriendModalLayout";
 import CatchMindListPage from "./components/game/catchMind/roomList/CatchMindListPage";
-import NewArticlePage from "./pages/gameInfo/board/NewArticlePage";
 import GameRulePage from "./pages/gameInfo/GameRulePage";
 import ArticleDetailPage from "./pages/gameInfo/board/ArticleDetailPage";
 import ReviewPage from "./pages/gameInfo/ReviewPage";
-import GameVideoPage from "./pages/gameInfo/GameVideoPage";
 
 import CockroachRoom from "./components/game/cockroachcard/CockroachRoom";
 import BurumabulRoomListPage from "./pages/game/burumabul/BurumabulRoomListPage";
 import SocketLayout from "./components/layout/SocketLayout";
 import FriendSocketLayout from "./components/layout/FriendSocketLayout";
-import EditArticlePage from "./pages/gameInfo/board/EditArticlePage";
 import FallingStars from "./components/background/FallingStars";
 
 import ErrorPage from "./pages/error/ErrorPage";
@@ -97,24 +94,12 @@ function App() {
                   element={<BoardPage />}
                 />
                 <Route
-                  path="/game-info/:gameInfoId/board/write"
-                  element={<NewArticlePage />}
-                />
-                <Route
                   path="/game-info/:gameInfoId/board/detail/:gameCommunityId"
                   element={<ArticleDetailPage />}
                 />
                 <Route
-                  path="/game-info/:gameInfoId/board/edit/:gameCommunityId"
-                  element={<EditArticlePage />}
-                />
-                <Route
                   path="/game-info/:gameInfoId/review"
                   element={<ReviewPage />}
-                />
-                <Route
-                  path="/game-info/:gameInfoId/video"
-                  element={<GameVideoPage />}
                 />
 
                 <Route path="/catch-mind/:roomId" element={<CatchMindPage />} />
