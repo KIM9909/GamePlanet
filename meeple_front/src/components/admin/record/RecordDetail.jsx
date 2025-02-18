@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Clock, User, Play, Pause } from 'lucide-react';
 import { AdminAPI } from '../../../sources/api/AdminAPI';
+import { toast } from 'react-toastify';
 
 const RecordDetail = () => {
   const navigate = useNavigate();
@@ -81,13 +82,13 @@ const RecordDetail = () => {
       }
     } catch (err) {
       console.error('Error playing audio:', err);
-      alert('음성 파일 재생에 실패했습니다.');
+      toast.error('음성 파일 재생에 실패했습니다.');
     }
   };
 
   const handleProcessVoiceLog = async () => {
     if (!processStatus) {
-      alert('처리 상태를 선택해주세요.');
+      toast.error('처리 상태를 선택해주세요.');
       return;
     }
   
@@ -100,13 +101,13 @@ const RecordDetail = () => {
   
       const response = await AdminAPI.processVoiceLog(processData);
       if (response.code === 200) {
-        alert('처리가 완료되었습니다.');
+        toast.success('처리가 완료되었습니다.');
         navigate(-1);
       } else {
-        alert('처리에 실패했습니다.');
+        toast.error('처리에 실패했습니다.');
       }
     } catch (err) {
-      alert('처리에 실패했습니다.');
+      toast.error('처리에 실패했습니다.');
       console.error('Error processing voice log:', err);
     } finally {
       setSubmitting(false);

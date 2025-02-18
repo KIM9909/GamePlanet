@@ -6,6 +6,7 @@ import ReviewItem from "../../components/info/gamereview/ReviewItem";
 import ReviewForm from "../../components/info/gamereview/ReviewForm";
 import { GameInfoAPI } from '../../sources/api/GameInfoAPI';
 import Pagination from "../../components/admin/Pagination";
+import { toast } from 'react-toastify';
 
 const ReviewPage = () => {
   const { gameInfoId } = useParams();
@@ -77,11 +78,11 @@ const ReviewPage = () => {
     if (window.confirm('정말로 이 리뷰를 삭제하시겠습니까?')) {
       try {
         await GameInfoAPI.deleteReview(gameInfoId, reviewId);
-        alert('리뷰가 삭제되었습니다.');
+        toast.success('리뷰가 삭제되었습니다.');
         fetchReviews();
       } catch (error) {
         console.error('리뷰 삭제 실패:', error);
-        alert('리뷰 삭제에 실패했습니다.');
+        toast.error('리뷰 삭제에 실패했습니다.');
       }
     }
   };

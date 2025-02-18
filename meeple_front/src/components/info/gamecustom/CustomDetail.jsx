@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { CustomAPI } from '../../../sources/api/CustomAPI';
 import { Edit, ArrowLeft } from 'lucide-react';
-import Dice from '../../game/burumabul/play/Dice';
+import { toast } from 'react-toastify';
 
 const CustomDetail = () => {
   const location = useLocation();
@@ -81,7 +81,7 @@ const CustomDetail = () => {
   const handleSubmit = async () => {
     const completedCount = getCompletedCustomTilesCount();
     if (completedCount < customizableTiles.length) {
-      alert('모든 커스터마이징 가능한 타일을 완성해야 신청할 수 있습니다.');
+      toast.error('모든 커스터마이징 가능한 타일을 완성해야 신청할 수 있습니다.');
       return;
     }
 
@@ -92,7 +92,7 @@ const CustomDetail = () => {
       const updatedCustom = await CustomAPI.getElementById(customGame.id);
       setCustomData(updatedCustom);
     } catch (error) {
-      alert('신청 중 오류가 발생했습니다.');
+      toast.error('신청 중 오류가 발생했습니다.');
       console.error('Submit error:', error);
     } finally {
       setIsSubmitting(false);

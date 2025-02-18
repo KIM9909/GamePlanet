@@ -5,6 +5,7 @@ import Loading from '../../../components/Loading'
 import { useSelector } from 'react-redux';
 import EditArticleModal from '../../../components/info/board/EditArticleModal';
 import Pagination from '../../../components/admin/Pagination';
+import { toast } from 'react-toastify';
 
 const ArticleDetailPage = () => {
   const { gameInfoId, gameCommunityId } = useParams();
@@ -80,7 +81,7 @@ const ArticleDetailPage = () => {
       setCommentContent('');
     } catch (error) {
       console.error('댓글 작성 실패:', error);
-      alert('댓글 작성에 실패했습니다.');
+      toast.error('댓글 작성에 실패했습니다.');
     }
   };
 
@@ -105,7 +106,7 @@ const ArticleDetailPage = () => {
       setEditContent('');
     } catch (error) {
       console.error('댓글 수정 실패:', error);
-      alert('댓글 수정에 실패했습니다.');
+      toast.error('댓글 수정에 실패했습니다.');
     }
   };
 
@@ -120,7 +121,7 @@ const ArticleDetailPage = () => {
       );
     } catch (error) {
       console.error('댓글 삭제 실패:', error);
-      alert('댓글 삭제에 실패했습니다.');
+      toast.error('댓글 삭제에 실패했습니다.');
     }
   };
 
@@ -139,11 +140,11 @@ const ArticleDetailPage = () => {
     if (window.confirm('게시글을 삭제하시겠습니까?')) {
       try {
         await GameInfoAPI.deleteCommunityPost(gameCommunityId);
-        alert('게시글이 삭제되었습니다.');
+        toast.success('게시글이 삭제되었습니다.');
         navigate(`/game-info/${gameInfoId}/board`);
       } catch (err) {
         console.error('게시글 삭제 실패:', err);
-        alert('게시글 삭제에 실패했습니다.');
+        toast.error('게시글 삭제에 실패했습니다.');
       }
     }
   };

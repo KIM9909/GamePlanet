@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { fetchFriendList, sendMessage } from "../../sources/api/FriendApi";
 import { useSelector } from "react-redux";
+import { toast } from 'react-toastify';
 
 const SendMessage = ({ selectedFriend }) => {
   const userId = useSelector((state) => state.user.userId);
@@ -32,12 +33,12 @@ const SendMessage = ({ selectedFriend }) => {
     e.preventDefault();
 
     if (!selectFriend) {
-      alert("보낼 친구를 선택해주세요!");
+      toast.error("보낼 친구를 선택해주세요!");
       return;
     }
 
     if (!messageText.trim()) {
-      alert("쪽지 내용을 입력해주세요!");
+      toast.error("쪽지 내용을 입력해주세요!");
       return;
     }
 
