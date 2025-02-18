@@ -55,21 +55,21 @@ public class SecurityConfig {
 				.sessionManagement(
 						session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
-								.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-								.requestMatchers("/ws/**", "/ws").permitAll()
-//                        .requestMatchers("/**").permitAll()
-								.requestMatchers("/topic/**", "/queue/**", "/app/**")
-								.permitAll()  // STOMP 엔드포인트 추가
-								.requestMatchers("/auth/login", "/user/register", "/user/checkEmail/**",
-										"/user/checkNickname/**").permitAll()
-								.requestMatchers(HttpMethod.GET, "/profile/{userId}").permitAll()
-								.requestMatchers(HttpMethod.PUT, "/profile/{userId}")
-								.authenticated()  // PUT 요청 허용
-								.requestMatchers(HttpMethod.PUT, "/profile/{userId}/password").permitAll()
-								.requestMatchers(HttpMethod.DELETE, "/profile/{userId}/delete").permitAll()
-								.requestMatchers("/api/video/**").permitAll()
-								.requestMatchers("/report/**").hasRole("ADMIN")
-								.anyRequest().authenticated()
+						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+						.requestMatchers("/ws/**", "/ws").permitAll()
+						.requestMatchers("/**").permitAll()
+						.requestMatchers("/topic/**", "/queue/**", "/app/**")
+						.permitAll()  // STOMP 엔드포인트 추가
+						.requestMatchers("/auth/login", "/user/register", "/user/checkEmail/**",
+								"/user/checkNickname/**").permitAll()
+						.requestMatchers(HttpMethod.GET, "/profile/{userId}").permitAll()
+						.requestMatchers(HttpMethod.PUT, "/profile/{userId}")
+						.authenticated()  // PUT 요청 허용
+						.requestMatchers(HttpMethod.PUT, "/profile/{userId}/password").permitAll()
+						.requestMatchers(HttpMethod.DELETE, "/profile/{userId}/delete").permitAll()
+						.requestMatchers("/api/video/**").permitAll()
+						.requestMatchers("/report/**").hasRole("ADMIN")
+						.anyRequest().authenticated()
 				)
 				.addFilterBefore(jwtAuthenticationFilter,
 						UsernamePasswordAuthenticationFilter.class)

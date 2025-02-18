@@ -1,5 +1,6 @@
 package com.meeple.meeple_back.game.bluemarble.controller.http;
 
+import com.meeple.meeple_back.game.bluemarble.controller.port.BluemarbleGameService;
 import com.meeple.meeple_back.game.bluemarble.controller.port.BluemarbleRoomService;
 import com.meeple.meeple_back.game.bluemarble.controller.response.RoomResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.response.SocketRoomResponse;
@@ -29,11 +30,10 @@ public class BluemarbleRoomCreateController {
 
 	private final BluemarbleRoomService bluemarbleRoomService;
 	private final CustomElementService customElementService;
-//
-//	//삭제핡것.
-//	private final BluemarbleGameService bluemarbleGameService;
-//	private final SimpMessagingTemplate messagingTemplate;
-//	private final OpenViduService openViduService;
+	//
+	//삭제핡것.
+	private final BluemarbleGameService bluemarbleGameService;
+
 
 	@PostMapping("/{userId}/create")
 	@Operation(summary = "대기방 생성", description = "새로운 블루마블 대기방을 생성합니다.")
@@ -47,17 +47,6 @@ public class BluemarbleRoomCreateController {
 		return ResponseEntity.status(HttpStatus.CREATED)
 				.body(response);
 	}
-//
-//	//TODO : 삭제해야됨.
-//	@GetMapping("/create")
-//	@Operation(summary = "부루마불 환경이 생성됐습니다.", description = "게임환경을 생성합니다.")
-//	public ResponseEntity<SocketResponse<GamePlayResponse>> create(
-//			@RequestBody GamePlayCreate gamePlayCreate)
-//			throws OpenViduJavaClientException, OpenViduHttpException {
-//		SocketResponse<GamePlayResponse> socketGamePlayResponse = SocketResponse.from(
-//				"create",
-//				bluemarbleGameService.create(gamePlayCreate),
-//				"ㅓㅐ");
-//		return ResponseEntity.ok(socketGamePlayResponse);
+
 }
 
