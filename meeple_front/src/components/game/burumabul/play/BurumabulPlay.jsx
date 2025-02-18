@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useState, useContext } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useState,
+  useContext,
+  useRef,
+} from "react";
 import TravelMap from "../play/TravelMap";
 import { createPortal } from "react-dom";
 import BurumabulSidebar from "../../../sidebar/burumabul/BurumabulSidebar";
@@ -34,8 +40,14 @@ const BurumabulPlay = ({
     buildBaseSocketData,
   } = socketContext;
   const { getProfile } = UserAPI;
+
   // 게임 데이터
   const [currentPlayData, setCurrentPlayData] = useState(playData);
+  const turnSound = useRef(null);
+
+  const [audioSrc, setAudioSrc] = useState(
+    "https://meeple-file-server-2.s3.ap-northeast-2.amazonaws.com/static-files/burumabul_turnSound.mp3"
+  );
 
   const [isGameEnded, setIsGameEnded] = useState(false);
 
@@ -65,8 +77,30 @@ const BurumabulPlay = ({
   };
 
   const currentPlayer = players?.[currentPlayData?.currentPlayerIndex];
-  // console.log("현재 플레이어: ", currentPlayer);
+  console.log("현재 플레이어: ", currentPlayer);
   const playerInfoList = currentPlayData.players;
+
+  const [previousPlayer, setPreviousPlayer] = useState(null);
+
+  useEffect(() => {
+    if (!currentPlayer || !turnSound.current) return;
+
+    // 이전 플레이어와 현재 플레이어가 다를 때만 실행
+    if (previousPlayer?.playerId !== currentPlayer.playerId) {
+      const playSound = async () => {
+        try {
+          turnSound.current.currentTime = 0;
+          await turnSound.current.play();
+          console.log("Sound played successfully");
+        } catch (error) {
+          console.error("Audio play failed:", error);
+        }
+      };
+
+      playSound();
+      setPreviousPlayer(currentPlayer); // 현재 플레이어를 이전 플레이어로 저장
+    }
+  }, [currentPlayer]);
 
   const myInfo = players?.find((player) => Number(player.playerId) === userId);
   // console.log("내 정보 출력 ==================", myInfo);
@@ -319,6 +353,7 @@ const BurumabulPlay = ({
           )}
         </div>
       </div>
+      <audio ref={turnSound} src={audioSrc} preload="auto" />
 
       {/* Game Status Bar */}
       <div className="absolute top-0 left-0 right-0 h-14 bg-gray-900/90 border-b border-cyan-500/30 z-40">
@@ -334,6 +369,13 @@ const BurumabulPlay = ({
               )}
             </div>
           </div>
+          <div className="text-white">
+            현재 플레이어 :{" "}
+            <span className="text-cyan-400 text-lg">
+              {currentPlayer.playerName}
+            </span>
+          </div>
+
           <div className="text-cyan-300/80">{gameSocketNotifi}</div>
         </div>
       </div>
