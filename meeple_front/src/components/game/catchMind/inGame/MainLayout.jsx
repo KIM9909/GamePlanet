@@ -27,6 +27,9 @@ import VideoChat from "./VideoChat";
 import ExitConfirmationModal from "./ExitConfirmationModal";
 import GameReviewModal from "./GameReivewModal";
 import Loading from "../../../Loading";
+import useSound from "./useSound";
+import CountdownModal from "./CountDownModal";
+import GameResultModal from "./GameResultModal";
 
 // 비디오 컨테이너 컴포넌트 - React.memo로 최적화
 const VideoContainer = React.memo(
@@ -270,8 +273,17 @@ const MainLayout = () => {
   const sessionId = useSelector((state) => state.catchmind.sessionId);
 
   const isCreator = gameState.creator === profileData?.userNickname;
-  const { connected, connectionStatus, sendMessage, client, joinRoom } =
-    useCatchSocket(roomId);
+  const {
+    connected,
+    connectionStatus,
+    sendMessage,
+    client,
+    joinRoom,
+    countdown,
+    gameResults,
+    showResults,
+    handleCloseResults,
+  } = useCatchSocket(roomId);
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [hasPlayedGame, setHasPlayedGame] = useState(false);
@@ -398,6 +410,10 @@ const MainLayout = () => {
     }, 500);
   }, [client, dispatch, navigate, profileData?.userNickname, roomId]);
 
+  const { play: playCountdown } = useSound(
+    "https://meeple-file-server-2.s3.ap-northeast-2.amazonaws.com/static-files/gameCountDown.mp3"
+  );
+
   // 게임 시작 처리 함수
   const handleStartGame = useCallback(async () => {
     if (!roomId || !client) return;
@@ -407,52 +423,58 @@ const MainLayout = () => {
       client.publish({
         destination: `/app/chat/${roomId}`,
         body: JSON.stringify({
-          message: "🎮 3초 후에 게임이 시작됩니다!",
+          message: "🎮 게임이 곧 시작됩니다!",
           sender: "SYSTEM",
           isNotice: true,
         }),
         headers: { "content-type": "application/json" },
       });
 
-      // 3초 카운트다운
-      setTimeout(() => {
-        client.publish({
-          destination: `/app/chat/${roomId}`,
-          body: JSON.stringify({
-            message: "3...",
-            sender: "SYSTEM",
-            isNotice: true,
-          }),
-          headers: { "content-type": "application/json" },
-        });
-      }, 100);
+      // 카운트다운 시작 (3)
+      client.publish({
+        destination: `/topic/catch-mind/${roomId}`,
+        body: JSON.stringify({
+          type: "countdown",
+          count: 3,
+        }),
+        headers: { "content-type": "application/json" },
+      });
 
+      // 2초 카운트다운
       setTimeout(() => {
         client.publish({
-          destination: `/app/chat/${roomId}`,
+          destination: `/topic/catch-mind/${roomId}`,
           body: JSON.stringify({
-            message: "2...",
-            sender: "SYSTEM",
-            isNotice: true,
+            type: "countdown",
+            count: 2,
           }),
           headers: { "content-type": "application/json" },
         });
       }, 1000);
 
+      // 1초 카운트다운
       setTimeout(() => {
         client.publish({
-          destination: `/app/chat/${roomId}`,
+          destination: `/topic/catch-mind/${roomId}`,
           body: JSON.stringify({
-            message: "1...",
-            sender: "SYSTEM",
-            isNotice: true,
+            type: "countdown",
+            count: 1,
           }),
           headers: { "content-type": "application/json" },
         });
       }, 2000);
 
-      // 3초 후에 실제 게임 시작
+      // START! 표시 및 게임 시작
       setTimeout(() => {
+        client.publish({
+          destination: `/topic/catch-mind/${roomId}`,
+          body: JSON.stringify({
+            type: "countdown",
+            count: 0,
+          }),
+          headers: { "content-type": "application/json" },
+        });
+
         dispatch(resetGameState());
         dispatch(updateGameState({ isGameStart: true }));
 
@@ -475,7 +497,9 @@ const MainLayout = () => {
           headers: { "content-type": "application/json" },
         });
       }, 3000);
-    } catch (error) {}
+    } catch (error) {
+      console.error("Game start error:", error);
+    }
   }, [roomId, client, dispatch]);
 
   // gameState 변경 감지를 위한 useEffect 추가
@@ -608,6 +632,12 @@ const MainLayout = () => {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+      <CountdownModal count={countdown} isVisible={countdown !== null} />
+      <GameResultModal
+        isOpen={showResults}
+        onClose={handleCloseResults}
+        results={gameResults || []}
+      />
       <ExitConfirmationModal
         isOpen={isExitModalOpen}
         onClose={handleCloseExitModal}

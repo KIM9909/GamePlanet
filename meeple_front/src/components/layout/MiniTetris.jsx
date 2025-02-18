@@ -31,13 +31,13 @@ const SHAPES = [
 ];
 
 const COLORS = [
-  "bg-lime-200", // I - 0
+  "bg-yellow-200", // I - 0
   "bg-yellow-300", // O - 1
   "bg-purple-400", // T - 2
-  "bg-blue-400", // J - 3
+  "bg-emerald-400", // J - 3
   "bg-orange-400", // L - 4
   "bg-red-400", // Z - 5
-  "bg-emerald-400", // S - 6
+  "bg-red-400", // S - 6
 ];
 
 const MiniTetris = () => {
