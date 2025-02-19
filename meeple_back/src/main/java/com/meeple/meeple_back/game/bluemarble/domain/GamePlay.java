@@ -174,6 +174,8 @@ public class GamePlay {
 			return DiceRollResponse.from(diceRollRequest.getPlayerId(), currentPlayer.getPosition(),
 					currentPlayer.getPosition(), diceRollRequest.getFirstDice(),
 					diceRollRequest.getSecondDice(), false, ActionType.CHECK_END);
+		} else if (isDouble && currentPlayer.getBlackHoleCount() > 0) {
+			currentPlayer.resetBlackholeCount();
 		}
 
 		DiceRollResult response = currentPlayer.rollDices(diceRollRequest);
@@ -181,7 +183,6 @@ public class GamePlay {
 
 		int currentPosition = response.getNextPosition();
 		ActionType nextAction = processTileEvent(currentPlayer, currentPosition);
-		// TODO 2 : 턴 종료 조건 판별
 		return DiceRollResponse.from(response, nextAction);
 	}
 

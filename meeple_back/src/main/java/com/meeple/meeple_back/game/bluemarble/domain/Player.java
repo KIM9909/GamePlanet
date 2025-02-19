@@ -152,4 +152,8 @@ public class Player {
 	public void decreaseBlackholeCount() {
 		this.blackHoleCount--;
 	}
+
+	public void resetBlackholeCount() {
+		this.blackHoleCount = 0;
+	}
 }
