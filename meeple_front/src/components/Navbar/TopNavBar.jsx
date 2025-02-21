@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../sources/store/slices/UserSlice";
@@ -12,9 +12,9 @@ import HongBeom from "../../assets/images/pixel_character/pixel-hongbeom.png";
 import JaeEun from "../../assets/images/pixel_character/pixel-jaeeun.png";
 import JinHyuk from "../../assets/images/pixel_character/pixel-jinhyuk.png";
 import SungHyun from "../../assets/images/pixel_character/pixel-sunghyun.png";
-import useFriendSocket from "../../hooks/useFriendSocket";
 import NotificationList from "../notification/NotificationList";
 import SettingsPopup from "./SettingsPopup";
+import { FriendSocketContext } from "../layout/FriendSocketLayout";
 
 const TopNavbar = () => {
   const dispatch = useDispatch();
@@ -24,15 +24,16 @@ const TopNavbar = () => {
   const characterRefs = useRef([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navbarRef = useRef(null);
-  const { token } = useSelector((state) => state.user);
+  const { token, userRole } = useSelector((state) => state.user);
 
   const userId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
-  const { connected, responseSocket, stompClientRef } = useFriendSocket();
+  const friendSocket = useContext(FriendSocketContext);
+
+  const { connected, responseSocket, stompClientRef } = friendSocket;
+
   const [notificationList, setNotificationList] = useState([]);
   const [isShowNotifi, setIsShowNotifi] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(
-    notificationList.length
-  );
+  const [notificationCount, setNotificationCount] = useState(0);
 
   const notificationRef = useRef(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -61,7 +62,9 @@ const TopNavbar = () => {
     4: {
       name: "재은",
       role: "Back-end",
-      description: "내 AI 좀 볼래?",
+      description: "내 AI 맛 좀 볼래,,?",
+      downloadLink:
+        "https://meeple-file-server-2.s3.ap-northeast-2.amazonaws.com/static-files/Meeple+Setup+1.4.5.exe",
     },
     5: { name: "성현", role: "Back-end", description: "내 새끼 돌려줘요 .." },
   };
@@ -103,16 +106,14 @@ const TopNavbar = () => {
   // 소켓 연결 관리
   useEffect(() => {
     if (connected) {
-      console.log("소켓연결 성공");
+      return
     } else {
-      console.log("소켓 연결 대기 중");
       if (stompClientRef?.current) {
         const reconnectSocket = async () => {
           try {
             await stompClientRef.current.activate();
-            console.log("소켓 재연결 시도");
           } catch (error) {
-            console.error("소켓 재연결 실패:", error);
+            return error
           }
         };
         reconnectSocket();
@@ -124,21 +125,16 @@ const TopNavbar = () => {
   useEffect(() => {
     if (responseSocket) {
       try {
-        console.log(responseSocket);
         setNotificationList((prevList) => {
           const updatedList = [...prevList, responseSocket];
+          setNotificationCount(updatedList.length);
           return updatedList;
         });
-        setNotificationCount((prev) => prev + 1);
       } catch (error) {
-        console.error("알림 처리 중 오류 발생: ", error);
+        return error
       }
     }
   }, [responseSocket]);
-
-  useEffect(() => {
-    setNotificationCount(notificationList.length);
-  }, [responseSocket, notificationList]);
 
   const showNotifi = () => {
     setIsShowNotifi(true);
@@ -342,6 +338,25 @@ const TopNavbar = () => {
               <p className="text-sm mt-1">
                 {characterInfo[selectedCharacter].description}
               </p>
+              {selectedCharacter === 4 && (
+                <a
+                  href={characterInfo[selectedCharacter].downloadLink}
+                  className="mt-3 block text-center bg-cyan-500 hover:bg-cyan-600 text-white py-2 px-4 rounded-md transition-colors duration-300"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Meeple Download
+                </a>
+              )}
+              {selectedCharacter === 1 && userRole === "ROLE_ADMIN" && (
+                <Link
+                  to="/admin"
+                  className="mt-3 block text-center bg-cyan-500 hover:bg-cyan-600 text-white py-2 px-4 rounded-md transition-colors duration-300"
+                  onClick={() => setSelectedCharacter(null)}
+                >
+                  관리자 페이지
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -351,7 +366,8 @@ const TopNavbar = () => {
       {isShowNotifi && (
         <NotificationList
           notiList={notificationList}
-          setNotiList={setNotificationList}
+          setNotificationList={setNotificationList}
+          setNotificationCount={setNotificationCount}
         />
       )}
     </nav>

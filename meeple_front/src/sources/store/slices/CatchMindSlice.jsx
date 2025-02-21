@@ -20,7 +20,7 @@ const initialState = {
   totalRounds: 5,
   timeLimit: 90,
   players: [],
-  isGameStarted: false,
+  isGameStart: false,
   currentTurnIndex: 0,
   quizCategory: null, // 퀴즈 카테고리 추가
   remainQuizCount: 0, // 남은 퀴즈 수 추가
@@ -91,8 +91,7 @@ const CatchMindSlice = createSlice({
 
     // 게임 시작 상태 업데이트 리듀서 추가
     setGameStarted: (state, action) => {
-      console.log("게임 시작 상태 변경:", action.payload);
-      state.isGameStarted = action.payload;
+      state.isGameStart = action.payload;
 
       // 게임 시작 시에는 상태 초기화하지 않음
       // 게임 종료 시에만 초기화
@@ -130,9 +129,13 @@ const CatchMindSlice = createSlice({
         password,
         roomId,
         sessionId,
+        isGameStart,
       } = action.payload;
 
       // 상태 업데이트
+      if (isGameStart !== undefined) {
+        state.isGameStart = isGameStart;
+      }
       if (currentWord !== undefined) state.currentWord = currentWord;
       // if (currentRound !== undefined) state.currentRound = currentRound;
       if (quizCategory !== undefined) state.quizCategory = quizCategory;
@@ -175,14 +178,7 @@ const CatchMindSlice = createSlice({
 
     // 라운드 증가
     incrementRound: (state) => {
-      console.group("Redux 라운드 증가");
-      console.log("현재 라운드:", state.currentRound);
-      console.log("현재 게임 상태:", state);
-
       state.currentRound += 1;
-
-      console.log("증가된 라운드:", state.currentRound);
-      console.groupEnd();
     },
 
     // 게임 상태 초기화 리듀서 추가
@@ -192,7 +188,7 @@ const CatchMindSlice = createSlice({
       // 게임 상태 초기화
       state.currentWord = null;
       state.currentRound = 1;
-      state.isGameStarted = false;
+      state.isGameStart = false;
       state.quizCategory = null;
       state.remainQuizCount = 0;
 

@@ -3,6 +3,7 @@ import { Search, Play, Pause, Eye } from 'lucide-react';
 import { AdminAPI } from "../../../sources/api/AdminAPI";
 import { useNavigate } from 'react-router-dom';
 import Pagination from '../Pagination';
+import { toast } from 'react-toastify';
 
 const RecordList = () => {
   const navigate = useNavigate();
@@ -22,6 +23,8 @@ const RecordList = () => {
       try {
         setLoading(true);
         const response = await AdminAPI.getVoiceLogList();
+        console.log(response);
+        
         if (response && response.voiceLogList) {
           setRecords(response.voiceLogList);
         } else {
@@ -40,15 +43,11 @@ const RecordList = () => {
   }, []);
 
   // 상태 텍스트 변환
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'Y':
-        return '처리완료';
-      case 'N':
-        return '미처리';
-      default:
-        return status;
+  const getStatusText = (status, userDeletedAt) => {
+    if (status === "Y") {
+      return userDeletedAt ? "영구제재" : "무혐의";
     }
+    return "미처리";
   };
 
   // 상태 색상 설정
@@ -56,10 +55,8 @@ const RecordList = () => {
     switch (status) {
       case 'Y':
         return 'bg-green-500';
-      case 'N':
-        return 'bg-red-500';
       default:
-        return 'bg-gray-500';
+        return 'bg-red-500';
     }
   };
 
@@ -120,7 +117,7 @@ const RecordList = () => {
       }
     } catch (err) {
       console.error('Error playing audio:', err);
-      alert('음성 파일 재생에 실패했습니다.');
+      toast.error('음성 파일 재생에 실패했습니다.');
     }
   };
 
@@ -209,14 +206,14 @@ const RecordList = () => {
                   {new Date(record.voiceTime).toLocaleString()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                  {record.user?.userName}
+                  {record.user?.userNickname}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-300">
                   {record.voiceLog}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-3 py-1 rounded-full text-xs font-medium text-white ${getStatusColor(record.voiceProcessStatus)}`}>
-                    {getStatusText(record.voiceProcessStatus)}
+                    {getStatusText(record.voiceProcessStatus, record.user.userDeletedAt)}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">

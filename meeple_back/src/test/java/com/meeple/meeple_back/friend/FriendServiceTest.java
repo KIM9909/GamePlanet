@@ -434,7 +434,7 @@ public class FriendServiceTest {
             .thenReturn(friendReverse);
 
         // Act
-        ResponseProcessBlock response = friendService.processBlock(request);
+        ResponseProcessBlock response = friendService.processBlock(5);
 
         // Assert
         assertNotNull(response);

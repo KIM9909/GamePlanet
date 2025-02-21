@@ -3,24 +3,44 @@ package com.meeple.meeple_back.game.bluemarble.service;
 import com.meeple.meeple_back.common.domain.exception.ResourceNotFoundException;
 import com.meeple.meeple_back.game.bluemarble.controller.port.BluemarbleGameService;
 import com.meeple.meeple_back.game.bluemarble.controller.request.DiceRollRequest;
-import com.meeple.meeple_back.game.bluemarble.controller.response.*;
+import com.meeple.meeple_back.game.bluemarble.controller.response.BuildBaseResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.response.BuyLandResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.response.DiceRollResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.response.DrawCardResponse;
+import com.meeple.meeple_back.game.bluemarble.controller.response.GamePlayResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.ChoosePositionRequest;
-import com.meeple.meeple_back.game.bluemarble.controller.socket.request.*;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuildBaseRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.BuyLandRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.CardDrawRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.PayFeeRequest;
+import com.meeple.meeple_back.game.bluemarble.controller.socket.request.TurnEndRequest;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.ChoosePositionResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.PayFeeResponse;
 import com.meeple.meeple_back.game.bluemarble.controller.socket.response.TurnEndResponse;
 import com.meeple.meeple_back.game.bluemarble.domain.ActionType;
+import com.meeple.meeple_back.game.bluemarble.domain.Card;
 import com.meeple.meeple_back.game.bluemarble.domain.GamePlay;
 import com.meeple.meeple_back.game.bluemarble.domain.GamePlayCreate;
+import com.meeple.meeple_back.game.bluemarble.domain.NeuronsValleyCard;
 import com.meeple.meeple_back.game.bluemarble.domain.Player;
+import com.meeple.meeple_back.game.bluemarble.domain.SeedCardLoader;
+import com.meeple.meeple_back.game.bluemarble.domain.SeedCertificateCard;
+import com.meeple.meeple_back.game.bluemarble.domain.TelepathyCard;
+import com.meeple.meeple_back.game.bluemarble.domain.Tile;
+import com.meeple.meeple_back.game.bluemarble.domain.TileLoader;
 import com.meeple.meeple_back.game.bluemarble.service.port.BluemarbleGameRepository;
+import com.meeple.meeple_back.game.bluemarble.util.ExcelReader;
+import com.meeple.meeple_back.game.bluemarble.util.NeuronsValleyParser;
+import com.meeple.meeple_back.game.bluemarble.util.SeedCertificateCardParser;
+import com.meeple.meeple_back.game.bluemarble.util.TelepathyCardParser;
+import com.meeple.meeple_back.game.bluemarble.util.TileParser;
 import com.meeple.meeple_back.user.service.UserService;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.logging.Logger;
 
 @Service
 @RequiredArgsConstructor
@@ -31,14 +51,62 @@ public class BluemarbleGameServiceImpl implements BluemarbleGameService {
 	private final BluemarbleGameRepository bluemarbleGameRepository;
 	private final UserService userService;
 
+	private final TileLoader tileLoader;
+	private final SeedCardLoader cardLoader;
+
+	private List<Card> createCards(Integer customId) {
+		List<Card> cards = new ArrayList<>();
+		SeedCertificateCardParser seedParser = new SeedCertificateCardParser();
+		List<SeedCertificateCard> originalSeedCertificateCards = seedParser.readExcelFile();
+		List<SeedCertificateCard> newCards = cardLoader.load(customId);
+		for (SeedCertificateCard nc : newCards) {
+			for (int i = 0; i < originalSeedCertificateCards.size(); i++) {
+				if (originalSeedCertificateCards.get(i).getNumber() == nc.getNumber()) {
+					originalSeedCertificateCards.set(i, nc);
+					break;
+				}
+			}
+		}
+
+		List<TelepathyCard> telepathyCards = new TelepathyCardParser().readExcelFile();
+		List<NeuronsValleyCard> neuronsValleyCards = new NeuronsValleyParser().readExcelFile();
+
+		cards.addAll(originalSeedCertificateCards);
+		cards.addAll(telepathyCards);
+		cards.addAll(neuronsValleyCards);
+
+		return cards;
+	}
+
+
+	private List<Tile> createTiles(Integer customId) {
+		ExcelReader<Tile> tileParser = new TileParser();
+		List<Tile> customTiles = tileLoader.load(customId);
+		List<Tile> tiles = tileParser.readExcelFile();
+		for (Tile customTile : customTiles) {
+			tiles.set(customTile.getId(), customTile);
+		}
+		return tiles;
+	}
+
 	@Override
 	@Transactional
 	public GamePlayResponse create(GamePlayCreate gamePlayCreate) {
+		final int DEFAULT_DECK = -1;
 		List<Player> players = gamePlayCreate.getPlayerIds().stream()
 				.map(id -> Player.init(userService.findById(id)))
 				.toList();
-		GamePlay gamePlay = bluemarbleGameRepository.save(GamePlay.init(gamePlayCreate, players));
-		return GamePlayResponse.from(gamePlay, ActionType.START_TURN);
+		if (gamePlayCreate.getCustomId() == DEFAULT_DECK) {
+			GamePlay gamePlay = bluemarbleGameRepository.save(
+					GamePlay.init(gamePlayCreate, players));
+			return GamePlayResponse.from(gamePlay, ActionType.START_TURN);
+		} else {
+			List<Tile> tiles = createTiles(gamePlayCreate.getCustomId());
+			List<Card> cards = createCards(gamePlayCreate.getCustomId());
+			GamePlay gamePlay = bluemarbleGameRepository.save(
+					GamePlay.init(gamePlayCreate, players, tiles, cards));
+			return GamePlayResponse.from(gamePlay, ActionType.START_TURN);
+		}
 	}
 
 	@Override

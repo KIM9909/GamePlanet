@@ -51,6 +51,9 @@ public class Report {
     @Column(name = "process_status")
     private String processStatus;
 
+    @Column(name = "report_document_url")
+    private String reportDocumentUrl;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;

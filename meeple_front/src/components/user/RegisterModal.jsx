@@ -137,11 +137,6 @@ const RegisterModal = ({ isOpen, onClose }) => {
 
   // 이메일 중복 검사
   const handleEmailCheck = async () => {
-    if (!formData.userEmail || !validations.validEmail) {
-      setError("유효한 이메일을 입력해주세요.");
-      return;
-    }
-
     try {
       const isDuplicate = await UserAPI.checkEmail(formData.userEmail);
       setValidations((prev) => ({
@@ -161,11 +156,6 @@ const RegisterModal = ({ isOpen, onClose }) => {
 
   // 닉네임 중복 검사
   const handleNicknameCheck = async () => {
-    if (!formData.userNickname || !validations.validNickname) {
-      setError("유효한 닉네임을 입력해주세요.");
-      return;
-    }
-
     try {
       const isDuplicate = await UserAPI.checkNickname(formData.userNickname);
       setValidations((prev) => ({
@@ -522,6 +512,29 @@ const RegisterModal = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="space-y-3 text-gray-300">
+                  <div className="flex items-center space-x-2 hover:text-cyan-400 transition-colors duration-300 mb-2 pb-2 border-b border-cyan-800">
+                    <input
+                      type="checkbox"
+                      id="allAgreement"
+                      checked={Object.values(termsAgreed).every(Boolean)}
+                      onChange={(e) =>
+                        setTermsAgreed({
+                          terms: e.target.checked,
+                          privacy: e.target.checked,
+                          device: e.target.checked,
+                          AI: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 rounded border-cyan-700 text-cyan-500 focus:ring-cyan-500"
+                    />
+                    <label
+                      htmlFor="allAgreement"
+                      className="text-md font-semibold"
+                    >
+                      이용약관 전체동의
+                    </label>
+                  </div>
+
                   <div className="flex items-center space-x-2 hover:text-cyan-400 transition-colors duration-300">
                     <input
                       type="checkbox"
@@ -536,8 +549,9 @@ const RegisterModal = ({ isOpen, onClose }) => {
                       className="w-4 h-4 rounded border-cyan-700 text-cyan-500 focus:ring-cyan-500"
                       required
                     />
-                    <label htmlFor="termsAgreement" className="text-sm">
-                      [필수] 서비스 이용약관 동의
+                    <label htmlFor="termsAgreement" className="flex text-sm">
+                      서비스 이용약관 동의{" "}
+                      <div className="text-gray-500 ml-2">[필수]</div>
                     </label>
                   </div>
 
@@ -555,8 +569,9 @@ const RegisterModal = ({ isOpen, onClose }) => {
                       className="w-4 h-4 rounded border-cyan-700 text-cyan-500 focus:ring-cyan-500"
                       required
                     />
-                    <label htmlFor="privacyAgreement" className="text-sm">
-                      [필수] 개인정보 수집 및 이용 동의
+                    <label htmlFor="privacyAgreement" className="flex text-sm">
+                      개인정보 수집 및 이용 동의{" "}
+                      <div className="text-gray-500 ml-2">[필수]</div>
                     </label>
                   </div>
 
@@ -574,8 +589,9 @@ const RegisterModal = ({ isOpen, onClose }) => {
                       className="w-4 h-4 rounded border-cyan-700 text-cyan-500 focus:ring-cyan-500"
                       required
                     />
-                    <label htmlFor="deviceAgreement" className="text-sm">
-                      [필수] 화상/음성 채팅 이용 동의
+                    <label htmlFor="deviceAgreement" className="flex text-sm">
+                      화상/음성 채팅 이용 동의{" "}
+                      <div className="text-gray-500 ml-2">[필수]</div>
                     </label>
                   </div>
 
@@ -593,8 +609,9 @@ const RegisterModal = ({ isOpen, onClose }) => {
                       className="w-4 h-4 rounded border-cyan-700 text-cyan-500 focus:ring-cyan-500"
                       required
                     />
-                    <label htmlFor="AIAgreement" className="text-sm">
-                      [필수] AI 욕설 감지 프로그램 설치 동의
+                    <label htmlFor="AIAgreement" className="flex text-sm">
+                      AI 욕설 감지 프로그램 설치 동의{" "}
+                      <div className="text-gray-500 ml-2">[필수]</div>
                     </label>
                   </div>
                 </div>

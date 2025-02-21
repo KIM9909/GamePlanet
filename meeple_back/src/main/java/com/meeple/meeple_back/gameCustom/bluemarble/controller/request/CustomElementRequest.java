@@ -5,4 +5,5 @@ import lombok.Data;
 @Data
 public class CustomElementRequest {
 	private String customName;
+	private Long userId;
 }

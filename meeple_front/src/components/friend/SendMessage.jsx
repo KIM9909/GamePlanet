@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { fetchFriendList, sendMessage } from "../../sources/api/FriendApi";
 import { useSelector } from "react-redux";
+import { toast } from 'react-toastify';
 
 const SendMessage = ({ selectedFriend }) => {
   const userId = useSelector((state) => state.user.userId);
@@ -32,12 +33,12 @@ const SendMessage = ({ selectedFriend }) => {
     e.preventDefault();
 
     if (!selectFriend) {
-      alert("보낼 친구를 선택해주세요!");
+      toast.error("보낼 친구를 선택해주세요!");
       return;
     }
 
     if (!messageText.trim()) {
-      alert("쪽지 내용을 입력해주세요!");
+      toast.error("쪽지 내용을 입력해주세요!");
       return;
     }
 
@@ -55,12 +56,12 @@ const SendMessage = ({ selectedFriend }) => {
   };
 
   return (
-    <div className="flex flex-col items-start justify-center h-full">
-      <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md h-[40vh] flex flex-col">
+    <div className="h-full flex flex-col items-center justify-start w-full overflow-y-auto">
+      <div className="w-full max-w-md mx-auto  bg-gray-800 rounded-lg shadow-md h-full flex flex-col">
         <form onSubmit={handleSendMessage} className="flex flex-col h-full">
           {/* 친구 선택 드롭다운 */}
           <div className="mb-4">
-            <label className="block text-gray-700 font-medium mb-2">
+            <label className="block text-cyan-400 font-medium mb-2">
               받는 사람
             </label>
             <select
@@ -86,11 +87,11 @@ const SendMessage = ({ selectedFriend }) => {
 
           {/* 쪽지 입력 폼 */}
           <div className="flex-1 mb-4">
-            <label className="block text-gray-700 font-medium mb-2">
+            <label className="block text-cyan-400 font-medium mb-2">
               쪽지 내용
             </label>
             <textarea
-              className="w-full h-[calc(100%-2rem)] px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full h-[calc(100%-2rem)] px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"
               placeholder="쪽지를 입력하세요..."
               value={messageText}
               onChange={(e) => setMessageText(e.target.value)}
@@ -100,7 +101,7 @@ const SendMessage = ({ selectedFriend }) => {
           {/* 제출 버튼 */}
           <button
             type="submit"
-            className="w-full bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600 transition-all duration-200"
+            className="w-full bg-cyan-500 text-white py-2 rounded-lg font-semibold hover:bg-cyan-700 transition-all duration-200"
           >
             보내기
           </button>

@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect, useContext } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProfile } from "../../../sources/store/slices/ProfileSlice";
 import { SocketContext } from "../../layout/SocketLayout";
+import UserAPI from "../../../sources/api/UserAPI";
 
 const BurumabulChatView = ({ playerInfoList }) => {
   const { connected, chatMessage, chatWaitingRoom } = useContext(SocketContext);
@@ -9,10 +10,23 @@ const BurumabulChatView = ({ playerInfoList }) => {
   const [messages, setMessages] = useState([]);
   const messagesEndRef = useRef(null);
   const dispatch = useDispatch();
+  const { getProfile } = UserAPI;
 
   // Redux에서 userId와 프로필 데이터 가져오기
   const userId = Number(useSelector((state) => state.user.userId));
-  const profileData = useSelector((state) => state.profile.profileData);
+
+  // 닉네임 조회
+  const getNickname = async (playerId) => {
+    if (playerId) {
+      try {
+        const response = await getProfile(playerId);
+        console.log("닉네임정보찾기: ", response);
+        return response.userNickname;
+      } catch (error) {
+        console.error("닉네임 정보 찾기 중 오류:", error);
+      }
+    }
+  };
 
   // 컴포넌트 마운트 시 프로필 정보 가져오기
   useEffect(() => {
@@ -28,22 +42,33 @@ const BurumabulChatView = ({ playerInfoList }) => {
       const senderInfo = playerInfoList.find(
         (player) => Number(player.playerId) === Number(sender)
       );
-      const senderName = senderInfo ? senderInfo.playerName : "알 수 없음";
+      const fetchNickname = async () => {
+        let senderName = "알 수 없음";
+        if (senderInfo) {
+          try {
+            senderName = await getNickname(senderInfo.playerId);
+          } catch (error) {
+            console.error("닉네임 가져오기 실패:", error);
+          }
+        }
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          type: "chat",
-          sender: sender,
-          senderName: senderName,
-          content: content,
-          isMe: sender === userId,
-          timestamp: Date.now(),
-        },
-      ]);
+        setMessages((prev) => [
+          ...prev,
+          {
+            type: "chat",
+            sender: sender,
+            senderName: senderName,
+            content: content,
+            isMe: sender === userId,
+            timestamp: Date.now(),
+          },
+        ]);
 
-      console.log("현재 유저 목록:", playerInfoList);
-      console.log("닉네임 찾기 결과:", senderName);
+        console.log("현재 유저 목록:", playerInfoList);
+        console.log("닉네임 찾기 결과:", senderName);
+      };
+
+      fetchNickname();
     }
   }, [chatMessage, playerInfoList, userId]);
 
@@ -81,7 +106,9 @@ const BurumabulChatView = ({ playerInfoList }) => {
             >
               <div
                 className={`rounded-lg p-2 max-w-[75%] ${
-                  msg.isMe ? "bg-gray-600 text-white" : "bg-gray-700 text-white"
+                  msg.isMe
+                    ? "bg-gray-600  text-white"
+                    : "bg-gray-700 text-white border-2 border-cyan-400"
                 }`}
               >
                 {/* ✅ 여기 적용 (보낸 사람 닉네임 표시) */}

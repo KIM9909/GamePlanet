@@ -79,7 +79,7 @@ public class AIServiceImpl implements AIService {
                 .code(200)
                 .message("정상 작동")
                 .voiceLog(voiceLog)
-
+                .userDeletedAt(voiceLog.getUser().getUserDeletedAt())
                 .build();
         return response;
     }
@@ -105,6 +105,7 @@ public class AIServiceImpl implements AIService {
         ResponseProcessVoiceLog response = ResponseProcessVoiceLog.builder()
                 .code(200)
                 .message("처리완료")
+                .userDeletedAt(savedVoiceLog.getUser().getUserDeletedAt())
                 .voiceLog(savedVoiceLog)
                 .build();
 

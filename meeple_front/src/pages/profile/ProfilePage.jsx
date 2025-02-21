@@ -6,7 +6,8 @@ import UserDeletePage from "./UserDeletePage";
 import Heejun from "../../assets/images/pixel_character/pixel-heejun.png";
 import Hongbeom from "../../assets/images/pixel_character/pixel-hongbeom.png";
 import ProfilePicture from "./ProfilePicture";
-import { Shield, Sword, Crown, Sparkles } from "lucide-react";
+import { Shield, Sword, Crown, Sparkles, Gem, Info } from "lucide-react";
+import { toast } from 'react-toastify';
 
 // Redux 액션들과 API 임포트
 import {
@@ -28,6 +29,7 @@ const ProfilePage = () => {
   const { userId } = useParams();
   const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState("info");
+  const [showTooltip, setShowTooltip] = useState(false);
 
   // Redux store에서 필요한 상태들을 가져오기
   const {
@@ -93,6 +95,10 @@ const ProfilePage = () => {
   // 경험치 바 퍼센트 계산 함수를 수정된 상태를 사용하도록 변경
   const calculateExpPercentage = () => {
     const maxExp = 300;
+    // 레벨이 30이면 100% 반환
+    if (expData.userLevel >= 30) {
+      return 100;
+    }
     return (expData.userExp / maxExp) * 100;
   };
 
@@ -106,14 +112,14 @@ const ProfilePage = () => {
       await dispatch(fetchProfile(userId));
     } catch (error) {
       console.error("프로필 업데이트 실패:", error);
-      alert("프로필 업데이트에 실패했습니다.");
+      toast.error("프로필 업데이트에 실패했습니다.");
     }
   };
 
   // 에러 발생 시 처리
   useEffect(() => {
     if (error) {
-      alert(error);
+      toast.error(error);
       dispatch(clearError());
     }
   }, [error, dispatch]);
@@ -126,7 +132,7 @@ const ProfilePage = () => {
 
   // UI 렌더링
   return (
-    <div className="min-h-screen mt-3">
+    <div className="min-h-screen mt-10">
       <div className="max-w-3xl mx-auto bg-zinc-900/80 rounded-[40px] border border-cyan-400/40">
         <div className="max-w-3xl mx-auto py-6 px-8">
           {/* 프로필 헤더 */}
@@ -134,11 +140,13 @@ const ProfilePage = () => {
             <div className="rounded-xl p-7 bg-zinc-900/60 shadow-lg backdrop-blur-sm border border-zinc-700/50">
               <div className="flex items-start gap-8">
                 {/* 프로필 이미지 */}
-                <ProfilePicture
-                  initialImageUrl={profile.userProfilePictureUrl}
-                  defaultImageUrl={Heejun}
-                  onSave={handleProfileUpdate}
-                />
+                <div className="mt-2">
+                  <ProfilePicture
+                    initialImageUrl={profile.userProfilePictureUrl}
+                    defaultImageUrl={Heejun}
+                    onSave={handleProfileUpdate}
+                  />
+                </div>
 
                 {/* 사용자 정보 */}
                 <div className="flex-1">
@@ -154,12 +162,66 @@ const ProfilePage = () => {
                             <Shield size={16} className="text-cyan-400" />
                           ) : profile.userLevel <= 19 ? (
                             <Sword size={16} className="text-emerald-400" />
-                          ) : (
+                          ) : profile.userLevel <= 29 ? (
                             <Crown size={16} className="text-yellow-400" />
+                          ) : (
+                            <Gem size={16} className="text-red-400" />
                           )}
                           <span className="text-cyan-400 text-sm font-semibold">
-                            Lv.{profile.userLevel}
+                            {profile.userLevel >= 30
+                              ? `Lv.MAX`
+                              : `Lv.${profile.userLevel}`}
                           </span>
+                        </div>
+                        <div className="relative">
+                          <button
+                            onMouseEnter={() => setShowTooltip(true)}
+                            onMouseLeave={() => setShowTooltip(false)}
+                          >
+                            <Info className="text-gray-400/80 w-5 h-5 -ml-1.5 mt-2" />
+                          </button>
+
+                          {showTooltip && (
+                            <div className="absolute left-6 top-1/2 -translate-y-1/2 z-50 bg-zinc-800 border border-zinc-700 rounded-lg p-3 shadow-lg min-w-[180px]">
+                              <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent border-r-[8px] border-r-zinc-700" />
+                              <div className="absolute -left-[7px] top-1/2 -translate-y-1/2 w-0 h-0 border-t-[7px] border-t-transparent border-b-[7px] border-b-transparent border-r-[7px] border-r-zinc-800" />
+                              <h3 className="text-sm font-semibold text-white mb-2">
+                                레벨별 등급
+                              </h3>
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <Shield size={16} className="text-cyan-400" />
+                                  <span className="text-sm text-zinc-300">
+                                    Lv.0-9 뉴비
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Sword
+                                    size={16}
+                                    className="text-emerald-400"
+                                  />
+                                  <span className="text-sm text-zinc-300">
+                                    Lv.10-19 중수
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Crown
+                                    size={16}
+                                    className="text-yellow-400"
+                                  />
+                                  <span className="text-sm text-zinc-300">
+                                    Lv.20-29 고수
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Gem size={16} className="text-red-400" />
+                                  <span className="text-sm text-zinc-300">
+                                    Lv.30(Max) 마스터
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -187,12 +249,16 @@ const ProfilePage = () => {
                     <div className="w-full mt-2">
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-md text-zinc-400">
-                          Level {expData.userLevel}
+                          {expData.userLevel >= 30
+                            ? `Level MAX`
+                            : `Level ${expData.userLevel}`}
                         </span>
                         <div className="flex items-center gap-1.5">
                           <Sparkles size={14} className="text-cyan-400" />
                           <span className="text-md font-medium text-cyan-400">
-                            {expData.userExp}/300
+                            {expData.userLevel >= 30
+                              ? "300/300"
+                              : `${expData.userExp}/300`}
                           </span>
                         </div>
                       </div>
@@ -221,14 +287,22 @@ const ProfilePage = () => {
                         />
                       </div>
 
-                      <div className="flex justify-between mt-1.5">
-                        <span className="text-sm text-zinc-500">
-                          Lv.{expData.userLevel}
-                        </span>
-                        <span className="text-sm text-zinc-500">
-                          Lv.{expData.userLevel + 1}
-                        </span>
-                      </div>
+                      {expData.userLevel >= 30 ? (
+                        <div className="text-center mt-1.5">
+                          <span className="text-sm text-zinc-500">
+                            Level MAX
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex justify-between mt-1.5">
+                          <span className="text-sm text-zinc-500">
+                            Lv.{expData.userLevel}
+                          </span>
+                          <span className="text-sm text-zinc-500">
+                            Lv.{expData.userLevel + 1}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

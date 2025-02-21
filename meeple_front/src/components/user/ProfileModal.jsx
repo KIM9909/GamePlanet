@@ -65,9 +65,7 @@ const ProfileModal = ({
           const profileData = await profileResponse.json();
           setProfileData(profileData);
         }
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-      }
+      } catch (error) {}
     };
 
     if (userNickname) {
@@ -111,7 +109,6 @@ const ProfileModal = ({
           friend.friendStatus === "ACCEPTED"
       );
     } catch (error) {
-      console.error("친구 목록 조회 중 오류 발생:", error);
       return false;
     }
   };
@@ -147,7 +144,6 @@ const ProfileModal = ({
         showAlert("유저를 찾을 수 없습니다.", "error");
       }
     } catch (error) {
-      console.error("친구 요청 중 오류 발생:", error);
       if (error.response?.data?.message === "이미 요청을 보냈습니다.") {
         showAlert("이미 친구 요청을 보냈습니다.", "error");
       } else if (
@@ -167,44 +163,74 @@ const ProfileModal = ({
     e.stopPropagation();
     // onReport() 호출 대신 직접 ReportForm을 보여주도록 수정
     setShowReportForm(true);
+    onReport();
   };
 
+  // ProfileModal.jsx의 handleReportSubmit 함수
   const handleReportSubmit = async (formData) => {
     try {
       const searchResponse = await fetch(
         `${
           import.meta.env.VITE_API_BASE_URL
         }/friend/search?userNickName=${userNickname}`
-        // `${
-        //   import.meta.env.VITE_LOCAL_API_BASE_URL
-        // }/friend/search?userNickName=${userNickname}`
       );
       const searchData = await searchResponse.json();
 
       if (searchData.code === 200 && searchData.userId) {
-        const reportData = {
-          ...formData,
-          userId: searchData.userId,
-          reporterId: userId,
-        };
+        // 새로운 FormData 객체 생성
+        const submitFormData = new FormData();
 
-        const response = await axios.post(
+        // 파일 처리 로깅
+        const file = formData.get("reportDocument");
+
+        if (file instanceof Blob) {
+          submitFormData.append("reportDocument", file);
+        } else {
+          const emptyBlob = new Blob([], { type: "application/octet-stream" });
+          submitFormData.append("reportDocument", emptyBlob, "empty.txt");
+        }
+
+        // ID 값들을 숫자로 변환
+        const targetUserId = Number(searchData.userId);
+        const reporterUserId = Number(userId);
+
+        // 나머지 필드 추가
+        submitFormData.append("reportReason", formData.get("reportReason"));
+        submitFormData.append("reportTitle", formData.get("reportTitle"));
+        submitFormData.append("reportContent", formData.get("reportContent"));
+        submitFormData.append("userId", targetUserId);
+        submitFormData.append("reporterId", reporterUserId);
+
+        const response = await fetch(
           `${import.meta.env.VITE_API_BASE_URL}/report`,
-          // `${import.meta.env.VITE_LOCAL_API_BASE_URL}/report`,
-          reportData
+          {
+            method: "POST",
+            body: submitFormData,
+          }
         );
 
-        if (response.data.code === 200) {
+        // 응답 로깅
+        const responseText = await response.text();
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = JSON.parse(responseText);
+
+        if (data.code === 200) {
           setShowReportForm(false);
           showAlert("신고가 접수되었습니다.", "success");
         } else {
-          showAlert("신고 접수에 실패했습니다.", "error");
+          showAlert(
+            data.message || "신고 처리 중 오류가 발생했습니다.",
+            "error"
+          );
         }
       } else {
         showAlert("유저를 찾을 수 없습니다.", "error");
       }
     } catch (error) {
-      console.error("신고 처리 중 오류 발생:", error);
       showAlert("신고 처리 중 오류가 발생했습니다.", "error");
     }
   };
@@ -234,7 +260,7 @@ const ProfileModal = ({
       {ReactDOM.createPortal(
         <div
           ref={modalRef}
-          className="fixed bg-zinc-900/95 backdrop-blur-sm rounded-xl shadow-2xl z-[9999] border border-cyan-500/20"
+          className="fixed bg-zinc-900/95 backdrop-blur-sm rounded-xl shadow-2xl z-[50] border border-cyan-500/20"
           style={{
             top: position.top,
             left: position.left,

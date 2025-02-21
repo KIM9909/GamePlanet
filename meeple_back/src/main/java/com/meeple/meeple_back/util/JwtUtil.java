@@ -23,17 +23,27 @@ public class JwtUtil {
 
 	private final int validity = 1000 * 60 * 60 * 4; // 4시간
 	private final UserRepository userRepository;
-
+	private final RedisTemplate<String, String> redisTemplate;
 	@Value("${jwt.secret}")
 	private String SECRET_KEY;
-
-	private final RedisTemplate<String, String> redisTemplate;
 
 	@Autowired
 	public JwtUtil(@Qualifier("userRedisTemplate") RedisTemplate<String, String> redisTemplate,
 			UserRepository userRepository) {
 		this.redisTemplate = redisTemplate;
 		this.userRepository = userRepository;
+	}
+
+	public static String generateToken(Long userId, String username) {
+		long now = System.currentTimeMillis();
+		Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+		return Jwts.builder()
+				.setSubject(String.valueOf(userId))
+				.claim("username", username)
+				.setIssuedAt(new Date(now))
+				.setExpiration(new Date(now + 1000 * 60 * 60 * 4))
+				.signWith(key)
+				.compact();
 	}
 
 	/**
@@ -48,21 +58,11 @@ public class JwtUtil {
 
 		return Jwts.builder()
 				.setSubject(String.valueOf(user.getUserId()))  // userId를 String으로 변환하여 subject에 저장
+				.claim("role", user.getUserRole())
+				.claim("nickname", user.getUserNickname())
 				.setIssuedAt(new Date(now))
 				.setExpiration(new Date(now + validity))
 				.signWith(key, SignatureAlgorithm.HS256)
-				.compact();
-	}
-
-	public static String generateToken(Long userId, String username) {
-		long now = System.currentTimeMillis();
-		Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-		return Jwts.builder()
-				.setSubject(String.valueOf(userId))
-				.claim("username", username)
-				.setIssuedAt(new Date(now))
-				.setExpiration(new Date(now + 1000 * 60 * 60 * 4))
-				.signWith(key)
 				.compact();
 	}
 

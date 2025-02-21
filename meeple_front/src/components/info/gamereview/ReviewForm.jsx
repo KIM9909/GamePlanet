@@ -3,6 +3,7 @@ import { FaStar } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { GameInfoAPI } from '../../../sources/api/GameInfoAPI';
+import { toast } from 'react-toastify';
 
 const ReviewForm = ({ initialData, onSuccess }) => {
   const [rating, setRating] = useState(0);
@@ -27,12 +28,12 @@ const ReviewForm = ({ initialData, onSuccess }) => {
     e.preventDefault();
     
     if (!rating) {
-      alert('별점을 선택해주세요.');
+      toast.error('별점을 선택해주세요.');
       return;
     }
 
     if (!content.trim()) {
-      alert('리뷰 내용을 입력해주세요.');
+      toast.error('리뷰 내용을 입력해주세요.');
       return;
     }
 
@@ -52,10 +53,10 @@ const ReviewForm = ({ initialData, onSuccess }) => {
           gameReviewContent: content,
         }
         await GameInfoAPI.updateReview(initialData.gameReviewId, reviewUpdateData);
-        alert('리뷰가 성공적으로 수정되었습니다.');
+        toast.success('리뷰가 성공적으로 수정되었습니다.');
       } else {
         await GameInfoAPI.createReview(reviewData);
-        alert('리뷰가 성공적으로 등록되었습니다.');
+        toast.success('리뷰가 성공적으로 등록되었습니다.');
         // 새 리뷰 작성 후 폼 초기화
         setRating(0);
         setContent('');
@@ -65,8 +66,7 @@ const ReviewForm = ({ initialData, onSuccess }) => {
         onSuccess();
       }
     } catch (error) {
-      console.error('리뷰 저장 중 오류 발생:', error);
-      alert('리뷰 저장에 실패했습니다.');
+      toast.error('리뷰 저장에 실패했습니다.');
     } finally {
       setIsSubmitting(false);
     }

@@ -2,6 +2,7 @@ package com.meeple.meeple_back.game.bluemarble.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -9,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Data
 public class Tile {
 
 	private int id;
@@ -22,7 +24,7 @@ public class Tile {
 
 
 	public void update(int ownerId, int tollPrice,
-	                   int price) {
+			int price) {
 		this.ownerId = ownerId;
 		this.tollPrice = tollPrice;
 		this.price = price;
@@ -42,7 +44,7 @@ public class Tile {
 	}
 
 	public void initialize() {
-		this.ownerId = -1;
+		this.ownerId = 0;
 		this.tollPrice = 0;
 		this.hasBase = false;
 	}

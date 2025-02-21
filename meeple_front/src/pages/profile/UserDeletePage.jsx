@@ -8,6 +8,7 @@ import {
 } from "../../sources/store/slices/ProfileSlice";
 import { logout } from "../../sources/store/slices/UserSlice";
 import { Eye, EyeOff } from "lucide-react";
+import { toast } from 'react-toastify';
 
 const UserDeletePage = ({ userId, onClose }) => {
   const dispatch = useDispatch();
@@ -46,11 +47,11 @@ const UserDeletePage = ({ userId, onClose }) => {
         onClose();
 
         navigate("/");
-        alert("회원 탈퇴가 완료되었습니다.");
+        toast.success("회원 탈퇴가 완료되었습니다.");
       }
     } catch (error) {
       // console.log("회원 탈퇴 실패 : ", error);
-      alert(error.message || "회원 탈퇴에 실패했습니다.");
+      toast.error("회원 탈퇴에 실패했습니다.");
       setShowConfirmModal(false);
     }
   };

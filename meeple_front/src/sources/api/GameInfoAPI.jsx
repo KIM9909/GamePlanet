@@ -165,7 +165,6 @@ export const GameInfoAPI = {
         `${GAMEINFO_API_BASE_URL}/community`,
         postData
       );
-      console.log("데이터:", response.data);
       return response.data;
     } catch (error) {
       throw error;

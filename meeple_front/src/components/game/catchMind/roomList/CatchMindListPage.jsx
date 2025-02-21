@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Lock, Plus, Users, Star, Search } from "lucide-react";
+import { Lock, Plus, Users, Star, Search, CircleHelp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { CatchMindAPI } from "../../../../sources/api/CatchMindAPI";
 import CatchMindCreateRoomModal from "./CatchMindCreateRoomModal";
 import CatchMindPasswordModal from "./CatchMindPasswordModal";
 import CatchMindImg from "../../../../assets/images/games/MainImage/CatchMind.jpg";
+import GuideModal from "./GuideModal";
 
 const CatchMindListPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -12,6 +13,7 @@ const CatchMindListPage = () => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [rooms, setRooms] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
   const navigate = useNavigate();
 
   const fetchRooms = async () => {
@@ -25,7 +27,6 @@ const CatchMindListPage = () => {
       }));
       setRooms(cleanedRooms);
     } catch (error) {
-      console.error("방 목록 가져오기 실패:", error);
       setRooms([]);
     }
   };
@@ -45,9 +46,7 @@ const CatchMindListPage = () => {
         await CatchMindAPI.joinRoom(room.roomId, userNickname);
         navigate(`/catch-mind/${room.roomId}`);
       }
-    } catch (error) {
-      console.error("방 입장 실패:", error);
-    }
+    } catch (error) {}
   };
 
   const handleSuccessfulEntry = (roomId) => {
@@ -62,8 +61,10 @@ const CatchMindListPage = () => {
     <div className="container mx-auto p-3">
       <div className="flex justify-between items-center mb-5 gap-4">
         <div className="flex items-center gap-3">
-          <Star className="w-8 h-8 text-blue-400 animate-pulse" />
-          <h1 className="text-3xl font-bold text-white">캐치마인드 대기방</h1>
+          <h1 className="text-3xl font-bold text-white">캐치마인드</h1>
+          <button onClick={() => setIsGuideModalOpen(true)}>
+            <CircleHelp className="h-6 w-6 text-yellow-300 animate-pulse hover:text-yellow-300 transition-colors" />
+          </button>
         </div>
         <div className="flex-1 max-w-[320px] relative ml-[420px]">
           <div className="mt-1">
@@ -88,7 +89,7 @@ const CatchMindListPage = () => {
         </button>
       </div>
 
-      <div className="bg-gray-900 bg-opacity-90 rounded-xl shadow-2xl p-8 border border-blue-900 h-[580px]">
+      <div className="bg-gray-900 bg-opacity-90 rounded-xl shadow-2xl p-8 border border-blue-900 h-[700px]">
         <div className="h-full overflow-y-auto custom-scrollbar">
           {filteredRooms.length === 0 ? (
             <div className="h-full flex items-center justify-center">
@@ -130,14 +131,12 @@ const CatchMindListPage = () => {
                       </div>
                       <span
                         className={`px-3 py-1 rounded-lg text-sm font-medium ${
-                          room.isGameStarted || room.isGameStart
+                          room.isGameStart
                             ? "bg-red-900/50 text-red-300 border border-red-800"
                             : "bg-green-900/50 text-green-300 border border-green-800"
                         }`}
                       >
-                        {room.isGameStarted || room.isGameStart
-                          ? "게임 중"
-                          : "대기 중"}
+                        {room.isGameStart ? "게임 중" : "대기 중"}
                       </span>
                     </div>
 
@@ -186,6 +185,11 @@ const CatchMindListPage = () => {
           onSuccessfulEntry={handleSuccessfulEntry}
         />
       )}
+
+      <GuideModal
+        isOpen={isGuideModalOpen}
+        onClose={() => setIsGuideModalOpen(false)}
+      />
     </div>
   );
 };

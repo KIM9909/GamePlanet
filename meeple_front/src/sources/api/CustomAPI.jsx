@@ -49,7 +49,20 @@ export const CustomAPI = {
    */
   createElement: async (elementData) => {
     try {
-      const response = await API.post("/custom-element/create", elementData);
+      const formData = new FormData();
+      formData.append('customName', elementData.customName);
+      formData.append('userId', elementData.userId);
+      formData.append('imgFile', new File([elementData.imgFile], 'thumbnail.png', { type: 'image/png' }));
+  
+      const response = await API.post(
+        "/custom-element/create", 
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
       return response;
     } catch (error) {
       throw error || "커스텀 요소 생성에 실패했습니다.";
@@ -76,7 +89,11 @@ export const CustomAPI = {
 
   updateElement: async (customId, elementData) => {
     try {
-      const response = await API.put(`/custom-element/${customId}/update`, elementData);
+      const response = await API.put(`/custom-element/${customId}/update`, elementData, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       return response;
     } catch (error) {
       throw error || "커스텀 요소 수정에 실패했습니다.";
@@ -144,6 +161,30 @@ export const CustomAPI = {
       return response;
     } catch (error) {
       throw error || "커스텀 타일을 불러오는데 실패했습니다.";
+    }
+  },
+
+   /**
+   * 특정 유저의 커스텀 요소 찾기
+   */
+   findByUserId: async (userId) => {
+    try {
+      const response = await API.get(`/custom-element/find-by-user-id/${userId}`);
+      return response;
+    } catch (error) {
+      throw error || "유저의 커스텀 요소를 찾는데 실패했습니다.";
+    }
+  },
+
+  /**
+   * 완성된 타일 목록 조회
+   */
+  getCompleteTiles: async (customId) => {
+    try {
+      const response = await API.get(`/custom-element/${customId}/complete-tiles`);
+      return response;
+    } catch (error) {
+      throw error || "완성된 타일 목록을 불러오는데 실패했습니다.";
     }
   },
 
@@ -335,6 +376,25 @@ export const CustomAPI = {
       throw error || "타일 카드를 찾는데 실패했습니다.";
     }
   },
+  // 특정 커스텀 ID에 해당하는 타일 삭제
+deleteCustomTileByNumber: async (customId, tileNumber) => {
+  try {
+    const response = await API.delete(`/custom-element/${customId}/delete-tile/${tileNumber}`);
+    return response;
+  } catch (error) {
+    throw error || "타일 삭제에 실패했습니다.";
+  }
+},
+// 상태 업데이트
+updateStatus: async (customId, status) => {
+  try {
+    const response = await API.put(`/custom-element/${customId}/update-status?status=${status}`);
+    return response;
+  } catch (error) {
+    throw error || "상태 업데이트에 실패했습니다.";
+  }
+},
+
 };
 
 export default CustomAPI;

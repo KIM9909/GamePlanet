@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useState, useContext } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useState,
+  useContext,
+  useRef,
+} from "react";
 import TravelMap from "../play/TravelMap";
 import { createPortal } from "react-dom";
 import BurumabulSidebar from "../../../sidebar/burumabul/BurumabulSidebar";
@@ -7,44 +13,44 @@ import { Menu, X, Trophy, CreditCard } from "lucide-react";
 import PlayerVideo from "../../../../components/game/burumabul/play/PlayerVideo";
 import { useDispatch, useSelector } from "react-redux";
 import { SocketContext } from "../../../layout/SocketLayout";
+import UserAPI from "../../../../sources/api/UserAPI";
 
 import SeedCard from "./burumabul_Modal/SeedCard";
 
-const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
+const BurumabulPlay = ({
+  roomId,
+  currentRoomInfo,
+  setIsStart,
+  playData,
+  setGameStatus,
+}) => {
   // console.log("부루마불 플레이 현재 방 정보 :", currentRoomInfo);
   const userId = Number(useSelector((state) => state.user.userId));
   // 소켓 사용
   const socketContext = useContext(SocketContext);
   const {
-    connected,
-    roomSocketData,
     socketBurumabulOpenVidu,
-    createBurumabulPlay,
     gamePlaySocketData,
-    currentPlayerSocketIndex,
     gameSocketNotifi,
     socketBoard,
     socketCards,
-    socketNext,
-    socketFirstDice,
-    socketSecondDice,
     socketCurrentRound,
-    socketDouble,
-    socketTileUpdate,
-    socketUserUpdate,
     rollDiceSocketData,
-    setBuyLandSocketData,
     buyLandSocketData,
-    setBuildBaseSocketData,
     buildBaseSocketData,
-    roll,
   } = socketContext;
+  const { getProfile } = UserAPI;
 
   // 게임 데이터
   const [currentPlayData, setCurrentPlayData] = useState(playData);
-  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(
-    currentPlayerSocketIndex
+  const turnSound = useRef(null);
+
+  const [audioSrc, setAudioSrc] = useState(
+    "https://meeple-file-server-2.s3.ap-northeast-2.amazonaws.com/static-files/burumabul_turnSound.mp3"
   );
+
+  const [isGameEnded, setIsGameEnded] = useState(false);
+
   const [board, setBoard] = useState(null);
   const [cards, setCards] = useState(null);
   const [players, setPlayers] = useState(currentPlayData?.players || []);
@@ -53,12 +59,6 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     setBoard(socketBoard);
     setCards(socketCards);
   }, [playData]);
-
-  useEffect(() => {
-    setCurrentPlayerIndex(currentPlayerSocketIndex);
-  }, [currentPlayerSocketIndex]);
-
-  // console.log("소켓에서 받아오는 현재 플레이어 순서", currentPlayerIndex);
 
   // 오픈비두 세션 아이디 저장하기
   const [burumabulOpenViduId, setBurumabulOpenVidu] = useState(
@@ -70,11 +70,37 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     }
   }, [socketBurumabulOpenVidu]);
 
-  // console.log(burumabulOpenViduId);
+  // 게임 종료 시 오픈비두 세션 종료 요청
+  const handleGameEnd = () => {
+    console.log("게임 종료됨 - PlayerVideo에 OpenVidu 종료 요청 보냄");
+    setIsGameEnded(true);
+  };
 
   const currentPlayer = players?.[currentPlayData?.currentPlayerIndex];
-  // console.log("현재 플레이어: ", currentPlayer);
+  console.log("현재 플레이어: ", currentPlayer);
   const playerInfoList = currentPlayData.players;
+
+  const [previousPlayer, setPreviousPlayer] = useState(null);
+
+  useEffect(() => {
+    if (!currentPlayer || !turnSound.current) return;
+
+    // 이전 플레이어와 현재 플레이어가 다를 때만 실행
+    if (previousPlayer?.playerId !== currentPlayer.playerId) {
+      const playSound = async () => {
+        try {
+          turnSound.current.currentTime = 0;
+          await turnSound.current.play();
+          console.log("Sound played successfully");
+        } catch (error) {
+          console.error("Audio play failed:", error);
+        }
+      };
+
+      playSound();
+      setPreviousPlayer(currentPlayer); // 현재 플레이어를 이전 플레이어로 저장
+    }
+  }, [currentPlayer]);
 
   const myInfo = players?.find((player) => Number(player.playerId) === userId);
   // console.log("내 정보 출력 ==================", myInfo);
@@ -88,14 +114,19 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     Array(currentPlayData?.players.length).fill([])
   );
 
+  const updateGameState = useCallback((newData) => {
+    if (newData) {
+      console.log("새로운 gamePlaySocekData 수신:", newData);
+      setCurrentPlayData(newData);
+      setPlayers(newData.players);
+    }
+  }, []);
+
   useEffect(() => {
     if (gamePlaySocketData) {
-      console.log("새로운 gamePlaySocekData 수신:", gamePlaySocketData);
-      setCurrentPlayData(gamePlaySocketData);
-      setPlayers(gamePlaySocketData.players);
-      setPlayerBases(Array(gamePlaySocketData.players.length).fill([]));
+      updateGameState(gamePlaySocketData);
     }
-  }, [gamePlaySocketData]);
+  }, [gamePlaySocketData, updateGameState]);
 
   const roomInfo = currentRoomInfo;
 
@@ -108,19 +139,46 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     setRollDice(() => rollDiceFn);
   }, []);
 
+  const [nicknames, setNicknames] = useState({});
+
+  const fetchNicknames = useCallback(async () => {
+    const newNicknames = {};
+    for (const player of players) {
+      if (!nicknames[player.playerId]) {
+        // 이미 조회된 닉네임이 있으면 건너뜀
+        try {
+          const response = await getProfile(player.playerId);
+          newNicknames[player.playerId] = response.userNickname;
+        } catch (error) {
+          console.error("플레이어 닉네임 조회 오류:", error);
+        }
+      }
+    }
+    if (Object.keys(newNicknames).length > 0) {
+      setNicknames((prev) => ({ ...prev, ...newNicknames }));
+    }
+  }, [players, nicknames]);
+
+  // players가 변경될 때마다 닉네임 가져오기
+  useEffect(() => {
+    if (players.length > 0) {
+      fetchNicknames();
+    }
+  }, [players, fetchNicknames]);
   // 주사위 결과
 
   const [firstDice, setFirstDice] = useState(null);
   const [secondDice, setSecondDice] = useState(null);
   const totalDice = Number(firstDice) + Number(secondDice);
   const [isDouble, setIsDouble] = useState(null);
-  const [nextAction, setNextAction] = useState(null);
 
   useEffect(() => {
-    setFirstDice(socketFirstDice);
-    setSecondDice(socketSecondDice);
-    setIsDouble(socketDouble);
-  }, [socketFirstDice, socketSecondDice, socketDouble, socketNext]);
+    if (rollDiceSocketData) {
+      setFirstDice(rollDiceSocketData.firstDice);
+      setSecondDice(rollDiceSocketData.secondDice);
+      setIsDouble(rollDiceSocketData.double);
+    }
+  }, [rollDiceSocketData]);
 
   // 현재 라운드
   const [currentRound, setCurrentRound] = useState(null);
@@ -218,17 +276,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
       }
       // setBuildBaseSocketData(null);
     }
-  }, [buildBaseSocketData, players, colors]);
-
-  // 상태 변화를 모니터링하기 위한 별도의 useEffect
-  useEffect(() => {
-    if (buyLandSocketData) {
-      // console.log("상태 업데이트 확인:");
-      // console.log("Updated Players:", players);
-      // console.log("Updated Cards:", cards);
-      // console.log("Updated Board:", board);
-    }
-  }, [players, board, cards, buyLandSocketData]);
+  }, [buildBaseSocketData]);
 
   const [showCard, setShowCard] = useState(null);
 
@@ -256,22 +304,12 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
     return <>{loadingMessage}</>;
   }
 
-  // console.log("currentPlayerIndex:", currentPlayerIndex);
-  // console.log("myColorIndex:", myColorIndex);
-  // console.log("rollDice 존재 여부:", !!rollDice);
-  // console.log("현재 게임 데이터", currentPlayData);
-  // console.log("현재 타일(보드 정보)", board);
-  // console.log("현재 카드 정보", cards);
-
-  // console.log("currentPlayerIndex:", currentPlayerIndex);
-  // console.log("myColorIndex:", myColorIndex);
-
   return (
-    <>
+    <div className="fixed inset-0 w-full h-full bg-gray-900 overflow-hidden">
       <style>{`
         .thin-scrollbar::-webkit-scrollbar { width: 5px; position: absolute; right: 0;}
-        .thin-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
-        .thin-scrollbar::-webkit-scrollbar-thumb { background: #888; border-radius: 15px;}
+        .thin-scrollbar::-webkit-scrollbar-track { background: #1a1a1a; }
+        .thin-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 15px;}
         .thin-scrollbar::-webkit-scrollbar-track { display: none; }
         .game-stats { backdrop-filter: blur(8px); }
       `}</style>
@@ -279,119 +317,114 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
       {/* 사이드바 */}
       <div className="fixed left-0 top-0 h-full z-50 flex">
         <div
-          className={`transition-transform duration-300 ease-in-out transform 
-            ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} relative`}
+          className={`transition-transform duration-300 ease-in-out transform ${
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } relative`}
         >
           <BurumabulSidebar playerInfoList={playerInfoList} />
           {isSidebarOpen && (
             <button
               onClick={toggleSidebar}
-              className="absolute -right-12 top-1/2 -translate-y-1/2 w-12 h-12 
-                bg-indigo-600 rounded-r text-white
-                hover:bg-indigo-700 focus:outline-none 
-                flex items-center justify-center
-                shadow-lg"
+              className="absolute -right-10 top-1/2 -translate-y-1/2 w-10 h-10 bg-cyan-400 rounded-r text-white hover:bg-cyan-600 focus:outline-none flex items-center justify-center shadow-lg"
             >
               <X className="w-6 h-6" />
             </button>
           )}
         </div>
       </div>
+      <audio ref={turnSound} src={audioSrc} preload="auto" />
 
-      {/* 게임 상태 바 */}
-      <div className="fixed top-0 left-0 right-0 bg-white/80 game-stats z-40">
-        <div className="container mx-auto px-4 py-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              <div className="flex items-center space-x-2">
-                <div className="text-indigo-600 font-medium">
-                  Round {currentRound}
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="bg-indigo-100 rounded-lg px-3 py-1">
-                  🎲 {firstDice} + {secondDice} = {totalDice}
-                  {isDouble && (
-                    <span className="ml-2 text-indigo-600 font-bold">
-                      Double!
-                    </span>
-                  )}
-                </div>
-              </div>
+      {/* Game Status Bar */}
+      <div className="absolute top-0 left-0 right-0 h-14 bg-gray-900/90 border-b border-cyan-500/30 z-40">
+        <div className="h-full px-4 flex items-center justify-between">
+          <div className="flex items-center space-x-6">
+            <div className="text-cyan-400 font-medium">
+              Round {currentRound}
             </div>
-            <div className="text-gray-600">{gameSocketNotifi}</div>
+            <div className="bg-gray-800 rounded-lg px-3 py-1 text-cyan-300">
+              🎲 {firstDice} + {secondDice} = {totalDice}
+              {isDouble && (
+                <span className="ml-2 text-cyan-400 font-bold">Double!</span>
+              )}
+            </div>
           </div>
+          <div className="text-white">
+            현재 플레이어 :{" "}
+            <span className="text-cyan-400 text-lg">
+              {currentPlayer.playerNickname}
+            </span>
+          </div>
+
+          <div className="text-cyan-300/80">{gameSocketNotifi}</div>
         </div>
       </div>
 
-      {/* 메인 게임 영역 */}
+      {/* Main Game Layout */}
       <div
-        className={`transition-all duration-300 ease-in-out pt-12
-        ${isSidebarOpen ? "ml-64" : "ml-0"}`}
+        className={`fixed top-14 left-0 right-0 bottom-0 transition-all duration-300 ease-in-out ${
+          isSidebarOpen ? "ml-64" : "ml-0"
+        }`}
       >
-        <div className="h-screen w-full flex bg-gradient-to-br from-gray-50 to-gray-100">
-          {/* 게임 맵 영역 */}
-          <div className="w-3/4">
+        <div className="flex h-full">
+          {/* Game Map Area */}
+          <div className="flex-1 h-full">
             <TravelMap
               onBasesInfo={handlePlayerBasesRef}
               gameData={currentPlayData}
               roomId={roomId}
+              setIsStart={setIsStart}
+              onGameEnd={handleGameEnd}
+              setGameStatus={setGameStatus}
             />
           </div>
 
-          {/* 플레이어 정보 영역 */}
-          <div className="w-1/4 bg-white/90 shadow-lg flex flex-col">
-            <div className="flex flex-col h-full">
-              {/* 플레이어 비디오 및 순위 영역 */}
-              <div className="h-[60%] overflow-y-auto thin-scrollbar border-b">
-                <h2 className="text-xl font-semibold text-gray-800 p-4 border-b">
-                  Players
-                </h2>
-                <div className="p-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    {playerInfoList.map((player, index) => (
-                      <PlayerVideo
-                        key={index}
-                        playerInfo={player}
-                        sessionId={burumabulOpenViduId}
-                      />
-                    ))}
-                  </div>
+          {/* Right Sidebar */}
+          <div className="w-96 bg-gray-900 border-l border-cyan-500/30 flex flex-col">
+            {/* Players Section */}
+            <div className="flex-1 overflow-hidden">
+              <div className="p-4 border-b border-cyan-500/30">
+                <h2 className="text-lg font-bold text-cyan-400">Players</h2>
+              </div>
+
+              <div className="h-[calc(100%-4rem)] overflow-y-auto thin-scrollbar">
+                <div className="p-4 grid grid-cols-2 gap-3">
+                  {playerInfoList.map((player, index) => (
+                    <PlayerVideo
+                      key={index}
+                      playerInfo={player}
+                      sessionId={burumabulOpenViduId}
+                      isGameEnded={isGameEnded}
+                    />
+                  ))}
                 </div>
 
-                {/* 순위 보드 */}
-                <div className="mx-4 mb-4 bg-gray-50 rounded-xl p-4">
+                {/* Ranking Board */}
+                <div className="mx-4 mb-4 bg-gray-800/50 rounded-xl p-4 border border-cyan-500/20">
                   <div className="flex items-center mb-3">
                     <Trophy className="w-5 h-5 text-yellow-500 mr-2" />
-                    <h2 className="font-semibold text-gray-800">Ranking</h2>
+                    <h2 className="font-semibold text-cyan-400">Ranking</h2>
                   </div>
                   <div className="space-y-2">
-                    {/* 순위 매기기 */}
                     {players
                       .map((player, index) => ({
                         ...player,
                         originalIndex: index,
-                      })) // 기존 인덱스 추가
-                      .sort((a, b) => {
-                        if (b.balance !== a.balance) {
-                          return b.balance - a.balance; // balance 기준 내림차순 정렬
-                        }
-                        return a.originalIndex - b.originalIndex; // balance 같으면 기존 인덱스 기준 정렬
-                      })
+                      }))
+                      .sort((a, b) => b.balance - a.balance)
                       .map((player, index) => (
                         <div
                           key={player.originalIndex}
-                          className="flex items-center justify-between p-2 bg-white rounded-lg shadow-sm"
+                          className="flex items-center justify-between p-2 bg-gray-800/30 rounded-lg hover:bg-gray-800/50 transition-colors"
                         >
                           <div className="flex items-center">
-                            <span className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-sm font-medium text-indigo-600">
+                            <span className="w-6 h-6 rounded-full bg-cyan-900/50 flex items-center justify-center text-sm font-medium text-cyan-400">
                               {index + 1}
                             </span>
-                            <span className="ml-3 font-medium text-gray-700">
-                              {player.playerName}
+                            <span className="ml-3 font-medium text-gray-300">
+                              {nicknames[player.playerId] || player.playerName}
                             </span>
                           </div>
-                          <span className="text-gray-600 font-medium">
+                          <span className="text-cyan-300 font-medium">
                             {player.balance}마불
                           </span>
                         </div>
@@ -399,69 +432,56 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* 내 정보 영역 */}
-              <div
-                className="h-[40%] p-4"
-                style={{ backgroundColor: colors[myColorIndex] }}
-              >
-                <div className="h-full flex flex-col">
-                  <h2 className="text-white font-bold text-lg mb-4">
-                    My Status
-                  </h2>
-                  <div className="flex-1 bg-white/20 rounded-xl p-4">
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-white">My Bases</span>
-                        <button
-                          onClick={handleShowCard}
-                          className="flex items-center px-3 py-1.5 bg-white/90 hover:bg-white
-                            rounded-lg text-sm font-medium text-gray-700 transition-colors"
-                        >
-                          <CreditCard className="w-4 h-4 mr-2" />
-                          View Cards
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        {myInfo?.cardOwned
-                          ?.slice(0, 4)
-                          .map((card, cardIndex) => (
-                            <div
-                              key={cardIndex}
-                              className="bg-white/30 rounded-lg p-2 text-white text-sm truncate"
-                            >
-                              {card.name}
-                            </div>
-                          ))}
-                      </div>
-                      {myInfo?.cardOwned?.length > 4 && (
-                        <div className="text-white text-center text-sm">
-                          +{myInfo.cardOwned.length - 4} more
-                        </div>
-                      )}
-                    </div>
-                  </div>
+            {/* My Status */}
+            <div
+              className="h-48 p-4 border-t border-cyan-500/30"
+              style={{ backgroundColor: colors[myColorIndex] }}
+            >
+              <div className="h-full flex flex-col">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-white font-bold text-lg">My Status</h2>
+                  <button
+                    onClick={handleShowCard}
+                    className="flex items-center px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium text-white transition-colors"
+                  >
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    View Cards
+                  </button>
                 </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {myInfo?.cardOwned?.slice(0, 4).map((card, cardIndex) => (
+                    <div
+                      key={cardIndex}
+                      className="bg-black/20 rounded-lg p-2 text-white text-sm truncate"
+                    >
+                      {card.name}
+                    </div>
+                  ))}
+                </div>
+                {myInfo?.cardOwned?.length > 4 && (
+                  <div className="text-white text-center text-sm mt-2">
+                    +{myInfo.cardOwned.length - 4} more
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 사이드바 토글 버튼 */}
+      {/* Sidebar Toggle Button */}
       {!isSidebarOpen && (
-        <div className="fixed left-0 top-1/2 transform -translate-y-1/2 z-50">
-          <button
-            onClick={toggleSidebar}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-r p-3
-              shadow-lg transition-colors"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
-        </div>
+        <button
+          onClick={toggleSidebar}
+          className="fixed left-4 top-1/2 transform -translate-y-1/2 z-50 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg p-2 shadow-lg transition-colors"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
       )}
 
-      {/* 카드 모달 */}
+      {/* Card Modal */}
       {showCard &&
         createPortal(
           <SeedCard
@@ -470,7 +490,7 @@ const BurumabulPlay = ({ roomId, currentRoomInfo, setIsStart, playData }) => {
           />,
           document.body
         )}
-    </>
+    </div>
   );
 };
 export default BurumabulPlay;

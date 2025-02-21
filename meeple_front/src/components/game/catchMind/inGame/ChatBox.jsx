@@ -36,7 +36,6 @@ const ChatBox = ({ roomId, currentUser, correctAnswer }) => {
       currentUserTurn &&
       message.trim().toLowerCase() === correctAnswer?.toLowerCase()
     ) {
-      console.log("출제자가 정답을 입력했습니다 - 무시됨");
       setMessage("");
       return;
     }

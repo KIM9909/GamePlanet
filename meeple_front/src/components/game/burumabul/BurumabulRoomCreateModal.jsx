@@ -1,13 +1,19 @@
 import React, { useState } from "react";
-import { EyeOff, Eye } from "lucide-react";
+import { EyeOff, Eye, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createBurumabulRoom } from "../../../sources/api/BurumabulRoomAPI";
 import { useDispatch, useSelector } from "react-redux";
-import { setRoomId } from "../../../sources/store/slices/BurumabulGameSlice";
+import {
+  setCustomList,
+  setRoomId,
+} from "../../../sources/store/slices/BurumabulGameSlice";
+import { toast } from "react-toastify";
+import CustomToastContent from "../../CustomToastContent";
 
 const BurumabulRoomCreateModal = ({ onClose }) => {
   const userId = useSelector((state) => state.user.userId);
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const initialRoomData = {
     roomName: "",
@@ -21,15 +27,56 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
     try {
-      console.log(roomData);
+      setIsSubmitting(true);
       const response = await createBurumabulRoom(userId, roomData);
-      const roomId = response.roomId;
+      if (response.status === 500) {
+        {
+          console.log("Showing toast...");
+          toast(
+            ({ closeToast }) => <CustomToastContent closeToast={closeToast} />,
+            {
+              position: "top-center",
+              autoClose: false,
+              hideProgressBar: true,
+              closeOnClick: false,
+              pauseOnHover: true,
+              draggable: true,
+              className: "!bg-transparent !p-0 !shadow-none",
+              toastClassName: "!bg-transparent !p-0",
+              bodyClassName: "!p-0 !m-0",
+              closeButton: false, // 기본 닫기 버튼 비활성화
+              style: {
+                background: "transparent",
+                padding: 0,
+              },
+            }
+          );
+          handleCancel();
+        }
+      } else if (response.status === 400) {
+        toast.error("모든 칸을 채워주세요.");
+      }
+      const roomId = response.roomResponse.roomId;
+      console.log(response);
+      console.log(roomId);
+      const customThemeList = response.customElementResponses;
       dispatch(setRoomId(roomId));
+      dispatch(setCustomList(customThemeList));
       navigate(`/game/burumabul/start/${roomId}`);
     } catch (error) {
       console.error("방 생성 중 오류 발생 : ", error);
+      console.error("방 생성 중 오류 발생 : ", error);
+      console.log("Error structure:", {
+        status: error.status,
+        responseStatus: error?.response?.status,
+        responseData: error?.response?.data,
+        message: error.message,
+      });
+    } finally {
+      setIsSubmitting(false); // 제출 완료 또는 에러 발생 시
     }
   };
 
@@ -43,24 +90,25 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
   };
 
   const handleCancel = () => {
+    if (isSubmitting) return;
     setRoomData(initialRoomData); // roomData 초기화
     onClose();
   };
 
   return (
     <div className="fixed inset-0 bg-blue-200 bg-opacity-50 flex justify-center items-center z-50">
-      <div className="w-96 p-6 bg-slate-900 bg-opacity-80 rounded-lg flex flex-col justify-center items-center">
-        <h1 className="text-3xl text-white ">부루마불 방 만들기</h1>
+      <div className="w-96 p-6 bg-gray-900 bg-opacity-90 border-2 border-cyan-500 rounded-lg flex flex-col justify-center items-center">
+        <h1 className="text-3xl text-cyan-400 ">부루마불 방 만들기</h1>
         <hr className="w-80 border-t-2 border-white my-2" />
-        <div className="bg-white w-full py-3 my-3 rounded-lg">
+        <div className="bg-gray-900 bg-opacity-80 w-full py-3 my-3 rounded-lg">
           <form onSubmit={handleSubmit} className="text-center">
             {/* 방 제목 */}
             <div className="flex flex-col items-center">
               <label
-                className="text-xl block mt-2 text-gray-900"
+                className="text-xl block mt-2 text-cyan-400 "
                 htmlFor="roomTitle"
               >
-                방 제목
+                🎯 방 제목
               </label>
               <hr className="w-80 border-t-2 border-gray-400 my-2" />
               <input
@@ -77,15 +125,15 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
             {/* 비밀방 선택 */}
             <div className="flex flex-row justify-center items-center my-2">
               <label
-                className="text-xl block my-2 text-gray-900"
+                className="text-xl block my-2 text-cyan-400 "
                 htmlFor="privateCheck"
               >
-                비밀방
+                🔒 비밀방
               </label>
               <div>
                 <button
-                  className={`bg-green-500 mx-2 text-white w-14 rounded ${
-                    roomData.isPrivate ? "bg-green-500" : "bg-slate-500"
+                  className={`bg-cyan-500 mx-2 text-white w-14 rounded ${
+                    roomData.isPrivate ? "bg-cyan-500" : "bg-slate-500"
                   }`}
                   value={roomData.isPrivate}
                   onClick={() =>
@@ -101,7 +149,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
                 </button>
                 <button
                   className={`"bg-red-500" mx-2 text-white w-14 rounded ${
-                    roomData.isPrivate ? "bg-slate-500" : "bg-red-500"
+                    roomData.isPrivate ? "bg-slate-500" : "bg-gray-500"
                   }`}
                   value={roomData.isPrivate}
                   onClick={() =>
@@ -122,7 +170,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
             <div>
               {roomData.isPrivate && (
                 <div className="flex flex-col items-center my-3">
-                  <label className="text-lg" htmlFor="password">
+                  <label className="text-lg text-cyan-400" htmlFor="password">
                     비밀번호 설정(숫자 8자리)
                   </label>
                   <hr className="w-80 border-t-2 border-gray-400 my-2" />
@@ -148,12 +196,12 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
             </div>
             {/* 플레이어 수 선택 */}
             <div className="flex flex-col items-center">
-              <h2 className="text-lg">플레이어 수 선택</h2>
+              <h2 className="text-lg text-cyan-400 ">👥 플레이어 수 선택</h2>
               <hr className="w-80 border-t-2 border-gray-400 my-2" />
               <div className="my-1">
                 <button
                   className={`bg-blue-200 text-gray-500 w-14 rounded mx-2 ${
-                    roomData.maxPlayers === 2 ? "bg-blue-400" : "bg-blue-200"
+                    roomData.maxPlayers === 2 ? "bg-cyan-400" : "bg-blue-200"
                   }`}
                   value={roomData.maxPlayers}
                   onClick={() =>
@@ -168,7 +216,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
                 </button>
                 <button
                   className={`bg-blue-200 text-gray-500 w-14 rounded mx-2 ${
-                    roomData.maxPlayers === 3 ? "bg-blue-400" : "bg-blue-200"
+                    roomData.maxPlayers === 3 ? "bg-cyan-400" : "bg-blue-200"
                   }`}
                   value={roomData.maxPlayers}
                   onClick={() =>
@@ -183,7 +231,7 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
                 </button>
                 <button
                   className={`bg-blue-200 text-gray-500 w-14 rounded mx-2 ${
-                    roomData.maxPlayers === 4 ? "bg-blue-400" : "bg-blue-200"
+                    roomData.maxPlayers === 4 ? "bg-cyan-400" : "bg-blue-200"
                   }`}
                   value={roomData.maxPlayers}
                   onClick={() =>
@@ -201,18 +249,27 @@ const BurumabulRoomCreateModal = ({ onClose }) => {
             {/* 방 생성 or 취소 */}
             <div className="flex flex-row justify-evenly my-3">
               <button
-                className="bg-red-500 rounded-lg text-white w-24"
+                className="bg-gray-500 rounded-lg text-white w-24 p-1 hover:bg-gray-700 "
                 onClick={handleCancel}
+                disabled={isSubmitting}
               >
                 취소
               </button>
               {/* 일단 생성 누르면 부루마불 대기방으로 */}
               <button
-                className="bg-green-500 rounded-lg text-white w-24"
+                className="bg-cyan-500 rounded-lg text-white w-24 p-1 hover:bg-cyan-600"
                 onClick={handleSubmit}
+                disabled={isSubmitting}
                 type="submit"
               >
-                생성
+                {isSubmitting ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    처리중...
+                  </>
+                ) : (
+                  "생성"
+                )}
               </button>
             </div>
           </form>

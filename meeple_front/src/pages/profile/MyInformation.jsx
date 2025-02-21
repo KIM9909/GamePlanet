@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { toast } from 'react-toastify';
 
 // Redux 액션들과 API 임포트
 import {
@@ -78,7 +79,7 @@ const MyInformation = () => {
   const handleNicknameCheck = async () => {
     // 닉네임 형식이 유효하지 않으면 중복 검사 수행하지 않음
     if (!validations.validNickname) {
-      alert("닉네임 형식을 확인해주세요.");
+      toast.error("닉네임 형식을 확인해주세요.");
       return;
     }
 
@@ -93,12 +94,12 @@ const MyInformation = () => {
 
       // 검사 결과에 따른 알림 표시
       if (isDuplicate) {
-        alert("이미 사용 중인 닉네임입니다.");
+        toast.error("이미 사용 중인 닉네임입니다.");
       } else {
-        alert("사용 가능한 닉네임입니다.");
+        toast.success("사용 가능한 닉네임입니다.");
       }
     } catch (error) {
-      alert("닉네임 중복 검사 중 오류가 발생했습니다.");
+      toast.error("닉네임 중복 검사 중 오류가 발생했습니다.");
     }
   };
 
@@ -158,7 +159,7 @@ const MyInformation = () => {
 
     // 이름 입력값이 있고 유효하지 않은 경우 검사
     if (formData.userName && !validations.validName) {
-      alert("이름 형식을 확인해주세요.");
+      toast.error("이름 형식을 확인해주세요.");
       return;
     }
 
@@ -166,17 +167,17 @@ const MyInformation = () => {
     const isNicknameChanged = formData.userNickname !== profile.userNickname;
     if (isNicknameChanged) {
       if (!validations.validNickname) {
-        alert("닉네임 형식을 확인해주세요.");
+        toast.error("닉네임 형식을 확인해주세요.");
         return;
       }
 
       if (!validations.nicknameChecked) {
-        alert("닉네임 중복 확인을 해주세요.");
+        toast.error("닉네임 중복 확인을 해주세요.");
         return;
       }
 
       if (validations.nicknameDuplicate) {
-        alert("이미 사용 중인 닉네임입니다.");
+        toast.error("이미 사용 중인 닉네임입니다.");
         return;
       }
     }
@@ -188,7 +189,7 @@ const MyInformation = () => {
       formData.userBirthday !== formatDateForInput(profile.userBirthday);
 
     if (!isFormChanged) {
-      alert("변경된 내용이 없습니다.");
+      toast.error("변경된 내용이 없습니다.");
       return;
     }
 
@@ -236,10 +237,10 @@ const MyInformation = () => {
       // 프로필 데이터 새로고침
       await refreshProfileData();
 
-      alert("프로필이 성공적으로 수정되었습니다.");
+      toast.success("프로필이 성공적으로 수정되었습니다.");
       dispatch(setEditing(false));
     } catch (error) {
-      alert(error.message || "프로필 수정에 실패했습니다.");
+      toast.error(error.message || "프로필 수정에 실패했습니다.");
     }
   };
 
@@ -283,7 +284,7 @@ const MyInformation = () => {
   // 에러 발생 시 처리
   useEffect(() => {
     if (error) {
-      alert(error);
+      toast.error(error);
       dispatch(clearError());
     }
   }, [error, dispatch]);

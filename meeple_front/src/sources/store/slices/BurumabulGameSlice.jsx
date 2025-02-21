@@ -2,6 +2,7 @@ import { createSlice, current } from "@reduxjs/toolkit";
 
 const initialState = {
   roomId: null,
+  customList: [],
   gamePlayId: null,
   currentPlayerIndex: 0,
   players: [],
@@ -19,7 +20,6 @@ const loadStateBurumabul = () => {
     const serializedState = localStorage.getItem("burumabulState");
     return serializedState ? JSON.parse(serializedState) : initialState;
   } catch (error) {
-    console.error("부루마불 정보 업데이트 중 에러 : ", error);
     return initialState;
   }
 };
@@ -27,7 +27,7 @@ const saveStateBurumabul = (state) => {
   try {
     localStorage.setItem("burumabulState", JSON.stringify(state));
   } catch (error) {
-    console.error("부루마불 데이터 저장 중 에러 : ", error);
+    return
   }
 };
 
@@ -39,6 +39,12 @@ const burumabulGameSlice = createSlice({
     setRoomId: (state, action) => {
       state.roomId = action.payload;
     },
+
+    // 커스텀 목록
+    setCustomList: (state, action) => {
+      state.customList = action.payload;
+    },
+
     // 게임 설정
     setGameData: (state, action) => {
       return { ...state, ...action.payload };
@@ -146,6 +152,7 @@ const burumabulGameSlice = createSlice({
 
 export const {
   setRoomId,
+  setCustomList,
   setGameData,
   addPlayer,
   removePlayer,

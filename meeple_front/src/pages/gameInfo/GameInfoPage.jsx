@@ -77,7 +77,6 @@ const GameInfoPage = () => {
       try {
         setLoading(true);
         const gameData = await GameInfoAPI.getGameInfo(gameInfoId);
-        console.log("게임 데이터 : ", gameData);
         setData(gameData);
         setError(null);
       } catch (err) {
@@ -119,7 +118,7 @@ const GameInfoPage = () => {
   return (
     <div className="min-h-screen p-8 bg-[#0a0a2a]/50">
       <div className="max-w-7xl mx-auto">
-        <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-cyan-500/50 max-h-[650px] overflow-y-auto custom-scrollbar">
+        <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-cyan-500/50 max-h-[750px] overflow-y-auto custom-scrollbar">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             {/* Left side - Image */}
             <div className="relative group">

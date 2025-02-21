@@ -82,12 +82,16 @@ public class CatchMindServiceImpl implements CatchMindService {
             throw new RuntimeException("OpenVidu HttpException 발생"+ e);
         }
 
+        Map<String, Object> gameData = new HashMap<>();
+
+        gameData.put("currentTurn", request.getCreator());
+
         Set<String> readyPlayer = new HashSet<>();
         readyPlayer.add(request.getCreator());
 
         roomInfo.put("roomId", savedRoom.getRoomId());
         roomInfo.put("players", players);
-        roomInfo.put("gameData", new HashMap<>());
+        roomInfo.put("gameData", gameData);
         roomInfo.put("gameType", "캐치마인드");
         roomInfo.put("isPrivate", request.isPrivate());
         roomInfo.put("password", request.getPassword());
@@ -120,6 +124,7 @@ public class CatchMindServiceImpl implements CatchMindService {
 
     @Override
     public ResponseJoinRoom joinRoom(RequestJoinRoom request) {
+        System.out.println(request.getPlayerName() + "joinRoom 서비스 호출");
         if (!redisTemplate.opsForHash().get(AI_KEY, request.getPlayerName()).equals("ON")
         ) {
             ResponseJoinRoom response = ResponseJoinRoom.builder()
@@ -295,6 +300,8 @@ public class CatchMindServiceImpl implements CatchMindService {
         Map<String, Object> roomInfo =
                 (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
 
+        roomInfo.put("isGameStart", true);
+
         List<Quiz> quizList = quizRepository.findAll();
         List<String> players = (List<String>) roomInfo.get("players");
 
@@ -463,6 +470,8 @@ public class CatchMindServiceImpl implements CatchMindService {
             if (quizList.isEmpty()) {
                 int finalScore = currentScore + 30;
                 playerScore.put(request.getSender(), finalScore);
+
+                roomInfo.put("isGameStart", false);
 
                 // Redis에 업데이트된 점수 저장
                 gameInfo.put("playerScore", playerScore);
@@ -662,12 +671,15 @@ public class CatchMindServiceImpl implements CatchMindService {
 
     @Override
     public ResponseExitCatchmindRoom exitRoom(String roomId, String userName) {
+        System.out.println(userName + "exitRoom 호출");
         Map<String, Object> roomInfo =
                 (Map<String, Object>) redisTemplate.opsForHash().get(ROOM_KEY, roomId);
 
         List<String> userList = (List<String>) roomInfo.get("players");
 
-        if (!userName.equals(roomInfo.get("creator"))) {
+        String creator = (String) roomInfo.get("creator");
+
+        if (!userName.equals(creator)) {
             for (int i = 0; i < userList.size(); i++) {
                 String user = userList.get(i);
                 if (user.equals(userName)) {
@@ -677,7 +689,7 @@ public class CatchMindServiceImpl implements CatchMindService {
             }
         } else {
             for (int i = 0; i < userList.size(); i++) {
-                if (!userList.get(i).equals(roomInfo.get("creator"))) {
+                if (!userList.get(i).equals(creator)) {
                     roomInfo.put("creator", userList.get(i));
                     break;
                 }
@@ -691,11 +703,25 @@ public class CatchMindServiceImpl implements CatchMindService {
             }
         }
 
+        Map<String, Object> gameData = (Map<String, Object>) roomInfo.get("gameData");
+
+        if (userList != null && !userList.isEmpty() &&
+                !gameData.getOrDefault("currentTurn", "").equals("")) {
+            String currentTurn = (String) gameData.get("currentTurn");
+            int currentIndex = currentTurn != null ? userList.indexOf(currentTurn) : 0;
+            int nextIndex = (currentIndex + 1) % userList.size();
+            String nextTurn = userList.get(nextIndex);
+
+            // 다음 출제자를 gameInfo에 저장
+            gameData.put("currentTurn", nextTurn);
+        }
+
+        roomInfo.put("gameData", gameData);
         roomInfo.put("players", userList);
-        if (userList.size() == 0) {
+        redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
+
+        if (userList.isEmpty()) {
             redisTemplate.opsForHash().delete(ROOM_KEY, roomId);
-        } else {
-            redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomInfo);
         }
 
         messagingTemplate.convertAndSend("/topic/ai-record" + userName, "녹음 종료");
@@ -727,6 +753,7 @@ public class CatchMindServiceImpl implements CatchMindService {
         List<String> quizList = (List<String>) gameInfo.get("quizList");
 
         if (quizList.isEmpty()) {
+            roomInfo.put("isGameStart", false);
             List<GameResultDTO> gameResult = gameResult(roomId);
 
             ResponseGameResult responseResult = ResponseGameResult.builder()

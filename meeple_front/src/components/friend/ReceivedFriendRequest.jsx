@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 
 import { useSelector, useDispatch } from "react-redux";
 import {
   processFriendRequest,
   requestFriendList,
 } from "../../sources/api/FriendApi";
-import useFriendSocket from "../../hooks/useFriendSocket";
+import { FriendSocketContext } from "../layout/FriendSocketLayout";
 
 const ReceivedFriendRequest = ({ requestedList }) => {
   const userId = useSelector((state) => state.user.userId);
@@ -16,26 +16,8 @@ const ReceivedFriendRequest = ({ requestedList }) => {
     setRequestList(requestedList);
   }, [requestedList]);
 
-  const { connected, responseSocket, stompClientRef } = useFriendSocket();
-
-  useEffect(() => {
-    if (connected) {
-      console.log("소켓이 연결되었습니다.");
-    } else {
-      console.error("소켓 연결 에러");
-      // 재연결 시도
-      const reconnectSocket = async () => {
-        if (stompClientRef.current) {
-          try {
-            await stompClientRef.current.activate();
-          } catch (error) {
-            console.error("재연결 실패:", error);
-          }
-        }
-      };
-      reconnectSocket();
-    }
-  }, [connected]);
+  const { connected, responseSocket, stompClientRef } =
+    useContext(FriendSocketContext);
 
   useEffect(() => {
     if (responseSocket) {
@@ -81,7 +63,7 @@ const ReceivedFriendRequest = ({ requestedList }) => {
   const handleBlock = async (friendId) => {
     if (requestList && userId) {
       try {
-        const requirements = "BLOCKING";
+        const requirements = "BLOCK";
         await processFriendRequest(friendId, requirements);
         const response = await requestFriendList(userId);
         setRequestList(response.requestedList);
@@ -93,32 +75,36 @@ const ReceivedFriendRequest = ({ requestedList }) => {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="h-full flex flex-col items-center justify-start w-full overflow-y-auto">
       {requestList && requestList.length > 0 ? (
-        <ul className="space-y-3">
+        <ul className="space-y-2 w-full">
           {requestList.map((list, index) => (
             <li
               key={index}
-              className="p-4 bg-gray-50 rounded-lg flex justify-between items-center"
+              className="p-2 bg-gray-800 rounded-lg flex items-center justify-between border border-cyan-500/30 hover:border-cyan-400/60 transition-all duration-300"
             >
-              <p className="font-medium text-gray-700">
+              <p
+                className="font-medium text-cyan-400 truncate mr-4 overflow-hidden whitespace-nowrap"
+                title={list.user.userNickname} // 툴팁으로 전체 이름 표시
+              >
                 {list.user.userNickname}
               </p>
-              <div className="flex gap-2">
+
+              <div className="flex gap-1 shrink-0">
                 <button
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200"
+                  className="px-2 py-1 text-sm bg-cyan-500/90 text-white rounded hover:bg-cyan-600 transition-all duration-300"
                   onClick={() => handleAccept(list.friendId)}
                 >
                   승인
                 </button>
                 <button
-                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all duration-200"
+                  className="px-2 py-1 text-sm bg-cyan-500/60 text-white rounded hover:bg-cyan-600 transition-all duration-300"
                   onClick={() => handleDeny(list.friendId)}
                 >
                   거절
                 </button>
                 <button
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-200"
+                  className="px-2 py-1 text-sm bg-cyan-500/40 text-white rounded hover:bg-cyan-600 transition-all duration-300"
                   onClick={() => handleBlock(list.friendId)}
                 >
                   차단
@@ -128,7 +114,7 @@ const ReceivedFriendRequest = ({ requestedList }) => {
           ))}
         </ul>
       ) : (
-        <div className="flex justify-center items-center h-[30vh] text-gray-500">
+        <div className="flex-1 flex items-center justify-center text-gray-400">
           <p>받은 친구 요청이 없습니다.</p>
         </div>
       )}

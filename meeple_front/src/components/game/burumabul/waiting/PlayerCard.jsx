@@ -11,15 +11,21 @@ const PlayerCard = ({ playerInfo, onClick }) => {
   const playerId = Number(playerInfo?.playerId);
   const { getProfile } = UserAPI;
   const [userNickName, setUserNickName] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
+  const [userLevel, setUserLevel] = useState(null);
+  const [userExp, setUserExp] = useState(null);
 
   // 유저 프로필 조회
   useEffect(() => {
     const getUserInfo = async () => {
-      if (playerId && playerId !== userId) {
+      if (playerId) {
         try {
-          const response = await getProfile(playerId);
+          const response = await getProfile(String(playerId));
           console.log("프로필 응답:", response);
           setUserNickName(response.userNickname);
+          setUserProfile(response.userProfilePictureUrl);
+          setUserLevel(response.userLevel);
+          setUserExp(response.userExp);
         } catch (error) {
           console.log("유저 조회 중 오류:", error);
         }
@@ -27,7 +33,7 @@ const PlayerCard = ({ playerInfo, onClick }) => {
     };
 
     getUserInfo();
-  }, [playerId, userId, getProfile]);
+  }, [playerId, userId]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showReportForm, setShowReportForm] = useState(false);
@@ -48,23 +54,25 @@ const PlayerCard = ({ playerInfo, onClick }) => {
   };
 
   return (
-    <div className="md:w-44 md:h-60 lg:w-52 lg:h-64  bg-white bg-opacity-70  rounded-lg flex flex-col justify-center items-center">
-      <div className="my-3">
+    <div className="w-28 h-40 flex-shrink-0 bg-gray-900 bg-opacity-80 border-2 border-cyan-400 rounded-lg flex flex-col items-center justify-center">
+      <div className="">
         <img
-          src={virgo}
+          src={userProfile}
           alt="플레이어 이미지"
-          className="w-16 h-16 md:w-20 md:h-20 lg:w-28 lg:h-28 max-w-28 max-h-28 rounded-full "
+          className="w-16 h-16 rounded-full cursor-pointer"
           ref={buttonRef}
           onClick={
             userId !== playerId ? () => setIsModalOpen((prev) => !prev) : null
           }
         />
       </div>
-      <div className="mx-3 flex flex-col justify-center items-center">
-        <p className="my-1">{playerInfo.playerName}</p>
+      <div className="text-center py-3">
+        <p className="font-medium truncate w-28 text-cyan-400">
+          {userNickName}
+        </p>
       </div>
 
-      {isModalOpen && (
+      {isModalOpen && !showReportForm && (
         <ProfileModal
           onClose={() => setIsModalOpen(false)}
           userNickname={userNickName}

@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 
-
-const ArticleForm = ({ gameInfoId,initialData, onSubmit, isEditing, isSubmitting: externalIsSubmitting }) => {
+const ArticleForm = ({ gameInfoId, initialData, onSubmit, isEditing, isSubmitting: externalIsSubmitting }) => {
   const { token } = useSelector((state) => state.user);
   const currentUserId = token ? JSON.parse(atob(token.split(".")[1])).sub : null;
   
   const [formData, setFormData] = useState({
-
     gameCommunityContent: '',
     userId: currentUserId,
     gameInfoId: gameInfoId,
@@ -17,7 +16,6 @@ const ArticleForm = ({ gameInfoId,initialData, onSubmit, isEditing, isSubmitting
   useEffect(() => {
     if (initialData) {
       setFormData({
-
         gameCommunityContent: initialData.gameCommunity.gameCommunityContent || '',
         userId: currentUserId
       });
@@ -40,16 +38,14 @@ const ArticleForm = ({ gameInfoId,initialData, onSubmit, isEditing, isSubmitting
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(currentUserId)
+    
     if (!formData.gameCommunityContent.trim()) {
-      alert('내용을 입력해주세요.');
+      toast.error('내용을 입력해주세요.');
       return;
     }
 
-    // 로그인 안한 사용자 필터링
-
     if (!currentUserId) {
-      alert('로그인이 필요합니다.');
+      toast.error('로그인이 필요합니다.');
       return;
     }
 
@@ -58,14 +54,12 @@ const ArticleForm = ({ gameInfoId,initialData, onSubmit, isEditing, isSubmitting
       await onSubmit(formData);
       if (!isEditing) {
         setFormData({ 
- 
           gameCommunityContent: '', 
-          userId :currentUserId
+          userId: currentUserId
         });
       }
     } catch (error) {
-      console.error('저장 중 오류 발생:', error);
-      alert('저장에 실패했습니다.');
+      toast.error('저장에 실패했습니다.');
     } finally {
       if (externalIsSubmitting === undefined) {
         setIsSubmitting(false);
@@ -74,38 +68,35 @@ const ArticleForm = ({ gameInfoId,initialData, onSubmit, isEditing, isSubmitting
   };
 
   return (
-    <form onSubmit={handleSubmit} className=" mx-auto p-4 space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-1">
+      <div>
+        <textarea
+          name="gameCommunityContent"
+          value={formData.gameCommunityContent}
+          onChange={handleChange}
+          placeholder="내용을 입력해주세요"
+          className="w-full h-40 px-5 py-4 bg-slate-700 text-white rounded-lg 
+                   border border-slate-600 focus:border-cyan-400 focus:outline-none
+                   resize-none"
+          disabled={isSubmitting}
+        />
+      </div>
 
-      <div className="max-h-screen p-8 bg-[#0a0a2a]/50">
-        <div className=" mx-auto">
-          <div className="bg-gray-900 bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-lg border border-cyan-500/50  overflow-y-auto custom-scrollbar">
-            <div className="space-y-2">
-              <textarea
-                name="gameCommunityContent"
-                value={formData.gameCommunityContent}
-                onChange={handleChange}
-                placeholder="내용을 입력하세요"
-                className="w-full h-96 px-4 py-2 border border-gray-300 rounded-lg 
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 
-                          focus:border-transparent resize-none
-                          disabled:bg-gray-100 disabled:cursor-not-allowed"
-                disabled={isSubmitting}
-              />
-            </div>
-
-            <div className="flex justify-end space-x-2">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-6 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors flex items-center duration-200
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 
-                          focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? '저장 중...' : isEditing ? '수정' : '저장'}
-              </button>
-            </div>
-          </div>
-        </div>
+      <div className="flex justify-end gap-3">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className={`px-3 py-1.5 text-white rounded-lg transition-colors
+                   ${isSubmitting 
+                     ? 'bg-cyan-600 cursor-not-allowed' 
+                     : 'bg-cyan-500 hover:bg-cyan-600'}`}
+        >
+          {isSubmitting 
+            ? '저장 중...' 
+            : isEditing 
+              ? '수정' 
+              : '작성'}
+        </button>
       </div>
     </form>
   );

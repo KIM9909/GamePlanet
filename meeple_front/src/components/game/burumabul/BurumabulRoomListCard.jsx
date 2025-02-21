@@ -9,9 +9,12 @@ import EnterSecretRoom from "../../game/burumabul/play/burumabul_Modal/EnterSecr
 import { CircleX } from "lucide-react";
 import WrongPasswordModal from "./play/burumabul_Modal/WrongPasswordModal";
 import { setLoading } from "../../../sources/store/slices/BoardSlice";
+import { toast } from "react-toastify";
+import CustomToastContent from "../../CustomToastContent";
 
 const BurumabulRoomListCard = ({ roomInfo }) => {
   const {
+    enterWaitingRoom,
     enterSecretWaitingRoom,
     roomSocketData,
     socketStatus,
@@ -28,8 +31,41 @@ const BurumabulRoomListCard = ({ roomInfo }) => {
   const [showTooltip, setShowTooltip] = useState(false);
 
   const goToGeneralWaitingRoom = async (roomId) => {
-    dispatch(setRoomId(roomInfo.roomId));
-    navigate(`/game/burumabul/start/${roomId}`);
+    const enterRoom = async (roomId) => {
+      if (roomId) {
+        try {
+          const response = await enterWaitingRoom();
+          navigate(`/game/burumabul/start/${roomId}`);
+          dispatch(setRoomId(roomInfo.roomId));
+        } catch (error) {
+          console.error("방 입장 중 에러:", error);
+          // if (error.response?.status === 500) {
+          //   toast(
+          //     ({ closeToast }) => (
+          //       <CustomToastContent closeToast={closeToast} />
+          //     ),
+          //     {
+          //       position: "top-center",
+          //       autoClose: false,
+          //       hideProgressBar: true,
+          //       closeOnClick: false,
+          //       pauseOnHover: true,
+          //       draggable: true,
+          //       className: "!bg-transparent !p-0 !shadow-none",
+          //       toastClassName: "!bg-transparent !p-0",
+          //       bodyClassName: "!p-0 !m-0",
+          //       closeButton: false, // 기본 닫기 버튼 비활성화
+          //       style: {
+          //         background: "transparent",
+          //         padding: 0,
+          //       },
+          //     }
+          //   );
+          // }
+        }
+      }
+    };
+    enterRoom(roomId);
   };
 
   const goToSecretWaitingRoom = async (roomId) => {
@@ -65,14 +101,14 @@ const BurumabulRoomListCard = ({ roomInfo }) => {
   return (
     <>
       {
-        <div className="bg-white bg-opacity-70 rounded-lg w-[300px] shadow-lg overflow-hidden">
+        <div className="bg-white bg-opacity-70 border-2 border-cyan-500 rounded-lg w-[300px] shadow-lg overflow-hidden">
           {/* 카드 내용을 감싸는 컨테이너 */}
           <div className="w-full h-[120px] flex items-center justify-center">
             {/* 여기에 게임 관련 이미지나 아이콘을 추가*/}
           </div>
 
           {/* 방 정보 영역 */}
-          <div className="bg-gray-800 bg-opacity-90 p-4 w-full">
+          <div className="bg-gray-900 bg-opacity-90 p-4 w-full border border-cyan-500">
             <div className="flex justify-between items-start">
               <div className="flex-1">
                 <div className="flex items-center gap-2">
@@ -82,11 +118,11 @@ const BurumabulRoomListCard = ({ roomInfo }) => {
                     onMouseEnter={() => setShowTooltip(true)}
                     onMouseLeave={() => setShowTooltip(false)}
                   >
-                    <div className="text-white overflow-hidden truncate max-w-[120px]">
+                    <div className="text-white overflow-hidden truncate max-w-[100px]">
                       {roomInfo.roomName}
                     </div>
                     {/* 커스텀 툴팁 */}
-                    {showTooltip && roomInfo.roomName.length > 7 && (
+                    {showTooltip && roomInfo.roomName.length > 5 && (
                       <div className="absolute left-0 top-[-30px] bg-black text-white px-2 py-1 rounded text-sm whitespace-nowrap z-10">
                         {roomInfo.roomName}
                       </div>
@@ -94,7 +130,7 @@ const BurumabulRoomListCard = ({ roomInfo }) => {
                   </div>
                 </div>
                 <div className="text-gray-300 mt-1">
-                  방장 : {roomInfo.creator.playerName}
+                  방장 : {roomInfo.creator.playerNickname}
                 </div>
               </div>
 
@@ -105,14 +141,14 @@ const BurumabulRoomListCard = ({ roomInfo }) => {
                 {!roomInfo.private ? (
                   <button
                     onClick={() => goToGeneralWaitingRoom(roomId)}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors"
+                    className="bg-cyan-400 hover:bg-cyan-600 text-white px-4 py-2 rounded-lg transition-colors"
                   >
                     입장
                   </button>
                 ) : (
                   <button
                     onClick={() => goToSecretWaitingRoom(roomId)}
-                    className="bg-indigo-600 hover:bg-indigo-700 p-2 rounded-lg transition-colors"
+                    className="bg-cyan-400 hover:bg-cyan-600 p-2 rounded-lg transition-colors"
                   >
                     <LockKeyhole size={24} color="#ffffff" />
                   </button>

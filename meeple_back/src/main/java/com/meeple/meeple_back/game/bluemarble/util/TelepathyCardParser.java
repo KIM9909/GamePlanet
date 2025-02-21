@@ -2,35 +2,32 @@ package com.meeple.meeple_back.game.bluemarble.util;
 
 import com.meeple.meeple_back.game.bluemarble.domain.CardType;
 import com.meeple.meeple_back.game.bluemarble.domain.TelepathyCard;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 
 /**
- * private int id;
- * private int number;
- * private String name;
- * private CardType type;
- * private String description;
+ * private int id; private int number; private String name; private CardType type; private String
+ * description;
  */
 public class TelepathyCardParser implements ExcelReader<TelepathyCard> {
-	private static final AtomicInteger counter = new AtomicInteger(100);
+
+	private static final AtomicInteger counter = new AtomicInteger(10000);
 
 	@Override
 	public List<TelepathyCard> readExcelFile() {
 		List<TelepathyCard> cards = new ArrayList<>();
 
 		try (InputStream fis = getClass().getResourceAsStream("/game-element/telepathy-cards.xlsx");
-		     Workbook workbook = new XSSFWorkbook(fis)) {
+				Workbook workbook = new XSSFWorkbook(fis)) {
 
 			Sheet sheet = workbook.getSheetAt(0);
 			Iterator<Row> rowIterator = sheet.iterator();
@@ -48,7 +45,8 @@ public class TelepathyCardParser implements ExcelReader<TelepathyCard> {
 				if (number == 3 || number == 7 || number == 10 || number == 11) {
 					for (int i = 0; i < 7; i++) {
 						int generatedId = counter.getAndIncrement();
-						cards.add(new TelepathyCard(generatedId, number, name, CardType.TELEPATHY_CARD, description));
+						cards.add(new TelepathyCard(generatedId, number, name,
+								CardType.TELEPATHY_CARD, description));
 					}
 				}
 			}

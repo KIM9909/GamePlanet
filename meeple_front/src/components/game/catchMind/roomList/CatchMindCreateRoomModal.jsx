@@ -54,7 +54,6 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
     try {
       const localToken = localStorage.getItem("token");
       if (!localToken || !token || localToken !== token) {
-        console.error("토큰이 유효하지 않습니다.");
         setIsSubmitting(false);
         return;
       }
@@ -76,12 +75,6 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
         navigate(`/catch-mind/${response.roomId}`);
       }
     } catch (error) {
-      console.error("Room creation error details:", {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-      });
-
       if (error.response?.status === 500) {
         toast(
           ({ closeToast }) => <CustomToastContent closeToast={closeToast} />,
@@ -254,7 +247,7 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
                          text-white appearance-none cursor-pointer
                          focus:outline-none focus:border-cyan-400 transition-colors"
               >
-                <option value="1">1초</option>
+                <option value="60">60초</option>
                 <option value="90">90초</option>
                 <option value="120">120초</option>
               </select>
@@ -278,7 +271,7 @@ const CatchMindCreateRoomModal = ({ isOpen, onClose }) => {
                        text-white appearance-none cursor-pointer
                        focus:outline-none focus:border-cyan-400 transition-colors"
             >
-              <option value="1">1개</option>
+              <option value="5">5개</option>
               <option value="7">7개</option>
               <option value="10">10개</option>
             </select>

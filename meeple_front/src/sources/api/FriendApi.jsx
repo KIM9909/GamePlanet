@@ -21,8 +21,7 @@ export const processFriendRequest = async (friendId, requirements) => {
 
     return response.data;
   } catch (error) {
-    console.error("친구 요청 처리 중 오류 : ", error);
-    throw error;
+    return error;
   }
 };
 
@@ -42,8 +41,7 @@ export const sendFriendRequest = async (userId, friendId) => {
       console.log("친구 요청 성공");
       return response.data;
     } catch (error) {
-      console.error("친구 요청 보내기 중 오류 : ", error);
-      throw error;
+      return error;
     }
   }
 };
@@ -58,8 +56,7 @@ export const messageList = async (userId) => {
       );
       return response.data;
     } catch (error) {
-      console.error("쪽지 목록 조회 중 오류 : ", error);
-      throw error;
+      return error;
     }
   }
 };
@@ -80,8 +77,7 @@ export const sendMessage = async (content, ToId, userId) => {
       );
       return response.data;
     } catch (error) {
-      console.error("메세지 발송 중 오류 :", error);
-      throw error;
+      return error;
     }
   }
 };
@@ -94,8 +90,7 @@ export const deleteMessage = async (friendMessageId) => {
     );
     return response.data;
   } catch (error) {
-    console.error("쪽지 삭제 중 에러 : ", error);
-    throw error;
+    return error;
   }
 };
 
@@ -107,11 +102,9 @@ export const fetchFriendList = async (userId) => {
       const response = await axios.get(
         `${FRIEND_API_BASE_URL}?userId=${userId}`
       );
-      console.log("✅ [프론트] API 응답:", response.data);
       return response.data;
     } catch (error) {
-      console.error("FriendList fetch error : ", error);
-      throw error;
+      return error;
     }
   }
 };
@@ -125,12 +118,11 @@ export const searchFriend = async (userNickname) => {
 
     return response.data;
   } catch (error) {
-    console.error("닉네임으로 친구 검색 중 오류가 났습니다. : ", error);
-    throw error;
+    return error;
   }
 };
 
-// // 친구 요청 목록
+// 친구 요청 목록
 export const requestFriendList = async (userId) => {
   if (!userId) throw new Error("유저 아이디가 없습니다.");
   if (userId) {
@@ -141,24 +133,22 @@ export const requestFriendList = async (userId) => {
 
       return response.data;
     } catch (error) {
-      console.error("친구 요청 목록 조회 중 오류 : ", error);
-      throw error;
+      return error;
     }
   }
 };
 
 // 차단 목록
-export const blokingFriendList = async (userId) => {
+export const blockingFriendList = async (userId) => {
   if (!userId) throw new Error("유저 아이디가 없습니다.");
   if (userId) {
     try {
       const response = await axios.get(
-        `${FRIEND_API_BASE_URL}/blocking-list?=${userId}`
+        `${FRIEND_API_BASE_URL}/blocking-list?userId=${userId}`
       );
       return response.data;
     } catch (error) {
-      console.error("차단 목록 조회 중 오류 : ", error);
-      throw error;
+      return error;
     }
   }
 };
@@ -166,17 +156,12 @@ export const blokingFriendList = async (userId) => {
 // 차단 해제
 export const liftBlocking = async (friendId) => {
   try {
-    const requestBody = {
-      friendId,
-    };
     const response = await axios.delete(
-      `${FRIEND_API_BASE_URL}/process-block`,
-      requestBody
+      `${FRIEND_API_BASE_URL}/process-block?friendId=${friendId}`
     );
     return response.data;
   } catch (error) {
-    console.error("차단 해제 중 오류 : ", error);
-    throw error;
+    return error;
   }
 };
 
@@ -200,7 +185,6 @@ export const deleteFriendRequest = async (friendId) => {
     );
     return response.data;
   } catch (error) {
-    console.error("친구 요청 삭제 중 오류 :", error);
-    throw error;
+    return error;
   }
 };

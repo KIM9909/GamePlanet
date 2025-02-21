@@ -20,35 +20,37 @@ import lombok.NoArgsConstructor;
 @Builder
 public class User {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
-    private Long userId;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "user_id")
+	private Long userId;
 
-    @Column(name = "user_name")
-    private String userName;
-    @Column(name = "user_email")
-    private String userEmail;
-    @Column(name = "user_password")
-    private String userPassword;
-    @Column(name="user_birthday")
-    private LocalDateTime userBirthday;
-    @Column(name = "user_nickname")
-    private String userNickname;
-    @Column(name = "user_profile_picture_url")
-    private String userProfilePictureUrl;
-    @Column(name = "user_tier")
-    private String userTier;
-    @Column(name = "user_exp", nullable = false)
-    private long userExp;
-    @Column(name = "user_level")
-    private int userLevel;
-    @Column(name = "user_created_at")
-    private LocalDateTime userCreatedAt;
-    @Column(name = "user_updated_at")
-    private LocalDateTime userUpdatedAt;
-    @Column(name = "user_deleted_at")
-    private LocalDateTime userDeletedAt;
-    @Column(name = "user_bio")
-    private String userBio;
+	@Column(name = "user_name")
+	private String userName;
+	@Column(name = "user_email")
+	private String userEmail;
+	@Column(name = "user_password")
+	private String userPassword;
+	@Column(name = "user_birthday")
+	private LocalDateTime userBirthday;
+	@Column(name = "user_nickname")
+	private String userNickname;
+	@Column(name = "user_profile_picture_url")
+	private String userProfilePictureUrl;
+	@Column(name = "user_tier")
+	private String userTier;
+	@Column(name = "user_exp", nullable = false)
+	private long userExp;
+	@Column(name = "user_level")
+	private int userLevel;
+	@Column(name = "user_created_at")
+	private LocalDateTime userCreatedAt;
+	@Column(name = "user_updated_at")
+	private LocalDateTime userUpdatedAt;
+	@Column(name = "user_deleted_at")
+	private LocalDateTime userDeletedAt;
+	@Column(name = "user_bio")
+	private String userBio;
+	@Column(name = "user_role")
+	private String userRole;
 }

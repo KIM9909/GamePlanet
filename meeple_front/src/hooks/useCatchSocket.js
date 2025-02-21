@@ -39,7 +39,60 @@ const useCatchSocket = (roomId) => {
   const currentUserNickname = useSelector(
     (state) => state.profile.profileData?.userNickname
   );
+  const [countdown, setCountdown] = useState(null);
+  const [gameResults, setGameResults] = useState(null);
+  const [showResults, setShowResults] = useState(false);
 
+  const handleCloseResults = useCallback(() => {
+    setShowResults(false);
+    setGameResults(null);
+  }, []);
+
+  const countdownSoundRef = useRef(null);
+  useEffect(() => {
+    countdownSoundRef.current = new Audio(
+      "https://meeple-file-server-2.s3.ap-northeast-2.amazonaws.com/static-files/gameCountDown.mp3"
+    );
+    countdownSoundRef.current.volume = 0.3;
+    return () => {
+      if (countdownSoundRef.current) {
+        countdownSoundRef.current.pause();
+        countdownSoundRef.current = null;
+      }
+    };
+  }, []);
+
+  const playCountdownSound = useCallback(() => {
+    if (countdownSoundRef.current) {
+      countdownSoundRef.current.currentTime = 0;
+      countdownSoundRef.current.play().catch((error) => {
+        console.error("Error playing countdown sound:", error);
+      });
+    }
+  }, []);
+
+  const correctSoundRef = useRef(null);
+  useEffect(() => {
+    correctSoundRef.current = new Audio(
+      "https://meeple-file-server-2.s3.ap-northeast-2.amazonaws.com/static-files/coin.mp3"
+    );
+    correctSoundRef.current.volume = 0.3;
+    return () => {
+      if (correctSoundRef.current) {
+        correctSoundRef.current.pause();
+        correctSoundRef.current = null;
+      }
+    };
+  }, []);
+
+  const playCorrectSound = useCallback(() => {
+    if (correctSoundRef.current) {
+      correctSoundRef.current.currentTime = 0;
+      correctSoundRef.current.play().catch((error) => {
+        console.error("Error playing sound:", error);
+      });
+    }
+  }, []);
   /**
    * WebSocket 연결을 설정하는 함수
    */
@@ -54,12 +107,8 @@ const useCatchSocket = (roomId) => {
         try {
           clientRef.current.deactivate();
           clientRef.current = null;
-        } catch (error) {
-          console.error("Error cleaning up previous connection:", error);
-        }
+        } catch (error) {}
       }
-
-      console.log("Connecting to WebSocket...");
 
       // SockJS를 사용하여 WebSocket 연결 생성
       const socket = new SockJS(
@@ -74,9 +123,6 @@ const useCatchSocket = (roomId) => {
       // STOMP 클라이언트 생성
       const client = new Client({
         webSocketFactory: () => socket,
-        debug: function (str) {
-          console.log("STOMP: " + str);
-        },
       });
 
       /**
@@ -87,11 +133,9 @@ const useCatchSocket = (roomId) => {
         heartbeatIncoming: 4000,
         heartbeatOutgoing: 4000,
         onConnect: () => {
-          console.log("새로운 연결 설정");
           setConnectionStatus("connected");
 
           if (!roomId) {
-            console.error("Invalid roomId for subscription:", roomId);
             return;
           }
           /**
@@ -104,12 +148,31 @@ const useCatchSocket = (roomId) => {
             (message) => {
               try {
                 const data = JSON.parse(message.body);
-                // console.log(`[${debugId}] Received message:`, data);
-                console.log("전체 게임 상태 데이터:", data);
+
+                if (data.type === "countdown") {
+                  setCountdown(data.count);
+                  if (data.count === 3) {
+                    // 카운트다운 시작할 때만 사운드 재생
+                    playCountdownSound();
+                  }
+                  if (data.count === 0) {
+                    // START! 메시지를 0.5초 후에 제거
+                    setTimeout(() => {
+                      setCountdown(null);
+                    }, 500);
+                  }
+                  return;
+                }
+
+                if (
+                  data.type === "message" &&
+                  data.message.content === "🎮 게임이 곧 시작됩니다!"
+                ) {
+                  // 카운트다운 사운드 재생
+                  playCountdownSound();
+                }
 
                 if (data.type === "updateRoom" && data.roomInfo) {
-                  console.log("방 정보 업데이트:", data.roomInfo);
-
                   // 방 정보 업데이트
                   dispatch(
                     updateGameState({
@@ -125,11 +188,6 @@ const useCatchSocket = (roomId) => {
 
                 // 타임아웃 처리
                 if (data.type === "timeOut" && data.gameData) {
-                  console.log(
-                    "타임아웃 발생. 다음 턴으로 넘어갑니다.",
-                    data.gameData
-                  );
-
                   // 메시지 추가
                   setMessages((prev) => [
                     ...prev,
@@ -159,11 +217,6 @@ const useCatchSocket = (roomId) => {
                     isTurn: player.nickname === data.gameData.nextTurn,
                   }));
 
-                  console.log("턴 변경:", {
-                    nextTurn: data.gameData.nextTurn,
-                    updatedPlayers: updatedPlayers,
-                  });
-
                   // 플레이어 정보 업데이트
                   dispatch(
                     updatePlayers({
@@ -174,13 +227,17 @@ const useCatchSocket = (roomId) => {
                   return;
                 }
 
-                if (data.type === "result" && Array.isArray(data.result)) {
-                  console.log("게임 결과 수신:", data.result);
+                //useCatchSocket.js 의 result 핸들러 부분
 
+                if (data.type === "result" && Array.isArray(data.result)) {
                   // 게임 상태를 종료 상태로 변경
                   dispatch(setGameStarted(false));
 
-                  // 결과 발표 메시지를 채팅창에 추가
+                  // 게임 결과 저장 및 모달 표시
+                  setGameResults(data.result);
+                  setShowResults(true);
+
+                  // 게임 종료 메시지 추가
                   setMessages((prev) => [
                     ...prev,
                     {
@@ -189,89 +246,87 @@ const useCatchSocket = (roomId) => {
                       timestamp: new Date(),
                       isNotice: true,
                     },
-                    ...data.result.map((result) => ({
-                      sender: "SYSTEM",
-                      content: `${result.rank}등 - ${result.player} (${result.point}점)`,
-                      timestamp: new Date(),
-                      isNotice: true,
-                    })),
-                    {
-                      sender: "SYSTEM",
-                      content: "5초 후에 새로고침됩니다...",
-                      timestamp: new Date(),
-                      isNotice: true,
-                    },
                   ]);
 
-                  // 5초 후 게임 상태 초기화 및 새로고침
-                  setTimeout(() => {
-                    // 캔버스 초기화 메시지 전송
-                    if (client) {
-                      client.publish({
-                        destination: `/app/drawing/${roomId}`,
-                        body: JSON.stringify({
-                          type: "clear",
-                          roomId: parseInt(roomId),
-                        }),
-                        headers: { "content-type": "application/json" },
-                      });
+                  // 게임 종료 후 처리
+                  const cleanupGame = async () => {
+                    try {
+                      // 1. 캔버스 초기화 메시지 전송
+                      if (clientRef.current?.connected) {
+                        clientRef.current.publish({
+                          destination: `/app/drawing/${roomId}`,
+                          body: JSON.stringify({
+                            type: "clear",
+                            roomId: parseInt(roomId),
+                          }),
+                          headers: { "content-type": "application/json" },
+                        });
+                      }
+
+                      // 2. 게임 상태 초기화
+                      dispatch(resetGameState());
+                      dispatch(
+                        updateGameState({
+                          currentWord: null,
+                          remainQuizCount: 0,
+                          currentRound: 1,
+                          quizCategory: null,
+                          isGameStart: false,
+                        })
+                      );
+
+                      // 3. 플레이어 점수 초기화
+                      const resetPlayers = currentGameState.players.map(
+                        (player) => ({
+                          ...player,
+                          score: 0,
+                          isTurn: false,
+                          rank: null,
+                        })
+                      );
+                      dispatch(updatePlayers({ players: resetPlayers }));
+
+                      // 4. 추가 메시지 표시
+                      setMessages((prev) => [
+                        ...prev,
+                        {
+                          sender: "SYSTEM",
+                          content: "🎨 새 게임을 시작할 수 있습니다!",
+                          timestamp: new Date(),
+                          isNotice: true,
+                        },
+                      ]);
+                    } catch (error) {
+                      setMessages((prev) => [
+                        ...prev,
+                        {
+                          sender: "SYSTEM",
+                          content: "⚠️ 게임 초기화 중 오류가 발생했습니다.",
+                          timestamp: new Date(),
+                          isNotice: true,
+                        },
+                      ]);
                     }
+                  };
 
-                    // 게임 상태 초기화
-                    dispatch(resetGameState());
-
-                    // 플레이어 점수 초기화
-                    const resetPlayers = currentGameState.players.map(
-                      (player) => ({
-                        ...player,
-                        score: 0,
-                        isTurn: false,
-                        rank: null,
-                      })
-                    );
-                    dispatch(updatePlayers({ players: resetPlayers }));
-
-                    // 게임 상태 업데이트
-                    dispatch(
-                      updateGameState({
-                        currentWord: null,
-                        remainQuizCount: 0,
-                        currentRound: 1,
-                        quizCategory: null,
-                        isGameStarted: false,
-                      })
-                    );
-
-                    // 페이지 새로고침
-                    window.location.reload();
-                  }, 5000);
+                  // 잠시 대기 후 정리 작업 시작
+                  setTimeout(cleanupGame, 2000);
 
                   return;
                 }
 
                 // gameInfo 타입 처리 추가
                 if (data.type === "gameInfo" && data.gameInfo) {
-                  console.log("[GameInfo] 수신된 데이터:", data.gameInfo);
-
                   // 게임 시작 상태 설정
                   dispatch(setGameStarted(true));
 
                   // 현재 Redux store의 players 상태 확인
                   const currentPlayers = store.getState().catchmind.players;
-                  console.log("[GameInfo] 현재 플레이어 상태:", currentPlayers);
-                  console.log(
-                    "[GameInfo] 새로운 턴 플레이어:",
-                    data.gameInfo.currentTurn
-                  );
 
                   let updatedPlayers = currentPlayers;
 
                   // players 배열이 비어있다면 roomInfo에서 플레이어 목록을 다시 가져옴
                   if (currentPlayers.length === 0 && data.roomInfo?.players) {
-                    console.log(
-                      "[GameInfo] 플레이어 목록 재구성:",
-                      data.roomInfo.players
-                    );
                     updatedPlayers = data.roomInfo.players.map(
                       (playerName, index) => ({
                         id: index + 1,
@@ -298,6 +353,7 @@ const useCatchSocket = (roomId) => {
                       currentWord: data.gameInfo.quiz,
                       remainQuizCount: data.gameInfo.remainQuizCount,
                       currentTurn: data.gameInfo.currentTurn,
+                      isGameStart: true,
                     })
                   );
 
@@ -311,12 +367,6 @@ const useCatchSocket = (roomId) => {
                       isNotice: true,
                     },
                   ]);
-
-                  console.log("[GameInfo] 상태 업데이트 완료:", {
-                    currentTurn: data.gameInfo.currentTurn,
-                    updatedPlayers: updatedPlayers,
-                    quiz: data.gameInfo.quiz,
-                  });
 
                   return;
                 }
@@ -336,7 +386,6 @@ const useCatchSocket = (roomId) => {
                     ]);
                     return;
                   }
-                  console.log("채팅 메시지 수신:", data.message);
 
                   setMessages((prev) => [
                     ...prev,
@@ -353,6 +402,8 @@ const useCatchSocket = (roomId) => {
 
                   // 정답을 맞췄을 때의 처리
                   if (data.message.correct) {
+                    playCorrectSound();
+
                     // 점수 업데이트
                     dispatch(
                       updatePlayerScore({
@@ -391,15 +442,11 @@ const useCatchSocket = (roomId) => {
 
                   // 방이 비어있을 때 처리
                   if (data.players.length === 0) {
-                    console.log("Room is empty, cleaning up...");
-
                     if (clientRef.current) {
                       try {
                         clientRef.current.deactivate();
                         clientRef.current = null;
-                      } catch (error) {
-                        console.error("Error during cleanup:", error);
-                      }
+                      } catch (error) {}
                     }
 
                     setConnectionStatus("disconnected");
@@ -414,10 +461,8 @@ const useCatchSocket = (roomId) => {
                 }
 
                 if (data.type === "roomInfo" && data.roomInfo) {
-                  console.log("[RoomInfo] 수신된 데이터:", data.roomInfo);
-
                   // 게임이 시작되지 않은 상태라면 점수를 0으로 초기화
-                  if (!data.roomInfo.isGameStarted) {
+                  if (!data.roomInfo.isGameStart) {
                     if (
                       data.roomInfo.players &&
                       Array.isArray(data.roomInfo.players)
@@ -433,10 +478,6 @@ const useCatchSocket = (roomId) => {
                       );
 
                       dispatch(updatePlayers({ players: updatedPlayers }));
-                      console.log(
-                        "[RoomInfo] 플레이어 정보 초기화됨:",
-                        updatedPlayers
-                      );
                     }
                   }
 
@@ -455,7 +496,7 @@ const useCatchSocket = (roomId) => {
                       password: data.roomInfo.password,
                       roomId: data.roomInfo.roomId,
                       sessionId: data.roomInfo.sessionId,
-                      isGameStarted: false, // 방 정보를 새로 받을 때는 게임 시작 상태를 false로
+                      isGameStart: false, // 방 정보를 새로 받을 때는 게임 시작 상태를 false로
                     })
                   );
 
@@ -468,13 +509,11 @@ const useCatchSocket = (roomId) => {
                 }
 
                 if (data.gameInfo && data.gameInfo.currentWord) {
-                  console.log("새로운 제시어 수신:", data.gameInfo.currentWord);
                   dispatch(setCurrentWord(data.gameInfo.currentWord));
                 }
 
                 // 게임 시작 응답 처리
                 if (data.quizList && data.sequence) {
-                  console.log("게임 시작! 라운드 초기화");
                   dispatch(resetGameState());
                   dispatch(setGameStarted(true));
 
@@ -515,12 +554,6 @@ const useCatchSocket = (roomId) => {
                     },
                   ]);
 
-                  console.log("게임 시작 설정 완료:", {
-                    firstPlayer,
-                    firstQuiz: firstQuiz.quiz,
-                    players: updatedPlayers,
-                  });
-
                   return;
                 }
 
@@ -532,8 +565,6 @@ const useCatchSocket = (roomId) => {
 
                   // 턴 변경 시에는 게임 상태 업데이트를 하지 않음
                   if (previousTurn !== newTurn && previousTurn !== null) {
-                    console.log("턴 변경 감지:", previousTurn, "->", newTurn);
-
                     // 플레이어 정보만 업데이트
                     const updatedPlayers = data.players.map((playerName) => ({
                       ...currentGameState.players.find(
@@ -547,8 +578,6 @@ const useCatchSocket = (roomId) => {
 
                   // 방이 비어있을 때 처리
                   if (data.players.length === 0) {
-                    console.log("Room is empty, cleaning up...");
-
                     if (clientRef.current) {
                       try {
                         fetch(
@@ -559,17 +588,11 @@ const useCatchSocket = (roomId) => {
                           //   import.meta.env.VITE_LOCAL_API_BASE_URL
                           // }/catch-mind/delete-room?roomId=${roomId}`,
                           { method: "DELETE" }
-                        )
-                          .then(() => console.log("Room deletion request sent"))
-                          .catch((error) =>
-                            console.error("Error deleting room:", error)
-                          );
+                        );
 
                         clientRef.current.deactivate();
                         clientRef.current = null;
-                      } catch (error) {
-                        console.error("Error during cleanup:", error);
-                      }
+                      } catch (error) {}
                     }
 
                     setConnectionStatus("disconnected");
@@ -581,17 +604,13 @@ const useCatchSocket = (roomId) => {
                     }, 500);
                   }
                 }
-              } catch (error) {
-                console.error("게임 상태 파싱 에러:", error);
-              }
+              } catch (error) {}
             }
           ));
           client.onDisconnect = () => {
             try {
               subscription.unsubscribe();
-            } catch (error) {
-              console.error("구독 해제 중 에러:", error);
-            }
+            } catch (error) {}
             setConnectionStatus("disconnected");
           };
         },
@@ -599,13 +618,11 @@ const useCatchSocket = (roomId) => {
 
       // 에러 핸들러들 설정
       client.onStompError = (frame) => {
-        console.error("STOMP error:", frame);
         setConnectionStatus("error");
         handleReconnect();
       };
 
       client.onWebSocketError = (event) => {
-        console.error("WebSocket error:", event);
         setConnectionStatus("error");
         handleReconnect();
       };
@@ -619,11 +636,10 @@ const useCatchSocket = (roomId) => {
       clientRef.current = client;
       client.activate();
     } catch (error) {
-      console.error("Error creating WebSocket connection:", error);
       setConnectionStatus("error");
       handleReconnect();
     }
-  }, [roomId, dispatch]);
+  }, [roomId, dispatch, playCorrectSound]);
 
   /**
    * 연결 재시도 핸들러
@@ -649,12 +665,9 @@ const useCatchSocket = (roomId) => {
     // 구독 해제
     if (subscriptionRef.current) {
       try {
-        console.log("Unsubscribing from previous subscription");
         subscriptionRef.current.unsubscribe();
         subscriptionRef.current = null;
-      } catch (error) {
-        console.error("Error unsubscribing:", error);
-      }
+      } catch (error) {}
     }
 
     if (clientRef.current) {
@@ -663,9 +676,7 @@ const useCatchSocket = (roomId) => {
         clientRef.current = null;
         setConnectionStatus("disconnected");
         setMessages([]);
-      } catch (error) {
-        console.error("Error disconnecting:", error);
-      }
+      } catch (error) {}
     }
   }, []);
 
@@ -676,12 +687,10 @@ const useCatchSocket = (roomId) => {
   const sendMessage = useCallback(
     (messageData) => {
       if (!roomId) {
-        console.error("Invalid roomId for message sending:", roomId);
         return;
       }
 
       if (!clientRef.current?.connected) {
-        console.warn("Cannot send message: WebSocket not connected");
         connect();
         return;
       }
@@ -693,7 +702,6 @@ const useCatchSocket = (roomId) => {
           headers: { "content-type": "application/json" },
         });
       } catch (error) {
-        console.error("Error sending message:", error);
         handleReconnect();
       }
     },
@@ -703,27 +711,21 @@ const useCatchSocket = (roomId) => {
   // roomId가 있을 때 WebSocket 연결 설정
   useEffect(() => {
     if (roomId) {
-      console.log("Setting up connection for room", roomId);
       connect();
 
       return () => {
-        console.log("Cleaning up connection for room", roomId);
         if (subscriptionRef.current) {
           try {
             subscriptionRef.current.unsubscribe();
             subscriptionRef.current = null;
-          } catch (error) {
-            console.error("Cleanup subscription error:", error);
-          }
+          } catch (error) {}
         }
 
         if (clientRef.current) {
           try {
             clientRef.current.deactivate();
             clientRef.current = null;
-          } catch (error) {
-            console.error("Cleanup connection error:", error);
-          }
+          } catch (error) {}
         }
         setConnectionStatus("disconnected");
       };
@@ -735,6 +737,7 @@ const useCatchSocket = (roomId) => {
     (joinData) => {
       if (!clientRef.current?.connected) {
         connect();
+        // 연결 후 입장 시도
         setTimeout(() => {
           if (clientRef.current?.connected) {
             clientRef.current.publish({
@@ -754,7 +757,6 @@ const useCatchSocket = (roomId) => {
           headers: { "content-type": "application/json" },
         });
       } catch (error) {
-        console.error("Error joining room:", error);
         handleReconnect();
       }
     },
@@ -769,6 +771,10 @@ const useCatchSocket = (roomId) => {
     messages,
     joinRoom,
     client: clientRef.current,
+    countdown,
+    gameResults,
+    showResults,
+    handleCloseResults,
   };
 };
 

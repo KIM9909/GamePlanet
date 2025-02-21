@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Camera } from "lucide-react";
+import { toast, ToastContainer } from 'react-toastify';
 
 const ProfilePicture = ({ initialImageUrl, onSave, defaultImageUrl }) => {
   const [isHovering, setIsHovering] = useState(false);
@@ -10,13 +11,13 @@ const ProfilePicture = ({ initialImageUrl, onSave, defaultImageUrl }) => {
 
     // 이미지 파일 타입 검증
     if (!file.type.startsWith("image/")) {
-      alert("이미지 파일만 업로드 가능합니다.");
+      toast.error("이미지 파일만 업로드 가능합니다.");
       return;
     }
 
     // 파일 크기 제한 (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert("파일 크기는 5MB 이하여야 합니다.");
+      toast.error("파일 크기는 5MB 이하여야 합니다.");
       return;
     }
 
@@ -34,7 +35,7 @@ const ProfilePicture = ({ initialImageUrl, onSave, defaultImageUrl }) => {
       await onSave(formDataToSend);
     } catch (error) {
       console.error("프로필 이미지 업데이트 실패:", error);
-      alert("프로필 이미지 업데이트에 실패했습니다.");
+      toast.error("프로필 이미지 업데이트에 실패했습니다.");
     }
   };
 

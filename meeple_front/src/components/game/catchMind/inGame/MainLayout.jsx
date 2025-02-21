@@ -18,11 +18,18 @@ import CatchMindUpdateRoomModal from "./CatchMindUpdateRoomModal";
 import {
   updatePlayers,
   resetGameState,
+  updateGameState,
 } from "../../../../sources/store/slices/CatchMindSlice";
 import { fetchProfile } from "../../../../sources/store/slices/ProfileSlice";
 import { CatchMindAPI } from "../../../../sources/api/CatchMindAPI";
 import useCatchSocket from "../../../../hooks/useCatchSocket";
 import VideoChat from "./VideoChat";
+import ExitConfirmationModal from "./ExitConfirmationModal";
+import GameReviewModal from "./GameReivewModal";
+import Loading from "../../../Loading";
+import useSound from "./useSound";
+import CountdownModal from "./CountdownModal";
+import GameResultModal from "./GameResultModal";
 
 // 비디오 컨테이너 컴포넌트 - React.memo로 최적화
 const VideoContainer = React.memo(
@@ -86,7 +93,7 @@ const GameInfo = React.memo(
 
     useEffect(() => {
       let timer;
-      if (roomInfo?.isGameStarted) {
+      if (roomInfo?.isGameStart) {
         timer = setInterval(() => {
           setTimeLeft((prevTime) => {
             if (prevTime <= 0) {
@@ -112,7 +119,7 @@ const GameInfo = React.memo(
         }
       };
     }, [
-      roomInfo?.isGameStarted,
+      roomInfo?.isGameStart,
       roomInfo?.timeLimit,
       roomInfo?.roomId,
       client,
@@ -120,7 +127,7 @@ const GameInfo = React.memo(
     ]);
 
     useEffect(() => {
-      if (roomInfo?.isGameStarted) {
+      if (roomInfo?.isGameStart) {
         setTimeLeft(roomInfo?.timeLimit || 90);
       }
     }, [word, roomInfo?.timeLimit]);
@@ -189,7 +196,7 @@ const GameInfo = React.memo(
                 </div>
 
                 {/* Creator Controls */}
-                {!roomInfo?.isGameStarted && (
+                {!roomInfo?.isGameStart && (
                   <div className="flex space-x-2">
                     {isCreator ? (
                       <>
@@ -218,26 +225,12 @@ const GameInfo = React.memo(
                           <span>Settings</span>
                         </button>
                       </>
-                    ) : (
-                      <button
-                        onClick={() =>
-                          client?.publish({
-                            destination: `/app/ready/${roomInfo.roomId}`,
-                            body: "",
-                            headers: { "content-type": "text/plain" },
-                          })
-                        }
-                        className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
-                      >
-                        <PlayCircle className="w-4 h-4 mr-2" />
-                        <span>Ready</span>
-                      </button>
-                    )}
+                    ) : null}
                   </div>
                 )}
 
                 {/* Exit Button */}
-                {!roomInfo?.isGameStarted && (
+                {!roomInfo?.isGameStart && (
                   <button
                     onClick={handleExitRoom}
                     className="flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
@@ -280,7 +273,70 @@ const MainLayout = () => {
   const sessionId = useSelector((state) => state.catchmind.sessionId);
 
   const isCreator = gameState.creator === profileData?.userNickname;
-  const { sendMessage, client, joinRoom } = useCatchSocket(roomId);
+  const {
+    connected,
+    connectionStatus,
+    sendMessage,
+    client,
+    joinRoom,
+    countdown,
+    gameResults,
+    showResults,
+    handleCloseResults,
+  } = useCatchSocket(roomId);
+  const [isExitModalOpen, setIsExitModalOpen] = useState(false);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [hasPlayedGame, setHasPlayedGame] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (connectionStatus === "connected" && !isInitialJoin) {
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 1000);
+    }
+  }, [connectionStatus, isInitialJoin]);
+
+  // 모달 닫기 핸들러
+  const handleCloseExitModal = () => {
+    setIsExitModalOpen(false);
+  };
+
+  // 나가기 확인 핸들러
+  const handleConfirmExit = () => {
+    handleExitRoom();
+    setIsExitModalOpen(false);
+  };
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (gameState.isGameStart) {
+        e.preventDefault();
+        setIsExitModalOpen(true);
+        e.returnValue = "";
+      }
+    };
+
+    const handlePopState = (e) => {
+      if (gameState.isGameStart) {
+        e.preventDefault();
+        setIsExitModalOpen(true);
+        // 현재 URL을 history stack에 다시 추가
+        window.history.pushState(null, "", window.location.pathname);
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("popstate", handlePopState);
+
+    // 초기 history state 추가
+    window.history.pushState(null, "", window.location.pathname);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [gameState.isGameStart]);
 
   // 현재 턴인 플레이어 찾기
   const currentPlayer = useSelector((state) =>
@@ -302,6 +358,13 @@ const MainLayout = () => {
 
     try {
       setIsExiting(true);
+
+      // 게임을 플레이했다면 리뷰 모달 표시
+      if (hasPlayedGame) {
+        setIsReviewModalOpen(true);
+        return; // 리뷰 모달에서 처리 후 나가기를 진행
+      }
+
       dispatch(resetGameState());
 
       client.publish({
@@ -315,7 +378,6 @@ const MainLayout = () => {
         navigate("/catch-mind");
       }, 500);
     } catch (error) {
-      console.error("[ExitRoom] Error during exit:", error);
       setIsExiting(false);
     }
   }, [
@@ -325,7 +387,32 @@ const MainLayout = () => {
     navigate,
     isExiting,
     dispatch,
+    hasPlayedGame,
   ]);
+
+  const handleReviewClose = useCallback(() => {
+    setIsReviewModalOpen(false);
+
+    // 리뷰 모달이 닫힌 후 방 나가기 처리
+    dispatch(resetGameState());
+
+    if (client) {
+      client.publish({
+        destination: `/app/exit-room/${roomId}`,
+        body: profileData.userNickname,
+        headers: { "content-type": "text/plain" },
+      });
+    }
+
+    setTimeout(() => {
+      setIsExiting(false);
+      navigate("/catch-mind");
+    }, 500);
+  }, [client, dispatch, navigate, profileData?.userNickname, roomId]);
+
+  const { play: playCountdown } = useSound(
+    "https://meeple-file-server-2.s3.ap-northeast-2.amazonaws.com/static-files/gameCountDown.mp3"
+  );
 
   // 게임 시작 처리 함수
   const handleStartGame = useCallback(async () => {
@@ -336,53 +423,60 @@ const MainLayout = () => {
       client.publish({
         destination: `/app/chat/${roomId}`,
         body: JSON.stringify({
-          message: "🎮 3초 후에 게임이 시작됩니다!",
+          message: "🎮 게임이 곧 시작됩니다!",
           sender: "SYSTEM",
           isNotice: true,
         }),
         headers: { "content-type": "application/json" },
       });
 
-      // 3초 카운트다운
-      setTimeout(() => {
-        client.publish({
-          destination: `/app/chat/${roomId}`,
-          body: JSON.stringify({
-            message: "3...",
-            sender: "SYSTEM",
-            isNotice: true,
-          }),
-          headers: { "content-type": "application/json" },
-        });
-      }, 100);
+      // 카운트다운 시작 (3)
+      client.publish({
+        destination: `/topic/catch-mind/${roomId}`,
+        body: JSON.stringify({
+          type: "countdown",
+          count: 3,
+        }),
+        headers: { "content-type": "application/json" },
+      });
 
+      // 2초 카운트다운
       setTimeout(() => {
         client.publish({
-          destination: `/app/chat/${roomId}`,
+          destination: `/topic/catch-mind/${roomId}`,
           body: JSON.stringify({
-            message: "2...",
-            sender: "SYSTEM",
-            isNotice: true,
+            type: "countdown",
+            count: 2,
           }),
           headers: { "content-type": "application/json" },
         });
       }, 1000);
 
+      // 1초 카운트다운
       setTimeout(() => {
         client.publish({
-          destination: `/app/chat/${roomId}`,
+          destination: `/topic/catch-mind/${roomId}`,
           body: JSON.stringify({
-            message: "1...",
-            sender: "SYSTEM",
-            isNotice: true,
+            type: "countdown",
+            count: 1,
           }),
           headers: { "content-type": "application/json" },
         });
       }, 2000);
 
-      // 3초 후에 실제 게임 시작
+      // START! 표시 및 게임 시작
       setTimeout(() => {
+        client.publish({
+          destination: `/topic/catch-mind/${roomId}`,
+          body: JSON.stringify({
+            type: "countdown",
+            count: 0,
+          }),
+          headers: { "content-type": "application/json" },
+        });
+
         dispatch(resetGameState());
+        dispatch(updateGameState({ isGameStart: true }));
 
         client.publish({
           destination: `/app/start-game/${roomId}`,
@@ -404,20 +498,27 @@ const MainLayout = () => {
         });
       }, 3000);
     } catch (error) {
-      console.error("[StartGame] Error:", error);
+      console.error("Game start error:", error);
     }
   }, [roomId, client, dispatch]);
 
+  // gameState 변경 감지를 위한 useEffect 추가
+  useEffect(() => {
+    if (gameState.isGameStart) {
+      setHasPlayedGame(true);
+    }
+  }, [gameState.isGameStart]);
+
   // 제시어 가져오기
   const currentWord = useMemo(() => {
-    if (!gameState.isGameStarted) {
+    if (!gameState.isGameStart) {
       return "";
     }
 
     const isDrawer = currentPlayer?.nickname === profileData?.userNickname;
     return isDrawer ? gameState.currentWord || "준비중..." : "???";
   }, [
-    gameState.isGameStarted,
+    gameState.isGameStart,
     gameState.currentWord,
     currentPlayer?.nickname,
     profileData?.userNickname,
@@ -425,19 +526,18 @@ const MainLayout = () => {
 
   // WebSocket을 통한 방 업데이트 구독
   useEffect(() => {
-    if (roomId) {
+    if (roomId && connected) {
       sendMessage({
         destination: `/topic/catch-mind/${roomId}`,
         subscribe: true,
         callback: (message) => {
           try {
             const data = JSON.parse(message.body);
-            console.log("Received WebSocket data:", data); // 디버깅을 위한 로그 추가
 
             if (data.type === "roomInfo" && data.roomInfo) {
               const updatedRoomInfo = {
                 ...data.roomInfo,
-                isGameStarted:
+                isGameStart:
                   data.roomInfo.isGameStarted ||
                   data.roomInfo.isGameStart ||
                   false,
@@ -474,9 +574,7 @@ const MainLayout = () => {
                 ...data.roomInfo,
               }));
             }
-          } catch (error) {
-            console.error("Error parsing message:", error);
-          }
+          } catch (error) {}
         },
       });
     }
@@ -488,6 +586,7 @@ const MainLayout = () => {
       if (!isInitialJoin || !profileData?.userNickname || !roomId) return;
 
       try {
+        setIsLoading(true);
         const joinData = await CatchMindAPI.joinRoom(
           roomId,
           profileData.userNickname,
@@ -495,11 +594,13 @@ const MainLayout = () => {
         );
 
         if (joinRoom && typeof joinRoom === "function") {
-          joinRoom(joinData);
+          await joinRoom(joinData);
           setIsInitialJoin(false);
         }
       } catch (error) {
-        console.error("Error joining room:", error);
+        console.error("Join room error:", error);
+        setIsLoading(false);
+        navigate("/catch-mind");
       }
     };
 
@@ -515,6 +616,7 @@ const MainLayout = () => {
     isInitialJoin,
     dispatch,
     joinRoom,
+    navigate,
   ]);
 
   // 프로필 정보 가져오기
@@ -524,8 +626,23 @@ const MainLayout = () => {
     }
   }, [userId, dispatch]);
 
+  if (isLoading) {
+    return <Loading />;
+  }
+
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+      <CountdownModal count={countdown} isVisible={countdown !== null} />
+      <GameResultModal
+        isOpen={showResults}
+        onClose={handleCloseResults}
+        results={gameResults || []}
+      />
+      <ExitConfirmationModal
+        isOpen={isExitModalOpen}
+        onClose={handleCloseExitModal}
+        onConfirm={handleConfirmExit}
+      />
       <div className="flex-1 p-4">
         <div className="h-full flex flex-col space-y-4">
           <GameInfo
@@ -539,7 +656,7 @@ const MainLayout = () => {
               maxPeople: gameState.maxPeople,
               quizCount: gameState.quizCount,
               players: gameState.players.map((p) => p.nickname),
-              isGameStarted: gameState.isGameStarted,
+              isGameStart: gameState.isGameStart,
             }}
             handleExitRoom={handleExitRoom}
             handleStartGame={handleStartGame}
@@ -573,6 +690,11 @@ const MainLayout = () => {
           correctAnswer={gameState?.currentWord || ""}
         />
       </div>
+      <GameReviewModal
+        isOpen={isReviewModalOpen}
+        onClose={handleReviewClose}
+        gameInfoId={3} // 캐치마인드 게임의 gameInfoId를 여기에 입력
+      />
     </div>
   );
 };

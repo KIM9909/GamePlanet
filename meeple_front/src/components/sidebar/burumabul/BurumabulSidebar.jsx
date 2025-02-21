@@ -49,42 +49,42 @@ const BurumabulSidebar = ({ playerInfoList }) => {
         style={{ fontFamily: "Galmuri9" }}
       >
         <div className="flex-1 overflow-hidden m-2">
-          <div className="h-full border border-gray-400 rounded-lg">
+          <div className="h-full border border-cyan-400 rounded-lg">
             {renderView()}
           </div>
         </div>
 
-        <div className="grid grid-cols-4 border-t border-gray-700">
+        <div className="grid grid-cols-3 border border-cyan-400">
           <button
             className={`py-2 text-center transition-colors text-sm ${
-              currentView === "chat" ? "bg-gray-800" : "hover:bg-gray-800"
+              currentView === "chat" ? "bg-cyan-500" : "hover:bg-cyan-500"
             }`}
             onClick={() => setCurrentView("chat")}
           >
             CHAT
           </button>
           <button
-            className={`py-2 text-center transition-colors text-sm border-l border-gray-700 ${
-              currentView === "rule" ? "bg-gray-800" : "hover:bg-gray-800"
+            className={`py-2 text-center transition-colors text-sm border-l border-cyan-700 ${
+              currentView === "rule" ? "bg-cyan-500" : "hover:bg-cyan-500"
             }`}
             onClick={() => setCurrentView("rule")}
           >
             RULE
           </button>
           <button
-            className={`py-2 text-center transition-colors text-sm border-l border-gray-700 ${
-              currentView === "setting" ? "bg-gray-800" : "hover:bg-gray-800"
+            className={`py-2 text-center transition-colors text-sm border-l border-cyan-700 ${
+              currentView === "setting" ? "bg-cyan-500" : "hover:bg-cyan-500"
             }`}
             onClick={() => setCurrentView("setting")}
           >
             SETTING
           </button>
-          <button
-            className="py-2 text-center transition-colors text-sm border-l border-gray-700 hover:bg-gray-800"
+          {/* <button
+            className="py-2 text-center transition-colors text-sm border-l border-cyan-700 hover:bg-gray-800"
             onClick={handleExit}
           >
             EXIT
-          </button>
+          </button> */}
         </div>
       </div>
     </>
