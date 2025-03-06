@@ -81,6 +81,8 @@
 
 - ### API 설계
 
+  ![API 명세서 링크](https://pastoral-makeup-5a5.notion.site/Meeple-API-1ae04fd79ea280c6b1dcd248e551aba5)
+  
 - ### WBS
 
   ![alt text](readMeImages/WBS.png)
